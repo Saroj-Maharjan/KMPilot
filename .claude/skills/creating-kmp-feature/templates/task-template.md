@@ -1,0 +1,85 @@
+# Task Template
+
+Template for individual task files in `.claude/docs/{featurename}/task-{N}-{title}.md`
+
+---
+
+```markdown
+# Task {N}: {Title}
+
+**Status:** ⏳ Pending | 🔄 In Progress | ✅ Done
+**Group:** Data | UI | Integration
+**Priority:** High | Medium | Low
+**Agent:** kmp-data-layer-agent | kmp-ui-layer-agent | kmp-integration-agent
+
+## Objective
+{One sentence describing what this task accomplishes}
+
+## Implementation Details
+{Step-by-step implementation instructions}
+
+1. {Step 1}
+2. {Step 2}
+3. {Step 3}
+
+## Files Created/Modified
+
+### ADDED Files
+- `{path/to/new/file.kt}` - {Brief description}
+
+### MODIFIED Files
+- `{path/to/existing/file.kt}` - {What change is made}
+
+## Code Reference
+- [references/patterns.md](../../../skills/creating-kmp-feature/references/patterns.md) § {section}
+- [architecture/{layer}.md](../../../skills/creating-kmp-feature/architecture/{layer}.md)
+
+## Acceptance Criteria
+
+<!-- Include scenarios for UI/behavior tasks, skip for foundation tasks -->
+
+#### Scenario: {TaskBehavior} (if applicable)
+- GIVEN {precondition}
+- WHEN {action}
+- THEN {expected outcome}
+
+### Verification Checklist
+- [ ] {Criterion 1}
+- [ ] {Criterion 2}
+- [ ] {Criterion 3}
+
+## Dependencies
+- Task {N}: {dependency description}
+- {Other dependency}
+```
+
+---
+
+## Guidance
+
+### When to Include Scenarios
+
+| Task Type | Include Scenarios? |
+|-----------|-------------------|
+| UI screens, user interactions | ✅ Yes |
+| ViewModel behavior | ✅ Yes |
+| Navigation flows | ✅ Yes |
+| Module structure, build config | ❌ Skip |
+| DI setup | ❌ Skip |
+| Pure data models | ❌ Skip |
+
+### Agent Assignment
+
+| Group | Agent | Example Tasks |
+|-------|-------|---------------|
+| Data | kmp-data-layer-agent | Models, Resources, DataSource, Repository |
+| UI | kmp-ui-layer-agent | UiState, ViewModel, Screens, Navigation |
+| Integration | kmp-integration-agent | DI module, 4 integration points |
+
+### Status Flow
+
+```
+⏳ Pending → 🔄 In Progress → ✅ Done
+```
+
+Agent updates status when starting and completing task.
