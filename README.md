@@ -177,7 +177,7 @@ Generate and open test coverage reports for all feature modules.
 
 ## 📚 Documentation
 
-**📖 [WIKI.md](WIKI.md)** — Complete reference for all AI tools, including skills (auto-activating workflows), agents (manual invocation), testing strategies, and detailed examples of each capability.
+**📖 [Wiki](https://github.com/ThisIsSadeghi/KMPilot/wiki)** — Complete reference for all AI tools, including skills (auto-activating workflows), agents (manual invocation), testing strategies, and detailed examples of each capability.
 
 **📐 [CLAUDE.md](CLAUDE.md)** — Quick reference for architecture patterns and mandatory conventions. Includes critical rules (setState, Either, 4-state UI), project structure, and common commands. Used by AI agents to maintain consistency.
 

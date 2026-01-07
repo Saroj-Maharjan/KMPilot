@@ -348,3 +348,4 @@ node_modules/
 
 # KMPilot sync markers
 .scripts/*
+.github/*
