@@ -10,6 +10,24 @@ Use for: UI-only features, no API, < 3 screens
 ## Overview
 {1-2 sentence description of what the feature does}
 
+## Goals
+- {Goal 1: What this feature should achieve}
+- {Goal 2: User benefit}
+
+## Non-Goals
+{Explicitly state what this feature will NOT do}
+
+- {Non-goal 1: Out of scope for this implementation}
+- {Non-goal 2: Future consideration}
+
+## Background & Rationale
+{Brief explanation of why this feature is needed - 1-2 sentences}
+
+## Design Decisions
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| {Decision 1} | {What we chose} | {Why} |
+
 ## Implementation Plan
 
 | Aspect | Value |
@@ -34,7 +52,15 @@ Use for: UI-only features, no API, < 3 screens
 
 ## Acceptance Criteria
 
-### Functional Scenarios
+### Test Scenarios
+
+| Scenario | Given | When | Then |
+|----------|-------|------|------|
+| Display correctly | User navigates to screen | Screen initializes | UI displayed correctly |
+| User interaction | User on screen | Interacts with {element} | Expected action occurs |
+| Navigation back | User on screen | Taps back | Navigates to previous |
+
+### Functional Scenarios (Detailed)
 
 #### Scenario: {Feature} displays correctly
 - GIVEN the user navigates to {Feature} screen

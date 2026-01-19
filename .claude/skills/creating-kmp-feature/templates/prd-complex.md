@@ -10,6 +10,32 @@ Use for: Features with API integration, multiple screens, business logic
 ## Overview
 {2-3 sentence description of what the feature does and its purpose}
 
+## Goals
+- {Goal 1: What this feature should achieve}
+- {Goal 2: Measurable outcome if possible}
+- {Goal 3: User benefit}
+
+## Non-Goals
+{Explicitly state what this feature will NOT do - prevents scope creep}
+
+- {Non-goal 1: Feature or capability explicitly out of scope}
+- {Non-goal 2: Future consideration, not this implementation}
+- {Non-goal 3: Related feature handled elsewhere}
+
+## Background & Rationale
+{Why is this feature needed? What problem does it solve?}
+
+{2-3 sentences explaining the business or user need driving this feature.
+Reference any user feedback, analytics, or strategic goals if applicable.}
+
+## Design Decisions
+{Key architectural or UX decisions and why they were made}
+
+| Decision | Choice | Alternatives Considered | Rationale |
+|----------|--------|------------------------|-----------|
+| {Decision 1} | {What we chose} | {Other options} | {Why this choice} |
+| {Decision 2} | {What we chose} | {Other options} | {Why this choice} |
+
 ## Feature Scope
 {Detailed explanation of functionality}
 
@@ -122,7 +148,18 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 
 ## Acceptance Criteria
 
-### Functional Scenarios
+### Test Scenarios
+
+| Scenario | Given | When | Then |
+|----------|-------|------|------|
+| Load success | User navigates to screen | API returns data | Data displayed, state = Success |
+| Load empty | User navigates to screen | API returns empty list | Empty state displayed |
+| Load error | User navigates to screen | Network error occurs | Error overlay with retry button |
+| Retry success | Error state displayed | User taps retry | Data loads successfully |
+| Navigation back | User on feature screen | User taps back | Navigates to previous screen |
+| {Additional scenario} | {precondition} | {action} | {expected result} |
+
+### Functional Scenarios (Detailed)
 
 #### Scenario: {Feature} data loads successfully
 - GIVEN the user navigates to {Feature} screen
@@ -143,7 +180,7 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 
 ### Technical Verification
 - [ ] Build passes: `./gradlew assembleDebug`
-- [ ] All 4 UI states handled
+- [ ] All 4 UI states handled (Uninitialized, Loading, Success, Failed)
 - [ ] Navigation works correctly
 - [ ] X-components used (no Material3)
 - [ ] setState {} used (not direct assignment)

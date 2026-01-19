@@ -17,6 +17,28 @@ Principles for integrating features into KMP apps. Every feature requires exactl
 
 Missing any of these will result in build errors or runtime crashes.
 
+## Spec Generation (Integration Agent Responsibility)
+
+The integration agent generates `spec.md` as the living documentation for the feature.
+
+**CRITICAL: Preserve WHY Sections from PRD**
+
+Before PRD is deleted during cleanup, the integration agent MUST copy these sections to spec.md:
+
+| PRD Section | Spec Section | Why It Matters |
+|-------------|--------------|----------------|
+| Goals | Goals | Documents intended outcomes |
+| Non-Goals | Non-Goals | Prevents future scope creep |
+| Background & Rationale | Background & Rationale | Explains why feature exists |
+| Design Decisions | Design Decisions | Preserves architectural context |
+
+**Process:**
+1. Read PRD at `.claude/docs/{featurename}/prd.txt`
+2. Extract Goals, Non-Goals, Background & Rationale, Design Decisions
+3. Include these sections verbatim in generated spec.md
+4. Add implementation details from actual code
+5. Spec.md now contains both WHY (from PRD) and WHAT (from code)
+
 ## Critical Rules (Integration)
 
 1. **Lowercase Packages**: `{PKG_PREFIX}.featurename` (never `feature-name`, `featureName`, or `feature_name`)
