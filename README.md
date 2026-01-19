@@ -125,10 +125,10 @@ Spec-first approach using `modifying-kmp-feature` skill:
 
 **Slash Commands**
 
-### 1- Generate Specification
-Generate living documentation from an existing feature implementation.
+### 1- Audit Specification
+Audit, generate, or compare specifications for existing KMP features.
 ```bash
-/generate-spec login
+/audit-spec login
 ```
 
 ### 2- Coverage Report
