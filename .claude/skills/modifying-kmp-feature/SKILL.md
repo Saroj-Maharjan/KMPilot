@@ -28,11 +28,15 @@ User Request: "modify {feature} to..."
     ↓
 [3] Plan → Determine affected layers (data/ui/integration)
     ↓
-[4] Implement → Apply changes following patterns
+[4] Draft Spec Changes → Propose updates to spec sections
     ↓
-[5] Validate → Build + Format
+[5] Review Gate → USER APPROVES spec changes before coding
     ↓
-[6] Update Spec → Regenerate with changelog
+[6] Implement → Apply changes following patterns
+    ↓
+[7] Validate → Build + Format
+    ↓
+[8] Update Spec → Apply approved changes + changelog
     ↓
 ✅ Done
 ```
@@ -43,9 +47,11 @@ User Request: "modify {feature} to..."
 2. **Spec Check** - Load or generate specification
 3. **Understand** - Read spec to understand current implementation
 4. **Plan** - Determine which layer(s) to modify
-5. **Implement** - Apply changes following architecture patterns
-6. **Validate** - Run feature build
-7. **Update Spec** - Regenerate spec from implementation
+5. **Draft Spec Changes** - Propose specific updates to spec sections
+6. **Review Gate** - Present changes to user for approval (REQUIRED)
+7. **Implement** - Apply changes following architecture patterns
+8. **Validate** - Run feature build
+9. **Update Spec** - Apply approved spec changes with changelog entry
 
 ## Phase 0: Context Discovery
 
@@ -82,7 +88,7 @@ Check for existing specification:
 .claude/docs/{featurename}/spec.md
 ```
 
-**If missing:** Run `/generate-spec {featurename}` to create specification from implementation.
+**If missing:** Run `/audit-spec {featurename}` to create specification from implementation.
 
 **If exists:** Proceed to Step 3.
 
@@ -122,7 +128,116 @@ Determine which layers are affected:
 - UI changes: `../creating-kmp-feature/architecture/ui.md`
 - Integration changes: `../creating-kmp-feature/architecture/integration.md`
 
-## Step 5: Implement Changes
+## Step 5: Draft Spec Changes
+
+**Purpose:** Propose specific updates to the spec BEFORE writing any code.
+
+Based on the planned changes, draft modifications to relevant spec sections:
+
+### 5.1 Identify Affected Spec Sections
+
+| Change Type | Spec Sections to Update |
+|-------------|------------------------|
+| New requirement | Section 3 (Requirements) |
+| New API endpoint | Section 5 (Interfaces) |
+| New data model | Section 4 (Design > Data Models) |
+| State changes | Section 6.2 (State Management) |
+| New UI flow | Section 6.1 (User Flows) |
+| New error case | Section 6.3 (Error Handling) |
+| New scenario | Section 7 (Testing) |
+
+### 5.2 Draft Changes Format
+
+Present proposed changes using diff format:
+
+```markdown
+## Proposed Spec Changes: {featurename}
+
+**Current Version:** {X.Y.Z}
+**Proposed Version:** {X.Y+1.Z} (Minor - new capability) or {X.Y.Z+1} (Patch - fix/clarification)
+
+---
+
+### Changes to Section {N}: {Section Name}
+
+```diff
+  existing content
++ added content
+- removed content
+```
+
+### New Section/Scenario (if applicable)
+
+```markdown
+#### Scenario: {New scenario name}
+- GIVEN {precondition}
+- WHEN {action}
+- THEN {expected result}
+```
+
+---
+
+### Rationale
+
+{Brief explanation of why these changes are needed}
+```
+
+## Step 6: Review Gate (REQUIRED)
+
+**Purpose:** Get explicit user approval for spec changes before implementation.
+
+**This step is MANDATORY** - never skip directly to implementation.
+
+### 6.1 Present Changes to User
+
+```markdown
+## Spec Change Review: {featurename}
+
+**Requested modification:** "{user's original request}"
+
+### Proposed Spec Updates
+
+{List all sections being modified with diff previews}
+
+### Summary of Changes
+
+| Section | Change Type | Description |
+|---------|-------------|-------------|
+| 3.1 Requirements | Addition | Added FR-X.Y for {capability} |
+| 6.2 State | Modification | Added {NewState} to UiState |
+| 7.1 Test Scenarios | Addition | Added scenario for {behavior} |
+
+### Proposed Changelog Entry
+
+```markdown
+- {YYYY-MM-DD} - {Brief description of change}
+```
+
+---
+
+**Please review the proposed spec changes above.**
+
+- [ ] **Approve** - Proceed with implementation
+- [ ] **Modify** - Request changes (please specify)
+- [ ] **Reject** - Do not proceed
+```
+
+### 6.2 Handle User Response
+
+| Response | Action |
+|----------|--------|
+| Approved | Proceed to Step 7 (Implement) |
+| Modify | Update draft per feedback → Re-present for approval |
+| Reject | End workflow, do not implement |
+
+### 6.3 Why This Gate Matters
+
+- **Prevents scope creep** - User sees exactly what will change
+- **Maintains spec authority** - Spec updated intentionally, not as afterthought
+- **Enables rollback** - If implementation fails, spec wasn't yet changed
+- **Documents decisions** - User explicitly approved the contract change
+
+## Step 7: Implement Changes
 
 Apply changes following existing patterns in the codebase.
 
@@ -140,7 +255,7 @@ Apply changes following existing patterns in the codebase.
 - Reference `feature/login/` as canonical example
 - Use `using-design-system` skill for UI changes
 
-## Step 6: Validate Build
+## Step 8: Validate Build
 
 Run incremental build:
 ```bash
@@ -154,18 +269,44 @@ For formatting:
 ./gradlew :feature:{featurename}:ktlintFormat
 ```
 
-## Step 7: Update Specification
+## Step 9: Update Specification
 
-1. Copy existing "Last Updated" entries from spec (if any)
-2. Regenerate the spec: `/generate-spec {featurename}`
-3. Add new changelog entry at top following template: `templates/spec-changelog-entry.md`
-   ```markdown
-   ## Last Updated
-   - {YYYY-MM-DD} - {Brief description of change}
-   - {previous entries...}
-   ```
+**Important:** Apply the APPROVED spec changes from Step 6, do not regenerate from scratch.
+
+### 9.1 Apply Approved Changes
+
+Edit `.claude/docs/{featurename}/spec.md` to apply the changes that were approved in Step 6:
+- Add new requirements/scenarios
+- Update data models
+- Modify state definitions
+- Add test scenarios
+
+### 9.2 Update Changelog
+
+Add the approved changelog entry at the top of the "Last Updated" section:
+
+```markdown
+## Last Updated
+- {YYYY-MM-DD} - {Brief description from approved changes}
+- {previous entries preserved...}
+```
+
+### 9.3 Version Bump
+
+Update the spec version in Metadata section:
+- **Patch** (X.Y.Z+1): Clarifications, typo fixes
+- **Minor** (X.Y+1.0): New capabilities, added features
+- **Major** (X+1.0.0): Breaking changes, removed features
 
 **Template reference:** See `templates/spec-changelog-entry.md` for format guidelines and examples.
+
+### 9.4 Verify Spec Accuracy
+
+After updating, quickly verify:
+- [ ] All approved changes applied
+- [ ] No contradictions with existing content
+- [ ] Changelog entry added
+- [ ] Version bumped appropriately
 
 ## Error Handling
 
@@ -187,9 +328,10 @@ For formatting:
 
 **Templates:**
 - `templates/spec-changelog-entry.md` - Spec update format
+- `templates/spec-change-review.md` - Review gate format
 
 **Commands:**
-- Spec generation: `/generate-spec {featurename}`
+- Spec audit: `/audit-spec {featurename}` (for drift detection)
 - Feature build: `./gradlew :feature:{featurename}:assembleAndroidMain`
 - Format: `./gradlew :feature:{featurename}:ktlintFormat`
 
@@ -198,9 +340,13 @@ For formatting:
 ## Completion Checklist
 
 Before completing modification:
+- [ ] Spec changes drafted and presented to user
+- [ ] **User approved spec changes** (Step 6 - REQUIRED)
 - [ ] Changes follow architecture patterns
 - [ ] Build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`
 - [ ] Code formatted: ktlint applied
-- [ ] Spec regenerated: `/generate-spec {featurename}`
+- [ ] Spec updated with approved changes (not regenerated)
+- [ ] Changelog entry added with date
+- [ ] Version bumped in spec metadata
 - [ ] All 4 UI states handled (if UI modified)
 - [ ] X-components used (if UI modified)
