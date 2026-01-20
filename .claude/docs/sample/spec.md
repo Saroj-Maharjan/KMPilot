@@ -3,7 +3,7 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 2.0 |
+| Version | 2.1.0 |
 | Status | Approved |
 | Author | System |
 | Created | 2026-01-05 |
@@ -24,7 +24,7 @@ A reference feature that demonstrates the standard KMP Clean Architecture patter
 - Illustrate proper navigation patterns and DI setup
 
 ### 1.3 Non-Goals
-- External API integration (uses local mock data)
+- Active API usage in repository (infrastructure ready, mock data used for testing)
 - Complex business logic (simplified for demonstration)
 - Production-ready feature (educational reference only)
 
@@ -62,6 +62,7 @@ The sample feature was created to provide a working reference implementation of 
 | FR-4 | Handle error state with retry capability | Must |
 | FR-5 | Support item selection and trigger navigation callback | Must |
 | FR-6 | Display uninitialized state before data load begins | Should |
+| FR-7 | Provide API infrastructure for future remote data integration | Should |
 
 ### 3.2 Non-Functional Requirements
 
@@ -116,8 +117,11 @@ The sample feature was created to provide a working reference implementation of 
 |-----------|----------------|
 | SampleLocalDataSource | Interface for local data operations |
 | SampleLocalDataSourceImpl | Mock data implementation (3 sample items) |
+| SampleRemoteDataSource | Interface for remote API operations |
+| SampleRemoteDataSourceImpl | API implementation using ApiClient |
+| SampleResources | Ktor Resource definitions for /api/sample/ endpoint |
 | SampleRepository | Interface for business logic |
-| SampleRepositoryImpl | Business logic implementation |
+| SampleRepositoryImpl | Business logic implementation (currently uses local data) |
 | SampleViewModel | State management using MutableStateFlow + setState |
 | SampleUiModel | UI state container with 4-state pattern |
 | SampleScreen | Main composable connecting ViewModel to UI |
@@ -148,12 +152,16 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 ├── data/
 │   ├── model/
 │   │   └── SampleItem.kt           # Data model (@Serializable)
+│   ├── remote/
+│   │   └── SampleResources.kt      # Ktor Resource for /api/sample/
 │   ├── datasource/
 │   │   ├── SampleLocalDataSource.kt        # Interface
-│   │   └── SampleLocalDataSourceImpl.kt    # Mock implementation
+│   │   ├── SampleLocalDataSourceImpl.kt    # Mock implementation
+│   │   ├── SampleRemoteDataSource.kt       # Interface (remote)
+│   │   └── SampleRemoteDataSourceImpl.kt   # API implementation
 │   └── repository/
 │       ├── SampleRepository.kt             # Interface
-│       └── SampleRepositoryImpl.kt         # Implementation
+│       └── SampleRepositoryImpl.kt         # Implementation (uses local, can switch to remote)
 ├── presentation/
 │   ├── SampleViewModel.kt          # MutableStateFlow + setState {}
 │   ├── SampleUiModel.kt            # @Stable data class
@@ -173,7 +181,32 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 
 ### 5.1 API Contracts
 
-No external API (uses local mock data).
+**Endpoint:** `GET /api/sample/`
+
+**Description:** Fetches all sample items.
+
+**Authentication:** Not required (demonstration endpoint)
+
+**Response:** `200 OK`
+```kotlin
+List<SampleItem>
+```
+
+**Response Model:**
+```kotlin
+@Serializable
+data class SampleItem(
+    val id: String,
+    val title: String,
+    val description: String,
+    val imageUrl: String? = null,
+)
+```
+
+**Notes:**
+- API infrastructure is implemented but not currently used by repository
+- Repository uses mock local data for testing purposes
+- Easy to switch to remote data source by changing repository implementation
 
 ### 5.2 Internal Contracts
 
@@ -194,7 +227,27 @@ interface SampleLocalDataSource {
 }
 
 /**
+ * Remote data source for sample items via API.
+ */
+interface SampleRemoteDataSource {
+    /**
+     * Fetches sample items from remote API.
+     *
+     * Contract:
+     * - Returns Either<List<SampleItem>>
+     * - Left: ErrorModel on failure
+     * - Right: List of sample items (may be empty)
+     * - Suspending operation (network call)
+     */
+    suspend fun getSampleItems(): Either<List<SampleItem>>
+}
+
+/**
  * Repository for sample feature business logic.
+ *
+ * Note: Currently uses local mock data for testing.
+ * Can easily switch to remote data source by injecting
+ * SampleRemoteDataSource instead of SampleLocalDataSource.
  */
 interface SampleRepository {
     /**
@@ -360,6 +413,7 @@ Uninitialized ──[loadItems()]──► Loading
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1.0 | 2026-01-20 | Added API infrastructure (Ktor Resource, RemoteDataSource) for /api/sample/ endpoint. Repository still uses mock data for testing, can be easily switched to remote. |
 | 2.0 | 2026-01-20 | Updated spec to match new SDD patterns with full template structure |
 | 1.0 | 2026-01-05 | Initial spec generated from existing implementation |
 

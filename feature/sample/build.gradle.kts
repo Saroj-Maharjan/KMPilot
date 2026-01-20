@@ -52,9 +52,11 @@ kotlin {
                 implementation(libs.koin.compose.viewmodel)
                 api(libs.koin.core)
                 implementation(libs.jetbrains.compose.navigation)
+                implementation(libs.ktor.client.resources)
 
                 implementation(project(":core:designsystem"))
                 implementation(project(":core:common"))
+                implementation(project(":core:data"))
             }
         }
 
