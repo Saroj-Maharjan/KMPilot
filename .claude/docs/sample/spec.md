@@ -1,48 +1,148 @@
-# Sample Specification
+# Feature: Sample
 
-## Purpose
-A reference feature that demonstrates the standard KMP Clean Architecture patterns, state management, and UI composition. Serves as a template for new feature development.
+## Metadata
+| Field | Value |
+|-------|-------|
+| Version | 2.0 |
+| Status | Approved |
+| Author | System |
+| Created | 2026-01-05 |
+| Updated | 2026-01-20 |
+| Reviewers | N/A |
 
-## Background
-The sample feature was created to showcase best practices for KMP feature development, including the 4-state UI pattern (Uninitialized, Loading, Success, Failed), Clean Architecture layer separation, and proper dependency injection setup. It uses local mock data to demonstrate the pattern without requiring external dependencies.
+---
 
-## Last Updated
-- 2026-01-05 - Generated from existing implementation
+## 1. Overview
 
-## Requirements
+### 1.1 Summary
+A reference feature that demonstrates the standard KMP Clean Architecture patterns, state management, and UI composition using X-components design system. Serves as a canonical template for new feature development.
 
-### Requirement: Display Sample Items
-The system SHALL provide a list view of sample items demonstrating the data flow from repository to UI.
+### 1.2 Goals
+- Demonstrate the 4-state UI pattern (Uninitialized, Loading, Success, Failed)
+- Showcase Clean Architecture layer separation (data, presentation, DI)
+- Provide reference implementation for state management with `setState {}`
+- Illustrate proper navigation patterns and DI setup
 
-#### Scenario: Sample items load successfully
-- GIVEN the user navigates to Sample screen
-- WHEN the data loads successfully
-- THEN a list of sample items MUST be displayed
-- AND the loading state MUST transition to success
+### 1.3 Non-Goals
+- External API integration (uses local mock data)
+- Complex business logic (simplified for demonstration)
+- Production-ready feature (educational reference only)
 
-#### Scenario: Sample items list is empty
-- GIVEN the user is on Sample screen
-- WHEN the repository returns an empty list
-- THEN a "No items found" message MUST be displayed
+---
 
-#### Scenario: Sample items fail to load
-- GIVEN the user is on Sample screen
-- WHEN an error occurs during data loading
-- THEN an error message MUST be displayed
-- AND a retry button MUST be available
+## 2. Context
 
-### Requirement: Item Selection
-The system SHALL allow users to select individual items and navigate to item details.
+### 2.1 Background
+The sample feature was created to provide a working reference implementation of all KMP architecture patterns. It demonstrates the complete feature lifecycle from data layer to UI without requiring external dependencies, making it ideal for onboarding and pattern validation.
 
-#### Scenario: User selects an item
-- GIVEN the user is viewing the sample items list
-- WHEN the user taps on an item
-- THEN the item MUST be marked as selected in the UI state
-- AND the navigation callback MUST be triggered with the item ID
+### 2.2 Dependencies
+- `:core:common` - UiState, ErrorModel, setState extension
+- `:core:designsystem` - X-components (XButton, XText, XCard, etc.)
+- Koin - Dependency injection framework
+- Kotlinx Serialization - Route serialization
+- Compose Navigation - Screen navigation
 
-## Architecture
+### 2.3 Constraints
+- Must use mock data only (no real API)
+- Must demonstrate all critical patterns
+- Must build successfully on both Android and iOS
+- Must use X-components exclusively (no Material3)
 
-### Package Structure
+---
+
+## 3. Requirements
+
+### 3.1 Functional Requirements
+
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| FR-1 | Display list of sample items with title, description | Must |
+| FR-2 | Show loading state while data is being fetched | Must |
+| FR-3 | Handle empty state when no items available | Must |
+| FR-4 | Handle error state with retry capability | Must |
+| FR-5 | Support item selection and trigger navigation callback | Must |
+| FR-6 | Display uninitialized state before data load begins | Should |
+
+### 3.2 Non-Functional Requirements
+
+| ID | Requirement | Target |
+|----|-------------|--------|
+| NFR-1 | State transitions | Explicit setState {} usage only |
+| NFR-2 | Architecture compliance | 100% adherence to 10 critical rules |
+| NFR-3 | Design system usage | X-components only, zero Material3 |
+| NFR-4 | Code quality | ktlint passing, no warnings |
+
+---
+
+## 4. Design
+
+### 4.1 Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                  UI Layer                        │
+│  ┌─────────────────────────────────────────┐    │
+│  │         SampleScreen                    │    │
+│  │      (Collects StateFlow)               │    │
+│  └──────────────────┬──────────────────────┘    │
+│                     │                            │
+│  ┌──────────────────▼──────────────────────┐    │
+│  │       SampleScreenRoot                  │    │
+│  │  (4-state rendering: U/L/S/F)           │    │
+│  └──────────────────┬──────────────────────┘    │
+│                     │                            │
+│           ┌─────────▼─────────┐                  │
+│           │   SampleViewModel │                  │
+│           │ (MutableStateFlow)│                  │
+│           └─────────┬─────────┘                  │
+├─────────────────────┼───────────────────────────┤
+│                     ▼      Domain Layer          │
+│  ┌──────────────────────────────────────────┐   │
+│  │         SampleRepository                 │   │
+│  │   (Interface + Impl pair)                │   │
+│  └──────────────────┬───────────────────────┘   │
+├─────────────────────┼───────────────────────────┤
+│                     ▼       Data Layer           │
+│  ┌─────────────────────────────────────────┐    │
+│  │    SampleLocalDataSource                │    │
+│  │   (Interface + Impl with mock data)     │    │
+│  └─────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────┘
+```
+
+### 4.2 Components
+
+| Component | Responsibility |
+|-----------|----------------|
+| SampleLocalDataSource | Interface for local data operations |
+| SampleLocalDataSourceImpl | Mock data implementation (3 sample items) |
+| SampleRepository | Interface for business logic |
+| SampleRepositoryImpl | Business logic implementation |
+| SampleViewModel | State management using MutableStateFlow + setState |
+| SampleUiModel | UI state container with 4-state pattern |
+| SampleScreen | Main composable connecting ViewModel to UI |
+| SampleScreenRoot | ViewModel-independent root for testing |
+| SampleCard | Reusable item card component |
+| SampleRoute | Navigation route (@Serializable data object) |
+| SampleModules | DI configuration (BaseFeature object) |
+
+### 4.3 Data Models
+
+```kotlin
+/**
+ * Sample data model demonstrating the pattern.
+ */
+@Serializable
+data class SampleItem(
+    val id: String,
+    val title: String,
+    val description: String,
+    val imageUrl: String? = null,
+)
+```
+
+### 4.4 Package Structure
+
 ```
 feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 ├── data/
@@ -67,111 +167,207 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
     └── SampleModules.kt            # BaseFeature object with Koin modules
 ```
 
-### Data Flow
-```
-[LocalDataSource] → Repository → ViewModel → [UI]
-   List<SampleItem>  List<SampleItem>  UiState<List<SampleItem>>
-```
+---
 
-### Key Classes
-| Class | Purpose | Location |
-|-------|---------|----------|
-| SampleLocalDataSource | Local data operations interface | data/datasource/ |
-| SampleLocalDataSourceImpl | Mock data implementation | data/datasource/ |
-| SampleRepository | Business logic interface | data/repository/ |
-| SampleRepositoryImpl | Business logic implementation | data/repository/ |
-| SampleViewModel | State management (MutableStateFlow + setState) | presentation/ |
-| SampleUiModel | UI state container (4-state pattern) | presentation/ |
-| SampleScreen | UI composition (Material3) | presentation/ui/ |
-| SampleScreenRoot | ViewModel-independent root for testing | presentation/ui/ |
-| SampleCard | Item card component | presentation/ui/components/ |
-| SampleRoute | Navigation route (@Serializable data object) | presentation/navigation/ |
-| SampleModules | DI configuration (BaseFeature) | di/ |
+## 5. Interfaces
 
-### Data Models
+### 5.1 API Contracts
+
+No external API (uses local mock data).
+
+### 5.2 Internal Contracts
+
 ```kotlin
 /**
- * Sample data model demonstrating the pattern.
+ * Local data source for sample items.
  */
-data class SampleItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageUrl: String? = null,
-)
+interface SampleLocalDataSource {
+    /**
+     * Fetches all sample items.
+     *
+     * Contract:
+     * - Returns list of sample items (may be empty)
+     * - Never throws exceptions
+     * - Synchronous operation (mock data)
+     */
+    fun getItems(): List<SampleItem>
+}
+
+/**
+ * Repository for sample feature business logic.
+ */
+interface SampleRepository {
+    /**
+     * Fetches sample items from data source.
+     *
+     * Contract:
+     * - Returns list of sample items (may be empty)
+     * - Never throws exceptions
+     * - Synchronous operation (no suspend needed for mock)
+     */
+    fun getItems(): List<SampleItem>
+}
 ```
 
-## Integration Points
+### 5.3 External Integrations
 
-| Point | File | Status |
-|-------|------|--------|
-| Module include | settings.gradle.kts | ✅ |
-| Dependency | composeApp/build.gradle.kts | ✅ |
-| DI init | initKoin.kt | ✅ |
-| Navigation | BaseAppNavHost.kt | ✅ |
+Navigation callbacks:
+- `onItemClick: (String) -> Unit` - Triggered when user taps item, passes item ID
 
-## State Management
+---
 
-### UiState Structure
+## 6. Behavior
+
+### 6.1 User Flows
+
+#### View Sample Items Flow
+1. User navigates to Sample screen via `navController.navigate(SampleRoute)`
+2. Screen enters Uninitialized state
+3. ViewModel calls `loadItems()` on init
+4. State transitions to Loading
+5. Repository fetches mock data from DataSource
+6. On success: State transitions to Success with item list
+7. On error: State transitions to Failed with error
+8. User sees list rendered based on state
+
+#### Item Selection Flow
+1. User taps on item card
+2. ViewModel's `onItemClick()` is called
+3. ViewModel updates `selectedItem` in state using `setState {}`
+4. Navigation callback is triggered with item ID
+
+#### Retry Flow
+1. User is in Failed state (error occurred)
+2. User taps "Retry" button
+3. ViewModel calls `retry()` which triggers `loadItems()`
+4. State transitions back to Loading
+5. Process repeats from step 5 of View Flow
+
+### 6.2 State Management
+
+#### UiState Structure
+
 ```kotlin
 /**
  * UI model for the sample feature.
  * Demonstrates the 4-state UI pattern: Uninitialized, Loading, Success, Failed.
  */
+@Stable
 data class SampleUiModel(
     val itemsState: UiState<List<SampleItem>> = UiState.Uninitialized,
     val selectedItem: SampleItem? = null,
 )
 ```
 
-### State Transitions
-1. **Initial State**: `itemsState = UiState.Uninitialized`, `selectedItem = null`
-2. **Loading**: `setState { copy(itemsState = UiState.Loading) }`
-3. **Success**: `setState { copy(itemsState = UiState.Success(items)) }`
-4. **Failed**: `setState { copy(itemsState = UiState.Failed(ErrorModel.Exception(e))) }`
-5. **Item Selection**: `setState { copy(selectedItem = item) }`
-6. **Retry**: Triggers `loadItems()` which resets to Loading state
+#### State Transitions
 
-### ViewModel Actions
+```
+Uninitialized ──[loadItems()]──► Loading
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+             [success]                          [failure]
+                    │                               │
+                    ▼                               ▼
+                Success                         Failed
+                    │                               │
+                    │                               │
+             [refresh]──► Loading           [retry]─┘
+                    │
+                    └──────────────────────────────┘
+```
+
+**State Definitions:**
+1. **Uninitialized**: Initial state, no data loaded yet
+2. **Loading**: Data fetch in progress, show loading indicator
+3. **Success**: Data loaded successfully, display items (or empty state if list is empty)
+4. **Failed**: Error occurred, show error message with retry button
+
+**ViewModel Actions:**
 - `loadItems()`: Fetches items from repository (called on init)
-- `onItemClick(item: SampleItem)`: Updates selected item in state
-- `retry()`: Re-triggers data loading on error
+- `onItemClick(item: SampleItem)`: Updates selected item using `setState { copy(selectedItem = item) }`
+- `retry()`: Re-triggers `loadItems()` after error
 
-## Navigation
+### 6.3 Error Handling
 
-- **Route:** `SampleRoute` (data object)
-- **Entry:** `navController.navigate(SampleRoute)`
-- **Callbacks:**
-  - `onItemClick: (String) -> Unit` - Triggered when user taps an item, passes item ID
+| Error Scenario | User Message | Action Available |
+|----------------|--------------|------------------|
+| Generic exception | "An error occurred loading items" | Retry button |
+| Empty list | "No items found" | None (not an error state) |
 
-## UI Components
+---
 
-### SampleScreen
-Main composable that connects ViewModel to UI:
-- Collects `uiModelState` as StateFlow
-- Delegates to `SampleScreenRoot` for rendering
-- Handles ViewModel actions (`onItemClick`, `retry`)
+## 7. Testing
 
-### SampleScreenRoot
-ViewModel-independent composable for testing:
-- Implements 4-state pattern with `when` expression
-- **Uninitialized**: Shows welcome message
-- **Loading**: Shows CircularProgressIndicator
-- **Success**: Shows LazyColumn with SampleCard items or empty state
-- **Failed**: Shows error message with retry button
+### 7.1 Test Scenarios
 
-### SampleCard
-Reusable item card component displaying item details
+| Scenario | Given | When | Then |
+|----------|-------|------|------|
+| Items load successfully | User navigates to Sample | Data loads from mock source | List of 3 items displayed, state = Success |
+| Items list is empty | Mock source returns empty list | Data loads | "No items found" message shown |
+| Items fail to load | Mock source throws exception | Data load attempted | Error overlay with retry button shown |
+| Retry after error | Error state displayed | User taps retry | Loading state shown, data reloaded |
+| Select item | Items displayed successfully | User taps item card | selectedItem updated, callback triggered |
+| Navigate back | User on Sample screen | User taps back | Returns to previous screen |
 
-## Mock Data
-The feature uses local mock data from `SampleLocalDataSourceImpl`:
-- 3 sample items with varying properties
-- Demonstrates optional `imageUrl` field
-- Simulates successful data retrieval
+### 7.2 Acceptance Criteria
 
-## Dependencies
-- `:core:common` - UiState, ErrorModel, setState extension
-- Material3 - UI components (Scaffold, Button, Text, etc.)
-- Koin - Dependency injection
-- Kotlinx Serialization - Route serialization
-- Compose Navigation - Screen navigation
+**Display & States:**
+- [ ] Uninitialized state shown initially
+- [ ] Loading indicator shown during data fetch
+- [ ] Success state displays all items correctly
+- [ ] Empty state shows when list is empty
+- [ ] Failed state shows error message and retry button
+
+**State Management:**
+- [ ] All state updates use `setState {}`
+- [ ] No direct state assignment anywhere in ViewModel
+- [ ] StateFlow properly collected in composable
+
+**Architecture:**
+- [ ] Interface + Impl pairs created for DataSource and Repository
+- [ ] 4 integration points completed (settings.gradle.kts, build.gradle.kts, initKoin, navigation)
+- [ ] X-components used exclusively (no Material3)
+- [ ] ktlint passes without errors
+
+**Navigation:**
+- [ ] SampleRoute defined as @Serializable data object
+- [ ] NavGraphBuilder extension created
+- [ ] Navigation callback works correctly
+
+---
+
+## Appendix
+
+### A. Glossary
+
+| Term | Definition |
+|------|------------|
+| 4-state pattern | UI state management with Uninitialized, Loading, Success, Failed states |
+| setState {} | Extension function for safe state updates in ViewModel |
+| Either<T> | Functional error handling type (not used in Sample - no API) |
+| BaseFeature | Koin module pattern for feature DI setup |
+| X-components | Custom design system components (`:core:designsystem`) |
+| ScreenRoot | ViewModel-independent composable for testing |
+
+### B. References
+
+- Core common library: `core/common/`
+- Design system: `core/designsystem/`
+- Architecture patterns: `.claude/skills/creating-kmp-feature/references/patterns.md`
+
+### C. Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0 | 2026-01-20 | Updated spec to match new SDD patterns with full template structure |
+| 1.0 | 2026-01-05 | Initial spec generated from existing implementation |
+
+### D. Integration Points
+
+| Point | File | Status |
+|-------|------|--------|
+| Module include | settings.gradle.kts | ✅ Completed |
+| Dependency | composeApp/build.gradle.kts | ✅ Completed |
+| DI initialization | initKoin.kt | ✅ Completed |
+| Navigation wiring | BaseAppNavHost.kt | ✅ Completed |
