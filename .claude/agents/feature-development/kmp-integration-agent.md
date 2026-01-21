@@ -46,7 +46,7 @@ You will receive:
 5. **Integration Point 3**: DI Init per `architecture/integration.md § DI Initialization`
 6. **Integration Point 4**: Navigation per `architecture/integration.md § Navigation Wiring`
 7. **Validate build**: `./gradlew assembleDebug && ./gradlew ktlintFormat`
-8. **Generate spec.md** in `.claude/docs/{featurename}/`
+8. **Generate spec.md** in `.claude/docs/{featurename}/` (see Spec Generation below)
 
 ## 4 Integration Points Checklist
 
@@ -58,6 +58,14 @@ You will receive:
 | 4 | Navigation | `{NAV_HOST_PATH}` | ⬜ |
 
 **Read Screen composable to determine all needed navigation callbacks.**
+
+## Spec Generation (Step 8)
+
+Generate spec.md per `architecture/integration.md § Spec Generation`.
+
+**CRITICAL**: Preserve WHY sections (Goals, Non-Goals, Rationale, Decisions) from PRD before cleanup.
+
+Use template from `.claude/commands/audit-spec.md § Spec Template`.
 
 ## Output Report
 
@@ -82,7 +90,7 @@ You will receive:
 ✅ Format: ./gradlew ktlintFormat
 
 ### Living Specification
-✅ Generated: .claude/docs/{featurename}/spec.md
+✅ Generated: .claude/docs/{featurename}/spec.md (WHY from PRD + WHAT from code)
 
 ### Next Steps
 Navigate with: `navController.navigate({Feature}Route)`
