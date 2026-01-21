@@ -40,17 +40,48 @@ Format: lowercase, no spaces/hyphens/underscores
 Single message, parallel calls:
 ```
 Glob: feature/{featurename}/**/*.kt
-Read: .claude/docs/{featurename}/prd.txt
-Read: .claude/docs/{featurename}/tasks.md
+Read: .claude/docs/{featurename}/spec.md
 Read: .claude/skills/creating-kmp-feature/architecture/data.md
 Read: .claude/skills/creating-kmp-feature/architecture/ui.md
 Read: .claude/skills/creating-kmp-feature/architecture/integration.md
 Read: .claude/skills/using-design-system/references/component-mappings.md
 ```
 
-**Note**: Loads all 3 split architecture files for complete validation context (990 words total vs 2,719 in old monolithic files = 64% reduction)
+**Note**: The spec.md is the single source of truth (replaces ephemeral prd.txt/tasks.md).
 
 If feature not found: Report error, stop.
+If spec not found: Note in review that spec is missing, recommend running `/audit-spec {featurename}`.
+
+### Phase 1.5: Spec Compliance Check (If spec exists)
+
+Validate implementation against spec requirements:
+
+**Data Models Check:**
+- Compare spec's "Data Models" section against actual `**/model/*.kt` files
+- Flag missing or extra models
+
+**Interfaces Check:**
+- Compare spec's "Key Classes" section against actual interfaces/implementations
+- Verify method signatures match spec
+
+**State Management Check:**
+- Compare spec's "UiState Structure" against actual UiModel/UiState
+- Flag missing or extra state fields
+
+**Navigation Check:**
+- Compare spec's "Navigation" routes/callbacks against implementation
+- Verify all documented callbacks exist
+
+**Report format for spec compliance:**
+```
+## Spec Compliance
+| Section | Status | Details |
+|---------|--------|---------|
+| Data Models | ✅/⚠️ | {match count, drift details} |
+| Interfaces | ✅/⚠️ | {match count, drift details} |
+| State Management | ✅/⚠️ | {match count, drift details} |
+| Navigation | ✅/⚠️ | {match count, drift details} |
+```
 
 ### Phase 2: Architecture Rules (Efficient Checks)
 
@@ -146,10 +177,22 @@ Create `.claude/docs/{featurename}/`:
 ```markdown
 # Code Review: {Feature}
 **Date**: {date} | **Path**: feature/{featurename}/
+**Spec**: .claude/docs/{featurename}/spec.md (v{version} | {exists/missing})
 
 ## Summary
 ✅ Passed: X/Y | ⚠️ Warnings: N | ❌ Critical: M
 **Status**: PASS / PASS WITH WARNINGS / FAIL
+
+## Spec Compliance
+| Section | Status | Details |
+|---------|--------|---------|
+| Data Models | ✅/⚠️ | {N models, M match spec} |
+| Interfaces | ✅/⚠️ | {N interfaces, M match spec} |
+| State Management | ✅/⚠️ | {N fields, M match spec} |
+| Navigation | ✅/⚠️ | {N callbacks, M match spec} |
+
+**Drift Detected**: {YES/NO}
+{If YES: List specific drifts with file:line references}
 
 ## Rules (1-10)
 ### ✅/❌ Rule N: {Name}
@@ -178,6 +221,7 @@ Create `.claude/docs/{featurename}/`:
 
 ## Conclusion
 {Assessment + Next steps}
+{If spec drift: Recommend running `/audit-spec {featurename} --compare` or updating spec}
 ```
 
 ### fixes.md
