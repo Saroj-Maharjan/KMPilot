@@ -64,6 +64,23 @@ Material3 allowed only in:
 - `MaterialTheme.colorScheme/typography` (accessing theme values)
 - Compose Foundation (Row, Column, Box, Spacer)
 
+## Spec Cross-Reference (When Available)
+
+If spec exists at `.claude/docs/{featurename}/spec.md`:
+
+1. **State Management Validation**:
+   - Compare implemented UiState against spec's "State Management > UiState Structure"
+   - Verify all 4 states (Uninitialized/Loading/Success/Failed) match spec
+
+2. **User Flow Validation**:
+   - Compare screen callbacks against spec's "Navigation > Callbacks"
+   - Ensure all documented user interactions are implemented
+
+3. **Report drift** if UI implementation differs from spec:
+   - Flag missing callbacks
+   - Flag extra/undocumented state fields
+   - Recommend spec update or implementation fix
+
 ## Validation Checklist
 
 Before completing UI work, verify:
@@ -75,6 +92,7 @@ Before completing UI work, verify:
 - ✅ AsyncImage uses `url` parameter (not `model`)
 - ✅ 4-state pattern implemented
 - ✅ ScreenRoot pattern: Screen + ScreenRoot pair exists
+- ✅ UI matches spec (if spec exists)
 
 ## Referenced Files
 
