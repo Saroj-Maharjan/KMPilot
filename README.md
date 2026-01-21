@@ -85,10 +85,10 @@ Follows the SDD workflow above (5 phases). AI generates everything from scratch:
 
 ### 2- Modifying Existing Features
 Spec-first approach using `modifying-kmp-feature` skill:
-1. Load existing spec from `.claude/docs/{feature}/spec/`
-2. Apply changes following established patterns
-3. Validate build
-4. Regenerate spec with changelog entry
+1. Load existing spec from `.claude/docs/{feature}/spec.md`
+2. Draft spec changes and get user approval (review gate)
+3. Apply changes following established patterns
+4. Validate build and update spec with changelog entry
 ```bash
 > Add sorting and filtering to the product list feature
 ```
