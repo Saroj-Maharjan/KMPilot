@@ -37,7 +37,10 @@ Read all source files ONCE, extract structured context, then pass only relevant 
 ```
 Glob: feature/{name}/src/commonMain/kotlin/**/*.kt
 Glob: feature/{name}/src/commonMain/sqldelight/**/*.sq
+Read: .claude/docs/{name}/spec.md (if exists)
 ```
+
+**Note**: If spec.md exists, extract test scenarios from Requirements section to guide test generation.
 
 ### 1.2 Extract FeatureContext
 
@@ -117,6 +120,25 @@ screen:
 sqldelight:
   exists: false  # or true with table/query info
 ```
+
+**Spec Scenarios** (from `spec.md` if exists):
+```
+specScenarios:
+  exists: true/false
+  scenarios:
+    - id: "REQ-1.1"
+      name: "Feature loads successfully"
+      given: "user navigates to screen"
+      when: "data loads successfully"
+      then: "content displayed, loading → success"
+    - id: "REQ-1.2"
+      name: "Feature handles errors"
+      given: "user is on screen"
+      when: "error occurs"
+      then: "error overlay, retry available"
+```
+
+**Note**: Pass relevant scenarios to worker agents to ensure tests cover spec requirements.
 
 ## Phase 2: Spawn Agents (3-Phase Parallel Strategy)
 
@@ -220,8 +242,13 @@ Prompt: |
   UiState: {state class with fields}
   Actions: {list of public methods}
 
+  Spec Scenarios (if available):
+  {extracted scenarios relevant to ViewModel - state transitions, actions}
+
   Generate tests at:
   feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/presentation/{Feature}ViewModelTest.kt
+
+  Note: If spec scenarios provided, ensure tests cover those scenarios explicitly.
 ```
 
 **UI Agent:**
@@ -244,11 +271,15 @@ Prompt: |
     - onShowResendDialog: (Order) -> Unit
   }
 
+  Spec Scenarios (if available):
+  {extracted scenarios relevant to UI - user interactions, state displays}
+
   Generate tests at:
   feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/presentation/ui/{Feature}ScreenTest.kt
 
   IMPORTANT: Test {Feature}ScreenRoot, NOT {Feature}Screen.
   ScreenRoot is ViewModel-independent and takes UiState + callbacks directly.
+  If spec scenarios provided, ensure tests cover those scenarios explicitly.
 ```
 
 **Integration Agent:**
@@ -327,6 +358,13 @@ If coverage is below 80%, the report will show a warning but tests will still be
 
 **Test Results:** {PASSED/FAILED}
 
+**Spec Coverage:** {if spec.md exists}
+| Scenario ID | Scenario Name | Test Coverage |
+|-------------|---------------|---------------|
+| REQ-1.1 | Feature loads successfully | ✅ ViewModelTest, UITest |
+| REQ-1.2 | Feature handles errors | ✅ ViewModelTest, UITest |
+| REQ-2.1 | {scenario} | ✅/⚠️ {test files} |
+
 **Coverage Report:** feature/{name}/build/reports/kover/html/index.html
 - Line Coverage: {X}% {coverage status: ✅ if >= 80%, ⚠️ if < 80%}
 - Branch Coverage: {Y}% {coverage status: ✅ if >= 80%, ⚠️ if < 80%}
@@ -391,3 +429,5 @@ fun OrdersScreenRoot(
 5. If an agent fails, note it and continue with others
 6. **Always generate Kover coverage report after tests pass** - parse XML to extract metrics
 7. **CRITICAL**: For UI tests, always identify and pass the ScreenRoot composable name
+8. **If spec.md exists**: Extract scenarios and pass to ViewModel/UI agents for targeted test generation
+9. **Report spec coverage**: Map generated tests to spec scenarios in final summary
