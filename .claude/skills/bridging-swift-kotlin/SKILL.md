@@ -13,6 +13,7 @@ Before implementing a bridge, detect project configuration:
 
 1. **Package Prefix**: Glob `feature/*/build.gradle.kts`, grep `namespace = "..."`, extract prefix (e.g., `com.example.login` → `com.example`)
 2. **Store as**: `{PKG_PREFIX}` for use in package paths below
+3. **Check for spec**: If bridge is for a feature module, check `.claude/docs/{featurename}/spec.md`
 
 ## Critical: Swift Inheritance
 
@@ -108,9 +109,43 @@ Types: `Int`→`Int32`, `Long`→`Int64`, `Boolean` return→`KotlinBoolean`, `B
 iosTarget.binaries.framework { export(project(":core:data")) }
 ```
 
+## Spec Integration
+
+When adding a bridge to an existing feature:
+
+### If spec exists (`.claude/docs/{featurename}/spec.md`):
+
+1. **Draft spec updates** for the bridge:
+   ```markdown
+   ### Interfaces > iOS Bridge
+   | Interface | Purpose | Swift Implementation |
+   |-----------|---------|---------------------|
+   | {Feature}Bridge | {purpose} | {Feature}BridgeImpl |
+
+   ### Integration Points
+   | Point | File | Status |
+   |-------|------|--------|
+   | iOS Bridge | iosApp/iosApp/{Feature}/{Feature}BridgeImpl.swift | ✅ |
+   ```
+
+2. **Present for user approval** before implementation (follows modifying-kmp-feature workflow)
+
+3. **Update spec** after implementation with bridge details
+
+### If spec doesn't exist:
+
+1. Note that spec is missing
+2. Recommend running `/audit-spec {featurename}` after bridge implementation
+3. Proceed with implementation
+
+### For core module bridges (no feature spec):
+
+Document in code comments only - core modules don't have feature specs.
+
 ## Checklist
 
 - [ ] Context Discovery: Detected `{PKG_PREFIX}` from existing feature namespace
+- [ ] Spec Check: Checked if `.claude/docs/{featurename}/spec.md` exists (for feature bridges)
 - [ ] Interface in `<module>/src/iosMain/kotlin/{PKG_PREFIX}/<featurename>/`
 - [ ] Provider wraps in try-catch returning `Either<T>`
 - [ ] Swift in `iosApp/iosApp/` inherits `<ModulePrefix><InterfaceName>`
@@ -119,3 +154,4 @@ iosTarget.binaries.framework { export(project(":core:data")) }
 - [ ] ContentView passes implementation
 - [ ] Module exported in `composeApp/build.gradle.kts`
 - [ ] `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode`
+- [ ] Spec Updated: Bridge documented in spec (if feature spec exists)
