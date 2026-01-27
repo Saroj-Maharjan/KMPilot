@@ -95,21 +95,21 @@ rm -f .claude/docs/{featurename}/task-*.md
 ### Next Steps
 1. Test navigation: `navController.navigate({FeatureName}Route)`
 2. Review spec: `.claude/docs/{featurename}/spec.md`
-3. Run code-reviewer if desired
+3. Run `/feature-review {featurename}` if desired
 ```
 
 ---
 
 ## Suggesting Code Review
 
-After feature completion, suggest running the code-reviewer agent:
+After feature completion, suggest running the code review:
 
 ```
-"Feature implementation complete! Would you like to run the code-reviewer
+"Feature implementation complete! Would you like to run /feature-review
 to validate against Clean Architecture guidelines?"
 ```
 
-If user agrees, invoke: `code-reviewer` agent with feature name.
+If user agrees, run: `/feature-review {featurename}`
 
 ---
 
