@@ -121,23 +121,70 @@ class {Feature}ScreenTest {
     }
 
     // ==========================================
-    // ERROR STATE
+    // ERROR STATE - Use actual ErrorConst messages
     // ==========================================
 
     @Test
-    fun `shows error message and retry button when state is Failed`() = runComposeUiTest {
+    fun `shows network error message and retry button`() = runComposeUiTest {
         setContent {
-            MaterialTheme {
-                {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createErrorState("Something went wrong"),
-                    onBackClick = {},
-                    onRetry = {},
-                    // ... all callbacks
-                )
-            }
+            {Feature}ScreenRoot(
+                uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                onBackClick = {},
+                onRetry = {},
+                // ... all callbacks
+            )
         }
 
-        onNodeWithText("Something went wrong").assertIsDisplayed()
+        // ErrorConst.NoNetwork message
+        onNodeWithText("Error: Error, Check your connection and try again.", substring = true).assertIsDisplayed()
+        onNodeWithText("Retry").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows unauthorized error message`() = runComposeUiTest {
+        setContent {
+            {Feature}ScreenRoot(
+                uiState = {Feature}UiFixtures.createUnauthorizedErrorState(),
+                onBackClick = {},
+                onRetry = {},
+                // ... all callbacks
+            )
+        }
+
+        // ErrorConst.Unauthorized message with code
+        onNodeWithText("Error: You must login (#1001)", substring = true).assertIsDisplayed()
+        onNodeWithText("Retry").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows not found error message`() = runComposeUiTest {
+        setContent {
+            {Feature}ScreenRoot(
+                uiState = {Feature}UiFixtures.createNotFoundErrorState(),
+                onBackClick = {},
+                onRetry = {},
+                // ... all callbacks
+            )
+        }
+
+        // MessageCode format: "message (#code)"
+        onNodeWithText("Error: {Resource} not found (#404)", substring = true).assertIsDisplayed()
+        onNodeWithText("Retry").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows server error message`() = runComposeUiTest {
+        setContent {
+            {Feature}ScreenRoot(
+                uiState = {Feature}UiFixtures.createServerErrorState(),
+                onBackClick = {},
+                onRetry = {},
+                // ... all callbacks
+            )
+        }
+
+        // ServerUnknownError message
+        onNodeWithText("Error: An unknown network error has occurred! (#500)", substring = true).assertIsDisplayed()
         onNodeWithText("Retry").assertIsDisplayed()
     }
 
@@ -150,14 +197,12 @@ class {Feature}ScreenTest {
         var retryCalled = false
 
         setContent {
-            MaterialTheme {
-                {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createErrorState("Error"),
-                    onBackClick = {},
-                    onRetry = { retryCalled = true },
-                    // ... all callbacks
-                )
-            }
+            {Feature}ScreenRoot(
+                uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                onBackClick = {},
+                onRetry = { retryCalled = true },
+                // ... all callbacks
+            )
         }
 
         onNodeWithText("Retry").performClick()
@@ -225,6 +270,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.UiState
+import {CORE_DATA_PKG}.ErrorConst
 import {PKG_PREFIX}.{name}.presentation.{Feature}UiModel  // or {Feature}UiState
 
 object {Feature}UiFixtures {
@@ -250,8 +296,28 @@ object {Feature}UiFixtures {
         {state}State = UiState.Success(persistentListOf())
     )
 
-    fun createErrorState(message: String = "Something went wrong") = {Feature}UiModel(
-        {state}State = UiState.Failed(ErrorModel.Message(message))
+    // ==========================================
+    // ERROR STATES (Use ErrorConst from {Feature}Fixtures)
+    // ==========================================
+
+    fun createNetworkErrorState() = {Feature}UiModel(
+        {state}State = UiState.Failed({Feature}Fixtures.networkError)
+    )
+
+    fun createUnauthorizedErrorState() = {Feature}UiModel(
+        {state}State = UiState.Failed({Feature}Fixtures.unauthorizedError)
+    )
+
+    fun createNotFoundErrorState() = {Feature}UiModel(
+        {state}State = UiState.Failed({Feature}Fixtures.notFoundError)
+    )
+
+    fun createServerErrorState() = {Feature}UiModel(
+        {state}State = UiState.Failed({Feature}Fixtures.serverError)
+    )
+
+    fun createTimeoutErrorState() = {Feature}UiModel(
+        {state}State = UiState.Failed({Feature}Fixtures.timeoutError)
     )
 
     // ==========================================

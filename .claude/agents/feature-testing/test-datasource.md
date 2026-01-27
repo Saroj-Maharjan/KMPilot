@@ -88,21 +88,83 @@ class {Feature}RemoteDataSourceTest {
     }
 
     // ==========================================
-    // HTTP ERROR CODES - Copy pattern for each
+    // HTTP ERROR CODES - Follow NetworkErrorModel format
     // ==========================================
+    // IMPORTANT: All error JSONs use {"detail": "...", "code": ...} format
+    // This is processed by EitherCallAdapter to create proper ErrorModel
 
     @Test
     fun `get{Entity} returns failure on 401 Unauthorized`() = runTest {
         val dataSource = createDataSource { request ->
             respond(
-                content = {Feature}Fixtures.error401Json,
-                status = HttpStatusCode.Unauthorized
+                content = {Feature}Fixtures.error401Json, // {"detail": "...", "code": null}
+                status = HttpStatusCode.Unauthorized,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val result = dataSource.get{Entity}()
+
+        // HTTP 401 always maps to ErrorConst.Unauthorized
+        assertTrue(result is Either.Failure)
+        val error = (result as Either.Failure).error as ErrorModel.MessageCode
+        assertEquals("You must login", error.message)
+        assertEquals(1001, error.code)
+    }
+
+    @Test
+    fun `get{Entity} returns failure on 404 Not Found`() = runTest {
+        val dataSource = createDataSource { request ->
+            respond(
+                content = {Feature}Fixtures.error404Json, // {"detail": "Resource not found", "code": 404}
+                status = HttpStatusCode.NotFound,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
         }
 
         val result = dataSource.get{Entity}()
 
         assertTrue(result is Either.Failure)
+        val error = (result as Either.Failure).error as ErrorModel.MessageCode
+        assertEquals("{Resource} not found", error.message)
+        assertEquals(404, error.code)
+    }
+
+    @Test
+    fun `get{Entity} returns failure on 500 Internal Server Error`() = runTest {
+        val dataSource = createDataSource { request ->
+            respond(
+                content = {Feature}Fixtures.error500Json, // {"detail": "Internal Server Error", "code": 5001}
+                status = HttpStatusCode.InternalServerError,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val result = dataSource.get{Entity}()
+
+        assertTrue(result is Either.Failure)
+        val error = (result as Either.Failure).error as ErrorModel.MessageCode
+        assertEquals("Internal Server Error", error.message)
+        assertEquals(5001, error.code)
+    }
+
+    @Test
+    fun `get{Entity} returns failure on 503 Service Unavailable`() = runTest {
+        val dataSource = createDataSource { request ->
+            respond(
+                content = {Feature}Fixtures.error503Json, // {"detail": null, "code": null}
+                status = HttpStatusCode.ServiceUnavailable,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val result = dataSource.get{Entity}()
+
+        // Blank/null detail triggers ServerUnknownError
+        assertTrue(result is Either.Failure)
+        val error = (result as Either.Failure).error as ErrorModel.MessageCode
+        assertEquals("An unknown network error has occurred!", error.message)
+        assertEquals(503, error.code)
     }
 
     // ==========================================
@@ -162,16 +224,16 @@ class {Feature}RemoteDataSourceTest {
 - [ ] 503 ServiceUnavailable → returns failure
 
 ### PARSING EDGE CASES
-- [ ] Malformed JSON → returns ParsingFailure
-- [ ] Empty response body → returns failure
-- [ ] Missing required fields → returns failure
+- [ ] Malformed JSON → returns ErrorConst.SerializationError
+- [ ] Empty response body → returns ErrorConst.SerializationError
+- [ ] Missing required fields → returns ErrorConst.SerializationError
 - [ ] Null optional fields → parses successfully
 - [ ] Extra unknown fields → ignores and parses (ignoreUnknownKeys = true)
 
 ### NETWORK FAILURES
-- [ ] Connection refused → returns NetworkFailure
-- [ ] Timeout → returns NetworkFailure
-- [ ] Unknown host → returns NetworkFailure
+- [ ] Connection refused → returns ErrorConst.NoNetwork
+- [ ] Timeout → returns ErrorConst.NoNetwork
+- [ ] Unknown host → returns ErrorConst.NoNetwork
 
 ### REQUEST VERIFICATION (for each API method)
 - [ ] Sends correct URL path

@@ -90,17 +90,51 @@ class {Feature}RepositoryImplTest {
     }
 
     // ==========================================
-    // ERROR PROPAGATION - Copy pattern for each error type
+    // ERROR PROPAGATION - Use ErrorConst errors
     // ==========================================
 
     @Test
     fun `get{Entity}s propagates network failure`() = runTest {
         everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Failure({Feature}Fixtures.createNetworkError())
+            Either.Failure({Feature}Fixtures.networkError) // ErrorConst.NoNetwork
 
         val result = repository.get{Entity}s()
 
         assertTrue(result is Either.Failure)
+        assertEquals({Feature}Fixtures.networkError, (result as Either.Failure).error)
+    }
+
+    @Test
+    fun `get{Entity}s propagates unauthorized error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+            Either.Failure({Feature}Fixtures.unauthorizedError) // ErrorConst.Unauthorized
+
+        val result = repository.get{Entity}s()
+
+        assertTrue(result is Either.Failure)
+        assertEquals({Feature}Fixtures.unauthorizedError, (result as Either.Failure).error)
+    }
+
+    @Test
+    fun `get{Entity}s propagates server error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+            Either.Failure({Feature}Fixtures.serverError) // ServerUnknownError
+
+        val result = repository.get{Entity}s()
+
+        assertTrue(result is Either.Failure)
+        assertEquals({Feature}Fixtures.serverError, (result as Either.Failure).error)
+    }
+
+    @Test
+    fun `get{Entity}s propagates not found error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+            Either.Failure({Feature}Fixtures.notFoundError) // MessageCode
+
+        val result = repository.get{Entity}s()
+
+        assertTrue(result is Either.Failure)
+        assertEquals({Feature}Fixtures.notFoundError, (result as Either.Failure).error)
     }
 
     // ==========================================
@@ -129,14 +163,12 @@ class {Feature}RepositoryImplTest {
 - [ ] Handles single item list
 - [ ] Handles large list (100 items)
 
-### ERROR PROPAGATION (Copy pattern for each)
-- [ ] Propagates NetworkFailure
-- [ ] Propagates ServerFailure
-- [ ] Propagates UnauthorizedFailure
-- [ ] Propagates NotFoundFailure
-- [ ] Propagates BadRequestFailure
-- [ ] Propagates ServiceUnavailableFailure
-- [ ] Wraps unexpected exceptions as UnknownFailure
+### ERROR PROPAGATION (Use ErrorConst)
+- [ ] Propagates ErrorConst.NoNetwork
+- [ ] Propagates ErrorConst.Unauthorized
+- [ ] Propagates ErrorConst.ServerUnknownError
+- [ ] Propagates MessageCode errors (404, 400, etc.)
+- [ ] Propagates ErrorConst.SerializationError
 
 ### DATA TRANSFORMATION (if repository does mapping)
 - [ ] Maps timestamp strings to Long correctly

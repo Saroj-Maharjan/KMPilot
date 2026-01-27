@@ -29,6 +29,35 @@ Mocked: Only HTTP layer (MockEngine)
 
 This catches wiring bugs that unit tests miss.
 
+## IMPORTANT: Test Dispatcher Usage
+
+**CRITICAL RULE**: `advanceUntilIdle()` must be called **immediately after** calling a method that contains coroutines. **NEVER** call it immediately after ViewModel creation.
+
+```kotlin
+// ❌ WRONG - After ViewModel creation
+setupWithMockEngine { ... }
+advanceUntilIdle() // Don't do this!
+
+// ❌ WRONG - Not immediately after method call
+viewModel.loadData()
+val loading = awaitItem()
+advanceUntilIdle() // Too late!
+
+// ✅ CORRECT - Init block testing
+setupWithMockEngine { ... }
+
+viewModel.uiModel.test {
+    val initial = awaitItem() // Init runs automatically
+    advanceUntilIdle() // Let init complete
+    val result = awaitItem()
+}
+
+// ✅ CORRECT - Explicit method call
+viewModel.retry()
+advanceUntilIdle() // Immediately after!
+val result = expectMostRecentItem()
+```
+
 ## Output Path
 
 ```
@@ -138,6 +167,7 @@ class {Feature}IntegrationTest {
     // ==========================================
     // ERROR RECOVERY - Retry Flow
     // ==========================================
+    // IMPORTANT: Error JSONs use NetworkErrorModel format {"detail": "...", "code": ...}
 
     @Test
     fun `full flow - retry after failure succeeds`() = runTest(testDispatcher) {
@@ -146,8 +176,9 @@ class {Feature}IntegrationTest {
             requestCount++
             if (requestCount == 1) {
                 respond(
-                    content = {Feature}Fixtures.error503Json,
-                    status = HttpStatusCode.ServiceUnavailable
+                    content = {Feature}Fixtures.error503Json, // {"detail": null, "code": null}
+                    status = HttpStatusCode.ServiceUnavailable,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 )
             } else {
                 respond(
@@ -179,6 +210,82 @@ class {Feature}IntegrationTest {
             assertTrue(current.{state}State is UiState.Success)
 
             assertEquals(2, requestCount)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `full flow - handles unauthorized error`() = runTest(testDispatcher) {
+        setupWithMockEngine { request ->
+            respond(
+                content = {Feature}Fixtures.error401Json, // {"detail": "Unauthorized", "code": null}
+                status = HttpStatusCode.Unauthorized,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        viewModel.uiModelState.test {
+            skipItems(1)
+            advanceUntilIdle()
+
+            val failed = awaitItem()
+            assertTrue(failed.{state}State is UiState.Failed)
+
+            // HTTP 401 always maps to ErrorConst.Unauthorized
+            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            assertEquals("You must login", error.message)
+            assertEquals(1001, error.code)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `full flow - handles not found error`() = runTest(testDispatcher) {
+        setupWithMockEngine { request ->
+            respond(
+                content = {Feature}Fixtures.error404Json, // {"detail": "Resource not found", "code": 404}
+                status = HttpStatusCode.NotFound,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        viewModel.uiModelState.test {
+            skipItems(1)
+            advanceUntilIdle()
+
+            val failed = awaitItem()
+            assertTrue(failed.{state}State is UiState.Failed)
+
+            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            assertEquals("{Resource} not found", error.message)
+            assertEquals(404, error.code)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `full flow - handles server error`() = runTest(testDispatcher) {
+        setupWithMockEngine { request ->
+            respond(
+                content = {Feature}Fixtures.error500Json, // {"detail": "Internal Server Error", "code": 5001}
+                status = HttpStatusCode.InternalServerError,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        viewModel.uiModelState.test {
+            skipItems(1)
+            advanceUntilIdle()
+
+            val failed = awaitItem()
+            assertTrue(failed.{state}State is UiState.Failed)
+
+            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            assertEquals("Internal Server Error", error.message)
+            assertEquals(5001, error.code)
 
             cancelAndIgnoreRemainingEvents()
         }

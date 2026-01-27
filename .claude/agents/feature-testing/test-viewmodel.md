@@ -83,7 +83,7 @@ class {Feature}ViewModelTest {
         everySuspend { repository.get{Entity}s(any<Int>(), any<Int>(), any<String>()) } returns
             {Feature}Fixtures.createSuccess{Entity}List()
 
-        createViewModel()
+        createViewModel() // Init runs automatically - no advanceUntilIdle here!
 
         viewModel.uiModelState.test {
             // Initial state is Loading (init triggers load)
@@ -93,7 +93,7 @@ class {Feature}ViewModelTest {
             }
             assertTrue(current.{state}State is UiState.Loading)
 
-            advanceUntilIdle()
+            advanceUntilIdle() // Let init coroutine complete
 
             current = awaitItem()
             assertTrue(current.{state}State is UiState.Success)
@@ -138,7 +138,7 @@ class {Feature}ViewModelTest {
             {Feature}Fixtures.createSuccess{Entity}List()
         )
 
-        createViewModel()
+        createViewModel() // Init runs automatically - no advanceUntilIdle here!
 
         viewModel.uiModelState.test {
             // Wait for initial failure
@@ -148,14 +148,12 @@ class {Feature}ViewModelTest {
                 current = awaitItem()
             }
 
-            // Retry
+            // Retry - IMPORTANT: advanceUntilIdle immediately after the call
             viewModel.retry()
-            advanceUntilIdle()
+            advanceUntilIdle() // Immediately after method call!
 
             // Should transition to success
-            while (current.{state}State !is UiState.Success) {
-                current = awaitItem()
-            }
+            current = expectMostRecentItem()
             assertTrue(current.{state}State is UiState.Success)
 
             cancelAndIgnoreRemainingEvents()
@@ -170,13 +168,19 @@ class {Feature}ViewModelTest {
     fun `on{Action} calls repository with correct params`() = runTest {
         everySuspend { repository.perform{Action}(any()) } returns Either.Success(Unit)
 
-        createViewModel()
-        advanceUntilIdle()
+        createViewModel() // Init runs automatically - no advanceUntilIdle here!
 
-        viewModel.on{Action}("test-param")
-        advanceUntilIdle()
+        viewModel.uiModelState.test {
+            skipItems(1) // Skip initial state
 
-        verifySuspend { repository.perform{Action}("test-param") }
+            // IMPORTANT: advanceUntilIdle immediately after method call
+            viewModel.on{Action}("test-param")
+            advanceUntilIdle()
+
+            verifySuspend { repository.perform{Action}("test-param") }
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }
 ```
@@ -241,14 +245,44 @@ class {Feature}ViewModelTest {
 ## Turbine Best Practices
 
 ```kotlin
+// CRITICAL RULE: advanceUntilIdle() must be called IMMEDIATELY AFTER calling a method that contains coroutines
+// NEVER call advanceUntilIdle() immediately after ViewModel creation (init runs automatically)
+
+// ❌ WRONG - advanceUntilIdle after ViewModel creation
+viewModel = MyViewModel(repository)
+advanceUntilIdle() // Don't do this!
+
+// ❌ WRONG - advanceUntilIdle not immediately after method call
+viewModel.loadData()
+val loading = awaitItem()
+advanceUntilIdle() // Too late!
+
+// ✅ CORRECT - Init block testing
+viewModel = MyViewModel(repository)
+
+viewModel.uiModel.test {
+    val initial = awaitItem() // Init runs automatically
+    advanceUntilIdle() // Let init coroutine complete
+    val success = awaitItem()
+}
+
+// ✅ CORRECT - Explicit method call
+viewModel.loadData()
+advanceUntilIdle() // Immediately after the call!
+val result = expectMostRecentItem()
+
+// ✅ CORRECT - Multiple method calls
+viewModel.retry()
+advanceUntilIdle() // After each call
+
+viewModel.loadData()
+advanceUntilIdle() // After each call
+
 // Always clean up
 cancelAndIgnoreRemainingEvents()
 
 // Skip known states
 skipItems(1)
-
-// Advance coroutines
-advanceUntilIdle()
 
 // Wait for specific state
 while (current.state !is UiState.Success) {

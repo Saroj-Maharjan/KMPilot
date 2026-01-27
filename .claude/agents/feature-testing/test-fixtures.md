@@ -149,18 +149,40 @@ object {Feature}Fixtures {
     )
 
     // ==========================================
-    // ERROR HELPERS (ALL 8 TYPES MANDATORY)
+    // ERROR HELPERS (Use Project ErrorConst)
     // ==========================================
 
-    fun createNetworkError() = ErrorModel.Message("No internet connection")
-    fun createServerError(code: Int = 500) = ErrorModel.Message("Server error: $code")
-    fun createUnauthorizedError() = ErrorModel.Message("Authentication required")
-    fun createNotFoundError() = ErrorModel.Message("Resource not found")
-    fun createBadRequestError() = ErrorModel.Message("Invalid request")
-    fun createForbiddenError() = ErrorModel.Message("Access denied")
-    fun createParsingError() = ErrorModel.Message("Failed to parse response")
-    fun createServiceUnavailableError() = ErrorModel.Message("Service temporarily unavailable")
-    fun createUnknownError() = ErrorModel.Message("Unknown error occurred")
+    // Import at top: import {CORE_DATA_PKG}.ErrorConst
+
+    // Network/Connection errors (no HTTP response)
+    val networkError = ErrorConst.NoNetwork
+
+    // HTTP 401 - Always maps to ErrorConst.Unauthorized
+    val unauthorizedError = ErrorConst.Unauthorized
+
+    // HTTP 404 - Custom message with code
+    val notFoundError = ErrorModel.MessageCode(
+        message = "{Resource} not found",
+        code = 404
+    )
+
+    // HTTP 400 - Bad request
+    val badRequestError = ErrorModel.MessageCode(
+        message = "Invalid request parameters",
+        code = 4001
+    )
+
+    // HTTP 408 - Timeout (triggers ServerUnknownError)
+    val timeoutError = ErrorConst.ServerUnknownError(408)
+
+    // HTTP 500 - Server error (triggers ServerUnknownError)
+    val serverError = ErrorConst.ServerUnknownError(500)
+
+    // HTTP 503 - Service unavailable (triggers ServerUnknownError)
+    val serviceUnavailableError = ErrorConst.ServerUnknownError(503)
+
+    // Serialization errors
+    val serializationError = ErrorConst.SerializationError
 
     // ==========================================
     // EITHER HELPERS
@@ -172,8 +194,15 @@ object {Feature}Fixtures {
     fun createSuccess{Entity}List(entities: List<{Entity}> = create{Entity}List()) =
         Either.Success(entities)
 
-    fun createFailure{Entity}(error: ErrorModel = createNetworkError()) =
+    fun createFailure{Entity}(error: ErrorModel = networkError) =
         Either.Failure(error)
+
+    // Specific Either responses for common error scenarios
+    val successResponse: Either<{Entity}> = Either.Success(create{Entity}())
+    val networkErrorResponse: Either<{Entity}> = Either.Failure(networkError)
+    val unauthorizedErrorResponse: Either<{Entity}> = Either.Failure(unauthorizedError)
+    val notFoundErrorResponse: Either<{Entity}> = Either.Failure(notFoundError)
+    val serverErrorResponse: Either<{Entity}> = Either.Failure(serverError)
 
     // ==========================================
     // JSON RESPONSES (ALL MANDATORY for MockEngine)
@@ -208,6 +237,31 @@ object {Feature}Fixtures {
     val empty{Entity}ListJson = "[]"
     val empty{Feature}ResponseJson = """{"count": 0, "next": null, "previous": null, "results": []}"""
 
+    // ==========================================
+    // ERROR JSON RESPONSES (NetworkErrorModel format)
+    // ==========================================
+    // CRITICAL: All error responses must use {"detail": "...", "code": ...} format
+    // This matches {CORE_DATA_PKG}.model.NetworkErrorModel
+
+    // HTTP 400 - Bad Request
+    val error400Json = """{"detail": "Invalid request parameters", "code": 4001}"""
+
+    // HTTP 401 - Unauthorized (ANY response triggers ErrorConst.Unauthorized)
+    val error401Json = """{"detail": "Unauthorized", "code": null}"""
+
+    // HTTP 404 - Not Found
+    val error404Json = """{"detail": "{Resource} not found", "code": 404}"""
+
+    // HTTP 408 - Timeout (blank detail triggers ServerUnknownError)
+    val error408Json = """{"detail": "", "code": null}"""
+
+    // HTTP 500 - Internal Server Error
+    val error500Json = """{"detail": "Internal Server Error", "code": 5001}"""
+
+    // HTTP 503 - Service Unavailable (null detail triggers ServerUnknownError)
+    val error503Json = """{"detail": null, "code": null}"""
+
+    // Malformed/Edge case JSONs
     val malformedJson = "{ invalid json"
     val incompleteJson = """{"id": "test-id"}"""
     val nullFieldsJson = """{"id": "test-id", "name": "Test", "description": null}"""

@@ -140,6 +140,27 @@ specScenarios:
 
 **Note**: Pass relevant scenarios to worker agents to ensure tests cover spec requirements.
 
+## CRITICAL: Error Handling Pattern
+
+**All worker agents MUST follow this error handling approach:**
+
+1. **Use ErrorConst** from `{CORE_DATA_PKG}.ErrorConst`:
+   - `ErrorConst.NoNetwork` - For network/connection errors
+   - `ErrorConst.Unauthorized` - For HTTP 401 (ALWAYS)
+   - `ErrorConst.SerializationError` - For JSON parsing errors
+   - `ErrorConst.ServerUnknownError(httpCode)` - For unknown server errors
+
+2. **NetworkErrorModel JSON format**: `{"detail": "message", "code": number}`
+   - HTTP 401: Always maps to `ErrorConst.Unauthorized` regardless of JSON content
+   - Blank/null detail: Triggers `ServerUnknownError(httpCode)`
+   - With detail+code: Creates `ErrorModel.MessageCode(detail, code)`
+
+3. **UI Error Messages** (from ErrorModel.asString()):
+   - NoNetwork: "Error, Check your connection and try again."
+   - Unauthorized: "You must login (#1001)"
+   - ServerUnknownError: "An unknown network error has occurred! (#{code})"
+   - MessageCode: "{message} (#{code})"
+
 ## Phase 2: Spawn Agents (3-Phase Parallel Strategy)
 
 ### Phase 2.1: Fixtures (MUST COMPLETE FIRST)
@@ -149,6 +170,9 @@ Prompt: |
   Feature: {name}
   Package: {PKG_PREFIX}.{name}
   CORE_COMMON_PKG: {CORE_COMMON_PKG}
+
+  CRITICAL: Use ErrorConst for all error fixtures.
+  Import: {CORE_DATA_PKG}.ErrorConst
 
   Entities:
   {extracted entity info with fields}
