@@ -101,6 +101,11 @@ Every feature follows this flow. The spec becomes the source of truth.
 | **Presentation** | UiState, ViewModel, Screen composables, Navigation routes |
 | **Integration** | Koin module, app navigation wiring, living spec |
 
+<div align="center">
+  <img src="assets/generated-feature.png" alt="Generated Feature Structure" width="600" />
+  <p><em>Example: Complete feature module structure</em></p>
+</div>
+
 <br />
 
 ## Skills & Agents
