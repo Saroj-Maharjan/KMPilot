@@ -241,6 +241,20 @@ Present proposed changes using diff format:
 
 Apply changes following existing patterns in the codebase.
 
+### Design Enhancement (Automatic)
+
+For UI changes, check if `frontend-design` skill is listed in system skills.
+
+**If available** (REQUIRED):
+1. Load `using-design-system/references/component-mappings.md`
+2. Invoke `frontend-design` skill with:
+   - Current screen context
+   - Proposed changes
+   - Constraint: "Use only X-components: [list from component-mappings.md]"
+3. Follow design output
+
+**If unavailable**: Use `using-design-system` skill directly.
+
 **Critical Rules:**
 1. Interface + Impl pairs for DataSource/Repository
 2. Either<T> for fallible operations

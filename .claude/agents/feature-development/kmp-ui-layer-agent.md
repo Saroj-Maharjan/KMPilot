@@ -36,6 +36,9 @@ You will receive:
 - Docs location: `.claude/docs/{featurename}/`
 - Data layer already implemented (Repository interface available)
 - Project context: `PKG_PREFIX`, `PKG_PATH`, `CORE_COMMON_PKG`, `CORE_DESIGNSYSTEM_PKG`, `DESIGN_SYSTEM_PKG`
+- **Optional**: Design specification from `frontend-design` plugin
+
+If design spec provided: Follow layout/component decisions, verify all components are X-components.
 
 ## Workflow
 

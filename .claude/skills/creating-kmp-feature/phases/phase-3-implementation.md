@@ -46,6 +46,17 @@ Invoke kmp-data-layer-agent with:
 
 **Wait for completion** → Verify success
 
+#### Design Enhancement (Automatic)
+
+Check if `frontend-design` skill is listed in system skills.
+
+**If available** (REQUIRED):
+1. Load `using-design-system/references/component-mappings.md` for available X-components
+2. Invoke `frontend-design` skill with: screen requirements from PRD + "Target: Compose Multiplatform. Use only these components: [X-components from mappings]"
+3. Pass design output to UI agent as additional context
+
+**If unavailable**: Skip, proceed with standard UI agent.
+
 #### Step 2: UI Layer
 ```
 Invoke kmp-ui-layer-agent with:
@@ -55,6 +66,7 @@ Invoke kmp-ui-layer-agent with:
   - PKG_PREFIX, PKG_PATH
   - CORE_COMMON_PKG, CORE_DESIGNSYSTEM_PKG
   - DESIGN_SYSTEM_PKG
+- Design spec (if generated above)
 - Expected: UI layer complete + build validation
 ```
 
@@ -78,6 +90,17 @@ Invoke kmp-integration-agent with:
 
 ### Option B: Parallel Execution (Recommended)
 
+#### Design Enhancement (Automatic)
+
+Check if `frontend-design` skill is listed in system skills.
+
+**If available** (REQUIRED):
+1. Load `using-design-system/references/component-mappings.md` for available X-components
+2. Invoke `frontend-design` skill with: screen requirements from PRD + "Target: Compose Multiplatform. Use only these components: [X-components from mappings]"
+3. Pass design output to UI agent as additional context
+
+**If unavailable**: Skip, proceed with standard UI agent.
+
 #### Step 1: Launch Data + UI Agents in Parallel
 
 **In ONE message**, invoke BOTH agents simultaneously:
@@ -92,6 +115,7 @@ Invoke kmp-integration-agent with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
      CORE_DESIGNSYSTEM_PKG, DESIGN_SYSTEM_PKG
+   - Design spec (if generated above)
 ```
 
 Each agent works in isolated context window.

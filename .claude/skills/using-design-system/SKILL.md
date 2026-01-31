@@ -94,6 +94,23 @@ Before completing UI work, verify:
 - ✅ ScreenRoot pattern: Screen + ScreenRoot pair exists
 - ✅ UI matches spec (if spec exists)
 
+## Plugin Integration
+
+### Automatic Invocation
+
+When working on UI code, check if `frontend-design` skill is available in the system skills list.
+
+**If available** (REQUIRED):
+1. Load `references/component-mappings.md`
+2. Invoke `frontend-design` skill with:
+   - Screen requirements/context
+   - Constraint: "Target: Compose Multiplatform. Use only X-components: [list from component-mappings.md]"
+3. Apply design output to implementation
+
+**If unavailable**: Proceed with standard X-components guidance from this skill.
+
+This skill remains the source of truth for component selection.
+
 ## Referenced Files
 
 - `references/component-mappings.md` - Complete Material3 → X-component mappings
