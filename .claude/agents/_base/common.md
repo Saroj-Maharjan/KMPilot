@@ -1,0 +1,44 @@
+# Agent Common Instructions
+
+All agents import this file for shared patterns.
+
+## Architecture Reference
+
+Load on demand: @../../skills/_shared/patterns.md
+
+## Context Variables
+
+Orchestrator provides:
+- `{featurename}` - Feature name (lowercase)
+- `{PKG_PREFIX}` - Package prefix (e.g., `com.example`)
+- `{PKG_PATH}` - Package as path (e.g., `com/example`)
+- `{CORE_COMMON_PKG}` - Core common package
+- `{CORE_DATA_PKG}` - Core data package
+- `{DESIGN_SYSTEM_PKG}` - Design system package
+
+## Build Validation
+
+After implementation:
+```bash
+./gradlew :feature:{featurename}:assembleAndroidMain
+```
+
+## On Build Failure
+
+1. Load layer-specific troubleshooting (max 3 retries)
+2. Identify error pattern
+3. Fix and retry
+4. Report if still failing
+
+Troubleshooting files:
+- Data: @../../skills/creating-kmp-feature/troubleshooting/data.md
+- UI: @../../skills/creating-kmp-feature/troubleshooting/ui.md
+- Integration: @../../skills/creating-kmp-feature/troubleshooting/integration.md
+
+## Error Handling Pattern
+
+Use `ErrorConst` from `{CORE_DATA_PKG}.ErrorConst`:
+- `ErrorConst.NoNetwork` - Connection errors
+- `ErrorConst.Unauthorized` - HTTP 401
+- `ErrorConst.SerializationError` - JSON parsing
+- `ErrorConst.ServerUnknownError(httpCode)` - Unknown errors
