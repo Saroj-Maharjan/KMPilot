@@ -31,7 +31,7 @@ Template for individual task files in `.claude/docs/{featurename}/task-{N}-{titl
 - `{path/to/existing/file.kt}` - {What change is made}
 
 ## Code Reference
-- [references/patterns.md](../../../skills/creating-kmp-feature/references/patterns.md) § {section}
+- [patterns.md](../../../skills/_shared/patterns.md) § {section}
 - [architecture/{layer}.md](../../../skills/creating-kmp-feature/architecture/{layer}.md)
 
 ## Acceptance Criteria

@@ -1,19 +1,13 @@
 ---
-name: bridging-swift-kotlin
 description: Bridge Swift to Kotlin Multiplatform via Interface Injection. Use when integrating iOS SDKs, calling Swift from Kotlin, accessing iOS-only APIs, implementing biometrics/payments/camera, or connecting native frameworks to KMP.
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)"]
 ---
 
 # Bridging Swift-Kotlin
 
 Kotlin interface in `iosMain` → Swift implements it in `iosApp` → Inject via Koin DI.
 
-## Context Discovery (First Step)
-
-Before implementing a bridge, detect project configuration:
-
-1. **Package Prefix**: Glob `feature/*/build.gradle.kts`, grep `namespace = "..."`, extract prefix (e.g., `com.example.login` → `com.example`)
-2. **Store as**: `{PKG_PREFIX}` for use in package paths below
-3. **Check for spec**: If bridge is for a feature module, check `.claude/docs/{featurename}/spec.md`
+**Architecture Reference:** @../_shared/patterns.md
 
 ## Critical: Swift Inheritance
 
@@ -26,21 +20,19 @@ Swift class inherits from `<ModulePrefix><InterfaceName>`:
 
 Use Xcode autocomplete (`Ctrl+Space`) to find exact protocol name.
 
-## Steps
+## Implementation Steps
 
-### 1. Bridge Interface
-
+### 1. Bridge Interface (`iosMain`)
 ```kotlin
-// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<featurename>/<Feature>Bridge.kt
+// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<feature>/<Feature>Bridge.kt
 interface <Feature>Bridge {
     suspend fun execute(param: String): String
 }
 ```
 
-### 2. Provider
-
+### 2. Provider (`iosMain`)
 ```kotlin
-// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<featurename>/IOS<Feature>Provider.kt
+// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<feature>/IOS<Feature>Provider.kt
 class IOS<Feature>Provider(private val bridge: <Feature>Bridge) : <Feature>Provider {
     override suspend fun execute(): Either<String> =
         try { Either.Success(bridge.execute("param")) }
@@ -48,8 +40,7 @@ class IOS<Feature>Provider(private val bridge: <Feature>Bridge) : <Feature>Provi
 }
 ```
 
-### 3. Swift Implementation
-
+### 3. Swift Implementation (`iosApp`)
 ```swift
 // iosApp/iosApp/<Feature>/<Feature>BridgeImpl.swift
 import ComposeApp
@@ -65,31 +56,34 @@ class <Feature>BridgeImpl: <ModulePrefix><Feature>Bridge {
 ```
 
 ### 4. DI Connection
-
+**MainViewController.kt** (`composeApp/src/iosMain/`):
 ```kotlin
-// composeApp/src/iosMain/kotlin/{PKG_PREFIX}/<appname>/MainViewController.kt
 fun MainViewController(bridge: <Feature>Bridge) = ComposeUIViewController(
     configure = { initKoin { modules(module { single { bridge } }) } }
 ) { App() }
 ```
 
+**ContentView.swift** (`iosApp/iosApp/`):
 ```swift
-// iosApp/iosApp/ContentView.swift
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
         MainViewControllerKt.MainViewController(bridge: <Feature>BridgeImpl())
     }
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 ```
 
-### 5. Register Provider
-
+### 5. Register Provider (`iosMain`)
 ```kotlin
-// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<featurename>/di/Module.ios.kt
+// <module>/src/iosMain/kotlin/{PKG_PREFIX}/<feature>/di/Module.ios.kt
 actual val platformModule = module {
     singleOf(::IOS<Feature>Provider).bind<<Feature>Provider>()
 }
+```
+
+### 6. Export Module
+```kotlin
+// composeApp/build.gradle.kts
+iosTarget.binaries.framework { export(project(":core:data")) }
 ```
 
 ## Signature Mapping
@@ -98,60 +92,23 @@ actual val platformModule = module {
 |--------|-------|
 | `suspend fun foo()` | `func foo(completionHandler: @escaping (Error?) -> Void)` |
 | `suspend fun foo(): T` | `func foo(completionHandler: @escaping (T?, Error?) -> Void)` |
-| `suspend fun foo(a: String, b: Int): T` | `func foo(a: String, b: Int32, completionHandler: @escaping (T?, Error?) -> Void)` |
+| `Int` | `Int32` |
+| `Long` | `Int64` |
+| `Boolean` (return) | `KotlinBoolean` |
+| `Boolean` (param) | `Bool` |
 
-Types: `Int`→`Int32`, `Long`→`Int64`, `Boolean` return→`KotlinBoolean`, `Boolean` param→`Bool`
+## Validation
 
-## Export Module
-
-```kotlin
-// composeApp/build.gradle.kts
-iosTarget.binaries.framework { export(project(":core:data")) }
+```bash
+./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
 ```
-
-## Spec Integration
-
-When adding a bridge to an existing feature:
-
-### If spec exists (`.claude/docs/{featurename}/spec.md`):
-
-1. **Draft spec updates** for the bridge:
-   ```markdown
-   ### Interfaces > iOS Bridge
-   | Interface | Purpose | Swift Implementation |
-   |-----------|---------|---------------------|
-   | {Feature}Bridge | {purpose} | {Feature}BridgeImpl |
-
-   ### Integration Points
-   | Point | File | Status |
-   |-------|------|--------|
-   | iOS Bridge | iosApp/iosApp/{Feature}/{Feature}BridgeImpl.swift | ✅ |
-   ```
-
-2. **Present for user approval** before implementation (follows modifying-kmp-feature workflow)
-
-3. **Update spec** after implementation with bridge details
-
-### If spec doesn't exist:
-
-1. Note that spec is missing
-2. Recommend running `/audit-spec {featurename}` after bridge implementation
-3. Proceed with implementation
-
-### For core module bridges (no feature spec):
-
-Document in code comments only - core modules don't have feature specs.
 
 ## Checklist
 
-- [ ] Context Discovery: Detected `{PKG_PREFIX}` from existing feature namespace
-- [ ] Spec Check: Checked if `.claude/docs/{featurename}/spec.md` exists (for feature bridges)
-- [ ] Interface in `<module>/src/iosMain/kotlin/{PKG_PREFIX}/<featurename>/`
+- [ ] Interface in `<module>/src/iosMain/kotlin/{PKG_PREFIX}/<feature>/`
 - [ ] Provider wraps in try-catch returning `Either<T>`
-- [ ] Swift in `iosApp/iosApp/` inherits `<ModulePrefix><InterfaceName>`
-- [ ] Completion handler signature exact match (see Signature Mapping)
-- [ ] MainViewController in `composeApp/src/iosMain/` accepts + registers bridge
+- [ ] Swift inherits `<ModulePrefix><InterfaceName>`
+- [ ] Completion handler signature matches exactly
+- [ ] MainViewController accepts + registers bridge
 - [ ] ContentView passes implementation
 - [ ] Module exported in `composeApp/build.gradle.kts`
-- [ ] `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode`
-- [ ] Spec Updated: Bridge documented in spec (if feature spec exists)

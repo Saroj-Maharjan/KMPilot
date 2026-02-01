@@ -1,196 +1,70 @@
 ---
-description: Creates complete KMP features with Clean Architecture through PRD generation, task breakdown, orchestrated implementation, and spec-driven cleanup. Automatically activates when user mentions "create feature", "new module", or "add feature".
-allowed-tools: ["*"]
+description: Creates complete KMP features with Clean Architecture through PRD generation, task breakdown, orchestrated implementation, and spec-driven cleanup. Invoke with /creating-kmp-feature.
+allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "Bash(mkdir:*)", "AskUserQuestion"]
 ---
 
-# Creating KMP Features (Orchestrator)
+# Creating KMP Features
 
-Orchestrates complete Kotlin Multiplatform feature creation using a structured 5-phase workflow.
+Orchestrates complete feature creation using a 5-phase workflow.
 
-## Contents
+**Architecture Reference:** @../_shared/patterns.md
 
-- [Quick Workflow](#quick-workflow)
-- [Critical Rules](#critical-rules)
-- [Phases](#phases)
-- [Specialized Agents](#specialized-agents)
-- [Templates](#templates)
-- [Error Handling](#error-handling)
+## Workflow
 
----
+**Phase 0** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Phase 3** → **Phase 4** → ✅ Done
 
-## Quick Workflow
+### Phase 0: Context Discovery (Auto)
+Detect: `PKG_PREFIX`, `INIT_KOIN_PATH`, `NAV_HOST_PATH` from existing features.
+See: @phases/phase-0-context.md
 
-```
-User Request
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 0: Context Discovery (AUTO)                               │
-│ Detect: PKG_PREFIX, INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 1: PRD Generation                                         │
-│ Analyze prompt → Generate PRD → Save to .claude/docs/{name}/    │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼  [USER CONFIRMS PRD]
-    │
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 2: Task Generation                                        │
-│ Break PRD into tasks → Assign to agents → Save task files       │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼  [USER CONFIRMS TASKS]
-    │
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 3: Implementation (Sequential or Parallel)                │
-│                                                                 │
-│  Option A (Sequential):  Data Agent → UI Agent → Integration    │
-│  Option B (Parallel):    Data + UI Agents → Integration         │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 4: Cleanup                                                │
-│ Verify spec.md → Remove prd.txt + tasks.md + task-*.md          │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-✅ Feature Complete (spec.md is source of truth)
-```
+### Phase 1: PRD Generation
+Analyze prompt → Generate PRD → Save to `.claude/docs/{name}/prd.txt`
+Template: @templates/prd-simple.md or @templates/prd-complex.md
+See: @phases/phase-1-prd.md
 
----
+### Phase 2: Task Generation
+Break PRD into tasks → Assign to agents → Save task files
+Template: @templates/task-template.md
+See: @phases/phase-2-tasks.md
+
+### Phase 3: Implementation
+**Parallel** (recommended): Data + UI agents together → Integration agent
+**Sequential**: Data → UI → Integration
+See: @phases/phase-3-implementation.md
+
+| Agent | Layer | Runs |
+|-------|-------|------|
+| `data-layer-agent` | Models, DataSource, Repository, Ktor | First (or parallel) |
+| `ui-layer-agent` | UiModel, ViewModel, Screens, Navigation | Second (or parallel) - follows UI Workflow from patterns.md |
+| `integration-agent` | DI, 4 integration points, spec.md | Last |
+
+### Phase 4: Cleanup
+Verify spec.md → Remove prd.txt + tasks.md + task-*.md
+See: @phases/phase-4-cleanup.md
 
 ## Critical Rules
 
-### User Confirmation Required
-
-- After PRD generation → Show PRD → Wait for approval
-- After task generation → Show tasks → Wait for approval
-- **Never proceed without explicit confirmation**
-
-### Documentation Storage
-
-- Location: `.claude/docs/{featurename}/`
-- Ephemeral (deleted after spec): `prd.txt`, `tasks.md`, `task-*.md`
-- Permanent: `spec.md` (single source of truth)
-
-### Architecture Requirements
-
-- Follow **10 critical rules** (see [references/patterns.md](references/patterns.md))
-- Complete **4 integration points**
-- Validate build after each layer
-
----
-
-## Phases
-
-| Phase | Purpose | Details |
-|-------|---------|---------|
-| 0 | Context Discovery | [phases/phase-0-context.md](phases/phase-0-context.md) |
-| 1 | PRD Generation | [phases/phase-1-prd.md](phases/phase-1-prd.md) |
-| 2 | Task Generation | [phases/phase-2-tasks.md](phases/phase-2-tasks.md) |
-| 3 | Implementation | [phases/phase-3-implementation.md](phases/phase-3-implementation.md) |
-| 4 | Cleanup | [phases/phase-4-cleanup.md](phases/phase-4-cleanup.md) |
-
-**Execution order**: Phase 0 (auto) → Phase 1 → [confirm] → Phase 2 → [confirm] → Phase 3 → Phase 4
-
----
-
-## Specialized Agents
-
-| Agent | Layer | Model | Runs |
-|-------|-------|-------|------|
-| `kmp-data-layer-agent` | Models, DataSource, Repository, Ktor Resources | Sonnet | First (or parallel with UI) |
-| `kmp-ui-layer-agent` | UiModel, ViewModel, Screens, Navigation | Sonnet | Second (or parallel with Data) |
-| `kmp-integration-agent` | DI module, 4 integration points, spec.md | Sonnet | Last (after both layers) |
-
-### Parallel Execution (Recommended)
-
-Launch Data + UI agents together in ONE message. Both work in isolated contexts.
-After both complete, launch Integration agent.
-
-### Sequential Execution
-
-Data → UI → Integration (safer, traditional approach)
-
----
-
-## Templates
-
-### PRD Templates
-
-| Complexity | Use When | Template |
-|------------|----------|----------|
-| Simple | UI-only, no API, < 3 screens | [templates/prd-simple.md](templates/prd-simple.md) |
-| Complex | API integration, multiple screens | [templates/prd-complex.md](templates/prd-complex.md) |
-
-### Task Template
-
-All tasks follow: [templates/task-template.md](templates/task-template.md)
-
----
+1. **User Confirmation Required** after Phase 1 and Phase 2 - never proceed without explicit approval
+2. **Documentation**: `.claude/docs/{featurename}/` - PRD/tasks ephemeral, spec.md permanent
+3. **Validate build** after each layer: `./gradlew :feature:{name}:assembleAndroidMain`
 
 ## Error Handling
 
-### Build Errors
+On build failure, load troubleshooting:
+- Data: @troubleshooting/data.md
+- UI: @troubleshooting/ui.md
+- Integration: @troubleshooting/integration.md
 
-Agents will load layer-specific troubleshooting and retry:
-- Data layer: [troubleshooting/data.md](troubleshooting/data.md)
-- UI layer: [troubleshooting/ui.md](troubleshooting/ui.md)
-- Integration: [troubleshooting/integration.md](troubleshooting/integration.md)
+## Completion Report
 
-### Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| Unclear prompt | Ask clarifying questions → Update PRD → Reconfirm |
-| Agent failure | Review output → Fix issues → Re-invoke agent |
-| Build failure | Load troubleshooting → Fix → Retry build |
-
-### Build Commands
-
-```bash
-# Incremental (per layer)
-./gradlew :feature:{name}:assembleAndroidMain
-
-# Full (integration)
-./gradlew assembleDebug
-
-# Format
-./gradlew ktlintFormat
 ```
-
----
-
-## Architecture References
-
-Agents load these as needed (progressive disclosure):
-
-| File | Content | Used By |
-|------|---------|---------|
-| [references/patterns.md](references/patterns.md) | 10 critical rules, 4 integration points | All agents |
-| [architecture/data.md](architecture/data.md) | Data layer principles | Data agent |
-| [architecture/ui.md](architecture/ui.md) | UI layer principles | UI agent |
-| [architecture/integration.md](architecture/integration.md) | Integration principles | Integration agent |
-
-**Key Philosophy**: Agents internalize principles and apply intelligently, not copy-paste templates.
-
----
-
-## Final Report Template
-
-```markdown
 ## Feature Complete: {FeatureName}
-
 ✅ Data layer implemented
 ✅ UI layer implemented
-✅ Integration complete
+✅ Integration complete (4 points)
 ✅ Build passing + ktlint formatted
-✅ Living spec: `.claude/docs/{featurename}/spec.md`
+✅ Living spec: .claude/docs/{featurename}/spec.md
 ✅ Ephemeral artifacts cleaned
 
-**Next:** Test with `navController.navigate({FeatureName}Route)`
+Next: navController.navigate({FeatureName}Route)
 ```
