@@ -1,49 +1,59 @@
 # CLAUDE
 
-KMP (Android + iOS) • Compose Multiplatform • Clean Architecture
+## STOP - Mandatory Workflow Rules
 
-## Workflow (Mandatory)
+**NEVER edit `feature/` files directly. ALWAYS invoke the required skill FIRST.**
 
-| Request | Skill |
-|---------|-------|
-| Create new feature/module | `creating-kmp-feature` |
-| Modify existing feature | `modifying-kmp-feature` |
-| UI/design/screen/component work | `frontend-design` |
+| Action | Skill | Trigger Keywords |
+|--------|-------|------------------|
+| Create feature | `/creating-kmp-feature` | "new feature", "add feature", "create" |
+| Modify feature | `/modifying-kmp-feature` | "add to", "change", "update", "fix", "modify" |
+| Review feature | `/feature-review` | "review", "check", "audit" |
+| Test feature | `/feature-test` | "test", "generate tests" |
 
-## Critical Patterns
-1. `setState { }` for state updates (never direct assignment)
-2. `Either<T>` for all error handling
-3. 4-state UI: Uninitialized/Loading/Success/Failed
-4. X-components from `:core:designsystem` (NOT Material3)
+**IMPORTANT:** Invoke the skill IMMEDIATELY upon recognizing feature work. Do NOT:
+- Read files first to "understand the codebase"
+- Explore the feature structure first
+- Plan the implementation first
+
+The skills contain workflows that handle exploration, planning, and implementation in the correct order.
+
+---
+
+## Build Commands
+```bash
+./gradlew :feature:{name}:assembleAndroidMain  # Incremental build
+./gradlew assembleDebug                         # Full build
+./gradlew :feature:{name}:ktlintFormat          # Format code
+./gradlew :feature:{name}:desktopTest           # Run tests
+```
+
+## Architecture
+KMP + Compose Multiplatform + Clean Architecture
+
+**Critical Rules** (violations break the build or cause bugs):
+1. `setState { copy() }` - NEVER `_state.value =`
+2. `Either<T>` for errors - NEVER throw exceptions
+3. 4-state UI: Uninitialized / Loading / Success / Failed
+4. X-components from `:core:designsystem` - NO Material3
 5. Interface + Impl pairs for DataSource/Repository
 
-Reference: `feature/sample/`
+Full patterns: @.claude/skills/_shared/patterns.md
 
-## Structure
+## Feature Structure
 ```
-{PROJECT}/
-├── composeApp/      # App entry, initKoin, BaseAppNavHost
-├── core/            # common, data, designsystem
-└── feature/         # Isolated modules
-```
-
-## Commands
-```bash
-./gradlew build                                # Full build
-./gradlew :feature:{name}:assembleAndroidMain  # Build feature
-./gradlew :feature:{name}:ktlintFormat         # Format feature
+feature/{name}/src/commonMain/kotlin/{pkg}/{name}/
+├── data/          # model/, datasource/, repository/, remote/
+├── presentation/  # ViewModel, UiState, ui/, navigation/
+└── di/            # {Feature}Modules.kt
 ```
 
-## Dependencies
-- Features → `:core:common`, `:core:designsystem`, `:core:data` (if API)
-- Features MUST NOT depend on other features
+## Gotchas
+- Package names: lowercase only (`productdetail` not `product-detail`)
+- Features NEVER depend on other features
+- Specs live at `.claude/docs/{name}/spec.md`
 
-## Documentation
-- Specs: `.claude/docs/{name}/spec.md` (source of truth)
-- PRD/tasks: Ephemeral (auto-deleted)
-
-## Config
+## Reference
+- Example: `feature/sample/`
 - Versions: `gradle/libs.versions.toml`
 - JVM: 21
-
-Context7 MCP for library docs.
