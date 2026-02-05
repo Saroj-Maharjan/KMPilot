@@ -3,70 +3,57 @@ name: test-integration
 description: Generates E2E Integration tests (MockEngine -> ViewModel).
 allowed-tools: ["Read", "Write", "Glob", "Bash(./gradlew:*)"]
 model: sonnet
-color: green
+color: red
 ---
 
-# Optimized Integration Test Agent
+# Integration Test Agent
 
-You test the full feature flow with MockEngine. Context is pre-computed by orchestrator.
-
-## Input
-
-Orchestrator provides:
-- Feature name and package
-- Full stack: ViewModel → Repository → DataSource classes
-- API endpoints and contracts
-- Fixtures location
-
-**Do NOT re-read source files** - use provided context.
+Test full feature flow. **Do NOT re-read source files** - use provided context.
 
 ## Key Principle
 
+**For Remote DataSource (API-based):**
 ```
 Real:   ViewModel + Repository + DataSource implementations
 Mocked: Only HTTP layer (MockEngine)
 ```
 
-This catches wiring bugs that unit tests miss.
-
-## IMPORTANT: Test Dispatcher Usage
-
-**CRITICAL RULE**: `advanceUntilIdle()` must be called **immediately after** calling a method that contains coroutines. **NEVER** call it immediately after ViewModel creation.
-
-```kotlin
-// ❌ WRONG - After ViewModel creation
-setupWithMockEngine { ... }
-advanceUntilIdle() // Don't do this!
-
-// ❌ WRONG - Not immediately after method call
-viewModel.loadData()
-val loading = awaitItem()
-advanceUntilIdle() // Too late!
-
-// ✅ CORRECT - Init block testing
-setupWithMockEngine { ... }
-
-viewModel.uiModel.test {
-    val initial = awaitItem() // Init runs automatically
-    advanceUntilIdle() // Let init complete
-    val result = awaitItem()
-}
-
-// ✅ CORRECT - Explicit method call
-viewModel.retry()
-advanceUntilIdle() // Immediately after!
-val result = expectMostRecentItem()
+**For Local DataSource (in-memory/mock data):**
+```
+Real:   ViewModel + Repository
+Mocked: LocalDataSource interface (with test implementations)
 ```
 
-## Output Path
+This catches wiring bugs that unit tests miss.
 
+## Output Path
 ```
 feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/integration/{Feature}IntegrationTest.kt
 ```
 
-Use `{PKG_PATH}` (package prefix as path, e.g., `acme` or `com/example`).
+## CRITICAL: Test Dispatcher Usage
 
-## Template (1 Complete Example per Flow Type)
+`advanceUntilIdle()` must be called **immediately after** calling a method that contains coroutines. **NEVER** call it immediately after ViewModel creation.
+
+```kotlin
+// ❌ WRONG
+setupWithMockEngine { ... }
+advanceUntilIdle() // Don't do this!
+
+// ✅ CORRECT - Init block testing
+setupWithMockEngine { ... }
+viewModel.uiModel.test {
+    val initial = awaitItem()
+    advanceUntilIdle() // Let init complete
+    val result = awaitItem()
+}
+
+// ✅ CORRECT - After method call
+viewModel.retry()
+advanceUntilIdle() // Immediately after!
+```
+
+## Template
 
 ```kotlin
 package {PKG_PREFIX}.{name}.integration
@@ -82,6 +69,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import kotlinx.serialization.json.Json
+import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.UiState
 import {CORE_DATA_PKG}.ApiClient
 import {PKG_PREFIX}.{name}.data.datasource.{Feature}RemoteDataSourceImpl
@@ -122,16 +110,13 @@ class {Feature}IntegrationTest {
             install(Resources)
         }
 
-        // Wire REAL implementations
         val apiClient = ApiClient(httpClient)
         val dataSource = {Feature}RemoteDataSourceImpl(apiClient)
         val repository = {Feature}RepositoryImpl(dataSource)
         viewModel = {Feature}ViewModel(repository)
     }
 
-    // ==========================================
-    // HAPPY PATH - Full Flow
-    // ==========================================
+    // === HAPPY PATH ===
 
     @Test
     fun `full flow - load {entity}s succeeds`() = runTest(testDispatcher) {
@@ -146,7 +131,6 @@ class {Feature}IntegrationTest {
         viewModel.uiModelState.test {
             var current = awaitItem()
 
-            // Handle state machine
             if (current.{state}State is UiState.Uninitialized) {
                 current = awaitItem()
             }
@@ -164,10 +148,7 @@ class {Feature}IntegrationTest {
         }
     }
 
-    // ==========================================
-    // ERROR RECOVERY - Retry Flow
-    // ==========================================
-    // IMPORTANT: Error JSONs use NetworkErrorModel format {"detail": "...", "code": ...}
+    // === ERROR RECOVERY ===
 
     @Test
     fun `full flow - retry after failure succeeds`() = runTest(testDispatcher) {
@@ -176,7 +157,7 @@ class {Feature}IntegrationTest {
             requestCount++
             if (requestCount == 1) {
                 respond(
-                    content = {Feature}Fixtures.error503Json, // {"detail": null, "code": null}
+                    content = {Feature}Fixtures.error503Json,
                     status = HttpStatusCode.ServiceUnavailable,
                     headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 )
@@ -192,18 +173,15 @@ class {Feature}IntegrationTest {
         viewModel.uiModelState.test {
             var current = awaitItem()
 
-            // Wait for initial failure
             while (current.{state}State !is UiState.Failed) {
                 advanceUntilIdle()
                 current = awaitItem()
             }
             assertTrue(current.{state}State is UiState.Failed)
 
-            // Retry
             viewModel.retry()
             advanceUntilIdle()
 
-            // Wait for success
             while (current.{state}State !is UiState.Success) {
                 current = awaitItem()
             }
@@ -219,7 +197,7 @@ class {Feature}IntegrationTest {
     fun `full flow - handles unauthorized error`() = runTest(testDispatcher) {
         setupWithMockEngine { request ->
             respond(
-                content = {Feature}Fixtures.error401Json, // {"detail": "Unauthorized", "code": null}
+                content = {Feature}Fixtures.error401Json,
                 status = HttpStatusCode.Unauthorized,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -232,7 +210,6 @@ class {Feature}IntegrationTest {
             val failed = awaitItem()
             assertTrue(failed.{state}State is UiState.Failed)
 
-            // HTTP 401 always maps to ErrorConst.Unauthorized
             val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
             assertEquals("You must login", error.message)
             assertEquals(1001, error.code)
@@ -245,7 +222,7 @@ class {Feature}IntegrationTest {
     fun `full flow - handles not found error`() = runTest(testDispatcher) {
         setupWithMockEngine { request ->
             respond(
-                content = {Feature}Fixtures.error404Json, // {"detail": "Resource not found", "code": 404}
+                content = {Feature}Fixtures.error404Json,
                 status = HttpStatusCode.NotFound,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -270,7 +247,7 @@ class {Feature}IntegrationTest {
     fun `full flow - handles server error`() = runTest(testDispatcher) {
         setupWithMockEngine { request ->
             respond(
-                content = {Feature}Fixtures.error500Json, // {"detail": "Internal Server Error", "code": 5001}
+                content = {Feature}Fixtures.error500Json,
                 status = HttpStatusCode.InternalServerError,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -291,9 +268,7 @@ class {Feature}IntegrationTest {
         }
     }
 
-    // ==========================================
-    // REQUEST VERIFICATION
-    // ==========================================
+    // === REQUEST VERIFICATION ===
 
     @Test
     fun `full flow - sends correct request parameters`() = runTest(testDispatcher) {
@@ -310,15 +285,12 @@ class {Feature}IntegrationTest {
         viewModel.uiModelState.test {
             advanceUntilIdle()
 
-            // Allow state updates to complete
             while (awaitItem().{state}State is UiState.Loading) {
                 advanceUntilIdle()
             }
 
             assertNotNull(capturedUrl)
             assertTrue(capturedUrl!!.contains("/api/"))
-            // Verify expected query params
-            // assertTrue(capturedUrl!!.contains("offset=0"))
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -326,65 +298,88 @@ class {Feature}IntegrationTest {
 }
 ```
 
-## Test Checklist (ALL MANDATORY)
+## Alternative: Local DataSource Pattern
 
-### HAPPY PATH
-- [ ] Load single entity succeeds
-- [ ] Load entity list succeeds with multiple items
-- [ ] Correct data displayed in UI state
-- [ ] All field mappings work end-to-end
+When testing features that use **LocalDataSource** (not remote API), use mock object implementations instead of MockEngine:
 
-### HTTP ERROR FLOWS (Copy pattern, change status)
-- [ ] 400 BadRequest → Failed state with message
-- [ ] 401 Unauthorized → Failed state
-- [ ] 403 Forbidden → Failed state with access denied
-- [ ] 404 NotFound → Failed state
-- [ ] 500 InternalServerError → Failed state
-- [ ] 503 ServiceUnavailable → Failed state with retry message
+```kotlin
+private fun setupWithMockDataSource(dataSource: {Feature}LocalDataSource) {
+    val repository = {Feature}RepositoryImpl(dataSource)
+    viewModel = {Feature}ViewModel(repository)
+}
 
-### NETWORK ERROR FLOWS
-- [ ] Connection timeout → Failed state with network error
-- [ ] Connection refused → Failed state with network error
+@Test
+fun `full flow - load items succeeds`() = runTest(testDispatcher) {
+    val mockItems = {Feature}Fixtures.create{Feature}List()
+    val mockDataSource = object : {Feature}LocalDataSource {
+        override suspend fun get{Feature}s(): List<{Feature}> = mockItems
+    }
 
-### PARSING ERRORS
-- [ ] Malformed JSON → Failed state
+    setupWithMockDataSource(mockDataSource)
 
-### RETRY FLOWS
-- [ ] Retry after 503 succeeds on second attempt
-- [ ] Multiple retries eventually succeed
-- [ ] Retry count verification
+    viewModel.uiModelState.test {
+        skipItems(1)
+        advanceUntilIdle()
 
-### AUTHENTICATION (if applicable)
-- [ ] Authorization header sent with Bearer token
-- [ ] 401 triggers auth error state
+        val current = awaitItem()
+        assertTrue(current.{state}State is UiState.Success)
+        val items = (current.{state}State as UiState.Success).value
+        assertEquals(3, items.size)
 
-### REQUEST VERIFICATION
-- [ ] Correct URL path sent
-- [ ] Correct HTTP method (GET/POST/PUT/DELETE)
-- [ ] Correct query parameters
-- [ ] Correct request body (for POST/PUT)
+        cancelAndIgnoreRemainingEvents()
+    }
+}
 
-### EMPTY & EDGE CASES
-- [ ] Empty list response shows empty state
-- [ ] Response with null optional fields parses correctly
-- [ ] Large response (100 items) handles correctly
+@Test
+fun `full flow - handles runtime exception`() = runTest(testDispatcher) {
+    val mockDataSource = object : {Feature}LocalDataSource {
+        override suspend fun get{Feature}s(): List<{Feature}> {
+            throw RuntimeException("Test error")
+        }
+    }
 
-### USER ACTIONS (if applicable)
-- [ ] Delete action sends DELETE request
-- [ ] Update action sends PUT/PATCH with correct body
-- [ ] Create action sends POST with correct body
+    setupWithMockDataSource(mockDataSource)
 
-### CONCURRENCY
-- [ ] Rapid consecutive requests debounced (only 1 request)
+    viewModel.uiModelState.test {
+        skipItems(1)
+        advanceUntilIdle()
+
+        val failed = awaitItem()
+        assertTrue(failed.{state}State is UiState.Failed)
+
+        val error = (failed.{state}State as UiState.Failed).error as ErrorModel.Exception
+        assertEquals("Test error", error.exception.message)
+
+        cancelAndIgnoreRemainingEvents()
+    }
+}
+```
+
+## Checklist
+
+**Happy Path:** Load single entity | Load list with multiple items | Correct data in UI state | All field mappings work E2E
+
+**HTTP Errors (Remote only):** 400 → Failed | 401 → Failed | 403 → Failed | 404 → Failed | 500 → Failed | 503 → Failed + retry message
+
+**Network Errors (Remote only):** Connection timeout → Failed | Connection refused → Failed
+
+**Parsing (Remote only):** Malformed JSON → Failed
+
+**Runtime Errors (Local only):** RuntimeException → Failed | NullPointerException → Failed | IllegalStateException → Failed
+
+**Retry:** Error → retry → success | Multiple retries succeed | Retry count verification
+
+**Auth (Remote only, if applicable):** Authorization header with Bearer | 401 triggers auth error
+
+**Request Verification (Remote only):** Correct URL path | Correct HTTP method | Correct query params | Correct request body (POST/PUT)
+
+**Empty & Edge Cases:** Empty list → empty state | Null optionals parse | Large response (100 items)
+
+**User Actions (if applicable):** Delete operation | Update operation | Create operation | Item selection
+
+**Concurrency:** Rapid requests/retries handled correctly | Request count verification
 
 ## Verify
-
 ```bash
 ./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*IntegrationTest"
 ```
-
-Fix failures and re-run until green.
-
-## Output
-
-Report: "Integration tests created at {path}" with test count and flow coverage summary.

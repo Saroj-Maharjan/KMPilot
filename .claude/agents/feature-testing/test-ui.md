@@ -3,43 +3,26 @@ name: test-ui
 description: Generates Compose UI tests.
 allowed-tools: ["Read", "Write", "Glob", "Bash(./gradlew:*)"]
 model: sonnet
-color: green
+color: yellow
 ---
 
-# Optimized UI Test Agent
+# UI Test Agent
 
-You test Compose screens using runComposeUiTest. Context is pre-computed by orchestrator.
+Test Compose screens using runComposeUiTest. **Do NOT re-read source files** - use provided context.
 
 ## Key Concept: ScreenRoot Pattern
 
-All screens follow the ScreenRoot pattern:
 - `{Feature}Screen` - ViewModel-based wrapper that collects state
 - `{Feature}ScreenRoot` - ViewModel-independent composable that takes UiState + callbacks
 
-**Tests ALWAYS target `{Feature}ScreenRoot`** - this allows testing without ViewModel mocking.
-
-## Input
-
-Orchestrator provides:
-- Feature name and package
-- Screen composable name (e.g., `LoginScreen`)
-- Root composable name (e.g., `LoginScreenRoot`) - **THIS IS WHAT YOU TEST**
-- UiState/UiModel class with variants
-- Callback parameters (all lambdas passed to ScreenRoot)
-- Test tags
-- Fixtures location
-
-**Do NOT re-read source files** - use provided context.
+**Tests ALWAYS target `{Feature}ScreenRoot`** - allows testing without ViewModel mocking.
 
 ## Output Path
-
 ```
 feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/presentation/ui/{Feature}ScreenTest.kt
 ```
 
-Use `{PKG_PATH}` (package prefix as path, e.g., `acme` or `com/example`).
-
-## Template (1 Complete Example per State)
+## Template
 
 ```kotlin
 package {PKG_PREFIX}.{name}.presentation.ui
@@ -49,14 +32,13 @@ import androidx.compose.ui.test.*
 import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
 import {PKG_PREFIX}.{name}.fixtures.{Feature}UiFixtures
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class {Feature}ScreenTest {
 
-    // ==========================================
-    // LOADING STATE
-    // ==========================================
+    // === LOADING STATE ===
 
     @Test
     fun `shows loading indicator when state is Loading`() = runComposeUiTest {
@@ -66,20 +48,14 @@ class {Feature}ScreenTest {
                     uiState = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = {},
                     onRetry = {},
-                    // ... all callbacks with empty lambdas
                 )
             }
         }
 
-        // Loading indicator should be visible
         onNodeWithText("Loading").assertExists()
-        // Or use content description
-        // onNodeWithContentDescription("Loading").assertExists()
     }
 
-    // ==========================================
-    // SUCCESS STATE WITH DATA
-    // ==========================================
+    // === SUCCESS STATE ===
 
     @Test
     fun `shows content when state is Success`() = runComposeUiTest {
@@ -91,18 +67,14 @@ class {Feature}ScreenTest {
                     uiState = {Feature}UiFixtures.createSuccessState(entities),
                     onBackClick = {},
                     onRetry = {},
-                    // ... all callbacks
                 )
             }
         }
 
-        // Content should be visible
         onAllNodesWithText(entities[0].name).onFirst().assertIsDisplayed()
     }
 
-    // ==========================================
-    // EMPTY STATE
-    // ==========================================
+    // === EMPTY STATE ===
 
     @Test
     fun `shows empty message when list is empty`() = runComposeUiTest {
@@ -112,7 +84,6 @@ class {Feature}ScreenTest {
                     uiState = {Feature}UiFixtures.createEmptyState(),
                     onBackClick = {},
                     onRetry = {},
-                    // ... all callbacks
                 )
             }
         }
@@ -120,9 +91,7 @@ class {Feature}ScreenTest {
         onNodeWithText("No {entity}s found").assertIsDisplayed()
     }
 
-    // ==========================================
-    // ERROR STATE - Use actual ErrorConst messages
-    // ==========================================
+    // === ERROR STATES ===
 
     @Test
     fun `shows network error message and retry button`() = runComposeUiTest {
@@ -131,11 +100,9 @@ class {Feature}ScreenTest {
                 uiState = {Feature}UiFixtures.createNetworkErrorState(),
                 onBackClick = {},
                 onRetry = {},
-                // ... all callbacks
             )
         }
 
-        // ErrorConst.NoNetwork message
         onNodeWithText("Error: Error, Check your connection and try again.", substring = true).assertIsDisplayed()
         onNodeWithText("Retry").assertIsDisplayed()
     }
@@ -147,11 +114,9 @@ class {Feature}ScreenTest {
                 uiState = {Feature}UiFixtures.createUnauthorizedErrorState(),
                 onBackClick = {},
                 onRetry = {},
-                // ... all callbacks
             )
         }
 
-        // ErrorConst.Unauthorized message with code
         onNodeWithText("Error: You must login (#1001)", substring = true).assertIsDisplayed()
         onNodeWithText("Retry").assertIsDisplayed()
     }
@@ -163,11 +128,9 @@ class {Feature}ScreenTest {
                 uiState = {Feature}UiFixtures.createNotFoundErrorState(),
                 onBackClick = {},
                 onRetry = {},
-                // ... all callbacks
             )
         }
 
-        // MessageCode format: "message (#code)"
         onNodeWithText("Error: {Resource} not found (#404)", substring = true).assertIsDisplayed()
         onNodeWithText("Retry").assertIsDisplayed()
     }
@@ -179,18 +142,14 @@ class {Feature}ScreenTest {
                 uiState = {Feature}UiFixtures.createServerErrorState(),
                 onBackClick = {},
                 onRetry = {},
-                // ... all callbacks
             )
         }
 
-        // ServerUnknownError message
         onNodeWithText("Error: An unknown network error has occurred! (#500)", substring = true).assertIsDisplayed()
         onNodeWithText("Retry").assertIsDisplayed()
     }
 
-    // ==========================================
-    // USER INTERACTION - RETRY
-    // ==========================================
+    // === USER INTERACTIONS ===
 
     @Test
     fun `retry button invokes onRetry callback`() = runComposeUiTest {
@@ -201,17 +160,12 @@ class {Feature}ScreenTest {
                 uiState = {Feature}UiFixtures.createNetworkErrorState(),
                 onBackClick = {},
                 onRetry = { retryCalled = true },
-                // ... all callbacks
             )
         }
 
         onNodeWithText("Retry").performClick()
         assertTrue(retryCalled)
     }
-
-    // ==========================================
-    // USER INTERACTION - BACK NAVIGATION
-    // ==========================================
 
     @Test
     fun `back button invokes onBackClick callback`() = runComposeUiTest {
@@ -223,7 +177,6 @@ class {Feature}ScreenTest {
                     uiState = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = { backCalled = true },
                     onRetry = {},
-                    // ... all callbacks
                 )
             }
         }
@@ -231,10 +184,6 @@ class {Feature}ScreenTest {
         onNodeWithContentDescription("Back").performClick()
         assertTrue(backCalled)
     }
-
-    // ==========================================
-    // USER INTERACTION - ITEM CLICK
-    // ==========================================
 
     @Test
     fun `item click invokes callback with correct item`() = runComposeUiTest {
@@ -248,7 +197,6 @@ class {Feature}ScreenTest {
                     onBackClick = {},
                     onRetry = {},
                     onItemClick = { id -> clickedId = id },
-                    // ... all callbacks
                 )
             }
         }
@@ -259,162 +207,29 @@ class {Feature}ScreenTest {
 }
 ```
 
-## {Feature}UiFixtures Template
-
-Create `{Feature}UiFixtures.kt` alongside `{Feature}Fixtures.kt`:
-
-```kotlin
-package {PKG_PREFIX}.{name}.fixtures
-
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import {CORE_COMMON_PKG}.ErrorModel
-import {CORE_COMMON_PKG}.UiState
-import {CORE_DATA_PKG}.ErrorConst
-import {PKG_PREFIX}.{name}.presentation.{Feature}UiModel  // or {Feature}UiState
-
-object {Feature}UiFixtures {
-
-    // ==========================================
-    // BASE STATES
-    // ==========================================
-
-    fun createUninitializedState() = {Feature}UiModel(
-        {state}State = UiState.Uninitialized
-    )
-
-    fun createLoadingState() = {Feature}UiModel(
-        {state}State = UiState.Loading
-    )
-
-    fun createSuccessState(entities: List<{Entity}> = {Feature}Fixtures.create{Entity}List()) =
-        {Feature}UiModel(
-            {state}State = UiState.Success(entities.toImmutableList())
-        )
-
-    fun createEmptyState() = {Feature}UiModel(
-        {state}State = UiState.Success(persistentListOf())
-    )
-
-    // ==========================================
-    // ERROR STATES (Use ErrorConst from {Feature}Fixtures)
-    // ==========================================
-
-    fun createNetworkErrorState() = {Feature}UiModel(
-        {state}State = UiState.Failed({Feature}Fixtures.networkError)
-    )
-
-    fun createUnauthorizedErrorState() = {Feature}UiModel(
-        {state}State = UiState.Failed({Feature}Fixtures.unauthorizedError)
-    )
-
-    fun createNotFoundErrorState() = {Feature}UiModel(
-        {state}State = UiState.Failed({Feature}Fixtures.notFoundError)
-    )
-
-    fun createServerErrorState() = {Feature}UiModel(
-        {state}State = UiState.Failed({Feature}Fixtures.serverError)
-    )
-
-    fun createTimeoutErrorState() = {Feature}UiModel(
-        {state}State = UiState.Failed({Feature}Fixtures.timeoutError)
-    )
-
-    // ==========================================
-    // DIALOG STATES (if applicable)
-    // ==========================================
-
-    fun createDialogVisibleState(entity: {Entity} = {Feature}Fixtures.create{Entity}()) =
-        {Feature}UiModel(
-            {state}State = UiState.Success({Feature}Fixtures.create{Entity}List().toImmutableList()),
-            showDialog = true,
-            selectedEntity = entity
-        )
-
-    fun createActionInProgressState(entity: {Entity} = {Feature}Fixtures.create{Entity}()) =
-        {Feature}UiModel(
-            {state}State = UiState.Success({Feature}Fixtures.create{Entity}List().toImmutableList()),
-            showDialog = true,
-            selectedEntity = entity,
-            isActionInProgress = true
-        )
-
-    // ==========================================
-    // INPUT VALIDATION STATES (if applicable)
-    // ==========================================
-
-    fun createWithValidInput(inputValue: String = "valid input") =
-        {Feature}UiModel(
-            {state}State = UiState.Uninitialized,
-            inputField = inputValue
-        )
-
-    fun createWithInvalidInput(inputValue: String = "") =
-        {Feature}UiModel(
-            {state}State = UiState.Uninitialized,
-            inputField = inputValue
-        )
-}
-```
-
-## Test Checklist (ALL MANDATORY)
-
-### STATE RENDERING
-- [ ] Uninitialized state shows initial UI (form, placeholder, etc.)
-- [ ] Loading state shows loading indicator
-- [ ] Loading state disables interactive elements
-- [ ] Success state shows content
-- [ ] Success state hides loading indicator
-- [ ] Success state displays all list items
-- [ ] Empty state shows empty placeholder message
-- [ ] Failed state shows error message
-- [ ] Failed state shows retry button
-
-### USER INTERACTIONS - CALLBACKS
-- [ ] Back button invokes onBackClick callback
-- [ ] Retry button invokes onRetry callback
-- [ ] Item click invokes onItemClick with correct entity
-- [ ] Primary action button invokes correct callback
-- [ ] Delete button invokes onDelete (if applicable)
-- [ ] Form submit invokes onSubmit (if applicable)
-
-### USER INTERACTIONS - TEXT INPUT (if applicable)
-- [ ] Input field accepts text input
-- [ ] Input change invokes onChange callback with new value
-- [ ] Submit button disabled when input empty/invalid
-- [ ] Submit button enabled when input valid
-
-### DIALOGS (if applicable)
-- [ ] Dialog appears when showDialog is true in state
-- [ ] Dialog shows correct entity data from state
-- [ ] Confirm button invokes onConfirm callback
-- [ ] Dismiss button invokes onDismiss callback
-- [ ] Dialog shows loading indicator when isActionInProgress is true
-
-### ACCESSIBILITY
-- [ ] Loading indicator has content description
-- [ ] Buttons have content descriptions or labels
-- [ ] Back button has "Back" content description
-
 ## Callback Naming Conventions
 
-Common callback patterns for ScreenRoot:
 - `onBackClick` - navigation back
 - `onRetry` / `onRetryLoad{Entity}s` - retry failed operation
 - `on{Entity}Click` / `onItemClick` - item selection
-- `on{Field}Change` - input field changes (e.g., `onPinChange`, `onSearchQueryChange`)
-- `onPerform{Action}` - primary action (e.g., `onPerformLogin`, `onSubmitOrder`)
+- `on{Field}Change` - input changes (e.g., `onPinChange`)
+- `onPerform{Action}` - primary action (e.g., `onPerformLogin`)
 - `onShow{Dialog}` / `onDismiss{Dialog}` - dialog visibility
 - `onConfirm{Action}` - confirm dialog action
 
-## Verify
+## Checklist
 
+**State Rendering:** Uninitialized → initial UI | Loading → indicator | Loading → disable interactive | Success → content | Success → hide loading | Success → all list items | Empty → placeholder | Failed → error message | Failed → retry button
+
+**Callbacks:** Back button → onBackClick | Retry → onRetry | Item click → onItemClick with entity | Primary action → correct callback | Delete → onDelete | Form submit → onSubmit
+
+**Text Input (if applicable):** Accepts input | onChange with new value | Submit disabled when empty/invalid | Submit enabled when valid
+
+**Dialogs (if applicable):** Appears when showDialog=true | Shows correct entity data | Confirm → onConfirm | Dismiss → onDismiss | Loading indicator when isActionInProgress
+
+**Accessibility:** Loading has content description | Buttons have labels | Back button has "Back" description
+
+## Verify
 ```bash
 ./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*ScreenTest"
 ```
-
-Fix failures and re-run until green.
-
-## Output
-
-Report: "UI tests created at {path}" with test count and state coverage summary.

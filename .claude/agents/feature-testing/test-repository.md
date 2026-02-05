@@ -3,33 +3,19 @@ name: test-repository
 description: Generates Repository tests using Mokkery.
 allowed-tools: ["Read", "Write", "Glob", "Bash(./gradlew:*)"]
 model: sonnet
-color: green
+color: cyan
 ---
 
-# Optimized Repository Test Agent
+# Repository Test Agent
 
-You test Repository implementations using Mokkery for mocking. Context is pre-computed by orchestrator.
-
-## Input
-
-Orchestrator provides:
-- Feature name and package
-- Repository interface and implementation names
-- Dependencies to mock (DataSources)
-- Method signatures
-- Fixtures location
-
-**Do NOT re-read source files** - use provided context.
+Test Repository implementations using Mokkery. **Do NOT re-read source files** - use provided context.
 
 ## Output Path
-
 ```
 feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/data/{Feature}RepositoryImplTest.kt
 ```
 
-Use `{PKG_PATH}` (package prefix as path, e.g., `acme` or `com/example`).
-
-## Template (1 Complete Example)
+## Template
 
 ```kotlin
 package {PKG_PREFIX}.{name}.data
@@ -62,9 +48,7 @@ class {Feature}RepositoryImplTest {
         resetAnswers(remoteDataSource)
     }
 
-    // ==========================================
-    // SUCCESS CASES
-    // ==========================================
+    // === SUCCESS CASES ===
 
     @Test
     fun `get{Entity}s returns mapped entity list on success`() = runTest {
@@ -89,14 +73,12 @@ class {Feature}RepositoryImplTest {
         assertTrue(result.value.isEmpty())
     }
 
-    // ==========================================
-    // ERROR PROPAGATION - Use ErrorConst errors
-    // ==========================================
+    // === ERROR PROPAGATION ===
 
     @Test
     fun `get{Entity}s propagates network failure`() = runTest {
         everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Failure({Feature}Fixtures.networkError) // ErrorConst.NoNetwork
+            Either.Failure({Feature}Fixtures.networkError)
 
         val result = repository.get{Entity}s()
 
@@ -107,7 +89,7 @@ class {Feature}RepositoryImplTest {
     @Test
     fun `get{Entity}s propagates unauthorized error`() = runTest {
         everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Failure({Feature}Fixtures.unauthorizedError) // ErrorConst.Unauthorized
+            Either.Failure({Feature}Fixtures.unauthorizedError)
 
         val result = repository.get{Entity}s()
 
@@ -118,7 +100,7 @@ class {Feature}RepositoryImplTest {
     @Test
     fun `get{Entity}s propagates server error`() = runTest {
         everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Failure({Feature}Fixtures.serverError) // ServerUnknownError
+            Either.Failure({Feature}Fixtures.serverError)
 
         val result = repository.get{Entity}s()
 
@@ -129,7 +111,7 @@ class {Feature}RepositoryImplTest {
     @Test
     fun `get{Entity}s propagates not found error`() = runTest {
         everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Failure({Feature}Fixtures.notFoundError) // MessageCode
+            Either.Failure({Feature}Fixtures.notFoundError)
 
         val result = repository.get{Entity}s()
 
@@ -137,9 +119,7 @@ class {Feature}RepositoryImplTest {
         assertEquals({Feature}Fixtures.notFoundError, (result as Either.Failure).error)
     }
 
-    // ==========================================
-    // PARAMETER VERIFICATION
-    // ==========================================
+    // === PARAMETER VERIFICATION ===
 
     @Test
     fun `get{Entity}s passes correct parameters to dataSource`() = runTest {
@@ -153,56 +133,21 @@ class {Feature}RepositoryImplTest {
 }
 ```
 
-## Test Checklist (ALL MANDATORY)
+## Checklist
 
-### SUCCESS CASES
-- [ ] Returns mapped entity on success
-- [ ] Returns mapped entity list on success
-- [ ] Returns empty list when response is empty
-- [ ] Correctly maps all fields from DTO to domain model
-- [ ] Handles single item list
-- [ ] Handles large list (100 items)
+**Success:** Mapped entity | Mapped list | Empty list | All fields mapped | Single item | Large list (100)
 
-### ERROR PROPAGATION (Use ErrorConst)
-- [ ] Propagates ErrorConst.NoNetwork
-- [ ] Propagates ErrorConst.Unauthorized
-- [ ] Propagates ErrorConst.ServerUnknownError
-- [ ] Propagates MessageCode errors (404, 400, etc.)
-- [ ] Propagates ErrorConst.SerializationError
+**Error Propagation (use ErrorConst):** NoNetwork | Unauthorized | ServerUnknownError | MessageCode (404, 400) | SerializationError
 
-### DATA TRANSFORMATION (if repository does mapping)
-- [ ] Maps timestamp strings to Long correctly
-- [ ] Maps nested objects correctly
-- [ ] Handles null optional fields
-- [ ] Filters/sorts data if applicable
+**Data Transformation:** Timestamps → Long | Nested objects | Null optionals | Filters/sorts
 
-### PARAMETER VERIFICATION
-- [ ] Passes correct ID to dataSource
-- [ ] Passes correct offset/limit for pagination
-- [ ] Passes correct ordering parameter
-- [ ] Passes correct filter parameters
+**Parameter Verification:** Correct ID | Offset/limit | Ordering | Filters
 
-### BOUNDARY CONDITIONS
-- [ ] Handles max page size (100)
-- [ ] Handles min page size (1)
-- [ ] Handles zero offset
-- [ ] Handles special characters in ID
-- [ ] Handles very long ID string
+**Boundary:** Max page (100) | Min page (1) | Zero offset | Special chars in ID | Long ID
 
-### CACHING (if applicable)
-- [ ] Returns cached data on cache hit
-- [ ] Falls back to network on cache miss
-- [ ] Updates cache on successful network response
-- [ ] Handles cache failure gracefully
+**Caching (if applicable):** Cache hit | Cache miss → network | Update cache | Cache failure
 
 ## Verify
-
 ```bash
 ./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*RepositoryImplTest"
 ```
-
-Fix failures and re-run until green.
-
-## Output
-
-Report: "Repository tests created at {path}" with test count.

@@ -3,32 +3,19 @@ name: test-datasource
 description: Generates DataSource tests using MockEngine.
 allowed-tools: ["Read", "Write", "Glob", "Bash(./gradlew:*)"]
 model: sonnet
-color: green
+color: blue
 ---
 
-# Optimized DataSource Test Agent
+# DataSource Test Agent
 
-You test DataSource implementations using Ktor MockEngine. Context is pre-computed by orchestrator.
-
-## Input
-
-Orchestrator provides:
-- Feature name and package
-- DataSource interface and implementation names
-- Method signatures with HTTP verbs and paths
-- Fixtures location
-
-**Do NOT re-read source files** - use provided context.
+Test DataSource implementations using Ktor MockEngine. **Do NOT re-read source files** - use provided context.
 
 ## Output Path
-
 ```
 feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/data/datasource/{Feature}RemoteDataSourceTest.kt
 ```
 
-Use `{PKG_PATH}` (package prefix as path, e.g., `acme` or `com/example`).
-
-## Template (1 Complete Example)
+## Template
 
 ```kotlin
 package {PKG_PREFIX}.{name}.data.datasource
@@ -37,12 +24,14 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import {CORE_COMMON_PKG}.Either
 import {CORE_COMMON_PKG}.ErrorConst
+import {CORE_COMMON_PKG}.ErrorModel
 import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
 import {CORE_DATA_PKG}.ApiClient
 import kotlin.test.*
@@ -68,9 +57,7 @@ class {Feature}RemoteDataSourceTest {
         return {Feature}RemoteDataSourceImpl(apiClient)
     }
 
-    // ==========================================
-    // SUCCESS CASES
-    // ==========================================
+    // === SUCCESS CASES ===
 
     @Test
     fun `get{Entity} returns success when API returns 200`() = runTest {
@@ -87,17 +74,14 @@ class {Feature}RemoteDataSourceTest {
         assertTrue(result is Either.Success)
     }
 
-    // ==========================================
-    // HTTP ERROR CODES - Follow NetworkErrorModel format
-    // ==========================================
-    // IMPORTANT: All error JSONs use {"detail": "...", "code": ...} format
-    // This is processed by EitherCallAdapter to create proper ErrorModel
+    // === HTTP ERROR CODES ===
+    // Error JSONs use {"detail": "...", "code": ...} format (NetworkErrorModel)
 
     @Test
     fun `get{Entity} returns failure on 401 Unauthorized`() = runTest {
         val dataSource = createDataSource { request ->
             respond(
-                content = {Feature}Fixtures.error401Json, // {"detail": "...", "code": null}
+                content = {Feature}Fixtures.error401Json,
                 status = HttpStatusCode.Unauthorized,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -105,7 +89,6 @@ class {Feature}RemoteDataSourceTest {
 
         val result = dataSource.get{Entity}()
 
-        // HTTP 401 always maps to ErrorConst.Unauthorized
         assertTrue(result is Either.Failure)
         val error = (result as Either.Failure).error as ErrorModel.MessageCode
         assertEquals("You must login", error.message)
@@ -116,7 +99,7 @@ class {Feature}RemoteDataSourceTest {
     fun `get{Entity} returns failure on 404 Not Found`() = runTest {
         val dataSource = createDataSource { request ->
             respond(
-                content = {Feature}Fixtures.error404Json, // {"detail": "Resource not found", "code": 404}
+                content = {Feature}Fixtures.error404Json,
                 status = HttpStatusCode.NotFound,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -134,7 +117,7 @@ class {Feature}RemoteDataSourceTest {
     fun `get{Entity} returns failure on 500 Internal Server Error`() = runTest {
         val dataSource = createDataSource { request ->
             respond(
-                content = {Feature}Fixtures.error500Json, // {"detail": "Internal Server Error", "code": 5001}
+                content = {Feature}Fixtures.error500Json,
                 status = HttpStatusCode.InternalServerError,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -152,7 +135,7 @@ class {Feature}RemoteDataSourceTest {
     fun `get{Entity} returns failure on 503 Service Unavailable`() = runTest {
         val dataSource = createDataSource { request ->
             respond(
-                content = {Feature}Fixtures.error503Json, // {"detail": null, "code": null}
+                content = {Feature}Fixtures.error503Json,
                 status = HttpStatusCode.ServiceUnavailable,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -160,16 +143,13 @@ class {Feature}RemoteDataSourceTest {
 
         val result = dataSource.get{Entity}()
 
-        // Blank/null detail triggers ServerUnknownError
         assertTrue(result is Either.Failure)
         val error = (result as Either.Failure).error as ErrorModel.MessageCode
         assertEquals("An unknown network error has occurred!", error.message)
         assertEquals(503, error.code)
     }
 
-    // ==========================================
-    // NETWORK FAILURES - Copy pattern for each
-    // ==========================================
+    // === NETWORK FAILURES ===
 
     @Test
     fun `get{Entity} returns failure on connection error`() = runTest {
@@ -183,9 +163,7 @@ class {Feature}RemoteDataSourceTest {
         assertEquals(ErrorConst.NoNetwork, (result as Either.Failure).error)
     }
 
-    // ==========================================
-    // REQUEST VERIFICATION - Copy pattern for each
-    // ==========================================
+    // === REQUEST VERIFICATION ===
 
     @Test
     fun `get{Entity} sends correct request path`() = runTest {
@@ -207,50 +185,19 @@ class {Feature}RemoteDataSourceTest {
 }
 ```
 
-## Test Checklist (ALL MANDATORY)
+## Checklist
 
-### SUCCESS CASES
-- [ ] 200 OK with valid single entity response
-- [ ] 200 OK with valid list response
-- [ ] 200 OK with empty list response
-- [ ] 200 OK with paginated response (if applicable)
+**Success:** 200 single entity | 200 list | 200 empty list | 200 paginated (if applicable)
 
-### HTTP ERROR CODES (Copy template, change status code)
-- [ ] 400 BadRequest → returns failure
-- [ ] 401 Unauthorized → returns failure
-- [ ] 403 Forbidden → returns failure
-- [ ] 404 NotFound → returns failure
-- [ ] 500 InternalServerError → returns failure
-- [ ] 503 ServiceUnavailable → returns failure
+**HTTP Errors (copy template, change status):** 400 | 401 | 403 | 404 | 500 | 503
 
-### PARSING EDGE CASES
-- [ ] Malformed JSON → returns ErrorConst.SerializationError
-- [ ] Empty response body → returns ErrorConst.SerializationError
-- [ ] Missing required fields → returns ErrorConst.SerializationError
-- [ ] Null optional fields → parses successfully
-- [ ] Extra unknown fields → ignores and parses (ignoreUnknownKeys = true)
+**Parsing:** Malformed JSON → SerializationError | Empty body → SerializationError | Missing fields → SerializationError | Null optionals → success | Extra fields → ignored
 
-### NETWORK FAILURES
-- [ ] Connection refused → returns ErrorConst.NoNetwork
-- [ ] Timeout → returns ErrorConst.NoNetwork
-- [ ] Unknown host → returns ErrorConst.NoNetwork
+**Network:** Connection refused → NoNetwork | Timeout → NoNetwork | Unknown host → NoNetwork
 
-### REQUEST VERIFICATION (for each API method)
-- [ ] Sends correct URL path
-- [ ] Sends correct HTTP method (GET/POST/PUT/DELETE)
-- [ ] Sends Authorization header with Bearer token
-- [ ] Sends correct Content-Type for POST/PUT
-- [ ] Serializes request body correctly (for POST/PUT)
-- [ ] Sends correct query parameters (for GET with params)
+**Request Verification:** Correct URL | Correct HTTP method | Auth header | Content-Type | Request body | Query params
 
 ## Verify
-
 ```bash
 ./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*RemoteDataSourceTest"
 ```
-
-Fix failures and re-run until green.
-
-## Output
-
-Report: "DataSource tests created at {path}" with test count.
