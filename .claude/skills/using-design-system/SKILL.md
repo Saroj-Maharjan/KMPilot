@@ -1,5 +1,6 @@
 ---
 description: Ensures consistent use of X-components design system instead of Material3 when working on feature UI code. Automatically activates for Composable functions in feature modules or when user mentions UI/screens/components.
+user-invocable: false
 allowed-tools: ["Read", "Edit", "Glob", "Grep"]
 ---
 
