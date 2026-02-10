@@ -1,6 +1,6 @@
 ---
 description: Creates complete KMP features with Clean Architecture through PRD generation, task breakdown, orchestrated implementation, and spec-driven cleanup. Invoke with /creating-kmp-feature.
-allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "Bash(mkdir:*)", "AskUserQuestion"]
+allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "Bash(mkdir:*)", "Bash(touch:*)", "Bash(rm -f /tmp/.claude-kmpilot-skill-active)", "AskUserQuestion"]
 ---
 
 # Creating KMP Features
@@ -9,9 +9,20 @@ Orchestrates complete feature creation using a 5-phase workflow.
 
 **Architecture Reference:** @../_shared/patterns.md
 
+## Hook Marker (Required)
+
+Before editing any feature files, activate the skill marker so the PreToolUse hook allows edits:
+```bash
+touch /tmp/.claude-kmpilot-skill-active
+```
+After Phase 4 completes (or on any early exit), remove it:
+```bash
+rm -f /tmp/.claude-kmpilot-skill-active
+```
+
 ## Workflow
 
-**Phase 0** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Phase 3** → **Phase 4** → ✅ Done
+**Phase 0** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Activate marker** → **Phase 3** → **Phase 4** → **Remove marker** → ✅ Done
 
 ### Phase 0: Context Discovery (Auto)
 Detect: `PKG_PREFIX`, `INIT_KOIN_PATH`, `NAV_HOST_PATH` from existing features.

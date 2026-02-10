@@ -3,6 +3,9 @@
 # Re-injects critical architecture rules after context compaction.
 # Used as a SessionStart hook with "compact" matcher.
 
+# Clean up stale skill marker on compaction
+rm -f /tmp/.claude-kmpilot-skill-active
+
 cat <<'RULES'
 ## Critical Architecture Rules (Re-injected After Compaction)
 

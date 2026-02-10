@@ -1,6 +1,6 @@
 ---
 description: Modify existing KMP features with spec-first workflow. Invoke with /modifying-kmp-feature.
-allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "AskUserQuestion"]
+allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "Bash(touch:*)", "Bash(rm -f /tmp/.claude-kmpilot-skill-active)", "AskUserQuestion"]
 ---
 
 # Modifying KMP Features
@@ -9,9 +9,20 @@ Apply changes to existing features using spec-first workflow.
 
 **Architecture Reference:** @../_shared/patterns.md
 
+## Hook Marker (Required)
+
+Before editing any feature files, activate the skill marker so the PreToolUse hook allows edits:
+```bash
+touch /tmp/.claude-kmpilot-skill-active
+```
+After completion (or on any early exit), remove it:
+```bash
+rm -f /tmp/.claude-kmpilot-skill-active
+```
+
 ## Workflow
 
-**Parse** → **Spec Check** → **Understand** → **Plan** → **Draft Spec** → [USER APPROVES] → **Implement** → **Validate** → **Update Spec** → ✅ Done
+**Parse** → **Spec Check** → **Understand** → **Plan** → **Draft Spec** → [USER APPROVES] → **Activate marker** → **Implement** → **Validate** → **Update Spec** → **Remove marker** → ✅ Done
 
 ### Step 1: Parse Feature Name
 Extract from request: "add sorting to productlist" → `productlist`
