@@ -15,12 +15,14 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 9. **No UseCases** - ViewModels invoke repositories directly
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
 
-## UI Implementation Workflow
+## UI Implementation Workflow (MANDATORY)
 
-When creating or modifying Screens, Composables, or UI components:
+**STOP — When creating or modifying ANY Screens, Composables, or UI components:**
 
-1. **If `/frontend-design` skill available** → Invoke FIRST for design guidance
-2. **Always** → Use `/using-design-system` for X-component mappings (mandatory)
+1. **Check** the available skills list (in the system-reminder) for `frontend-design`
+2. **If `frontend-design` IS in the available skills** → invoke `/frontend-design` FIRST — MANDATORY, do NOT skip
+
+`/using-design-system` auto-activates for UI work and does not need explicit invocation. `/frontend-design` is required whenever it appears in the available skills list — when present, NEVER skip it.
 
 ## 4 Integration Points
 

@@ -10,6 +10,7 @@
 | Modify feature | `/modifying-kmp-feature` | "add to", "change", "update", "fix", "modify" |
 | Review feature | `/feature-review` | "review", "check", "audit" |
 | Test feature | `/feature-test` | "test", "generate tests" |
+| UI work | `/frontend-design` (see UI rule below) | "screen", "UI", "composable", "component", "layout", "design" |
 
 **IMPORTANT:** Invoke the skill IMMEDIATELY upon recognizing feature work. Do NOT:
 - Read files first to "understand the codebase"
@@ -17,6 +18,12 @@
 - Plan the implementation first
 
 The skills contain workflows that handle exploration, planning, and implementation in the correct order.
+
+**UI WORK RULE:** When ANY task involves creating or modifying Screens, Composables, or UI components:
+1. **Check** the available skills list (in the system-reminder) for `frontend-design`
+2. **If `frontend-design` IS listed** → invoke `/frontend-design` FIRST — MANDATORY, do NOT skip it
+
+`/using-design-system` auto-activates for UI work and does not need explicit invocation. `/frontend-design` is required whenever it appears in the available skills list — when present, NEVER skip it.
 
 ---
 
