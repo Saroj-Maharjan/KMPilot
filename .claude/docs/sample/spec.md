@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 2.1.0 |
+| Version | 2.2.0 |
 | Status | Approved |
 | Author | System |
 | Created | 2026-01-05 |
-| Updated | 2026-01-20 |
+| Updated | 2026-02-10 |
 | Reviewers | N/A |
 
 ---
@@ -47,6 +47,7 @@ The sample feature was created to provide a working reference implementation of 
 - Must demonstrate all critical patterns
 - Must build successfully on both Android and iOS
 - Must use X-components exclusively (no Material3)
+- UI must demonstrate premium visual design using X-components
 
 ---
 
@@ -126,7 +127,7 @@ The sample feature was created to provide a working reference implementation of 
 | SampleUiModel | UI state container with 4-state pattern |
 | SampleScreen | Main composable connecting ViewModel to UI |
 | SampleScreenRoot | ViewModel-independent root for testing |
-| SampleCard | Reusable item card component |
+| SampleCard | Premium item card: crimson accent bar, bold title, ghost index number, XCard-based |
 | SampleRoute | Navigation route (@Serializable data object) |
 | SampleModules | DI configuration (BaseFeature object) |
 
@@ -174,6 +175,26 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 └── di/
     └── SampleModules.kt            # BaseFeature object with Koin modules
 ```
+
+### 4.5 UI Design
+
+**SampleCard Layout:**
+- `XCard` (white, 1dp elevation) with `IntrinsicSize.Min` row
+- Left: 3dp crimson accent bar (primary color), full card height
+- Center: `XText` bold title + muted description
+- Right: ghost index number (36sp Black, `GhostGray #E5E4E7`)
+
+**SampleScreenRoot States:**
+- Uninitialized: oversized ghost "SAMPLE" wordmark + "Collection" subtitle
+- Loading: `XCircularProgressIndicator` + "Loading collection" label
+- Success: `XTopAppBar` "Collection" title + editorial header (COLLECTION label / item count / divider) + card list
+- Empty: em-dash decorative mark + "Nothing here" + subtitle text
+- Error: centered `XCard` with top crimson strip, error message, `XButton` "Try Again"
+
+**Private color tokens:**
+- `TitleDark = Color(0xFF323036)`
+- `TextMutedGray = Color(0xFF7D7887)`
+- `GhostGray = Color(0xFFE5E4E7)`
 
 ---
 
@@ -345,7 +366,7 @@ Uninitialized ──[loadItems()]──► Loading
 
 | Error Scenario | User Message | Action Available |
 |----------------|--------------|------------------|
-| Generic exception | "An error occurred loading items" | Retry button |
+| Generic exception | Error message in premium card overlay | "Try Again" XButton |
 | Empty list | "No items found" | None (not an error state) |
 
 ---
@@ -413,6 +434,7 @@ Uninitialized ──[loadItems()]──► Loading
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-02-10 | Premium UI redesign: SampleCard with crimson accent bar + ghost index number; SampleScreenRoot with XScaffold/XTopAppBar, editorial header, premium state screens. Full X-components compliance. |
 | 2.1.0 | 2026-01-20 | Added API infrastructure (Ktor Resource, RemoteDataSource) for /api/sample/ endpoint. Repository still uses mock data for testing, can be easily switched to remote. |
 | 2.0 | 2026-01-20 | Updated spec to match new SDD patterns with full template structure |
 | 1.0 | 2026-01-05 | Initial spec generated from existing implementation |
