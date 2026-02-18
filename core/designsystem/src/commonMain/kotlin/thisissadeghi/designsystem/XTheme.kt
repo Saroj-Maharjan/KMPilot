@@ -3,6 +3,7 @@ package thisissadeghi.designsystem
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -32,11 +33,16 @@ private val Shapes =
     )
 
 private val XColors =
-    lightColorScheme(
-        background = XTheme.Colors.PaleLavender,
-        surface = Color.White,
-        primary = Color(0xFFB02418),
-//        primaryVariant = Color(0xFFD61905),
+    darkColorScheme(
+        background = Color(0xFF0A0A10),
+        surface = Color(0xFF131318),
+        primary = Color(0xFFD4AF37),
+        onPrimary = Color(0xFF0A0A10),
+        onBackground = Color.White,
+        onSurface = Color.White,
+        onSurfaceVariant = Color(0xFF5A5870),
+        outlineVariant = Color(0xFF2A2A35),
+        error = Color(0xFFFF6B6B),
     )
 
 /*
