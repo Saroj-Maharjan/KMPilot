@@ -3,20 +3,12 @@ package thisissadeghi.sample.data.remote
 import io.ktor.resources.Resource
 import kotlinx.serialization.Serializable
 
-/**
- * Ktor Resources for sample feature API endpoints.
- * Base path: /api/sample/
- */
-@Resource("/api/sample")
+@Resource("/api/finance")
 @Serializable
 class SampleResources {
-    /**
-     * GET /api/sample/
-     * Fetches all sample items.
-     */
-    @Resource("")
+    @Resource("/dashboard")
     @Serializable
-    class GetAll(
+    class GetDashboard(
         val parent: SampleResources = SampleResources(),
     )
 }

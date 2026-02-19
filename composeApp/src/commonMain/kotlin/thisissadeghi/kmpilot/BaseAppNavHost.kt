@@ -20,9 +20,8 @@ fun BaseAppNavHost(modifier: Modifier) {
         startDestination = SampleRoute,
     ) {
         sample(
-            onItemClick = { itemId ->
-                // Handle item click - navigate to detail if needed
-                // For now, just log or show a toast
+            onActionClick = { actionId ->
+                // Handle action — navigation or action handling to be wired later
             },
         )
     }

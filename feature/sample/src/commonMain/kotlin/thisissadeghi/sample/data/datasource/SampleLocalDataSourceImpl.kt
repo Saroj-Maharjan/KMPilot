@@ -1,30 +1,77 @@
 package thisissadeghi.sample.data.datasource
 
-import thisissadeghi.sample.data.model.SampleItem
+import thisissadeghi.sample.data.model.AccountBalance
+import thisissadeghi.sample.data.model.BudgetCategory
+import thisissadeghi.sample.data.model.DashboardData
+import thisissadeghi.sample.data.model.MonthlySummary
+import thisissadeghi.sample.data.model.PortfolioAsset
+import thisissadeghi.sample.data.model.QuickAction
+import thisissadeghi.sample.data.model.SavingsGoal
+import thisissadeghi.sample.data.model.SpendingInsight
+import thisissadeghi.sample.data.model.Transaction
+import thisissadeghi.sample.data.model.UpcomingBill
 
-/**
- * Implementation with mock data - replace with real data source for production.
- */
 class SampleLocalDataSourceImpl : SampleLocalDataSource {
-    override suspend fun getSampleItems(): List<SampleItem> =
-        listOf(
-            SampleItem(
-                id = "1",
-                title = "First Item",
-                description = "This is a sample item demonstrating the pattern",
-            ),
-            SampleItem(
-                id = "2",
-                title = "Second Item",
-                description = "Another sample with optional image",
-                imageUrl = "https://via.placeholder.com/150",
-            ),
-            SampleItem(
-                id = "3",
-                title = "Third Item",
-                description = "Demonstrates UiState handling",
-            ),
+    override suspend fun getDashboard(): DashboardData =
+        DashboardData(
+            accountBalance =
+                AccountBalance(
+                    totalBalance = 24850.50,
+                    currency = "USD",
+                    changePercent = 2.4,
+                    changeAmount = 580.00,
+                ),
+            monthlySummary =
+                MonthlySummary(
+                    monthName = "February 2026",
+                    income = 5200.00,
+                    expenses = 3450.00,
+                    currency = "USD",
+                ),
+            recentTransactions =
+                listOf(
+                    Transaction("t1", "Netflix", "Streaming", 15.99, false, "Feb 18", "USD"),
+                    Transaction("t2", "Salary Deposit", "Income", 5200.00, true, "Feb 15", "USD"),
+                    Transaction("t3", "Whole Foods", "Food", 84.50, false, "Feb 14", "USD"),
+                    Transaction("t4", "Uber Eats", "Food", 32.00, false, "Feb 13", "USD"),
+                    Transaction("t5", "AWS Services", "Tech", 120.00, false, "Feb 12", "USD"),
+                ),
+            budgetCategories =
+                listOf(
+                    BudgetCategory("Food & Dining", 340.00, 500.00, "USD"),
+                    BudgetCategory("Transportation", 120.00, 200.00, "USD"),
+                    BudgetCategory("Entertainment", 85.00, 150.00, "USD"),
+                    BudgetCategory("Shopping", 420.00, 400.00, "USD"),
+                ),
+            savingsGoals =
+                listOf(
+                    SavingsGoal("Emergency Fund", 8500.00, 10000.00, "USD", "Dec 2026"),
+                    SavingsGoal("Vacation Fund", 1200.00, 3000.00, "USD", "Jul 2026"),
+                ),
+            quickActions =
+                listOf(
+                    QuickAction("send", "Send", "send"),
+                    QuickAction("receive", "Receive", "receive"),
+                    QuickAction("pay", "Pay", "pay"),
+                    QuickAction("topup", "Top Up", "topup"),
+                ),
+            upcomingBills =
+                listOf(
+                    UpcomingBill("b1", "Rent", 1200.00, "Mar 1", "USD", false),
+                    UpcomingBill("b2", "Electricity", 95.00, "Mar 5", "USD", false),
+                    UpcomingBill("b3", "Internet", 59.99, "Feb 28", "USD", true),
+                ),
+            spendingInsight =
+                SpendingInsight(
+                    message = "You spent 20% more than last month on Food & Dining",
+                    percentageChange = 20.0,
+                    isPositive = false,
+                ),
+            portfolioAssets =
+                listOf(
+                    PortfolioAsset("p1", "Bitcoin", "BTC", 0.15, 6420.00, 3.2, "USD"),
+                    PortfolioAsset("p2", "Ethereum", "ETH", 2.0, 4800.00, -1.5, "USD"),
+                    PortfolioAsset("p3", "USD Coin", "USDC", 1000.0, 1000.00, 0.0, "USD"),
+                ),
         )
-
-    override suspend fun getSampleItemById(id: String): SampleItem? = getSampleItems().find { it.id == id }
 }
