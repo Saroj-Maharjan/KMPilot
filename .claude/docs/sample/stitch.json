@@ -1,0 +1,39 @@
+{
+  "projectId": "3450000335577208531",
+  "projectName": "projects/3450000335577208531",
+  "featureName": "sample",
+  "deviceType": "MOBILE",
+  "modelId": "GEMINI_3_FLASH",
+  "theme": {
+    "defaultTheme": "dark",
+    "primaryHex": "#9D70FF",
+    "paletteCustomized": true
+  },
+  "screens": {
+    "dashboard": {
+      "screenId": "050d5cfd574a4eeb91539a8ff5800fdc",
+      "screenName": "projects/3450000335577208531/screens/050d5cfd574a4eeb91539a8ff5800fdc",
+      "description": "Premium Finance Dashboard — success state with net worth, quick actions, budgets, savings, portfolio, transactions",
+      "designFile": "designs/sample.md",
+      "screenshot": "designs/sample.png",
+      "stateScreenshots": {
+        "loading": "designs/sample_loading.png",
+        "failed": "designs/sample_failed.png"
+      },
+      "stateScreenIds": {
+        "loading": "e8887bcbe5f5462eac6dd5fea03f53f8",
+        "failed": "43b3b3d46124403fb0b96dca5960a975"
+      },
+      "blueprint": "designs/sample_blueprint.md",
+      "approved": true,
+      "approvedAt": "2026-02-23"
+    }
+  },
+  "implementation": {
+    "implemented": true,
+    "implementedAt": "2026-02-23",
+    "method": "blueprint"
+  },
+  "createdAt": "2026-02-23",
+  "updatedAt": "2026-02-23"
+}

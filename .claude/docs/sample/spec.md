@@ -3,11 +3,12 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 2.2.0 |
+| Version | 3.1.0 |
 | Status | Approved |
 | Author | System |
 | Created | 2026-01-05 |
-| Updated | 2026-02-10 |
+| Updated | 2026-02-19 |
+| Design | `.claude/docs/sample/designs/sample_blueprint.md` |
 | Reviewers | N/A |
 
 ---
@@ -15,39 +16,40 @@
 ## 1. Overview
 
 ### 1.1 Summary
-A reference feature that demonstrates the standard KMP Clean Architecture patterns, state management, and UI composition using X-components design system. Serves as a canonical template for new feature development.
+A finance dashboard mockup that shows all key personal finance sections using hard-coded local data. Demonstrates the standard KMP Clean Architecture patterns while providing a realistic finance UI: total balance, income/expenses summary, recent transactions, budget progress, savings goals, quick actions, upcoming bills, spending insights, and portfolio snapshot.
 
 ### 1.2 Goals
 - Demonstrate the 4-state UI pattern (Uninitialized, Loading, Success, Failed)
 - Showcase Clean Architecture layer separation (data, presentation, DI)
 - Provide reference implementation for state management with `setState {}`
-- Illustrate proper navigation patterns and DI setup
+- Serve as a realistic finance dashboard mockup for future feature development
 
 ### 1.3 Non-Goals
-- Active API usage in repository (infrastructure ready, mock data used for testing)
-- Complex business logic (simplified for demonstration)
-- Production-ready feature (educational reference only)
+- Active API usage in repository (infrastructure ready, mock data used)
+- Functional quick actions (stubs only — handlers to be added later)
+- Production-ready feature (mockup only)
 
 ---
 
 ## 2. Context
 
 ### 2.1 Background
-The sample feature was created to provide a working reference implementation of all KMP architecture patterns. It demonstrates the complete feature lifecycle from data layer to UI without requiring external dependencies, making it ideal for onboarding and pattern validation.
+The sample feature was repurposed from a generic pattern demonstrator into a realistic finance dashboard mockup. It demonstrates the complete feature lifecycle from data layer to UI without requiring external dependencies, using a realistic finance domain to serve as a design reference and architecture example.
 
 ### 2.2 Dependencies
 - `:core:common` - UiState, ErrorModel, setState extension
-- `:core:designsystem` - X-components (XButton, XText, XCard, etc.)
+- `:core:designsystem` - X-components (XButton, XText, XCard, XIcon, etc.)
 - Koin - Dependency injection framework
-- Kotlinx Serialization - Route serialization
+- Kotlinx Serialization - Route serialization + model serialization
 - Compose Navigation - Screen navigation
+- Compose Material Icons Extended - Dashboard icons
 
 ### 2.3 Constraints
 - Must use mock data only (no real API)
 - Must demonstrate all critical patterns
 - Must build successfully on both Android and iOS
-- Must use X-components exclusively (no Material3)
-- UI must demonstrate premium visual design using X-components
+- Must use X-components exclusively (no Material3 components directly)
+- Quick actions are stubs (render but take no real action)
 
 ---
 
@@ -57,13 +59,17 @@ The sample feature was created to provide a working reference implementation of 
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| FR-1 | Display list of sample items with title, description | Must |
-| FR-2 | Show loading state while data is being fetched | Must |
-| FR-3 | Handle empty state when no items available | Must |
-| FR-4 | Handle error state with retry capability | Must |
-| FR-5 | Support item selection and trigger navigation callback | Must |
-| FR-6 | Display uninitialized state before data load begins | Should |
-| FR-7 | Provide API infrastructure for future remote data integration | Should |
+| FR-1 | Display total balance card with currency, amount, and change percentage | Must |
+| FR-2 | Show monthly income vs. expenses summary with visual bars | Must |
+| FR-3 | Display last 5 recent transactions with category icon and amount | Must |
+| FR-4 | Show budget progress for 4 categories with percentage-filled bar | Must |
+| FR-5 | Display 2 savings goals with progress bars and target dates | Must |
+| FR-6 | Show 4 quick action buttons: Send, Receive, Pay, Top Up (stubs) | Must |
+| FR-7 | Display upcoming bills list (3 items) | Must |
+| FR-8 | Show spending insight banner | Must |
+| FR-9 | Display portfolio/currency snapshot (3 assets) | Must |
+| FR-10 | Show loading state while data is fetching | Must |
+| FR-11 | Handle error state with retry | Must |
 
 ### 3.2 Non-Functional Requirements
 
@@ -71,7 +77,7 @@ The sample feature was created to provide a working reference implementation of 
 |----|-------------|--------|
 | NFR-1 | State transitions | Explicit setState {} usage only |
 | NFR-2 | Architecture compliance | 100% adherence to 10 critical rules |
-| NFR-3 | Design system usage | X-components only, zero Material3 |
+| NFR-3 | Design system usage | X-components only, zero direct Material3 |
 | NFR-4 | Code quality | ktlint passing, no warnings |
 
 ---
@@ -117,33 +123,69 @@ The sample feature was created to provide a working reference implementation of 
 | Component | Responsibility |
 |-----------|----------------|
 | SampleLocalDataSource | Interface for local data operations |
-| SampleLocalDataSourceImpl | Mock data implementation (3 sample items) |
+| SampleLocalDataSourceImpl | Hard-coded finance dashboard data |
 | SampleRemoteDataSource | Interface for remote API operations |
 | SampleRemoteDataSourceImpl | API implementation using ApiClient |
-| SampleResources | Ktor Resource definitions for /api/sample/ endpoint |
+| SampleResources | Ktor Resource definitions for /api/finance/dashboard endpoint |
 | SampleRepository | Interface for business logic |
-| SampleRepositoryImpl | Business logic implementation (currently uses local data) |
+| SampleRepositoryImpl | Business logic implementation (uses local data) |
 | SampleViewModel | State management using MutableStateFlow + setState |
 | SampleUiModel | UI state container with 4-state pattern |
 | SampleScreen | Main composable connecting ViewModel to UI |
 | SampleScreenRoot | ViewModel-independent root for testing |
-| SampleCard | Premium item card: crimson accent bar, bold title, ghost index number, XCard-based |
+| BalanceSection | Total balance hero card with gold accent |
+| MonthlySummarySection | Income vs. expenses bar comparison |
+| QuickActionsSection | 4 stub action buttons in a row |
+| SectionHeader | Reusable labelled divider for dashboard sections |
+| TransactionRow | Single transaction row with category icon |
+| BudgetRow | Budget category with progress bar (red if over budget) |
+| SavingsGoalCard | Savings goal with progress bar and due date |
+| BillRow | Upcoming bill row (red if overdue) |
+| InsightBanner | Full-width spending insight card |
+| PortfolioAssetRow | Asset with symbol circle, balance, and change % |
 | SampleRoute | Navigation route (@Serializable data object) |
 | SampleModules | DI configuration (BaseFeature object) |
 
 ### 4.3 Data Models
 
 ```kotlin
-/**
- * Sample data model demonstrating the pattern.
- */
-@Serializable
-data class SampleItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageUrl: String? = null,
+data class DashboardData(
+    val accountBalance: AccountBalance,
+    val monthlySummary: MonthlySummary,
+    val recentTransactions: List<Transaction>,
+    val budgetCategories: List<BudgetCategory>,
+    val savingsGoals: List<SavingsGoal>,
+    val quickActions: List<QuickAction>,
+    val upcomingBills: List<UpcomingBill>,
+    val spendingInsight: SpendingInsight,
+    val portfolioAssets: List<PortfolioAsset>,
 )
+
+data class AccountBalance(val totalBalance: Double, val currency: String,
+    val changePercent: Double, val changeAmount: Double)
+
+data class MonthlySummary(val monthName: String, val income: Double,
+    val expenses: Double, val currency: String)
+
+data class Transaction(val id: String, val title: String, val category: String,
+    val amount: Double, val isIncome: Boolean, val date: String, val currency: String)
+
+data class BudgetCategory(val name: String, val spent: Double, val total: Double,
+    val currency: String)  // computed: progress, isOverBudget
+
+data class SavingsGoal(val name: String, val current: Double, val target: Double,
+    val currency: String, val dueDate: String)  // computed: progress
+
+data class QuickAction(val id: String, val label: String, val iconName: String)
+
+data class UpcomingBill(val id: String, val name: String, val amount: Double,
+    val dueDate: String, val currency: String, val isOverdue: Boolean)
+
+data class SpendingInsight(val message: String, val percentageChange: Double,
+    val isPositive: Boolean)
+
+data class PortfolioAsset(val id: String, val name: String, val symbol: String,
+    val balance: Double, val value: Double, val changePercent: Double, val currency: String)
 ```
 
 ### 4.4 Package Structure
@@ -152,49 +194,54 @@ data class SampleItem(
 feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 ├── data/
 │   ├── model/
-│   │   └── SampleItem.kt           # Data model (@Serializable)
+│   │   ├── DashboardData.kt         # All finance data models (@Serializable)
+│   │   └── SampleItem.kt            # Empty — replaced by DashboardData.kt
 │   ├── remote/
-│   │   └── SampleResources.kt      # Ktor Resource for /api/sample/
+│   │   └── SampleResources.kt       # Ktor Resource for /api/finance/dashboard
 │   ├── datasource/
 │   │   ├── SampleLocalDataSource.kt        # Interface
-│   │   ├── SampleLocalDataSourceImpl.kt    # Mock implementation
+│   │   ├── SampleLocalDataSourceImpl.kt    # Hard-coded finance data
 │   │   ├── SampleRemoteDataSource.kt       # Interface (remote)
 │   │   └── SampleRemoteDataSourceImpl.kt   # API implementation
 │   └── repository/
 │       ├── SampleRepository.kt             # Interface
-│       └── SampleRepositoryImpl.kt         # Implementation (uses local, can switch to remote)
+│       └── SampleRepositoryImpl.kt         # Implementation (uses local)
 ├── presentation/
-│   ├── SampleViewModel.kt          # MutableStateFlow + setState {}
-│   ├── SampleUiModel.kt            # @Stable data class
+│   ├── SampleViewModel.kt           # MutableStateFlow + setState {}
+│   ├── SampleUiModel.kt             # @Stable data class
 │   ├── ui/
-│   │   ├── SampleScreen.kt         # Main composable
+│   │   ├── SampleScreen.kt          # Full dashboard screen + all section composables
 │   │   └── components/
-│   │       └── SampleCard.kt       # Item card component
+│   │       └── SampleCard.kt        # Empty — components live in SampleScreen.kt
 │   └── navigation/
-│       └── SampleNavigation.kt     # @Serializable route + extension
+│       └── SampleNavigation.kt      # @Serializable route + extension
 └── di/
-    └── SampleModules.kt            # BaseFeature object with Koin modules
+    └── SampleModules.kt             # BaseFeature object with Koin modules
 ```
 
 ### 4.5 UI Design
 
-**SampleCard Layout:**
-- `XCard` (white, 1dp elevation) with `IntrinsicSize.Min` row
-- Left: 3dp crimson accent bar (primary color), full card height
-- Center: `XText` bold title + muted description
-- Right: ghost index number (36sp Black, `GhostGray #E5E4E7`)
+**Theme:** Dark (background `#0D0919`, surface `#181228`, primary purple `#9D70FF`)
 
-**SampleScreenRoot States:**
-- Uninitialized: oversized ghost "SAMPLE" wordmark + "Collection" subtitle
-- Loading: `XCircularProgressIndicator` + "Loading collection" label
-- Success: `XTopAppBar` "Collection" title + editorial header (COLLECTION label / item count / divider) + card list
-- Empty: em-dash decorative mark + "Nothing here" + subtitle text
-- Error: centered `XCard` with top crimson strip, error message, `XButton` "Try Again"
+**Color tokens (M3 roles):**
+- Income/positive: `MaterialTheme.colorScheme.tertiary` (`#4ADE80`)
+- Expense/negative: `XTheme.Colors.ExpenseRed` (`#FF6B6B`)
+- All other colors via `MaterialTheme.colorScheme.*` — no hardcoded hex in feature code
 
-**Private color tokens:**
-- `TitleDark = Color(0xFF323036)`
-- `TextMutedGray = Color(0xFF7D7887)`
-- `GhostGray = Color(0xFFE5E4E7)`
+**Dashboard Layout (LazyColumn) — section order:**
+1. **BalanceCard** — "TOTAL NET WORTH" uppercase label; wallet watermark icon (alpha 0.10); large purple `$` amount (38sp); trend pill with tertiary green bg + icon; 3dp primary top strip; 24dp card corners
+2. **QuickActionsSection** — centered Row with 24dp gaps; 56dp icon circles with 32dp corners + primary tint border
+3. **InsightBanner** — tertiary-tinted card with lightbulb icon + smart insight message
+4. **MonthlySummarySection** — section heading; single card with "Income Performance" (tertiary) and "Expenses Used" (ExpenseRed) bars; 6dp bar height
+5. **BudgetsSection** — section heading + "View All"; cards with 4dp left-accent border (ExpenseRed if over, primary otherwise); icon circles; "OVER" badge or "On track" label
+6. **SavingsGoalsSection** — section heading; cards with outlineVariant border; tertiary progress bars (8dp height); percentage label
+7. **UpcomingBillsSection** — section heading; cards with 4dp left-accent; icon circles; "OVERDUE" in ExpenseRed (no day count)
+8. **PortfolioSection** — section heading; single card wrapping all assets with XHorizontalDivider between rows; symbol circle with primary fill
+9. **RecentTransactionsSection** — section heading + tune icon; single card with XHorizontalDivider; category • date sub-label
+
+**Header:** Custom Column (not XTopAppBar) — "Good morning" subtitle in onSurfaceVariant + "Dashboard" bold title in onSurface. No navigation icons.
+
+**All cards:** `RoundedCornerShape(24.dp)`. Progress bar track: `Color(0xFF1E293B)` (slate-800).
 
 ---
 
@@ -202,91 +249,38 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 
 ### 5.1 API Contracts
 
-**Endpoint:** `GET /api/sample/`
+**Endpoint:** `GET /api/finance/dashboard`
 
-**Description:** Fetches all sample items.
+**Description:** Fetches the full finance dashboard data.
 
 **Authentication:** Not required (demonstration endpoint)
 
-**Response:** `200 OK`
-```kotlin
-List<SampleItem>
-```
-
-**Response Model:**
-```kotlin
-@Serializable
-data class SampleItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageUrl: String? = null,
-)
-```
+**Response:** `200 OK` → `DashboardData`
 
 **Notes:**
 - API infrastructure is implemented but not currently used by repository
-- Repository uses mock local data for testing purposes
-- Easy to switch to remote data source by changing repository implementation
+- Repository uses hard-coded local data for the mockup
 
 ### 5.2 Internal Contracts
 
 ```kotlin
-/**
- * Local data source for sample items.
- */
 interface SampleLocalDataSource {
-    /**
-     * Fetches all sample items.
-     *
-     * Contract:
-     * - Returns list of sample items (may be empty)
-     * - Never throws exceptions
-     * - Synchronous operation (mock data)
-     */
-    fun getItems(): List<SampleItem>
+    suspend fun getDashboard(): DashboardData
 }
 
-/**
- * Remote data source for sample items via API.
- */
 interface SampleRemoteDataSource {
-    /**
-     * Fetches sample items from remote API.
-     *
-     * Contract:
-     * - Returns Either<List<SampleItem>>
-     * - Left: ErrorModel on failure
-     * - Right: List of sample items (may be empty)
-     * - Suspending operation (network call)
-     */
-    suspend fun getSampleItems(): Either<List<SampleItem>>
+    suspend fun getDashboard(): Either<DashboardData>
 }
 
-/**
- * Repository for sample feature business logic.
- *
- * Note: Currently uses local mock data for testing.
- * Can easily switch to remote data source by injecting
- * SampleRemoteDataSource instead of SampleLocalDataSource.
- */
 interface SampleRepository {
-    /**
-     * Fetches sample items from data source.
-     *
-     * Contract:
-     * - Returns list of sample items (may be empty)
-     * - Never throws exceptions
-     * - Synchronous operation (no suspend needed for mock)
-     */
-    fun getItems(): List<SampleItem>
+    suspend fun getDashboard(): DashboardData
 }
 ```
 
 ### 5.3 External Integrations
 
 Navigation callbacks:
-- `onItemClick: (String) -> Unit` - Triggered when user taps item, passes item ID
+- `onActionClick: (String) -> Unit` — Called when user taps a quick action button, passes action ID
 
 ---
 
@@ -294,80 +288,53 @@ Navigation callbacks:
 
 ### 6.1 User Flows
 
-#### View Sample Items Flow
+#### View Dashboard Flow
 1. User navigates to Sample screen via `navController.navigate(SampleRoute)`
-2. Screen enters Uninitialized state
-3. ViewModel calls `loadItems()` on init
-4. State transitions to Loading
-5. Repository fetches mock data from DataSource
-6. On success: State transitions to Success with item list
-7. On error: State transitions to Failed with error
-8. User sees list rendered based on state
+2. Screen enters Uninitialized → immediately triggers Loading
+3. ViewModel calls `loadDashboard()` on init
+4. State transitions to Loading (shows spinner)
+5. Repository fetches mock data from local DataSource
+6. State transitions to Success — full dashboard renders
+7. On error: State transitions to Failed with retry button
 
-#### Item Selection Flow
-1. User taps on item card
-2. ViewModel's `onItemClick()` is called
-3. ViewModel updates `selectedItem` in state using `setState {}`
-4. Navigation callback is triggered with item ID
+#### Quick Action Flow
+1. User taps any quick action button (Send, Receive, Pay, Top Up)
+2. `onActionClick(actionId)` callback is invoked with the action's ID
+3. No further navigation or behaviour (stub — to be implemented later)
 
 #### Retry Flow
-1. User is in Failed state (error occurred)
-2. User taps "Retry" button
-3. ViewModel calls `retry()` which triggers `loadItems()`
+1. User is in Failed state
+2. User taps "Try Again"
+3. ViewModel calls `retry()` → `loadDashboard()`
 4. State transitions back to Loading
-5. Process repeats from step 5 of View Flow
 
 ### 6.2 State Management
 
-#### UiState Structure
-
 ```kotlin
-/**
- * UI model for the sample feature.
- * Demonstrates the 4-state UI pattern: Uninitialized, Loading, Success, Failed.
- */
-@Stable
 data class SampleUiModel(
-    val itemsState: UiState<List<SampleItem>> = UiState.Uninitialized,
-    val selectedItem: SampleItem? = null,
+    val dashboardState: UiState<DashboardData> = UiState.Uninitialized,
 )
 ```
 
-#### State Transitions
-
+**State Transitions:**
 ```
-Uninitialized ──[loadItems()]──► Loading
-                                    │
-                    ┌───────────────┴───────────────┐
-                    │                               │
-             [success]                          [failure]
-                    │                               │
-                    ▼                               ▼
-                Success                         Failed
-                    │                               │
-                    │                               │
-             [refresh]──► Loading           [retry]─┘
-                    │
-                    └──────────────────────────────┘
+Uninitialized ──[loadDashboard()]──► Loading
+                                         │
+                         ┌───────────────┴───────────────┐
+                         │                               │
+                  [success]                          [failure]
+                         │                               │
+                         ▼                               ▼
+                      Success                         Failed
+                                                         │
+                                                  [retry]─┘
 ```
-
-**State Definitions:**
-1. **Uninitialized**: Initial state, no data loaded yet
-2. **Loading**: Data fetch in progress, show loading indicator
-3. **Success**: Data loaded successfully, display items (or empty state if list is empty)
-4. **Failed**: Error occurred, show error message with retry button
-
-**ViewModel Actions:**
-- `loadItems()`: Fetches items from repository (called on init)
-- `onItemClick(item: SampleItem)`: Updates selected item using `setState { copy(selectedItem = item) }`
-- `retry()`: Re-triggers `loadItems()` after error
 
 ### 6.3 Error Handling
 
 | Error Scenario | User Message | Action Available |
 |----------------|--------------|------------------|
 | Generic exception | Error message in premium card overlay | "Try Again" XButton |
-| Empty list | "No items found" | None (not an error state) |
 
 ---
 
@@ -377,37 +344,33 @@ Uninitialized ──[loadItems()]──► Loading
 
 | Scenario | Given | When | Then |
 |----------|-------|------|------|
-| Items load successfully | User navigates to Sample | Data loads from mock source | List of 3 items displayed, state = Success |
-| Items list is empty | Mock source returns empty list | Data loads | "No items found" message shown |
-| Items fail to load | Mock source throws exception | Data load attempted | Error overlay with retry button shown |
-| Retry after error | Error state displayed | User taps retry | Loading state shown, data reloaded |
-| Select item | Items displayed successfully | User taps item card | selectedItem updated, callback triggered |
-| Navigate back | User on Sample screen | User taps back | Returns to previous screen |
+| Dashboard loads | User navigates to screen | Data loads from mock source | Full dashboard visible, state = Success |
+| Dashboard fails | Mock source throws exception | Data load attempted | Error overlay with retry button shown |
+| Retry after error | Error state displayed | User taps retry | Loading state shown, data reloads |
+| Quick action tap | Dashboard displayed | User taps any action button | onActionClick called with action ID |
 
 ### 7.2 Acceptance Criteria
 
 **Display & States:**
-- [ ] Uninitialized state shown initially
 - [ ] Loading indicator shown during data fetch
-- [ ] Success state displays all items correctly
-- [ ] Empty state shows when list is empty
+- [ ] Success state renders all 9 dashboard sections
 - [ ] Failed state shows error message and retry button
 
-**State Management:**
-- [ ] All state updates use `setState {}`
-- [ ] No direct state assignment anywhere in ViewModel
-- [ ] StateFlow properly collected in composable
+**Dashboard Sections:**
+- [ ] Balance card shows total, currency chip, and trend indicator
+- [ ] Monthly summary shows income/expense bars for current month
+- [ ] 5 recent transactions visible with category icons and amounts
+- [ ] 4 budget categories with progress bars (Shopping shows OVER badge)
+- [ ] 2 savings goals with green progress bars
+- [ ] 4 quick action buttons rendered as surface cards
+- [ ] 3 upcoming bills (Internet shows OVERDUE in red)
+- [ ] Spending insight banner renders with lightbulb icon
+- [ ] 3 portfolio assets with symbol circles and change percentages
 
 **Architecture:**
-- [ ] Interface + Impl pairs created for DataSource and Repository
-- [ ] 4 integration points completed (settings.gradle.kts, build.gradle.kts, initKoin, navigation)
-- [ ] X-components used exclusively (no Material3)
+- [ ] All state updates use `setState {}`
+- [ ] X-components used exclusively
 - [ ] ktlint passes without errors
-
-**Navigation:**
-- [ ] SampleRoute defined as @Serializable data object
-- [ ] NavGraphBuilder extension created
-- [ ] Navigation callback works correctly
 
 ---
 
@@ -419,10 +382,9 @@ Uninitialized ──[loadItems()]──► Loading
 |------|------------|
 | 4-state pattern | UI state management with Uninitialized, Loading, Success, Failed states |
 | setState {} | Extension function for safe state updates in ViewModel |
-| Either<T> | Functional error handling type (not used in Sample - no API) |
-| BaseFeature | Koin module pattern for feature DI setup |
+| DashboardData | Top-level model containing all finance dashboard sections |
+| Quick action stub | UI element that renders but performs no real operation (placeholder) |
 | X-components | Custom design system components (`:core:designsystem`) |
-| ScreenRoot | ViewModel-independent composable for testing |
 
 ### B. References
 
@@ -434,10 +396,12 @@ Uninitialized ──[loadItems()]──► Loading
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.2.0 | 2026-02-10 | Premium UI redesign: SampleCard with crimson accent bar + ghost index number; SampleScreenRoot with XScaffold/XTopAppBar, editorial header, premium state screens. Full X-components compliance. |
-| 2.1.0 | 2026-01-20 | Added API infrastructure (Ktor Resource, RemoteDataSource) for /api/sample/ endpoint. Repository still uses mock data for testing, can be easily switched to remote. |
-| 2.0 | 2026-01-20 | Updated spec to match new SDD patterns with full template structure |
-| 1.0 | 2026-01-05 | Initial spec generated from existing implementation |
+| 3.1.0 | 2026-02-19 | UI redesign via Stitch (ui-designer skill): purple brand palette (#9D70FF primary), M3 tertiary for income (#4ADE80), XTheme.Colors.ExpenseRed for expenses, 24dp card corners, custom header Column, reordered sections (Insight Banner after Quick Actions), Budget/Bills redesigned as cards with 4dp left-accent borders, Portfolio/Transactions wrapped in single cards with dividers, removed private color vals in favour of MaterialTheme.colorScheme roles. |
+| 3.0.0 | 2026-02-19 | Major rewrite: replaced generic sample with finance dashboard mockup. New domain models (DashboardData + 9 sub-models), hard-coded local data, full dashboard UI with balance, summary, transactions, budget, savings goals, quick actions, bills, insights, portfolio. Navigation callback renamed to onActionClick. |
+| 2.2.0 | 2026-02-10 | Premium UI redesign: SampleCard with crimson accent bar + ghost index number. |
+| 2.1.0 | 2026-01-20 | Added API infrastructure (Ktor Resource, RemoteDataSource). |
+| 2.0 | 2026-01-20 | Updated spec to match new SDD patterns. |
+| 1.0 | 2026-01-05 | Initial spec. |
 
 ### D. Integration Points
 
@@ -446,4 +410,4 @@ Uninitialized ──[loadItems()]──► Loading
 | Module include | settings.gradle.kts | ✅ Completed |
 | Dependency | composeApp/build.gradle.kts | ✅ Completed |
 | DI initialization | initKoin.kt | ✅ Completed |
-| Navigation wiring | BaseAppNavHost.kt | ✅ Completed |
+| Navigation wiring | BaseAppNavHost.kt | ✅ Updated (onActionClick) |
