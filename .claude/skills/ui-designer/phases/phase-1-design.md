@@ -374,6 +374,12 @@ After all state designs are approved (success + loading + failed + empty), audit
 
 1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`)
 2. **Collect all colors from Stitch prompts**: Gather every color specified in the "Defined colors" and "Proposed colors" blocks from all Stitch prompts used during this phase (Steps 1.2b and 1.6). These prompts are the authoritative source of color values — do NOT attempt to extract hex values from screenshots via vision, as that is imprecise.
+
+   **Also collect component visual properties from the HTML** (Step 1.6.6 downloads the HTML — read it before deleting). For every component visible in the design, extract two things and flag any divergence in a "Component Overrides" section of the Color Audit:
+
+   - **Colors per visual state**: For every component, read the actual CSS colors for every visual state from the HTML. For each, verify that the mapped M3 role in `XTheme.kt` resolves to that exact hex. If it diverges, flag it — the blueprint must use an explicit color override instead of the semantic role.
+
+   - **Sizing**: For every component, read the explicit dimensions from the HTML. Compare to the X-component's actual rendered default. If they differ, flag it — the blueprint must include an explicit size override.
 3. **Map each color to an M3 role** using the [Complete M3 Role Catalog](../references/m3-colors.md#complete-m3-role-catalog)
 4. **Classify each role**:
    - **Defined**: Already in the active scheme in `XTheme.kt`

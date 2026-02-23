@@ -133,7 +133,16 @@ After implementation finishes:
 }
 ```
 
-3. **Inform the user** that implementation is complete
+3. **Blueprint fidelity check**: For each state in the blueprint, verify the
+   implementation contains every component listed (icons, decorative elements,
+   text elements, buttons). A missing component means the implementation is
+   incomplete — add it before proceeding.
+
+   Also verify **modifier-level fidelity**: for each component, confirm every
+   Modifier in the blueprint (`.border()`, `.shadow()`, `.alpha()`, etc.) is
+   present in the implementation — not just the component itself.
+
+4. **Inform the user** that implementation is complete
 
 **Mode 2** → Show completion report. Done.
 **Mode 3** → Proceed to **Phase 3: Visual Verification**.

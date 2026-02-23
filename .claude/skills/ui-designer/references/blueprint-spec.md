@@ -94,6 +94,13 @@ RULES:
    - w-full → Modifier.fillMaxWidth(), h-{N} → Modifier.height({N*4}.dp)
    - flex/flex-col → Column, flex-row → Row
    - items-center → CenterVertically/CenterHorizontally
+     ⚠ Compose caveat: In CSS, `items-center` on a full-width flex container centers
+       children automatically. In Compose, `CenterHorizontally` is a no-op unless the
+       Column itself has `fillMaxWidth()`. Similarly, `textAlign = TextAlign.Center` on
+       XText is invisible unless that XText has `fillMaxWidth()`. When the HTML has
+       `flex-col items-center text-center`, translate as:
+       Column(Modifier.fillMaxWidth(), horizontalAlignment = CenterHorizontally)
+       with fillMaxWidth() on each XText child.
    - justify-center → Arrangement.Center, justify-between → Arrangement.SpaceBetween
    - text-{size} → fontSize (xs=12sp, sm=14sp, base=16sp, lg=18sp, xl=20sp, 2xl=24sp, 3xl=30sp)
    - font-bold → Bold, font-semibold → SemiBold, font-medium → Medium
@@ -103,6 +110,11 @@ RULES:
    - fixed/sticky bottom → XScaffold bottomBar
 3. Map HTML elements to X-components using the provided mapping table.
 4. Map all colors to M3 roles using the Color Audit. Use MaterialTheme.colorScheme.{role}, never hex.
+4b. **Component visual fidelity verification (MANDATORY for every component)**:
+    For every component in the blueprint, extract two things directly from the HTML — never assume X-component defaults match:
+    (a) **Colors**: Read the actual CSS color for every visual state of every component (bg-*, text-*, border-*, etc.). For each, look up the M3 role via the Color Audit, then verify that role's hex in `XTheme.kt` equals the CSS hex. If it matches → use `MaterialTheme.colorScheme.{role}`. If it diverges → write an explicit color override using the actual hex value, annotated with the mismatch reason.
+    (b) **Sizing**: Read explicit dimensions from the HTML for every component. Compare to the X-component's actual rendered default. If they differ → write an explicit size override in the blueprint.
+    The principle: the HTML is always the source of truth. X-component defaults are assumptions that must be verified, not trusted.
 5. Identify shared scaffold common across all states — describe ONCE.
 6. Per state, describe only the differing content area.
 7. Extract repeated patterns (2+ occurrences) as named components.
@@ -128,6 +140,7 @@ RULES:
     - `rounded-lg` → 2rem → 32dp
     - `rounded-xl` → 3rem → 48dp
     - `rounded-full` → 9999dp (use `CircleShape` or `RoundedCornerShape(50)`)
+    If a custom config exists but a class is NOT listed in it (e.g. `rounded-2xl` when only `DEFAULT`, `lg`, `xl` are defined), use the standard Tailwind default for that class — never extrapolate from the defined keys.
     If no custom config exists, use standard Tailwind defaults:
     - `rounded-sm` → 2dp, `rounded` → 4dp, `rounded-md` → 6dp,
       `rounded-lg` → 8dp, `rounded-xl` → 12dp, `rounded-2xl` → 16dp, `rounded-3xl` → 24dp
@@ -163,6 +176,12 @@ RULES:
     - **Dropdown trigger**: A row with text + `expand_more`/`chevron_down` Material icon →
       `XExposedDropdownMenuBox` anchor with `XDropdownMenuItem` menu, NOT a plain clickable `Row`.
       The visual shows a static selector, but the implementation needs a popup menu.
+17. **Independent state parsing**: Each state screen has its own HTML file with its own
+    tailwind config. Do NOT carry values (border radius, padding, colors, font sizes)
+    from one state's HTML to another. Re-read the `tailwind.config` `<script>` tag and
+    CSS classes independently for each state file. A failed state may define
+    `rounded-card: 12px` while the success state uses `rounded-xl: 1.5rem` — these are
+    different values that must be translated separately.
 
 X-COMPONENT MAPPING TABLE:
 {paste from stitch-guide.md}
