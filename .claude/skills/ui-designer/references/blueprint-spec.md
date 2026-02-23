@@ -62,10 +62,23 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 
 | Condition | Style |
 |-----------|-------|
-| HTML body ≤150 lines AND ≤3 visual sections | **Flat** — one component tree per state |
+| HTML body ≤150 lines AND ≤3 visual sections | **Flat** — one component tree per state, everything in `{Feature}Screen.kt` |
 | HTML body >150 lines OR >3 sections | **Decomposed** — skeleton with `[slot]` placeholders + individual component specs |
 
 **Repeated patterns** (2+ occurrences with same structure) must be extracted as named components.
+
+**For decomposed blueprints**, annotate each named component with its target file based on this rule:
+- **`{Feature}Screen.kt`** — structural glue: state routing, top-level layout scaffold, state screens (Loading, Error)
+- **`components/{ComponentName}.kt`** — self-contained UI units: composables that have meaning independently of the screen, own their internal structure, or have private sub-composables/helper functions
+
+Example annotation in the blueprint component tree:
+```
+// → {Feature}Screen.kt
+- LazyColumn scaffold (sequences all sections)
+
+// → components/ProductCard.kt
+- ProductCard (owns image, title, price layout + ratingColor helper)
+```
 
 ---
 

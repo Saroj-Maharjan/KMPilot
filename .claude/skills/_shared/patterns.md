@@ -120,11 +120,30 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 │   ├── {Feature}ViewModel.kt
 │   ├── {Feature}UiState.kt
 │   ├── {Feature}UiModel.kt
-│   ├── ui/              # Screens + components
+│   ├── ui/
+│   │   ├── {Feature}Screen.kt   # Screen + ScreenRoot + state routing only
+│   │   └── components/          # Self-contained UI units
 │   └── navigation/      # Routes + NavGraphBuilder
 └── di/
     └── {Feature}Modules.kt
 ```
+
+### UI File Organization
+
+`{Feature}Screen.kt` is the orchestrator — it must stay lean. Use this rule to decide where each composable lives:
+
+**Keep in `{Feature}Screen.kt`** — composables that are structural glue:
+- `{Feature}Screen` and `{Feature}ScreenRoot`
+- State routing (`when (uiState) { Loading -> ... Success -> ... }`)
+- Top-level layout scaffold (e.g. the `LazyColumn` or `Column` that sequences sections)
+- State screens (`LoadingContent`, `ErrorContent`) — they exist only to respond to a UI state, not as standalone units
+
+**Move to `components/{Name}.kt`** — composables that are self-contained UI units:
+- A composable can be named and described as a "thing" independently of the screen
+- It owns its own internal structure, visual identity, or domain logic
+- It has its own private sub-composables or private helper functions
+
+> The guiding question: *"Does this composable have meaning on its own, or does it only make sense as part of the screen?"* If it has meaning on its own → `components/`. If it only exists to wire things together → `{Feature}Screen.kt`.
 
 ## Build Commands
 
