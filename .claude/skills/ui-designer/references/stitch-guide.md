@@ -100,10 +100,11 @@ This is too vague. Stitch needs specific visual details to generate quality desi
 Full M3 role catalog, color rules, and usage guidance: **[m3-colors.md](m3-colors.md)**
 
 Key points (read the full reference when writing Stitch prompts or doing Color Audits):
-- **Source of truth**: `XTheme.kt` `lightColorScheme` defines all active roles
+- **Source of truth**: `XTheme.kt` defines all active roles in `XLightColors` (lightColorScheme) and `XDarkColors` (darkColorScheme)
+- Use the scheme matching `defaultTheme` (from Phase 0 Step 0.1.5) when writing Stitch prompts
 - Every design color **must** map to an M3 role — annotate as `{hex} (M3: {role})`
 - Feature code uses `MaterialTheme.colorScheme.*` exclusively — never raw `Color()` hex
-- Missing roles must be added to `lightColorScheme` before implementation (Phase 2 Step 2.1)
+- Missing roles must be added to **both** `XLightColors` and `XDarkColors` before implementation (Phase 2 Step 2.1)
 
 ---
 

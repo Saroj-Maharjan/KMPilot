@@ -67,15 +67,20 @@ Steps 1.2–1.5 handle the **success state** variant selection. Step 1.6 generat
 Read: core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt
 ```
 
-Parse the `lightColorScheme(...)` call and list every role with its hex value. For example:
+Parse the color scheme that matches the `defaultTheme` established in Phase 0 Step 0.1.5:
+- `defaultTheme = light` → parse `XLightColors` / `lightColorScheme(...)`
+- `defaultTheme = dark` → parse `XDarkColors` / `darkColorScheme(...)`
+
+List every role with its hex value. For example:
 ```
-Currently defined M3 roles:
-- background: #F3F2F7
-- surface: #FFFFFF
-- primary: #B02418
+Default theme: dark
+Currently defined M3 roles (XDarkColors):
+- background: #1C1B1E
+- surface: #2B2930
+- primary: #E8B85A
 ```
 
-This is the **only** color palette you can reference as "defined" in the Stitch prompt. Any other colors needed by the design are "proposed" and will be added to `lightColorScheme` after approval.
+This is the **only** color palette you can reference as "defined" in the Stitch prompt. Any other colors needed by the design are "proposed" and will be added to **both** `XLightColors` and `XDarkColors` after approval (Phase 2 Step 2.1).
 
 ### Model Selection
 
@@ -367,12 +372,12 @@ After all state designs are approved (success + loading + failed + empty), audit
 
 ### Procedure
 
-1. **Re-read `XTheme.kt`** to get the current `lightColorScheme` roles
+1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`)
 2. **Collect all colors from Stitch prompts**: Gather every color specified in the "Defined colors" and "Proposed colors" blocks from all Stitch prompts used during this phase (Steps 1.2b and 1.6). These prompts are the authoritative source of color values — do NOT attempt to extract hex values from screenshots via vision, as that is imprecise.
 3. **Map each color to an M3 role** using the [Complete M3 Role Catalog](../references/m3-colors.md#complete-m3-role-catalog)
 4. **Classify each role**:
-   - **Defined**: Already in `lightColorScheme` in `XTheme.kt`
-   - **Missing**: Used in the design but not yet in `lightColorScheme` — must be added before implementation
+   - **Defined**: Already in the active scheme in `XTheme.kt`
+   - **Missing**: Used in the design but not yet defined — must be added to **both** `XLightColors` and `XDarkColors` before implementation (Phase 2 Step 2.1 handles this)
    - **Custom**: Cannot map to any M3 role (gradients, decorative) — will use `XTheme.Colors.*` extension (must justify)
 
 ### Color Audit Output
@@ -382,21 +387,17 @@ Append to the design description file (`.claude/docs/{featurename}/designs/{feat
 ```markdown
 ## Color Audit
 
-### Defined M3 Roles (already in lightColorScheme)
-| Role | Hex | Usage in Design |
-|------|-----|-----------------|
-| background | #F3F2F7 | Screen background |
-| surface | #FFFFFF | Card backgrounds |
-| primary | #B02418 | Action buttons, active indicators |
+Default theme for design: {light|dark}
 
-### Missing M3 Roles (must add to lightColorScheme before implementation)
+### Defined M3 Roles (already in active scheme — XLightColors or XDarkColors)
 | Role | Hex | Usage in Design |
 |------|-----|-----------------|
-| onSurface | #1C1B1E | Primary body text, titles |
-| onSurfaceVariant | #49454F | Secondary text, captions |
-| onPrimary | #FFFFFF | Text on primary buttons |
-| error | #BA1A1A | Error icon and retry button in failed state |
-| outline | #79747E | Input field borders |
+| {role} | {hex from XTheme.kt} | {usage} |
+
+### Missing M3 Roles (must add to BOTH XLightColors and XDarkColors before implementation)
+| Role | Active Scheme Hex | Counterpart Scheme Hex | Usage in Design |
+|------|-------------------|----------------------|-----------------|
+| {role} | {hex for defaultTheme} | {derived counterpart hex} | {usage} |
 
 ### Custom Colors (XTheme.Colors.* — justified exceptions only)
 | Name | Hex | Justification |
@@ -404,7 +405,7 @@ Append to the design description file (`.claude/docs/{featurename}/designs/{feat
 | (none expected — only if needed) | | |
 ```
 
-This audit is the input for Phase 2, where missing roles are added to `XTheme.kt` before any feature code is written.
+This audit is the input for Phase 2, where missing roles are added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` before any feature code is written.
 
 ---
 

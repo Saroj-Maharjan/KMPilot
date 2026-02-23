@@ -20,40 +20,57 @@ Implementation Progress:
 
 ## Step 2.1: Update XTheme with Missing M3 Roles (MANDATORY)
 
-**Before any feature code is written**, add all missing M3 roles from the Color Audit (Phase 1 Step 1.6.5) to `lightColorScheme` in `XTheme.kt`.
+**Before any feature code is written**, add all missing M3 roles from the Color Audit (Phase 1 Step 1.6.5) to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`.
 
 ### Procedure
 
-1. **Read the Color Audit** from `.claude/docs/{featurename}/designs/{featurename}.md` (the "Missing M3 Roles" table)
+1. **Read the Color Audit** from `.claude/docs/{featurename}/designs/{featurename}.md` (the "Missing M3 Roles" table — it contains both the active-scheme hex and the counterpart-scheme hex for each missing role)
 2. **Read current `XTheme.kt`**: `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`
-3. **Add every missing role** to the `lightColorScheme(...)` call with its hex value from the audit
+3. **Add every missing role to `XLightColors`** (lightColorScheme) using the "Active Scheme Hex" column if `defaultTheme = light`, or the "Counterpart Scheme Hex" column if `defaultTheme = dark`
+4. **Add every missing role to `XDarkColors`** (darkColorScheme) using the opposite column
 
-Example — if the audit says `onSurface` (#1C1B1E) and `error` (#BA1A1A) are missing:
+Example — if the audit lists `onSurface` and `error` as missing:
 
 ```kotlin
-// Before
-private val XColors =
+// Before (existing roles — actual hex values read from XTheme.kt)
+private val XLightColors =
     lightColorScheme(
-        background = XTheme.Colors.PaleLavender,
-        surface = Color.White,
-        primary = Color(0xFFB02418),
+        background = Color({lightBackground}),
+        surface = Color({lightSurface}),
+        primary = Color({lightPrimary}),
     )
 
-// After
-private val XColors =
+private val XDarkColors =
+    darkColorScheme(
+        background = Color({darkBackground}),
+        surface = Color({darkSurface}),
+        primary = Color({darkPrimary}),
+    )
+
+// After (missing roles appended — hex values taken from the Color Audit table)
+private val XLightColors =
     lightColorScheme(
-        background = XTheme.Colors.PaleLavender,
-        surface = Color.White,
-        primary = Color(0xFFB02418),
-        onSurface = Color(0xFF1C1B1E),
-        error = Color(0xFFBA1A1A),
+        background = Color({lightBackground}),
+        surface = Color({lightSurface}),
+        primary = Color({lightPrimary}),
+        onSurface = Color({lightOnSurface}),    // from Color Audit: Active Scheme Hex
+        error = Color({lightError}),             // from Color Audit: Active Scheme Hex
+    )
+
+private val XDarkColors =
+    darkColorScheme(
+        background = Color({darkBackground}),
+        surface = Color({darkSurface}),
+        primary = Color({darkPrimary}),
+        onSurface = Color({darkOnSurface}),     // from Color Audit: Counterpart Scheme Hex
+        error = Color({darkError}),              // from Color Audit: Counterpart Scheme Hex
     )
 ```
 
-4. **If the audit has custom colors** (justified `XTheme.Colors.*` exceptions): Add them as extension properties in `Colors.kt` following the existing pattern
-5. **Verify build**: `./gradlew :core:designsystem:assembleAndroidMain` to ensure the theme compiles
+5. **If the audit has custom colors** (justified `XTheme.Colors.*` exceptions): Add them as extension properties in `Colors.kt` following the existing pattern
+6. **Verify build**: `./gradlew :core:designsystem:assembleAndroidMain` to ensure both schemes compile
 
-This step ensures that by the time feature code is written, every color it needs is available through `MaterialTheme.colorScheme.*`.
+This step ensures that by the time feature code is written, every color it needs is available through `MaterialTheme.colorScheme.*` in both themes.
 
 ---
 

@@ -73,7 +73,7 @@ See: [Phase 3: Verify](phases/phase-3-verify.md)
 5. **Stitch MCP is mandatory** - if not available, stop and ask user to configure it
 6. **Mobile MCP is mandatory for Mode 3** - if not available, stop and inform user. Mobile MCP tool names are dynamic (depend on server configuration, typically `mcp__claude_in_mobile__*`) and cannot be pre-listed in allowed-tools — the user must manually approve each mobile MCP tool call at runtime
 7. **Never edit feature files directly** - always delegate to `/modifying-kmp-feature` or `/creating-kmp-feature`
-8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `lightColorScheme`. After design approval, a Color Audit identifies missing roles which are added to `lightColorScheme` before implementation. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
+8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `XLightColors` and `XDarkColors`. After design approval, a Color Audit identifies missing roles which are added to **both** color schemes before implementation. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
 
 ## Stitch MCP Reference
 

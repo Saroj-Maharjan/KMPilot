@@ -2,7 +2,7 @@
 
 **Single source of truth**: `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`
 
-The `lightColorScheme` in `XTheme.kt` defines all active M3 roles. Before writing any Stitch prompt or implementing any UI, read this file to know the current palette.
+`XTheme.kt` defines all active M3 roles in two complementary schemes: `XLightColors` (`lightColorScheme`) and `XDarkColors` (`darkColorScheme`). Before writing any Stitch prompt or implementing any UI, read this file. Use the scheme that matches the `defaultTheme` established in Phase 0 Step 0.1.5 as the design reference; both schemes must stay in sync whenever roles are added or updated.
 
 ## Complete M3 Role Catalog
 
@@ -83,6 +83,6 @@ Every color in a design **must** map to one of these roles. All roles are access
 
 1. **Every design color → M3 role**: Every color in the design MUST map to an M3 role from the catalog above. No exceptions except Rule 5.
 2. **No silent defaults**: Every M3 role that a design uses **must** be explicitly defined in `lightColorScheme` in `XTheme.kt`. Do NOT rely on M3 default values.
-3. **Grow the theme after approval**: Run a Color Audit (Phase 1 Step 1.6.5). Every missing M3 role must be added to `XTheme.kt` BEFORE any feature code is written.
+3. **Grow the theme after approval**: Run a Color Audit (Phase 1 Step 1.6.5). Every missing M3 role must be added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` BEFORE any feature code is written.
 4. **Feature code = `MaterialTheme.colorScheme.*` only**: Never use raw `Color()` hex values.
 5. **`XTheme.Colors.*` is last resort**: Only for truly non-semantic colors (gradients, decorative accents). Must add a code comment explaining why.
