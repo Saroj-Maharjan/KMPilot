@@ -276,6 +276,11 @@ The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
   "featureName": "string - KMP feature name (lowercase)",
   "deviceType": "string - Always MOBILE",
   "modelId": "string - GEMINI_3_PRO (Mode 1) or GEMINI_3_FLASH (Modes 2 & 3)",
+  "theme": {
+    "defaultTheme": "string - light or dark",
+    "primaryHex": "string - effective primary brand color hex",
+    "paletteCustomized": "boolean - true if user provided a custom primary hex"
+  },
   "screens": {
     "screen_key": {
       "screenId": "string - Stitch screen ID (success state)",
