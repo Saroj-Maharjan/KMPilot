@@ -25,6 +25,11 @@
         "failed": "43b3b3d46124403fb0b96dca5960a975"
       },
       "blueprint": "designs/sample_blueprint.md",
+      "dimensions": {
+        "success": { "width": 780, "height": 4094 },
+        "loading": { "width": 780, "height": 1768 },
+        "failed": { "width": 780, "height": 1768 }
+      },
       "approved": true,
       "approvedAt": "2026-02-23"
     }
@@ -34,6 +39,17 @@
     "implementedAt": "2026-02-23",
     "method": "blueprint"
   },
+  "verification": {
+    "verified": true,
+    "verifiedAt": "2026-02-25",
+    "auditReport": "designs/sample_audit.md",
+    "deviceScreenshots": {
+      "dashboard": "designs/device/desktop_sample.png",
+      "loading": "designs/device/desktop_sample_loading.png",
+      "failed": "designs/device/desktop_sample_failed.png"
+    },
+    "attempts": 1
+  },
   "createdAt": "2026-02-23",
-  "updatedAt": "2026-02-23"
+  "updatedAt": "2026-02-25"
 }

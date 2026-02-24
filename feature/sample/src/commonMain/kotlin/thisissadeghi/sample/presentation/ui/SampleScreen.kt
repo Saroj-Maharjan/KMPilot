@@ -111,7 +111,7 @@ private fun DashboardContent(
 ) {
     LazyColumn(
         modifier = modifier.navigationBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 48.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         item { NetWorthCard(data.accountBalance.totalBalance, data.accountBalance.changePercent) }
@@ -185,7 +185,6 @@ private fun ErrorContent(
                 Column(
                     modifier = Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     XIcon(
                         imageVector = Icons.Filled.Error,
@@ -193,6 +192,7 @@ private fun ErrorContent(
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp),
                     )
+                    Spacer(Modifier.height(16.dp))
                     XText(
                         text = "Something went wrong",
                         fontSize = 20.sp,
@@ -201,6 +201,7 @@ private fun ErrorContent(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    Spacer(Modifier.height(8.dp))
                     XText(
                         text = error,
                         fontSize = 14.sp,
@@ -208,7 +209,7 @@ private fun ErrorContent(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(32.dp))
                     XButton(
                         onClick = onRetry,
                         modifier = Modifier.fillMaxWidth(),

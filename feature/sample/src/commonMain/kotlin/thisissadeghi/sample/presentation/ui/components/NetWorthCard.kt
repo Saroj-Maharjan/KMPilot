@@ -64,8 +64,8 @@ internal fun NetWorthCard(
                 Column(modifier = Modifier.padding(24.dp)) {
                     XText(
                         text = "TOTAL NET WORTH",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 2.sp,
                     )
