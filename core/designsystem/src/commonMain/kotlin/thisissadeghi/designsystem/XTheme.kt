@@ -20,10 +20,13 @@ object XTheme {
 }
 
 @Composable
-fun XTheme(content: @Composable () -> Unit) {
+fun XTheme(
+    darkTheme: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
         content = content,
-        colorScheme = XDarkColors,
+        colorScheme = if (darkTheme) XDarkColors else XLightColors,
         shapes = Shapes,
         typography = MaterialTheme.typography,
     )
