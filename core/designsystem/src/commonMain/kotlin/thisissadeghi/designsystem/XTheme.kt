@@ -15,7 +15,7 @@ object XTheme {
     object Colors {
         // Semantic status colors — no M3 role equivalent
         val Success = Color(0xFF4ADE80) // Income, savings progress, on-track budgets
-        val Danger = Color(0xFFFF6B6B)  // Over-budget, expenses, overdue bills
+        val Danger = Color(0xFFFF6B6B) // Over-budget, expenses, overdue bills
     }
 }
 
@@ -58,19 +58,19 @@ internal val XLightColors =
 
 internal val XDarkColors =
     darkColorScheme(
-        primary = Color(0xFF9D70FF),           // Design primary accent
-        onPrimary = Color(0xFF1A0054),         // Text on primary buttons
-        primaryContainer = Color(0xFF350070),  // Tinted container
+        primary = Color(0xFF9D70FF), // Design primary accent
+        onPrimary = Color(0xFF1A0054), // Text on primary buttons
+        primaryContainer = Color(0xFF350070), // Tinted container
         onPrimaryContainer = Color(0xFFEDE0FF),
-        background = Color(0xFF0D0919),        // Deep dark indigo background
-        surface = Color(0xFF181228),           // Card / elevated surface
-        onBackground = Color(0xFFE9E0FF),      // Primary text (bright)
-        onSurface = Color(0xFFE9E0FF),         // Primary text on surface
-        onSurfaceVariant = Color(0xFFC5BCE0),  // Muted text
-        surfaceVariant = Color(0xFF231A38),    // Slightly elevated over surface
-        outline = Color(0xFF4A3F6B),           // Subtle border
-        outlineVariant = Color(0xFF1E1A2E),    // Divider / progress track
-        error = Color(0xFFFFB4AB),             // Error / coral accent
+        background = Color(0xFF0D0919), // Deep dark indigo background
+        surface = Color(0xFF181228), // Card / elevated surface
+        onBackground = Color(0xFFE9E0FF), // Primary text (bright)
+        onSurface = Color(0xFFE9E0FF), // Primary text on surface
+        onSurfaceVariant = Color(0xFFC5BCE0), // Muted text
+        surfaceVariant = Color(0xFF231A38), // Slightly elevated over surface
+        outline = Color(0xFF4A3F6B), // Subtle border
+        outlineVariant = Color(0xFF1E1A2E), // Divider / progress track
+        error = Color(0xFFFFB4AB), // Error / coral accent
         onError = Color(0xFF690005),
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
