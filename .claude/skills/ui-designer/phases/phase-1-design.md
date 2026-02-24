@@ -178,16 +178,16 @@ After each `generate_screen_from_text` call:
 
 3. **Run the Screen Sync Procedure**, then **download only new screenshots**: Call `mcp__stitch__list_screens` to get the current screen list. Compare with the screen list from before the generation call to identify only the **newly created screens**. For each new screen:
    - Call `mcp__stitch__get_screen` with all 3 required params: `name: "projects/{projectId}/screens/{screenId}"`, `projectId: "{projectId}"`, `screenId: "{screenId}"` — use `screenshot.downloadUrl` from the response
-   - Download via `curl -sL -o {path} {downloadUrl}`
+   - Download hi-res via `curl -sL "{downloadUrl}=s0" -o {path}` (always use `=s0` suffix for full resolution)
    - Save to `.claude/docs/{featurename}/designs/{featurename}_v{N}.png` (N = 1, 2, 3...)
 
 ---
 
 ## Step 1.3: Present Designs to User
 
-Show **all variant screenshots inline** so the user can compare without leaving Claude Code:
+Tell the user the designs are ready and list the file paths — **do not read/display images inline**:
 
-1. For each downloaded screenshot, use `Read` on the `.png` file to display it inline
+1. List each variant path: `designs/{featurename}_v1.png`, `designs/{featurename}_v2.png`, etc.
 2. Label each variant: **"Variant 1: {screen title}"**, **"Variant 2: {screen title}"**, etc.
 3. **Ask user** using `AskUserQuestion`:
 
@@ -226,10 +226,10 @@ After every edit, variant, or regeneration call:
 2. **Run the Screen Sync Procedure** (Step 1.2b) to ensure new screens are visible
 3. Call `mcp__stitch__list_screens` to get the updated screen list
 4. Compare with the pre-operation screen list to identify **newly created screens**
-5. **Download screenshots** — the numbering depends on the operation type:
+5. **Download screenshots** — the numbering depends on the operation type (always use `=s0` suffix for hi-res):
    - **For variants**: The original screen (the one variants were generated from) is kept as `{featurename}_v1.png`. Download each new variant screen as `{featurename}_v2.png`, `{featurename}_v3.png`, etc. This gives the user the original + N variants to compare side by side.
    - **For edits/regeneration**: Download only the newly created screens as `{featurename}_v1.png`, `{featurename}_v2.png`, etc. (the original is replaced by the edit result).
-6. **Display all inline** via `Read` and return to Step 1.3
+6. **Notify user** that screenshots are ready, listing their file paths — **do not read/display inline** — and return to Step 1.3
 
 ### If User Requests Edits
 
@@ -330,7 +330,7 @@ modelId: {from stitch.json}
 
 ### Present State Designs
 
-Display all state screenshots inline via `Read` and ask user for approval:
+Tell the user the state design screenshots are ready and list their file paths — **do not read/display inline**. Ask user for approval:
 
 | Option | Description |
 |--------|-------------|
@@ -423,10 +423,11 @@ This step parses the Stitch HTML export into a structured Compose Implementation
 
 ### Procedure
 
-1. **Download HTML for each approved screen state** (success + loading + failed + empty if applicable):
-   a. Call `mcp__stitch__get_screen` with all 3 required params to get `htmlCode.downloadUrl`
+1. **Download HTML and record dimensions** for each approved screen state (success + loading + failed + empty if applicable):
+   a. Call `mcp__stitch__get_screen` with all 3 required params to get `htmlCode.downloadUrl`, `width`, and `height`
    b. Download: `curl -sL -o /tmp/stitch_{featurename}_{state}.html {htmlCode.downloadUrl}`
    c. Read the downloaded HTML file content
+   d. Record the screen dimensions (`width`, `height`) — these are needed for Mode 3 verification screenshots
 
 2. **Generate the blueprint**: Feed ALL state HTML files together with context to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
    - All downloaded HTML file contents (labeled by state: success, loading, failed, empty)
@@ -438,7 +439,13 @@ This step parses the Stitch HTML export into a structured Compose Implementation
    - Shared scaffold (toolbar, background, bottom nav) is described once
    - Per-state content sections capture only the differences
 
-4. **Clean up temp files**: Delete all `/tmp/stitch_{featurename}_*.html` files
+4. **Handle HTML files** (mode-dependent):
+   - **Mode 2**: Delete all `/tmp/stitch_{featurename}_*.html` files (HTML is not needed after blueprint generation)
+   - **Mode 3**: Move HTML files to `.claude/docs/{featurename}/designs/html/` for use in Phase 3 verification:
+     ```bash
+     mkdir -p .claude/docs/{featurename}/designs/html
+     mv /tmp/stitch_{featurename}_*.html .claude/docs/{featurename}/designs/html/
+     ```
 
 5. **Verify** the blueprint file was written and contains all expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with all states)
 

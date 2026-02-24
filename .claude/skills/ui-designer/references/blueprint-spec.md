@@ -100,8 +100,10 @@ INPUT:
 RULES:
 1. Convert CSS px to dp (1px = 1dp for mobile). Convert font-size px to sp.
 2. Map Tailwind classes to Compose modifiers:
-   - p-{N} → Modifier.padding({N*4}.dp)
-   - px-{N}/py-{N} → horizontal/vertical padding
+   - p-{N} → Modifier.padding({N*4}.dp). **Compound overrides**: when shorthand + directional
+     coexist (e.g., `p-4 pt-8`), the directional class overrides ONLY that side — other sides
+     keep the shorthand value. `p-4 pt-8` → padding(start=16, end=16, top=32, bottom=16).
+   - px-{N}/py-{N} → horizontal/vertical padding. Same override rule applies: `px-4 pl-6` → start=24, end=16
    - gap-{N} → Arrangement.spacedBy({N*4}.dp)
    - rounded-{N} → RoundedCornerShape (see Rule 11 for value mapping)
    - w-full → Modifier.fillMaxWidth(), h-{N} → Modifier.height({N*4}.dp)
@@ -115,8 +117,21 @@ RULES:
        Column(Modifier.fillMaxWidth(), horizontalAlignment = CenterHorizontally)
        with fillMaxWidth() on each XText child.
    - justify-center → Arrangement.Center, justify-between → Arrangement.SpaceBetween
-   - text-{size} → fontSize (xs=12sp, sm=14sp, base=16sp, lg=18sp, xl=20sp, 2xl=24sp, 3xl=30sp)
-   - font-bold → Bold, font-semibold → SemiBold, font-medium → Medium
+   - text-{size} → fontSize (xs=12sp, sm=14sp, base=16sp, lg=18sp, xl=20sp, 2xl=24sp, 3xl=30sp).
+     No text class = text-base = 16sp. Arbitrary values: `text-[38px]` → 38.sp, `text-[10px]` → 10.sp
+   - font-medium → Medium, font-semibold → SemiBold, font-bold → Bold,
+     font-extrabold → ExtraBold, font-black → Black
+   - tracking-tighter → -0.05em, tracking-tight → -0.025em, tracking-normal → 0,
+     tracking-wide → 0.025em, tracking-wider → 0.05em, tracking-widest → 0.1em.
+     Convert to sp: `em × fontSize`. Example: tracking-widest on text-xs(12sp) → 0.1×12 = 1.2.sp
+   - space-y-{N} → Arrangement.spacedBy({N*4}.dp) (same effect as gap-{N})
+   - size-{N} → Modifier.size({N*4}.dp). Example: size-14 → 56.dp, size-10 → 40.dp
+   - divide-y divide-{color} → XHorizontalDivider between items with explicit color param
+   - mb-{N} → margin-bottom. In LazyColumn items, absorbed by spacedBy. Standalone: Spacer or padding
+   - shadow-sm/shadow/shadow-md/shadow-lg/shadow-xl/shadow-2xl → Modifier.shadow(elevation, shape).
+     Map: sm=1dp, default=2dp, md=4dp, lg=8dp, xl=12dp, 2xl=16dp.
+     Custom `shadow-[...]` glow effects → note as `[decorative shadow — omit or use drawBehind]`
+   - shrink-0 → no effect if using fixed-size Modifier.size(); for flex children use weight()
    - overflow-y-auto → LazyColumn or verticalScroll
    - grid grid-cols-{N} → LazyVerticalGrid(columns = GridCells.Fixed(N)). If grid items have different heights (no uniform aspect-* or h-*), use LazyVerticalStaggeredGrid instead.
    - grid gap-{N} → horizontalArrangement + verticalArrangement spacedBy({N*4}.dp)
@@ -195,6 +210,12 @@ RULES:
     CSS classes independently for each state file. A failed state may define
     `rounded-card: 12px` while the success state uses `rounded-xl: 1.5rem` — these are
     different values that must be translated separately.
+18. **No silent omissions**: The mapping table above is not exhaustive. For ANY Tailwind
+    class not listed, look up its CSS value and translate to the equivalent Compose modifier.
+    Never silently skip a class. If a class has no Compose equivalent (e.g., `cursor-pointer`,
+    `transition-all`), note it as `[omitted: {class} — no Compose equivalent]` in a comment.
+    Every visual property in the HTML must appear in the blueprint — either as a Compose value
+    or as an explicit omission note.
 
 X-COMPONENT MAPPING TABLE:
 {paste from stitch-guide.md}

@@ -16,7 +16,7 @@ Design UI screens in Google Stitch, optionally implement them in code, and visua
 |------|-------------|--------------|
 | **1. Design Only** | Design screens in Stitch, export screenshots, get user approval | Stitch |
 | **2. Design + Implement** | Design in Stitch, then implement UI code after approval | Stitch |
-| **3. Design + Implement + Verify** | Full pipeline: design, implement, run on device, screenshot-compare | Stitch + Mobile |
+| **3. Design + Implement + Verify** | Full pipeline: design, implement, three-way HTML→Blueprint→Code token audit | Stitch |
 
 ## Delegation Model
 
@@ -60,8 +60,8 @@ See: [Phase 1: Design](phases/phase-1-design.md)
 Implement from Compose Implementation Blueprint with design screenshots as visual cross-reference.
 See: [Phase 2: Implement](phases/phase-2-implement.md)
 
-### Phase 3: Visual Verification (Mode 3 Only)
-Run on device, screenshot, compare with Stitch design. Retry if <90% match.
+### Phase 3: Verification (Mode 3 Only)
+Three-way HTML→Blueprint→Code token audit. Desktop screenshot for human reference. Fix loop for mismatches.
 See: [Phase 3: Verify](phases/phase-3-verify.md)
 
 ## Critical Rules
@@ -71,7 +71,7 @@ See: [Phase 3: Verify](phases/phase-3-verify.md)
 3. **Screenshots stored at** `.claude/docs/{featurename}/designs/` - visible to user
 4. **Stitch project tracked at** `.claude/docs/{featurename}/stitch.json` - for project continuity
 5. **Stitch MCP is mandatory** - if not available, stop and ask user to configure it
-6. **Mobile MCP is mandatory for Mode 3** - if not available, stop and inform user. Mobile MCP tool names are dynamic (depend on server configuration, typically `mcp__claude_in_mobile__*`) and cannot be pre-listed in allowed-tools — the user must manually approve each mobile MCP tool call at runtime
+6. **Mode 3 verification is device-free** — uses `ImageComposeScene` for desktop headless screenshots and three-way HTML→Blueprint→Code token audit. No device, emulator, or Mobile MCP required
 7. **Never edit feature files directly** - always delegate to `/modifying-kmp-feature` or `/creating-kmp-feature`
 8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `XLightColors` and `XDarkColors`. After design approval, a Color Audit identifies missing roles which are added to **both** color schemes before implementation. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
 
@@ -85,10 +85,11 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 | Error | Action |
 |-------|--------|
 | Stitch MCP not available | Stop. Ask user to configure Stitch MCP server |
-| Mobile MCP not available (Mode 3) | Stop. Ask user to configure mobile MCP server |
 | Stitch generation fails | Retry with refined prompt. Max 3 attempts |
 | Implementation skill failure (Mode 2/3) | Review error, adjust design context, re-invoke skill |
-| Visual match <90% (Mode 3) | Prepare fix context, re-invoke implementation skill. Max 3 attempts |
+| Critical audit mismatches (Mode 3) | Prepare fix instructions from audit, re-invoke implementation skill. Max 3 attempts |
+| Desktop screenshot test fails (Mode 3) | Check `desktopTest` dependencies and `ImageComposeScene` availability |
+| HTML files missing (Mode 3) | Re-download from Stitch via `get_screen` `htmlCode.downloadUrl` |
 | Stitch project not found | Create new project automatically |
 
 ## Completion Report
@@ -102,6 +103,6 @@ Design spec: designs/{featurename}.md
 Blueprint: {designs/{featurename}_blueprint.md (Modes 2 & 3) | N/A (Mode 1)}
 Stitch config: .claude/docs/{featurename}/stitch.json
 Build: {passing + ktlint formatted (Modes 2 & 3) | N/A (Mode 1)}
-Device screenshots: {designs/device/device_{featurename}.png (Mode 3) | N/A}
-Visual match: {percentage% (Mode 3) | N/A}
+Desktop screenshots: {designs/device/desktop_{featurename}.png (Mode 3) | N/A}
+Audit report: {designs/{featurename}_audit.md (Mode 3) | N/A}
 ```

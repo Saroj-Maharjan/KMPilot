@@ -299,6 +299,16 @@ The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
         "empty": "string - Stitch screen ID for empty state (list screens only)"
       },
       "blueprint": "string - Path to blueprint .md file (Modes 2 & 3 only)",
+      "dimensions": {
+        "success": { "width": "number - Stitch pixel width", "height": "number - Stitch pixel height" },
+        "loading": { "width": "number", "height": "number" },
+        "failed": { "width": "number", "height": "number" }
+      },
+      "htmlFiles": {
+        "success": "string - Path to saved HTML (Mode 3 only, deleted after verification)",
+        "loading": "string",
+        "failed": "string"
+      },
       "approved": "boolean - User approved this design",
       "approvedAt": "string - ISO date"
     }
@@ -309,13 +319,11 @@ The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
     "method": "string - Implementation method (e.g., 'blueprint')"
   },
   "verification": {
-    "verified": "boolean - Visual verification completed (Mode 3)",
+    "verified": "boolean - Token-level verification completed (Mode 3)",
     "verifiedAt": "string - ISO date",
-    "matchScores": {
-      "screen_key": "number - Match percentage"
-    },
+    "auditReport": "string - Path to three-way audit report .md",
     "deviceScreenshots": {
-      "screen_key": "string - Path to device screenshot"
+      "screen_key": "string - Path to desktop-rendered screenshot"
     },
     "attempts": "number - Number of verification attempts"
   },
