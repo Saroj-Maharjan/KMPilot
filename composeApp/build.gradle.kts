@@ -65,6 +65,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:designsystem"))
             implementation(project(":feature:sample"))
+            implementation(project(":feature:send"))
         }
     }
 }

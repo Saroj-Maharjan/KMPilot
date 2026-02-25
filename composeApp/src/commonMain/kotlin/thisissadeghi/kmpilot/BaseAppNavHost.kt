@@ -6,6 +6,8 @@ import androidx.navigation.compose.rememberNavController
 import thisissadeghi.designsystem.XNavHost
 import thisissadeghi.sample.presentation.navigation.SampleRoute
 import thisissadeghi.sample.presentation.navigation.sample
+import thisissadeghi.send.presentation.navigation.SendRoute
+import thisissadeghi.send.presentation.navigation.send
 
 /**
  * Main app navigation host
@@ -21,8 +23,11 @@ fun BaseAppNavHost(modifier: Modifier) {
     ) {
         sample(
             onActionClick = { actionId ->
+                if (actionId == "send")
+                    navController.navigate(SendRoute)
                 // Handle action — navigation or action handling to be wired later
             },
         )
+        send(onBackClick = { navController.popBackStack() })
     }
 }
