@@ -113,14 +113,16 @@ fun SendScreenRoot(
                     }
                 },
                 actions = {
-                    XIconButton(
-                        onClick = onQrScanClick,
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        XIcon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = "Scan QR",
-                        )
+                    if (uiState.state is UiState.Success || uiState.state is UiState.Uninitialized) {
+                        XIconButton(
+                            onClick = onQrScanClick,
+                            modifier = Modifier.padding(8.dp),
+                        ) {
+                            XIcon(
+                                imageVector = Icons.Default.QrCodeScanner,
+                                contentDescription = "Scan QR",
+                            )
+                        }
                     }
                 },
                 backgroundColor = MaterialTheme.colorScheme.background,

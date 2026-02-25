@@ -23,8 +23,9 @@ fun BaseAppNavHost(modifier: Modifier) {
     ) {
         sample(
             onActionClick = { actionId ->
-                if (actionId == "send")
+                if (actionId == "send") {
                     navController.navigate(SendRoute)
+                }
                 // Handle action — navigation or action handling to be wired later
             },
         )

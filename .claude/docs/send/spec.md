@@ -1,6 +1,7 @@
 # Feature Spec: Send
 
 **Status:** Complete
+**Version:** 1.0.1
 **Module:** `:feature:send`
 **Package:** `thisissadeghi.send`
 **Generated:** 2026-02-25
@@ -229,9 +230,29 @@ navController.navigate(SendRoute)
 
 ---
 
+## Known Limitations (Component-Level)
+
+These mismatches were identified in the UI audit but cannot be fixed at the feature level
+without modifying shared design system components:
+
+| Issue | Root Cause | Component to fix |
+|-------|-----------|-----------------|
+| App bar title is centered instead of left-aligned | `XTopAppBar` wraps `CenterAlignedTopAppBar` unconditionally | `:core:designsystem` — `XTopAppBar` |
+| Icon button backgrounds show dark circle | `XIconButton` always renders a background shape | `:core:designsystem` — `XIconButton` |
+| Input vertical padding is 10dp instead of 16dp | `XTextField` hardcodes `top=10dp, bottom=10dp` | `:core:designsystem` — `XTextField` |
+
+---
+
 ## Dependencies
 
 | Module | When |
 |--------|------|
 | `:core:common` | Always (Either, UiState, setState, ErrorModel, BaseFeature) |
 | `:core:designsystem` | Always (X-components, XTheme) |
+
+---
+
+## Last Updated
+
+- 2026-02-25 — Initial implementation (v1.0.0)
+- 2026-02-25 — Audit fixes: paste button overlap (critical), QR icon hidden in Loading/Failed states (v1.0.1)
