@@ -15,14 +15,16 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 9. **No UseCases** - ViewModels invoke repositories directly
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
 
-## UI Implementation Workflow (MANDATORY)
+## Design-Aware Implementation
 
-**STOP — When creating or modifying ANY Screens, Composables, or UI components:**
+Implementation skills (`/modifying-kmp-feature`, `/creating-kmp-feature`) auto-detect Stitch design blueprints:
 
-1. **Check** the available skills list (in the system-reminder) for `frontend-design`
-2. **If `frontend-design` IS in the available skills** → invoke `/frontend-design` FIRST — MANDATORY, do NOT skip
+1. Check for `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+2. Check `blueprintConsumed == false` in `.claude/docs/{featurename}/stitch.json`
+3. If both conditions met → **design-aware mode**: blueprint drives UI implementation (XTheme updates, component tree, post-implementation checklist)
+4. After implementation → set `blueprintConsumed: true` in stitch.json
 
-`/using-design-system` auto-activates for UI work and does not need explicit invocation. `/frontend-design` is required whenever it appears in the available skills list — when present, NEVER skip it.
+`/using-design-system` auto-activates for UI work and does not need explicit invocation.
 
 ## 4 Integration Points
 

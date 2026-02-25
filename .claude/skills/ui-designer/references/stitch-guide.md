@@ -91,7 +91,7 @@ This is too vague. Stitch needs specific visual details to generate quality desi
 6. **Name the components** you want (cards, buttons, lists)
 7. **Describe states** if designing non-default states
 8. **Reference platform patterns** ("like an iOS settings screen" or "Material Design-inspired")
-9. **Model selection**: Use `GEMINI_3_PRO` for Mode 1 (design only, highest quality). Use `GEMINI_3_FLASH` for Modes 2 & 3
+9. **Model selection**: Always use `GEMINI_3_FLASH`
 
 ---
 
@@ -259,7 +259,7 @@ When the user requests **variants**:
 
 ## Compose Implementation Blueprint
 
-For Modes 2 & 3, Stitch HTML is parsed into a structured blueprint for implementation. Full spec, extraction prompt, and edge cases: **[blueprint-spec.md](blueprint-spec.md)**
+Stitch HTML is always parsed into a structured blueprint after design approval. The blueprint is the self-contained handoff artifact for implementation skills. Full spec, extraction prompt, and edge cases: **[blueprint-spec.md](blueprint-spec.md)**
 
 See Phase 1 Step 1.6.6.
 
@@ -275,7 +275,8 @@ The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
   "projectName": "string - Full resource name (projects/{id})",
   "featureName": "string - KMP feature name (lowercase)",
   "deviceType": "string - Always MOBILE",
-  "modelId": "string - GEMINI_3_PRO (Mode 1) or GEMINI_3_FLASH (Modes 2 & 3)",
+  "modelId": "string - Always GEMINI_3_FLASH",
+  "blueprintConsumed": "boolean - false when ui-designer saves a new blueprint, true after implementation skill consumes it",
   "theme": {
     "defaultTheme": "string - light or dark",
     "primaryHex": "string - effective primary brand color hex",
@@ -298,28 +299,23 @@ The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
         "failed": "string - Stitch screen ID for failed state",
         "empty": "string - Stitch screen ID for empty state (list screens only)"
       },
-      "blueprint": "string - Path to blueprint .md file (Modes 2 & 3 only)",
+      "blueprint": "string - Path to blueprint .md file",
       "dimensions": {
         "success": { "width": "number - Stitch pixel width", "height": "number - Stitch pixel height" },
         "loading": { "width": "number", "height": "number" },
         "failed": { "width": "number", "height": "number" }
-      },
-      "htmlFiles": {
-        "success": "string - Path to saved HTML (Mode 3 only, deleted after verification)",
-        "loading": "string",
-        "failed": "string"
       },
       "approved": "boolean - User approved this design",
       "approvedAt": "string - ISO date"
     }
   },
   "implementation": {
-    "implemented": "boolean - Code implementation completed (Modes 2 & 3)",
+    "implemented": "boolean - Code implementation completed",
     "implementedAt": "string - ISO date",
     "method": "string - Implementation method (e.g., 'blueprint')"
   },
   "verification": {
-    "verified": "boolean - Token-level verification completed (Mode 3)",
+    "verified": "boolean - Token-level verification completed",
     "verifiedAt": "string - ISO date",
     "auditReport": "string - Path to three-way audit report .md",
     "deviceScreenshots": {

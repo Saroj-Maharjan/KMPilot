@@ -22,7 +22,7 @@ rm -f /tmp/.claude-kmpilot-skill-active
 
 ## Workflow
 
-**Parse** → **Spec Check** → **Understand** → **Plan** → **Draft Spec** → [USER APPROVES] → **Activate marker** → **Implement** → **Validate** → **Update Spec** → **Remove marker** → ✅ Done
+**Parse** → **Spec Check** → **Design Artifact Detection** → **Understand** → **Plan** → **Draft Spec** → [USER APPROVES] → **Activate marker** → **Implement** → **Validate** → **Update Spec** → **Remove marker** → Done
 
 ### Step 1: Parse Feature Name
 Extract from request: "add sorting to productlist" → `productlist`
@@ -32,6 +32,26 @@ Validate: `ls feature/{featurename}/src/commonMain/kotlin/`
 Load `.claude/docs/{featurename}/spec.md`
 If missing: Run `/audit-spec {featurename}` first
 
+### Step 2.5: Design Artifact Detection
+
+Check for a Stitch design blueprint:
+
+1. **Check blueprint exists**: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+2. **Check stitch.json**: `.claude/docs/{featurename}/stitch.json` — read `blueprintConsumed` field
+3. **Determine mode**:
+
+| Blueprint exists? | `blueprintConsumed` | Mode |
+|-------------------|---------------------|------|
+| Yes | `false` | **Design-aware mode** — blueprint drives UI implementation |
+| Yes | `true` | Normal mode — blueprint already consumed |
+| No | N/A | Normal mode — no design artifact |
+
+If entering **design-aware mode**, log:
+```
+Design artifact detected: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
+Entering design-aware mode. Blueprint will drive UI implementation.
+```
+
 ### Step 3: Understand Current Implementation
 Read spec sections: Requirements, Architecture, State Management, Navigation
 
@@ -40,6 +60,8 @@ Determine affected layers and load architecture as needed:
 - Data changes: @../creating-kmp-feature/architecture/data.md
 - UI changes: @../creating-kmp-feature/architecture/ui.md
 - Integration changes: @../creating-kmp-feature/architecture/integration.md
+
+**Design-aware branch**: If in design-aware mode, read the blueprint's **Pre-Implementation Contract** section. Plan XTheme updates first (missing M3 roles from the contract's Color Audit). Include blueprint component tree in the UI plan.
 
 ### Step 5: Draft Spec Changes
 Propose updates using diff format:
@@ -66,9 +88,19 @@ Present changes to user with:
 **Never skip this step.**
 
 ### Step 7: Implement Changes
-Follow patterns from @../_shared/patterns.md (includes UI Implementation Workflow)
+Follow patterns from @../_shared/patterns.md
 
 For UI changes: Load @../using-design-system/references/component-mappings.md
+
+**Design-aware branch**: If in design-aware mode, implement in this order:
+1. **XTheme update** — Add all missing M3 roles from the blueprint's Pre-Implementation Contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
+2. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only.
+3. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
+   - All XTheme missing roles added to BOTH schemes
+   - Every component in blueprint exists in implementation
+   - Every Modifier in blueprint is present in code
+   - All colors use `MaterialTheme.colorScheme.{role}` — no raw `Color()` hex
+   - Component override sizes/colors applied
 
 ### Step 8: Validate Build
 ```bash
@@ -84,6 +116,10 @@ Apply APPROVED changes (don't regenerate). Add changelog:
 ```
 Version bump: Patch (X.Y.Z+1) for fixes, Minor (X.Y+1.0) for features
 
+**Design-aware branch**: Also:
+- Add UI Design section to spec referencing the blueprint and design screenshots
+- Set `"blueprintConsumed": true` in `.claude/docs/{featurename}/stitch.json`
+
 ## Error Handling
 
 Build errors: Load @../creating-kmp-feature/troubleshooting/index.md
@@ -97,3 +133,4 @@ Design system: Activate `/using-design-system`
 - [ ] Spec updated with approved changes
 - [ ] Changelog entry added
 - [ ] Version bumped
+- [ ] (Design-aware) blueprintConsumed set to true in stitch.json

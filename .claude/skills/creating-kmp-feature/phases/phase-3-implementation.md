@@ -30,6 +30,14 @@ Ask user for preference:
 
 ## Step 3.2: Invoke Specialized Agents
 
+### Design-Aware Blueprint Passthrough
+
+If in **design-aware mode** (Phase 0.5 detected an unconsumed blueprint):
+
+1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles
+2. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
+3. **Pass blueprint to UI agent**: Include the blueprint path as additional context for the UI layer agent. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
+
 ### Option A: Sequential Execution
 
 #### Step 1: Data Layer
@@ -46,17 +54,6 @@ Invoke kmp-data-layer-agent with:
 
 **Wait for completion** → Verify success
 
-#### Design Enhancement (Automatic)
-
-Check if `frontend-design` skill is listed in system skills.
-
-**If available** (REQUIRED):
-1. Load `using-design-system/references/component-mappings.md` for available X-components
-2. Invoke `frontend-design` skill with: screen requirements from PRD + "Target: Compose Multiplatform. Use only these components: [X-components from mappings]"
-3. Pass design output to UI agent as additional context
-
-**If unavailable**: Skip, proceed with standard UI agent.
-
 #### Step 2: UI Layer
 ```
 Invoke kmp-ui-layer-agent with:
@@ -66,7 +63,9 @@ Invoke kmp-ui-layer-agent with:
   - PKG_PREFIX, PKG_PATH
   - CORE_COMMON_PKG, CORE_DESIGNSYSTEM_PKG
   - DESIGN_SYSTEM_PKG
-- Design spec (if generated above)
+- Design-aware context (if applicable):
+  - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
+  - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
 - Expected: UI layer complete + build validation
 ```
 
@@ -90,17 +89,6 @@ Invoke kmp-integration-agent with:
 
 ### Option B: Parallel Execution (Recommended)
 
-#### Design Enhancement (Automatic)
-
-Check if `frontend-design` skill is listed in system skills.
-
-**If available** (REQUIRED):
-1. Load `using-design-system/references/component-mappings.md` for available X-components
-2. Invoke `frontend-design` skill with: screen requirements from PRD + "Target: Compose Multiplatform. Use only these components: [X-components from mappings]"
-3. Pass design output to UI agent as additional context
-
-**If unavailable**: Skip, proceed with standard UI agent.
-
 #### Step 1: Launch Data + UI Agents in Parallel
 
 **In ONE message**, invoke BOTH agents simultaneously:
@@ -115,7 +103,9 @@ Check if `frontend-design` skill is listed in system skills.
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
      CORE_DESIGNSYSTEM_PKG, DESIGN_SYSTEM_PKG
-   - Design spec (if generated above)
+   - Design-aware context (if applicable):
+     - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
+     - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
 ```
 
 Each agent works in isolated context window.
@@ -136,6 +126,15 @@ Invoke kmp-integration-agent with:
 ```
 
 **Wait for completion** → Verify success
+
+---
+
+### Post-Agent: Design-Aware Finalization
+
+If in **design-aware mode**, after all agents complete successfully:
+
+1. **Verify Post-Implementation Checklist** from the blueprint
+2. **Set `blueprintConsumed: true`** in `.claude/docs/{featurename}/stitch.json`
 
 ---
 
@@ -197,4 +196,5 @@ After all agents complete:
 - Integration complete (4 points)
 - Build passing + ktlint formatted
 - spec.md generated
+- (Design-aware) blueprintConsumed set to true in stitch.json
 - Ready to proceed to **Phase 4: Cleanup**

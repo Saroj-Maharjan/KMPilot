@@ -18,7 +18,7 @@ Design Progress:
 - [ ] Step 1.5: Finalize approved success design
 - [ ] Step 1.6: Generate state designs (loading, failed, empty)
 - [ ] Step 1.6.5: Color Audit — map all design colors to M3 roles (MANDATORY)
-- [ ] Step 1.6.6: Generate Implementation Blueprint (Modes 2 & 3)
+- [ ] Step 1.6.6: Generate Implementation Blueprint
 - [ ] Step 1.7: Update stitch.json
 - [ ] Step 1.8: User final approval
 ```
@@ -417,7 +417,7 @@ This audit is the input for Phase 2, where missing roles are added to **both** `
 
 ## Step 1.6.6: Generate Implementation Blueprint
 
-**Condition**: Only runs when **mode is 2 or 3**. Skip for Mode 1.
+**Condition**: Always runs after design approval.
 
 This step parses the Stitch HTML export into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation. The HTML is transient — downloaded, parsed, deleted.
 
@@ -439,13 +439,10 @@ This step parses the Stitch HTML export into a structured Compose Implementation
    - Shared scaffold (toolbar, background, bottom nav) is described once
    - Per-state content sections capture only the differences
 
-4. **Handle HTML files** (mode-dependent):
-   - **Mode 2**: Delete all `/tmp/stitch_{featurename}_*.html` files (HTML is not needed after blueprint generation)
-   - **Mode 3**: Move HTML files to `.claude/docs/{featurename}/designs/html/` for use in Phase 3 verification:
-     ```bash
-     mkdir -p .claude/docs/{featurename}/designs/html
-     mv /tmp/stitch_{featurename}_*.html .claude/docs/{featurename}/designs/html/
-     ```
+4. **Delete HTML files** — HTML is transient and not needed after blueprint extraction:
+   ```bash
+   rm -f /tmp/stitch_{featurename}_*.html
+   ```
 
 5. **Verify** the blueprint file was written and contains all expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with all states)
 
@@ -457,7 +454,9 @@ Update `.claude/docs/{featurename}/stitch.json` following the [stitch.json schem
 
 Record the approved screen with all state screenshot paths. Include `screenId`, `screenName`, `description`, `designFile`, `screenshot` (success), `stateScreenshots` (loading, failed, empty), `stateScreenIds` (loadingScreenId, failedScreenId, emptyScreenId — recorded in Step 1.6), `approved: true`, and `approvedAt` date.
 
-If Step 1.6.6 generated a blueprint, also record `"blueprint": "designs/{featurename}_blueprint.md"` in the screen entry.
+Record `"blueprint": "designs/{featurename}_blueprint.md"` in the screen entry.
+
+**Set `"blueprintConsumed": false`** at the top level of stitch.json — this signals to implementation skills that a new blueprint is available for consumption.
 
 ---
 
@@ -482,9 +481,7 @@ Design spec: .claude/docs/{featurename}/designs/{featurename}.md
 Ready to proceed?
 ```
 
-**Mode 1**: This is the final step. Show completion report and stop.
-
-**Mode 2 or 3**: Proceed to Phase 2 (Implementation).
+Show completion report from SKILL.md and stop. The user controls the next step — they can invoke an implementation skill if they want to proceed with code.
 
 ---
 
@@ -496,10 +493,9 @@ After Phase 1 completes:
 - Failed screenshot: `.claude/docs/{featurename}/designs/{featurename}_failed.png`
 - Empty screenshot: `.claude/docs/{featurename}/designs/{featurename}_empty.png` (list screens)
 - Design description: `.claude/docs/{featurename}/designs/{featurename}.md`
-- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (Modes 2 & 3)
-- stitch.json updated with approved screen and all state screenshots
+- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+- stitch.json updated with approved screen, all state screenshots, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received
 
-**Mode 1** → Show completion report. Done.
-**Mode 2/3** → Proceed to **Phase 2: Implementation**.
+Show completion report from SKILL.md. Done.

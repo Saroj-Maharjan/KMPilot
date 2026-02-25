@@ -2,7 +2,7 @@
 
 The Stitch HTML export is parsed into a structured blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
 
-**Condition**: Generated in Phase 1 Step 1.6.6 for Modes 2 & 3. Used as the primary source in Phase 2.
+**Condition**: Always generated after design approval. Used as the self-contained handoff artifact for implementation skills.
 
 ---
 
@@ -54,6 +54,56 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 
 ### Empty State (list screens only)
 - `Column` (fillMaxSize, center) → `XIcon` + `XText("No {items} yet")`
+
+## Pre-Implementation Contract
+
+### XTheme Updates Required
+
+| Role | Active Scheme Hex | Counterpart Scheme Hex | Usage |
+|------|-------------------|----------------------|-------|
+| {role} | {hex} | {hex} | {usage} |
+
+### Architecture Rules
+- Use X-components exclusively (no Material3) — see core:designsystem
+- Follow ScreenRoot pattern: FeatureScreen (ViewModel wrapper) + FeatureScreenRoot (testable)
+- Handle all 4 UI states: Uninitialized / Loading / Success / Failed
+- Use setState { copy() } for state updates, never _state.value =
+- Use ImmutableList for collections in state
+- Callbacks for navigation (onBackClick), not navController
+
+### Color Rules
+- ALL colors MUST use MaterialTheme.colorScheme.{role} — never raw Color() hex values
+- If a needed role is missing, add it to XTheme.kt BOTH schemes first, then continue
+
+### Color Audit
+
+#### Defined Roles
+| Role | Hex | Usage |
+|------|-----|-------|
+| {role} | {hex} | {usage} |
+
+#### Missing Roles (must add before implementation)
+| Role | Active Scheme Hex | Counterpart Scheme Hex | Usage |
+|------|-------------------|----------------------|-------|
+| {role} | {hex} | {hex} | {usage} |
+
+#### Custom Colors (justified exceptions only)
+| Name | Hex | Justification |
+|------|-----|---------------|
+
+#### Component Overrides (divergences from X-component defaults)
+| Component | Property | HTML Value | X-component Default | Override Required |
+|-----------|----------|-----------|-------------------|------------------|
+
+## Post-Implementation Checklist
+
+- [ ] All XTheme missing roles added to BOTH XLightColors and XDarkColors
+- [ ] Every component in blueprint Component Tree exists in implementation
+- [ ] Every Modifier in blueprint (border, shadow, alpha, padding, size) is present in code
+- [ ] All colors use MaterialTheme.colorScheme.{role} — no raw Color() hex
+- [ ] Component override sizes/colors from Pre-Implementation Contract applied
+- [ ] Build passes: `./gradlew :feature:{name}:assembleAndroidMain`
+- [ ] Code formatted: `./gradlew :feature:{name}:ktlintFormat`
 ```
 
 ---
@@ -216,6 +266,17 @@ RULES:
     `transition-all`), note it as `[omitted: {class} — no Compose equivalent]` in a comment.
     Every visual property in the HTML must appear in the blueprint — either as a Compose value
     or as an explicit omission note.
+19. **Pre-Implementation Contract**: After the Component Tree, emit a `## Pre-Implementation Contract`
+    section containing:
+    - **XTheme Updates Required** table: Every M3 role from the Color Audit that is missing from XTheme.kt,
+      with hex values for both active and counterpart schemes
+    - **Architecture Rules**: The standard architecture rules (X-components only, ScreenRoot pattern,
+      4 UI states, setState, ImmutableList, callbacks)
+    - **Color Rules**: Strict color usage rules (MaterialTheme.colorScheme only, no raw hex)
+    - **Color Audit**: Full color audit tables (Defined, Missing, Custom, Component Overrides)
+20. **Post-Implementation Checklist**: After the Pre-Implementation Contract, emit a
+    `## Post-Implementation Checklist` with verification items: XTheme updates, component completeness,
+    modifier fidelity, color fidelity, component override application, build validation, ktlint format.
 
 X-COMPONENT MAPPING TABLE:
 {paste from stitch-guide.md}

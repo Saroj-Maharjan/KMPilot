@@ -22,16 +22,40 @@ rm -f /tmp/.claude-kmpilot-skill-active
 
 ## Workflow
 
-**Phase 0** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Activate marker** → **Phase 3** → **Phase 4** → **Remove marker** → ✅ Done
+**Phase 0** → **Phase 0.5** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Activate marker** → **Phase 3** → **Phase 4** → **Remove marker** → Done
 
 ### Phase 0: Context Discovery (Auto)
 Detect: `PKG_PREFIX`, `INIT_KOIN_PATH`, `NAV_HOST_PATH` from existing features.
 See: @phases/phase-0-context.md
 
+### Phase 0.5: Design Artifact Detection
+
+Check for a Stitch design blueprint:
+
+1. **Check blueprint exists**: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+2. **Check stitch.json**: `.claude/docs/{featurename}/stitch.json` — read `blueprintConsumed` field
+3. **Determine mode**:
+
+| Blueprint exists? | `blueprintConsumed` | Mode |
+|-------------------|---------------------|------|
+| Yes | `false` | **Design-aware mode** — blueprint drives UI layer |
+| Yes | `true` | Normal mode — blueprint already consumed |
+| No | N/A | Normal mode — no design artifact |
+
+If entering **design-aware mode**, log:
+```
+Design artifact detected: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
+Entering design-aware mode. Blueprint will drive UI layer implementation.
+```
+
+If blueprint exists and `blueprintConsumed == false`, the blueprint's Pre-Implementation Contract will auto-populate the UI section of the PRD in Phase 1.
+
 ### Phase 1: PRD Generation
 Analyze prompt → Generate PRD → Save to `.claude/docs/{name}/prd.txt`
 Template: @templates/prd-simple.md or @templates/prd-complex.md
 See: @phases/phase-1-prd.md
+
+**Design-aware note**: If blueprint exists, incorporate the blueprint's design tokens, component tree, and color audit into the PRD's UI section automatically.
 
 ### Phase 2: Task Generation
 Break PRD into tasks → Assign to agents → Save task files
@@ -46,7 +70,7 @@ See: @phases/phase-3-implementation.md
 | Agent | Layer | Runs |
 |-------|-------|------|
 | `data-layer-agent` | Models, DataSource, Repository, Ktor | First (or parallel) |
-| `ui-layer-agent` | UiModel, ViewModel, Screens, Navigation | Second (or parallel) - follows UI Workflow from patterns.md |
+| `ui-layer-agent` | UiModel, ViewModel, Screens, Navigation | Second (or parallel) |
 | `integration-agent` | DI, 4 integration points, spec.md | Last |
 
 ### Phase 4: Cleanup
@@ -70,12 +94,13 @@ On build failure, load troubleshooting:
 
 ```
 ## Feature Complete: {FeatureName}
-✅ Data layer implemented
-✅ UI layer implemented
-✅ Integration complete (4 points)
-✅ Build passing + ktlint formatted
-✅ Living spec: .claude/docs/{featurename}/spec.md
-✅ Ephemeral artifacts cleaned
+- Data layer implemented
+- UI layer implemented
+- Integration complete (4 points)
+- Build passing + ktlint formatted
+- Living spec: .claude/docs/{featurename}/spec.md
+- Ephemeral artifacts cleaned
+{Design-aware: "- blueprintConsumed set to true in stitch.json"}
 
 Next: navController.navigate({FeatureName}Route)
 ```

@@ -10,9 +10,9 @@ Use X-components from `:core:designsystem` instead of Material3 in feature modul
 
 **Architecture Reference:** @../_shared/patterns.md
 
-## MANDATORY: Design-First Workflow
+## Design-Aware Mode
 
-**When creating NEW Screens/Composables, INVOKE `/frontend-design` skill FIRST** to get design guidance before writing UI code. This skill provides component mappings for existing code.
+If a Stitch design blueprint exists (`.claude/docs/{featurename}/designs/{featurename}_blueprint.md` with `blueprintConsumed == false` in stitch.json), implementation skills auto-detect it and use the blueprint's component tree for UI implementation. This skill provides component mappings for existing code.
 
 ## Core Rule
 

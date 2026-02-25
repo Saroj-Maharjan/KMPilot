@@ -10,7 +10,8 @@
 | Modify feature | `/modifying-kmp-feature` | "add to", "change", "update", "fix", "modify" |
 | Review feature | `/feature-review` | "review", "check", "audit" |
 | Test feature | `/feature-test` | "test", "generate tests" |
-| UI work | `/frontend-design` (see UI rule below) | "screen", "UI", "composable", "component", "layout", "design" |
+| Design UI | `/ui-designer` | "design screen", "Stitch", "design UI", "mockup" |
+| Verify UI | `/verify-ui` | "verify UI", "audit UI", "check implementation" |
 
 **IMPORTANT:** Invoke the skill IMMEDIATELY upon recognizing feature work. Do NOT:
 - Read files first to "understand the codebase"
@@ -19,11 +20,17 @@
 
 The skills contain workflows that handle exploration, planning, and implementation in the correct order.
 
-**UI WORK RULE:** When ANY task involves creating or modifying Screens, Composables, or UI components:
-1. **Check** the available skills list (in the system-reminder) for `frontend-design`
-2. **If `frontend-design` IS listed** → invoke `/frontend-design` FIRST — MANDATORY, do NOT skip it
+`/using-design-system` auto-activates for UI work and does not need explicit invocation.
 
-`/using-design-system` auto-activates for UI work and does not need explicit invocation. `/frontend-design` is required whenever it appears in the available skills list — when present, NEVER skip it.
+### Design Pipeline
+
+The design pipeline uses a **blueprint artifact contract** for decoupled skill coordination:
+
+1. `/ui-designer` designs screens in Stitch and produces a self-contained blueprint (sets `blueprintConsumed: false` in stitch.json)
+2. `/creating-kmp-feature` or `/modifying-kmp-feature` auto-detect the blueprint and enter **design-aware mode** (sets `blueprintConsumed: true` after implementation)
+3. `/verify-ui` audits the implementation against the Stitch design (three-way token audit)
+
+Each skill is independently invocable — no skill calls another skill. The user controls the pipeline.
 
 ---
 
