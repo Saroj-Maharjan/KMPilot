@@ -105,6 +105,11 @@ fun SendScreenRoot(
                     XIconButton(
                         onClick = onBackClick,
                         modifier = Modifier.padding(8.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
                     ) {
                         XIcon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -117,6 +122,11 @@ fun SendScreenRoot(
                         XIconButton(
                             onClick = onQrScanClick,
                             modifier = Modifier.padding(8.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = MaterialTheme.colorScheme.onSurface,
+                                ),
                         ) {
                             XIcon(
                                 imageVector = Icons.Default.QrCodeScanner,

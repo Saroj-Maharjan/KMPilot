@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.designsystem.XButton
+import thisissadeghi.designsystem.XOutlinedButton
 import thisissadeghi.designsystem.XText
 
 @Composable
@@ -90,7 +90,7 @@ fun AmountInput(
             modifier = Modifier.padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            OutlinedButton(
+            XOutlinedButton(
                 onClick = { onPercentClick(25) },
                 shape = CircleShape,
                 colors =
@@ -106,7 +106,7 @@ fun AmountInput(
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold),
                 )
             }
-            OutlinedButton(
+            XOutlinedButton(
                 onClick = { onPercentClick(50) },
                 shape = CircleShape,
                 colors =
