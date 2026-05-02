@@ -2,6 +2,7 @@ package thisissadeghi.designsystem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +54,7 @@ fun XTextField(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = if (singleLine) XTextFieldDefaults.Shape else XTextFieldDefaults.MultilineShape,
     colors: TextFieldColors = XTextFieldDefaults.Colors,
+    contentPadding: PaddingValues = XTextFieldDefaults.ContentPadding,
 ) {
     val textColor =
         textStyle.color.takeOrElse {
@@ -112,13 +114,7 @@ fun XTextField(
                 isError = isError,
                 interactionSource = interactionSource,
                 colors = colors,
-                contentPadding =
-                    OutlinedTextFieldDefaults.contentPadding(
-                        start = 16.dp,
-                        top = 10.dp,
-                        end = 16.dp,
-                        bottom = 10.dp,
-                    ),
+                contentPadding = contentPadding,
                 container = {
                     Container(
                         enabled = enabled,
@@ -134,6 +130,15 @@ fun XTextField(
 }
 
 object XTextFieldDefaults {
+    val ContentPadding: PaddingValues
+        get() =
+            OutlinedTextFieldDefaults.contentPadding(
+                start = 16.dp,
+                top = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
+            )
+
     val Shape: CornerBasedShape
         @ReadOnlyComposable
         @Composable

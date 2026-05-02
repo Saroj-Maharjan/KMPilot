@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.Button
@@ -42,7 +41,7 @@ fun XButton(
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         Button(
             onClick = onClick,
-            modifier = modifier.then(DefaultModifier),
+            modifier = modifier,
             enabled = enabled,
             shape = shape,
             colors = colors,
@@ -74,7 +73,7 @@ fun XIconButton(
 ) {
     XButton(
         onClick = onClick,
-        modifier = modifier.then(DefaultIconButtonModifier),
+        modifier = modifier,
         contentPadding = contentPadding,
         enabled = enabled,
         shape = shape,
@@ -102,7 +101,7 @@ fun XTextButton(
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         TextButton(
             onClick = onClick,
-            modifier = modifier.then(DefaultModifier),
+            modifier = modifier,
             enabled = enabled,
             shape = shape,
             colors = colors,
@@ -130,7 +129,7 @@ fun XTextIconButton(
 ) {
     XTextButton(
         onClick = onClick,
-        modifier = modifier.then(DefaultIconButtonModifier),
+        modifier = modifier,
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -158,7 +157,7 @@ fun XOutlinedButton(
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         OutlinedButton(
             onClick = onClick,
-            modifier = modifier.then(DefaultModifier),
+            modifier = modifier,
             enabled = enabled,
             shape = shape,
             colors = colors,
@@ -186,7 +185,7 @@ fun XOutlinedIconButton(
 ) {
     XOutlinedButton(
         onClick = onClick,
-        modifier = modifier.then(DefaultIconButtonModifier),
+        modifier = modifier,
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -207,9 +206,6 @@ private fun outlinedButtonBorder(
         width = 1.dp,
         color = if (enabled) colors.contentColor else colors.disabledContentColor,
     )
-
-private val DefaultModifier = Modifier.defaultMinSize(minHeight = 44.dp, minWidth = 100.dp)
-private val DefaultIconButtonModifier = Modifier.defaultMinSize(minWidth = 38.dp, minHeight = 38.dp)
 
 object XButtonDefaults {
     val IconSize = 20.dp
