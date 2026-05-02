@@ -36,7 +36,21 @@ If in **design-aware mode** (Phase 0.5 detected an unconsumed blueprint):
 
 1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles
 2. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
-3. **Pass blueprint to UI agent**: Include the blueprint path as additional context for the UI layer agent. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
+3. **X-Component Constraint Check**: Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
+   - `defaultMinSize` constraints (e.g. `XButton` enforces `minWidth=100.dp, minHeight=44.dp`)
+   - Default parameter values that differ from the blueprint's intent (e.g. `XIconButton` defaults to a visible `surface` background)
+   - Hardcoded internal padding that overrides `contentPadding` (e.g. `XTextField` hardcodes `top=10.dp, bottom=10.dp`)
+   - Any internal `Modifier` applied via `.then(...)` that the caller cannot override
+
+   Reading the whole file matters: the UI agent may legitimately reach for a sibling composable in the same file, and it needs those constraints too.
+
+   For each conflict, decide the resolution before the UI agent writes any code:
+   - Override via modifier: `Modifier.defaultMinSize(Dp.Unspecified)`
+   - Override via parameter: explicit `colors`, `shape`, or `contentPadding`
+   - Accept as architectural limitation: note it in the agent prompt
+
+   **Pass the conflict list to the UI agent** as additional context alongside the blueprint.
+4. **Pass blueprint to UI agent**: Include the blueprint path, design screenshots, and constraint conflict list as context. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
 
 ### Option A: Sequential Execution
 

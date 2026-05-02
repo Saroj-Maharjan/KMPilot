@@ -94,8 +94,21 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
 
 **Design-aware branch**: If in design-aware mode, implement in this order:
 1. **XTheme update** — Add all missing M3 roles from the blueprint's Pre-Implementation Contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
-2. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only.
-3. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
+2. **X-Component Constraint Check** — Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
+   - `defaultMinSize` constraints (e.g. `XButton` enforces `minWidth=100.dp, minHeight=44.dp`)
+   - Default parameter values that differ from what the blueprint intends (e.g. `XIconButton` defaults to a visible `surface` background)
+   - Hardcoded internal padding that overrides `contentPadding` (e.g. `XTextField` hardcodes `top=10.dp, bottom=10.dp`)
+   - Any internal `Modifier` applied via `.then(...)` that the caller cannot override
+
+   Reading the whole file matters: the implementation may legitimately reach for a sibling composable in the same file (e.g. use `XOutlinedButton` instead of `XButton` for a pill), and you need its constraints too.
+
+   For each conflict found, decide the resolution **before writing any code**:
+   - Override via modifier: `Modifier.defaultMinSize(Dp.Unspecified)` to remove a min-size floor
+   - Override via parameter: pass explicit `colors`, `shape`, or `contentPadding` to win over the default
+   - Accept as architectural limitation: note it — do not fight it with hacks
+
+3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from step 2.
+4. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
    - All XTheme missing roles added to BOTH schemes
    - Every component in blueprint exists in implementation
    - Every Modifier in blueprint is present in code
