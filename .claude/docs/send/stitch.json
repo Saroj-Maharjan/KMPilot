@@ -38,14 +38,11 @@
   "createdAt": "2026-02-25T00:00:00Z",
   "updatedAt": "2026-02-25T00:00:00Z",
   "verification": {
-    "verified": false,
-    "verifiedAt": "2026-02-25",
+    "verified": true,
+    "verifiedAt": "2026-05-01",
     "auditReport": "designs/send_audit.md",
-    "deviceScreenshots": {
-      "send_screen": "designs/device/desktop_send.png",
-      "send_screen_loading": "designs/device/desktop_send_loading.png",
-      "send_screen_failed": "designs/device/desktop_send_failed.png"
-    },
-    "attempts": 1
+    "xComponentsCompliant": true,
+    "criticalIssues": 0,
+    "attempts": 5
   }
 }

@@ -1,161 +1,210 @@
-# Three-Way Audit Report: Send
-
-**Date**: 2026-02-25
-**Auditor**: verify-ui skill
-**States audited**: Success, Loading, Failed
-**Total properties checked**: 72
-**Critical mismatches**: 1
-**Minor mismatches**: 5
+# UI Audit Report: Send Feature
+> Verified: 2026-05-01 | Attempts: 5
 
 ---
 
-## Summary
+## X-Component Constraint Catalog
+
+### XButton
+- `LocalMinimumInteractiveComponentSize provides Dp.Unspecified` → M3's 48dp min touch target **disabled**
+- Default shape: `CircleShape`
+- Default contentPadding: `ButtonDefaults.ContentPadding` = 24dp horizontal, 8dp vertical
+
+### XIconButton (delegates to XButton)
+- **Default containerColor: `MaterialTheme.colorScheme.surface`** ← visible background rendered when no `colors` override passed
+- Default contentPadding: `PaddingValues(0dp)` (zero)
+- Default shape: `CircleShape`
+
+### XTextField
+- `defaultMinSize(minWidth = 280dp, minHeight = 48dp)`
+- Default shape (singleLine=true): `CircleShape`
+- Default contentPadding: 16dp all sides
+- `trailingIcon` slot auto-reserves space — no explicit right padding needed
+
+### XTopAppBar
+- Uses `CenterAlignedTopAppBar` → title is always **center-aligned**
+- `windowInsets = WindowInsets(0, 0, 0, 0)`
+
+---
+
+## Three-Way Token Audit
+
+### Screen Container
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Background | `bg-background-dark` = `#0d0919` | `colorScheme.background` | `XScaffold(containerColor = colorScheme.background)` | OK |
+
+### Top App Bar
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Background | `bg-background-dark` | `colorScheme.background` | `XTopAppBar(backgroundColor = colorScheme.background)` | OK |
+| **Title alignment** | `ml-4` only → **left-aligned** | left-aligned | **`CenterAlignedTopAppBar` → center-aligned** | **MINOR** |
+| Title font size | `text-xl` = 20sp | 20sp | 20sp | OK |
+| Title font weight | `font-bold` | Bold | FontWeight.Bold | OK |
+| Title letter spacing | `tracking-tight` ≈ −0.5sp | −0.5sp | `letterSpacing = (−0.5).sp` | OK |
+
+### Back Button
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Padding | `p-2` = 8dp | 8dp | `Modifier.padding(8.dp)` | OK |
+| Background | no bg (hover-only) | transparent | `containerColor = Color.Transparent` | OK |
+| Shape | `rounded-full` | CircleShape | XIconButton default = CircleShape | OK |
+
+### Recipient Address Input
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Section top margin | `mt-4` = 16dp | 16dp | `Spacer(height = 16.dp)` | OK |
+| Label size | `text-sm` = 14sp | 14sp | 14sp | OK |
+| Label weight | `font-medium` | Medium | FontWeight.Medium | OK |
+| Label color | `text-slate-400` ≈ muted | `colorScheme.onSurfaceVariant` | `colorScheme.onSurfaceVariant` | OK |
+| Label bottom margin | `mb-2` = 8dp | 8dp | `padding(bottom = 8.dp)` | OK |
+| Input background | `bg-surface-variant` = `#231a38` | `colorScheme.surfaceVariant` | `surfaceVariant` | OK |
+| Input border | `border-outline` = `#4a3f6b`, 1dp | outline, 1dp | `colorScheme.outline`, 1dp | OK |
+| Input corner radius | `rounded-xl` = 24dp | 24dp | `RoundedCornerShape(24.dp)` | OK |
+| Input content padding | `py-4 pl-4` = 16dp | 16dp | XTextField default = 16dp all | OK |
+| **Paste button background** | **no bg class — transparent** | **transparent** | **XIconButton default = `colorScheme.surface` (#181228) — visible circle** | **CRITICAL** |
+| Paste icon tint | `text-primary` | `colorScheme.primary` | `tint = colorScheme.primary` | OK |
+| Paste button padding | `p-1` = 4dp | 4dp | `PaddingValues(4.dp)` | OK |
+
+### Amount Section
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Section top margin | `mt-8` = 32dp | 32dp | `Spacer(height = 32.dp)` | OK |
+| Label size | `text-sm` = 14sp | 14sp | 14sp | OK |
+| Amount value size | `text-[40px]` = 40sp | 40sp | 40sp | OK |
+| Amount value weight | `font-bold` | Bold | FontWeight.Bold | OK |
+| **Amount value color** | **`text-white` = #FFFFFF** | `colorScheme.onSurface` | **`colorScheme.onSurface` = #E9E0FF** | **MINOR** |
+| Amount value line height | `leading-none` = 40sp | 40sp | `lineHeight = 40.sp` | OK |
+| Coin symbol size | `text-xl` = 20sp | 20sp | 20sp | OK |
+| Coin symbol weight | `font-semibold` | SemiBold | FontWeight.SemiBold | OK |
+| Coin symbol color | `text-primary` | primary | `colorScheme.primary` | OK |
+| Balance text margin | `mt-2` = 8dp | 8dp | `padding(top = 8.dp)` | OK |
+| % buttons top margin | `mt-4` = 16dp | 16dp | `padding(top = 16.dp)` | OK |
+| % buttons gap | `gap-2` = 8dp | 8dp | `Arrangement.spacedBy(8.dp)` | OK |
+| 25%/50% padding | `px-4 py-1.5` = 16dp/6dp | 16dp/6dp | `PaddingValues(horizontal=16.dp, vertical=6.dp)` | OK |
+| 25%/50% background | `bg-primary/10` | `primary.copy(0.1f)` | `primary.copy(alpha = 0.1f)` | OK |
+| 25%/50% border | `border-primary/20` 1dp | 1dp, `primary.copy(0.2f)` | `BorderStroke(1.dp, primary.copy(0.2f))` | OK |
+| MAX background | `bg-primary` | primary | `containerColor = primary` | OK |
+| MAX text color | `text-primary-dark` = `#1a0054` | onPrimary | `contentColor = onPrimary` | OK |
+
+### Asset Selector Rows
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Section top margin | `mt-10` = 40dp | 40dp | `Spacer(height = 40.dp)` | OK |
+| Row spacing | `space-y-4` = 16dp | 16dp | `Arrangement.spacedBy(16.dp)` | OK |
+| Row background | `bg-surface-variant` | `colorScheme.surfaceVariant` | `colorScheme.surfaceVariant` | OK |
+| Row border | `border-outline` 1dp | outline 1dp | `border(1.dp, colorScheme.outline, ...)` | OK |
+| Row corner radius | `rounded-xl` = 24dp | 24dp | `RoundedCornerShape(24.dp)` | OK |
+| Row padding | `p-4` = 16dp | 16dp | `padding(16.dp)` | OK |
+| Icon circle size | `w-10 h-10` = 40dp | 40dp | `Modifier.size(40.dp)` | OK |
+| Icon+text gap | `gap-3` = 12dp | 12dp | `Arrangement.spacedBy(12.dp)` | OK |
+| BTC icon bg | `bg-yellow-500/20` | `#EAB308.copy(0.2f)` | `Color(0xFFEAB308).copy(alpha = 0.2f)` | OK |
+| Name size | default 16sp | 16sp | 16sp | OK |
+| Name weight | `font-bold` | Bold | FontWeight.Bold | OK |
+| Subtitle size | `text-xs` = 12sp | 12sp | 12sp | OK |
+| Chevron tint | `text-slate-400` | `colorScheme.onSurfaceVariant` | `colorScheme.onSurfaceVariant` | OK |
+
+### Transaction Summary Card
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Card top margin | `mt-8` = 32dp | 32dp | `Spacer(height = 32.dp)` | OK |
+| Card background | `bg-surface` = `#181228` | `colorScheme.surface` | `colorScheme.surface` | OK |
+| Card corner radius | `rounded-xl` = 24dp | 24dp | `RoundedCornerShape(24.dp)` | OK |
+| Card padding | `p-4` = 16dp | 16dp | `padding(16.dp)` | OK |
+| Card border | `border-outline/30` | `outline.copy(0.3f)` | `colorScheme.outline.copy(alpha = 0.3f)` | OK |
+| Header size | `text-xs` = 12sp | 12sp | 12sp | OK |
+| Header letter spacing | `tracking-wider` = 0.6sp | 0.6sp | `letterSpacing = 0.6.sp` | OK |
+| Header bottom margin | `mb-4` = 16dp | 16dp | `padding(bottom = 16.dp)` | OK |
+| Fee rows spacing | `space-y-3` = 12dp | 12dp | `Arrangement.spacedBy(12.dp)` | OK |
+| Divider margin before | `mt-1` = 4dp | 4dp | `Spacer(height = 4.dp)` | OK |
+| Divider padding after | `pt-3` = 12dp | 12dp | `Spacer(height = 12.dp)` | OK |
+| Divider color | `border-outline/20` | `outline.copy(0.2f)` | `colorScheme.outline.copy(alpha = 0.2f)` | OK |
+| Arrival value color | `text-green-400` = `#4ADE80` | `XTheme.Colors.Success` | `XTheme.Colors.Success = #4ADE80` | OK |
+| Arrival icon size | `text-sm` = 14sp | 14dp | `Modifier.size(14.dp)` | OK |
+
+### Bottom Action Button
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Container padding | `p-6` = 24dp | 24dp | `padding(24.dp)` | OK |
+| Gradient | top=transparent, bottom=bg | ✓ | `verticalGradient(Transparent, bg.95, bg)` | OK |
+| Background | `bg-primary` | primary | `containerColor = primary` | OK |
+| Text color | `text-primary-dark` | onPrimary | `contentColor = onPrimary` | OK |
+| Vertical padding | `py-4` = 16dp | 16dp | `PaddingValues(vertical = 16.dp)` | OK |
+| Corner radius | `rounded-xl` = 24dp | 24dp | `RoundedCornerShape(24.dp)` | OK |
+
+### Failed State
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Horizontal padding | `px-6` = 24dp | 24dp | `padding(horizontal = 24.dp)` | OK |
+| Error circle bottom margin | `mb-8` = 32dp | 32dp | `padding(bottom = 32.dp)` | OK |
+| Error circle padding | `p-6` = 24dp | 24dp | `padding(24.dp)` | OK |
+| Error circle bg | `bg-error-soft/10` | `error.copy(0.1f)` | `colorScheme.error.copy(alpha = 0.1f)` | OK |
+| Error icon size | `text-[80px]` = 80dp | 80dp | `Modifier.size(80.dp)` | OK |
+| Error icon tint | `text-error-soft` = error | `colorScheme.error` | `colorScheme.error` | OK |
+| Error icon fill | `FILL 0, wght 300` | ErrorOutline | `Icons.Default.ErrorOutline` | OK |
+| Title size | `text-2xl` = 24sp | 24sp | 24sp | OK |
+| Title color | `text-text-heading` = `#e9e0ff` | `colorScheme.onSurface` | `colorScheme.onSurface` | OK |
+| Message line height | `leading-relaxed` = 26sp | 26sp | `lineHeight = 26.sp` | OK |
+| Message max width | `max-w-[280px]` = 280dp | 280dp | `widthIn(max = 280.dp)` | OK |
+
+### Loading State
+| Property | HTML | Blueprint | Code | Verdict |
+|----------|------|-----------|------|---------|
+| Spinner size | `h-12 w-12` = 48dp | 48dp | `Modifier.size(48.dp)` | OK |
+| Spinner color | `text-primary` | primary | `color = colorScheme.primary` | OK |
+
+---
+
+## Catalog-Driven Reverse Sweep — XIconButton Instances
+
+| Instance | Design Background | XIconButton Default | Feature Override | Verdict |
+|----------|-----------------|---------------------|-----------------|---------|
+| `SendScreen.kt:105` back button | transparent | `colorScheme.surface` | `Color.Transparent` ✓ | OK |
+| `SendScreen.kt:122` QR button | transparent | `colorScheme.surface` | `Color.Transparent` ✓ | OK |
+| **`RecipientAddressInput.kt:63`** paste button | **transparent** | **`colorScheme.surface` = #181228** | **none — visible dark circle rendered** | **CRITICAL** |
+
+---
+
+## X-Components Compliance
+
+| File | Import | Verdict |
+|------|--------|---------|
+| All | `ButtonDefaults`, `OutlinedTextFieldDefaults`, `MaterialTheme` | ✅ Config helpers / theme — allowed |
+| All | No M3 UI components (`Button`, `Card`, `Text`, etc.) | ✅ PASS |
+
+**Violations: 0 — PASS**
+
+---
+
+## Critical Fix Required
+
+### Fix: Paste button in RecipientAddressInput
+**File:** `RecipientAddressInput.kt:63`  
+**Root cause:** `XIconButton` default `containerColor = colorScheme.surface` renders a visible dark circle  
+**Fix:** Pass explicit transparent colors:
+
+```kotlin
+XIconButton(
+    onClick = onPasteClick,
+    contentPadding = PaddingValues(4.dp),
+    colors = ButtonDefaults.buttonColors(
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.primary,
+    ),
+) {
+```
+
+---
+
+## Results Summary
 
 | State | Critical | Minor | Status |
 |-------|----------|-------|--------|
-| Success | 1 | 3 | FAIL |
-| Loading | 0 | 1 | WARN |
-| Failed | 0 | 1 | WARN |
+| Success | 1 | 2 | ❌ FAIL |
+| Loading | 0 | 0 | ✅ PASS |
+| Failed | 0 | 0 | ✅ PASS |
+| X-Components | 0 violations | — | ✅ PASS |
 
----
-
-## Critical Mismatches
-
-### RecipientAddressInput — Input end padding
-
-| Property | HTML (ground truth) | Blueprint | Code | Verdict |
-|----------|-------------------|-----------|------|---------|
-| Input end padding | `pr-12` = 48dp (room for paste icon) | `contentPadding end=48.dp` | XTextField hardcodes `end=16.dp` | **CODE MISMATCH** |
-
-**Impact**: Long wallet addresses (e.g. `1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2`, 34 chars) will overflow visually under the paste icon button. The overlay paste button starts ~60dp from the right edge, but text only receives 16dp right clearance.
-
-**Root cause**: `XTextField` does not expose a `contentPadding` parameter — padding is hardcoded internally at `start=16dp, top=10dp, end=16dp, bottom=10dp`.
-
-**Fix options** (prefer option A):
-- **Option A**: Move paste button from Box overlay to `XTextField`'s `trailingIcon` slot — this is cleaner and makes the field automatically manage text clearance.
-- **Option B**: Add a transparent `Spacer` as the `trailingIcon` to push text away from the right edge.
-
-**File**: `feature/send/src/commonMain/kotlin/thisissadeghi/send/presentation/ui/components/RecipientAddressInput.kt`
-
----
-
-## Minor Mismatches
-
-### 1. App bar title alignment
-
-| Property | HTML | Blueprint | Code | Verdict |
-|----------|------|-----------|------|---------|
-| Title alignment | left-aligned (flex row `ml-4`) | not specified | centered (CenterAlignedTopAppBar) | BLUEPRINT + CODE MISMATCH |
-
-**Note**: `XTopAppBar` wraps `CenterAlignedTopAppBar` unconditionally. This is an XTopAppBar architectural decision. Not fixable at the feature level without customizing the component.
-
----
-
-### 2. Icon button backgrounds
-
-| Property | HTML | Blueprint | Code | Verdict |
-|----------|------|-----------|------|---------|
-| Back/QR button bg | transparent (hover-only `bg-primary/10`) | not specified | visible dark circle | BLUEPRINT + CODE MISMATCH |
-
-**Note**: `XIconButton` renders with a default background shape visible in dark mode. In the Stitch design, buttons are transparent with hover-only styling. Not fixable at the feature level without XIconButton changes.
-
----
-
-### 3. Input vertical padding
-
-| Property | HTML | Blueprint | Code | Verdict |
-|----------|------|-----------|------|---------|
-| Input top padding | `py-4` = 16dp | 16dp | XTextField hardcodes 10dp | CODE MISMATCH |
-| Input bottom padding | `py-4` = 16dp | 16dp | XTextField hardcodes 10dp | CODE MISMATCH |
-
-**Note**: The 48dp `minHeight` constraint partially compensates, yielding ~48dp total height vs the designed ~52dp. Visual difference is ~4dp on a typical device. Same root cause as Critical #1 (XTextField hardcoded padding).
-
----
-
-### 4. Loading state — QR icon visible
-
-| Property | HTML | Blueprint | Code | Verdict |
-|----------|------|-----------|------|---------|
-| QR icon in loading | `opacity-0 pointer-events-none` | noted as hidden | always visible | CODE MISMATCH |
-
-**Fix**: Conditionally hide the QR icon in `SendScreenRoot` based on `uiState.state`:
-```kotlin
-actions = {
-    if (uiState.state !is UiState.Loading) {
-        XIconButton(onClick = onQrScanClick, ...) { ... }
-    }
-}
-```
-**File**: `feature/send/src/commonMain/kotlin/thisissadeghi/send/presentation/ui/SendScreen.kt`
-
----
-
-### 5. Failed state — QR icon present
-
-| Property | HTML | Blueprint | Code | Verdict |
-|----------|------|-----------|------|---------|
-| QR icon in failed | absent | not specified | visible | CODE MISMATCH |
-
-**Fix**: Same as Minor #4 — also exclude QR icon in `UiState.Failed` state.
-
----
-
-## Passing Properties (67/72)
-
-All of the following match exactly across HTML → Blueprint → Code:
-
-**Success state**: Main horizontal padding (16dp), recipient top spacing (16dp), label styles (14sp Medium onSurfaceVariant, 8dp bottom), input shape (RoundedCornerShape 24dp), input colors (surfaceVariant fill, outline border, onSurface text), paste icon offset (12dp), amount spacing (32dp top), amount value (40sp Bold onSurface lineHeight=40sp), ticker (20sp SemiBold primary), amount-ticker gap (8dp), balance text (8dp top, 14sp onSurfaceVariant), % buttons row (16dp top, 8dp gap), 25%/50% style (16/6dp padding, primary/10 bg, CircleShape, primary/20 border), MAX style (primary bg, onPrimary, CircleShape), asset section top (40dp), asset gap (16dp), selector label (14sp Medium mb-8dp), selector container (surfaceVariant bg, 1dp outline, RoundedCornerShape 24dp, 16dp padding), icon size (40dp), icon gap (12dp), BTC icon tint (Color(0xFFEAB308)), BTC bg (yellow/20), name style (16sp Bold onSurface), subtitle (12sp onSurfaceVariant), expand icon (onSurfaceVariant), summary top (32dp), summary container (surface bg, outline/30 border, RoundedCornerShape 24dp, 16dp padding), header (12sp Bold 0.6sp tracking mb-16dp), row gap (12dp), fee row (14sp onSurfaceVariant/onSurface), total weight (SemiBold), divider spacers (4dp + 12dp), divider color (outline/20), arrival icon (14dp, XTheme.Colors.Success), arrival text (12sp XTheme.Colors.Success), arrival gap (4dp), bottom bar padding (24dp), gradient (verticalGradient transparent→bg/95→bg), Send button (primary bg, onPrimary, RoundedCornerShape 24dp, 16dp py, 8dp elevation), home spacer (16dp).
-
-**Loading state**: Spinner size (48dp), spinner color (primary).
-
-**Failed state**: Horizontal padding (24dp), error container bottom (32dp), error container bg (error/10 CircleShape), error container padding (24dp), error icon size (80dp), error icon color (error), heading (24sp Bold onSurface), heading bottom (16dp), heading horizontal (16dp), subtitle (16sp onSurfaceVariant lineHeight=26sp), subtitle max-width (280dp), retry button (identical to send button, correct).
-
----
-
-## Fix Instructions
-
-### Critical — Fix 1: RecipientAddressInput paste button overlap
-
-**File**: `feature/send/src/commonMain/kotlin/thisissadeghi/send/presentation/ui/components/RecipientAddressInput.kt`
-
-Replace the `Box { XTextField(...) XIconButton(...) }` with `XTextField` using its `trailingIcon` slot:
-
-```kotlin
-XTextField(
-    value = value,
-    onValueChange = onValueChange,
-    placeholder = { ... },
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
-    colors = OutlinedTextFieldDefaults.colors(...),
-    singleLine = true,
-    trailingIcon = {
-        XIconButton(onClick = onPasteClick, contentPadding = PaddingValues(4.dp)) {
-            XIcon(
-                imageVector = Icons.Default.ContentPaste,
-                contentDescription = "Paste",
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }
-    },
-)
-```
-
-This eliminates the overlay pattern and lets XTextField automatically compute safe text clearance for the trailing icon.
-
-### Minor — Fix 2+3: QR icon visibility in Loading and Failed states
-
-**File**: `feature/send/src/commonMain/kotlin/thisissadeghi/send/presentation/ui/SendScreen.kt`
-
-In `SendScreenRoot`, update the `actions` slot to conditionally render the QR button:
-
-```kotlin
-actions = {
-    val showQr = uiState.state is UiState.Success || uiState.state is UiState.Uninitialized
-    if (showQr) {
-        XIconButton(onClick = onQrScanClick, modifier = Modifier.padding(8.dp)) {
-            XIcon(imageVector = Icons.Default.QrCodeScanner, contentDescription = "Scan QR")
-        }
-    }
-},
-```
+**Minor observations (no fix required):**
+1. Title centered (XTopAppBar/CenterAlignedTopAppBar behavior) vs left-aligned in mockup — design system behavior is authoritative
+2. Amount value `#E9E0FF` vs `#FFFFFF` — semantic theme mapping is correct
