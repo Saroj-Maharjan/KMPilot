@@ -1,256 +1,267 @@
 ---
-description: Verify UI implementation against Stitch design using three-way HTML→Blueprint→Code token audit and desktop screenshots.
+description: Verify UI implementation against Stitch design via a token audit (HTML ↔ Code, with X-component default-render checks) and an X-components compliance check.
 argument-hint: [feature-name]
-allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(./gradlew *), AskUserQuestion, mcp__stitch__get_screen, mcp__stitch__list_screens, mcp__stitch__get_project
+allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(grep *), Bash(wc *), Bash(./gradlew *), Bash(python3 *), AskUserQuestion, mcp__stitch__get_screen, mcp__stitch__list_screens, mcp__stitch__get_project
 ---
 
 # Verify UI
 
-Verify that a feature's UI implementation matches the Stitch design at the token level. Produces desktop screenshots for visual reference and a three-way audit report.
+Verify a feature's UI implementation matches the Stitch design at the token level. Produces a two-source token audit (HTML ↔ Code) overlaid with an X-component default-render trap checklist, plus an X-components compliance check.
 
 **Architecture Reference:** @../_shared/patterns.md
+**Rationale & edge cases:** @RATIONALE.md *(read only when an edge case stumps you)*
 
 ## Prerequisites
 
 - Feature implemented (build passes)
-- Blueprint exists at `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-- stitch.json exists at `.claude/docs/{featurename}/stitch.json`
+- `stitch.json` exists at `.claude/docs/{featurename}/stitch.json`
 
 ## Workflow
 
 ```
-[USER INVOKES] → Preflight → Download HTML → Desktop Screenshots → Three-Way Audit → Present Results → Handle Mismatches → Cleanup → DONE
+[USER INVOKES] → Preflight → Download HTML → Token Extraction → Catalog → Token Audit → Trap Checklist → X-Components Check → Present Results → Handle Mismatches → Cleanup → DONE
 ```
 
 ---
 
 ## Step 1: Preflight
 
-1. **Parse feature name** from `$ARGUMENTS` or ask user
-2. **Verify files exist**:
-   - `.claude/docs/{featurename}/stitch.json` — load project ID, screen IDs, dimensions
-   - `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` — the blueprint
-   - `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/` — implementation code
-3. **Verify build passes**: `./gradlew :feature:{featurename}:assembleAndroidMain`
+1. Parse feature name from `$ARGUMENTS` or ask the user.
+2. Verify files exist:
+   - `.claude/docs/{featurename}/stitch.json`
+   - `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/`
+3. Verify build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`.
 
-If any prerequisite is missing, stop and inform the user what's needed.
+If any prerequisite is missing, stop and inform the user.
+
+> The implementation blueprint is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode). Verify-ui does **not** read it — the audit compares HTML directly against the implemented code, with the X-components catalog as the third source for default-render checks.
 
 ---
 
 ## Step 2: Download HTML from Stitch
 
-Re-download HTML for each approved screen state using screen IDs from stitch.json:
-
-1. For each state (success, loading, failed, empty if applicable):
-   - Get screen ID from `stitch.json` (`screens.{key}.screenId` for success, `screens.{key}.stateScreenIds.{state}` for others)
-   - Call `mcp__stitch__get_screen` with all 3 required params
-   - Download HTML: `curl -sL -o /tmp/stitch_{featurename}_{state}.html {htmlCode.downloadUrl}`
-   - Read the downloaded HTML file content
+1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
+2. For each state (success, loading, failed, empty if applicable):
+   - Get screen ID from `stitch.json` (`screens.{key}.screenId` for success, `screens.{key}.stateScreenIds.{state}` for others).
+   - Call `mcp__stitch__get_screen` with all 3 required params.
+   - Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
+   - Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
+3. Download states **sequentially**.
 
 ---
 
-## Step 3: Generate Desktop Screenshots
+## Step 3: Token Extraction
 
-Render the implemented screen headlessly via Compose Desktop's `ImageComposeScene` for human visual reference. This screenshot is **not scored** — it exists so the user can see what the implementation looks like.
-
-### 3.1: Read screen dimensions
-
-Load dimensions from `stitch.json` (`screens.{key}.dimensions.width` and `height` per state). These match the Stitch design pixel dimensions.
-
-### 3.2: Generate verification test file
-
-Create a temporary `desktopTest` file that renders `{Feature}ScreenRoot` with mock data:
-
-```
-feature/{name}/src/desktopTest/kotlin/{PKG_PATH}/{name}/verification/VerificationScreenshot.kt
-```
-
-The test must:
-- Import `ImageComposeScene`, `Density`, `EncodedImageFormat` from Compose/Skia
-- Use `@OptIn(ExperimentalComposeUiApi::class)`
-- Render at Stitch dimensions with `Density(2f)` (Stitch uses 2x CSS pixels for mobile)
-- Wrap content in `XTheme(darkTheme = {defaultTheme == "dark"})` — matching the app's theme
-- Generate one test per state (Success, Loading, Failed, Empty if applicable)
-- Output PNGs to `.claude/docs/{featurename}/designs/device/`
-
-**Mock data**: Create minimal inline mock data that exercises all component variants. This is temporary code — deleted after verification.
-
-**Output path**: Gradle sets `user.dir` to the module root (`feature/{name}/`). Navigate up to project root:
-```kotlin
-val projectRoot = File(System.getProperty("user.dir")).parentFile.parentFile
-val outputDir = File(projectRoot, ".claude/docs/{featurename}/designs/device").also { it.mkdirs() }
-```
-
-### 3.3: Run the test
+For each state's HTML file:
 
 ```bash
-mkdir -p .claude/docs/{featurename}/designs/device
-./gradlew :feature:{name}:desktopTest --tests "*VerificationScreenshot*"
+python3 .claude/skills/verify-ui/extract_tokens.py \
+  .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
+  > .claude/docs/{featurename}/designs/extracted/tokens_{state}.md
 ```
 
-Verify PNGs were created in `.claude/docs/{featurename}/designs/device/`.
+Then:
 
-### 3.4: Stitch Screenshots (Already Hi-Res)
+1. Read each generated `tokens_{state}.md`.
+2. **Do not read the raw HTML.** Use only the script output.
+3. Trust the auto-converted dp/sp/color values directly.
 
-Phase 1 always downloads full-resolution screenshots (with `=s0` suffix). Use the existing files directly for comparison:
-- Success: `.claude/docs/{featurename}/designs/{featurename}.png`
-- Loading: `.claude/docs/{featurename}/designs/{featurename}_loading.png`
-- Failed: `.claude/docs/{featurename}/designs/{featurename}_failed.png`
-- Empty: `.claude/docs/{featurename}/designs/{featurename}_empty.png` (if applicable)
+The inventories are the complete element/class checklist for Step 5 — Step 5.2 must inspect every visual element, but only mismatches are emitted in the audit.
 
 ---
 
-## Step 4: Three-Way Token Audit
+## Step 4: X-Components Catalog
 
-This is the **primary verification mechanism**. It compares every measurable design token across three sources:
+### 4.1 Read the catalog
 
-1. **Stitch HTML** (ground truth — what the user approved)
-2. **Blueprint** (intermediate translation — may have errors)
-3. **Implementation code** (final output — may have errors)
+Read `.claude/skills/_shared/X_COMPONENTS_CATALOG.md`. It is the **third source** for the audit (HTML, Code, Catalog). Don't re-read individual `X*.kt` files — the catalog is the source of truth for X-component default-render behaviour.
 
-### 4.1: Load all sources
+If the catalog is missing or stale, see `RATIONALE.md` → *Regenerating the catalog*.
 
-- **HTML files**: Read from `/tmp/stitch_{featurename}_{state}.html`
-- **Blueprint**: Read from `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-- **Code files**: Read all `.kt` files in `feature/{name}/src/commonMain/.../presentation/ui/` and `ui/components/`
+### 4.2 Build the X-component instance map
 
-### 4.2: Extract HTML values
-
-For each HTML file, extract every Tailwind class and convert to its dp/sp/color value using the rules in the blueprint spec. Key extractions:
-
-- **Spacing**: Every `p-{N}`, `px-{N}`, `py-{N}`, `pt-{N}`, `pb-{N}`, `gap-{N}`, `space-y-{N}`, `mb-{N}`, `size-{N}` → dp values
-- **Typography**: Every `text-{size}`, `font-{weight}`, `tracking-{type}` → sp/weight/letterSpacing values
-- **Colors**: Every `bg-{color}`, `text-{color}`, `border-{color}` with alpha variants (`/{N}`) → hex + alpha
-- **Shapes**: Every `rounded-{size}` → dp (check `tailwind.config` for overrides)
-- **Borders**: Every `border`, `border-{side}-{N}`, `divide-{axis}` → width + color
-- **Shadows**: Every `shadow-{size}` → elevation dp
-- **Layout**: `flex`/`flex-col`/`flex-row`, `items-{align}`, `justify-{align}` → Compose layout equivalents
-
-### 4.3: Compare three-way
-
-For each extracted value, check the blueprint and code for the corresponding value. Produce a report:
-
-```markdown
-## Three-Way Audit Report: {FeatureName}
-
-### {ComponentName}
-
-| Property | HTML (ground truth) | Blueprint | Code | Verdict |
-|----------|-------------------|-----------|------|---------|
-| top padding | pt-8 = 32dp | 32.dp | 8.dp | CODE MISMATCH |
-| bottom padding | p-4 = 16dp | 8.dp | 8.dp | BLUEPRINT + CODE MISMATCH |
+```bash
+grep -rnHE "\bX[A-Z][[:alnum:]]*\s*\(" feature/{name}/src/commonMain/**/presentation/ui/
 ```
 
-**Verdicts**:
-- **OK** — all three match
-- **CODE MISMATCH** — HTML and Blueprint agree, Code differs. Fix target: code.
-- **BLUEPRINT MISMATCH** — HTML correct, Blueprint wrong, Code may match either. Fix target: code (use HTML value).
-- **BLUEPRINT + CODE MISMATCH** — Both Blueprint and Code differ from HTML the same way. The blueprint mistranslated, code faithfully followed the wrong spec. Fix target: code (use HTML value).
-- **ALL DIFFER** — all three have different values. Fix target: code (use HTML value).
+- Filter out import lines and comments.
+- **Preserve duplicates** (no `sort -u`).
+- Output is the instance map — Step 5.3 (Trap Checklist) walks every entry that matches one of the seven trap classes.
 
-### 4.4: Classify mismatches
+Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as parameters.
 
-Group mismatches by severity:
+---
+
+## Step 5: Token Audit
+
+### 5.1 Sources
+
+- **Element inventories**: `.claude/docs/{featurename}/designs/extracted/tokens_{state}.md`
+  - Visual elements (the full per-class blocks) drive the audit rows.
+  - Layout-only one-liners are still scanned for **structural mismatches** (`flex-row` vs `Column`, `justify-between` vs `Arrangement.Start`, etc.) but produce rows only when something disagrees.
+- **Tailwind config overrides**: top of each inventory file.
+- **Global styles**: in the inventory file under "Global Styles".
+- **Code files**: `feature/{name}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
+- **X-components catalog**: from Step 4.1.
+
+> **No blueprint.** The implementation blueprint already drove the code. Re-reading it during verification was redundant — the design ground truth is the HTML, and the code is what we audit. The blueprint is consumed by `/creating-kmp-feature` / `/modifying-kmp-feature`, not here.
+
+### 5.2 Convert and compare — Success state
+
+For every visual element in the inventory, convert each Tailwind class to its dp/sp/color/modifier value, then find the matching code implementation.
+
+**Rule — effective rendered value.** The Code column shows what actually renders: the declared parameter **after** any X-component internal overrides from the catalog. Not just the declared param. *(Worked examples: `RATIONALE.md`.)*
+
+**Output format — mismatches only, as blocks.** The audit does **not** list OK rows. Use one block per mismatch:
+
+```markdown
+## Token Audit: {FeatureName} — Success
+
+**Audited: {visual element count} visual elements, {layout count} layout containers.**
+**Mismatches: {N}.**
+
+### {Severity} — {short title}
+- **Where:** `{ComponentFile.kt:LINE}` (and HTML element index `[N]` if useful)
+- **HTML:** {expected value, e.g. "no bg class — transparent"}
+- **Code:** {actual rendered value, e.g. "XIconButton default `surface` = #181228 — visible circle"}
+- **Fix:** {one-line code change}
+```
+
+When `N = 0`, write `**No mismatches.**` and stop. Do not produce a table.
+
+**Verdicts** (used as the "{Severity}" tag in the block heading):
+- **CRITICAL** — see Step 5.5.
+- **MINOR** — see Step 5.5.
+- (No OK blocks — they are summarised in the count line and never listed.)
+
+### 5.3 Trap Checklist — Success state
+
+The reverse sweep is a **fixed checklist** of the seven X-component default-render traps from `X_COMPONENTS_CATALOG.md` ("How to use this catalog"). For each trap, scan the instance map; if the trap applies and the feature code does NOT override AND the HTML has no class declaring the property, produce a CRITICAL block in the same format as Step 5.2.
+
+**Checklist:**
+
+| # | Trap | Trigger | Fix |
+|---|------|---------|-----|
+| 1 | `XIconButton` default `containerColor = surface` | Any `XIconButton(...)` call without an explicit `colors` param, where HTML has no `bg-*` class on the icon button | Pass `colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, …)` |
+| 2 | `XTextField` `defaultMinSize(280dp × 48dp)` | Any `XTextField(...)` whose HTML container is narrower than 280dp or shorter than 48dp | Note as MINOR; usually unfixable without forking the component |
+| 3 | `XTextField` extra `padding(top = 8.dp)` when `label != null` | `XTextField(... label = { ... })` | Either drop the label or absorb the extra 8dp into the surrounding spacing |
+| 4 | `XTopAppBar` always center-aligned title | `XTopAppBar(...)` where HTML title sits at `ml-4` (left-aligned) | MINOR — design system behaviour is authoritative |
+| 5 | `XDialog` always 90% width | Any `XDialog(...)` whose HTML mockup uses a different width fraction | MINOR — design system behaviour is authoritative |
+| 6 | `XPrimaryScrollableTabRow` no divider by default | Any `XPrimaryScrollableTabRow(...)` whose HTML shows a divider line under the tabs | Pass an explicit `divider = { HorizontalDivider() }` |
+| 7 | `XRadioButton` unselected colour = `primary` (not `outline`) | Any `XRadioButton(...)` whose HTML shows an outline-coloured unselected ring | Pass explicit `colors = RadioButtonDefaults.colors(unselectedColor = colorScheme.outline)` |
+
+Skip a row entirely when the X-component isn't used in the feature. Do **not** walk catalog properties beyond this list — full sweeps were removed because they produced churn-y false positives without proportionate catch.
+
+### 5.4 Loading and Failed states — brief checklist
+
+These states are typically trivial (a spinner or an error illustration). Inspect the inventory and code for each state:
+
+- If everything matches → write `### {State}: no mismatches.` and stop.
+- If there are mismatches → emit them as Step 5.2 blocks under a `### {State}` heading.
+
+No "OK" bullets — silence means OK.
+
+### 5.5 Classify mismatches
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
-| **Critical** | Spacing >=8dp off, wrong color role, missing component, wrong font size | Must fix |
-| **Minor** | Spacing 1-4dp off, shadow omitted, letter-spacing off, decorative detail | Report to user, fix if requested |
-| **Data-only** | Different mock data text/values | Ignore — not a code issue |
+| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3** | Must fix |
+| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width) | Report; fix if requested |
+| **Data-only** | Different mock data text/values | Ignore |
 
 Save the audit report to `.claude/docs/{featurename}/designs/{featurename}_audit.md`.
 
 ---
 
-## Step 5: Present Results
+## Step 6: X-Components Compliance Check
 
-Show the user:
+### 6.1 Detect forbidden Material3 imports
 
-1. **Desktop screenshots** — read both the device PNGs and Stitch PNGs inline via `Read` for visual comparison
-2. **Audit summary** — critical and minor mismatches count
-3. **Full audit table** — all mismatches with verdicts
+```
+import androidx.compose.material3.    // any M3 component import (wildcard or named)
+import coil3.compose.AsyncImage       // use AsyncImage from :core:designsystem
+```
+
+`MaterialTheme.colorScheme` and `MaterialTheme.typography` are **allowed** — `XTheme` wraps `MaterialTheme`. Only component imports are forbidden.
+
+### 6.2 Compliance report
+
+```markdown
+## X-Components Compliance Report: {FeatureName}
+
+| File | Line | Violation | Correct Alternative |
+|------|------|-----------|---------------------|
+| SendScreen.kt | 12 | import androidx.compose.material3.Button | XButton from :core:designsystem |
+```
+
+All M3 component violations are Critical.
+
+---
+
+## Step 7: Present Results
 
 ```
 ## Verification Report: {FeatureName}
 
-### Desktop Screenshots (visual reference)
-| State | Stitch Design | Desktop Render |
-|-------|--------------|----------------|
-| Success | designs/{featurename}.png | designs/device/desktop_{featurename}.png |
-| Loading | designs/{featurename}_loading.png | designs/device/desktop_{featurename}_loading.png |
-| Failed | designs/{featurename}_failed.png | designs/device/desktop_{featurename}_failed.png |
-
-### Token Audit Results
+### Token Audit
+- Visual elements audited: {N}
 - Critical mismatches: {N}
 - Minor mismatches: {N}
-- Total properties checked: {N}
 
-{Full audit table}
+### X-Components Compliance
+- Material3 violations: {N} ({PASS if 0, FAIL otherwise})
+
+{Mismatch blocks from Step 5.2 / 5.3 / 5.4 — only the blocks, no OK rows.}
+
+{Compliance violations table (if any).}
 ```
 
 ---
 
-## Step 6: Handle Mismatches
+## Step 8: Handle Mismatches
 
-### If critical mismatches exist
+### Critical issues (token mismatches OR Material3 violations)
 
-1. **Save audit report** with fix instructions — for each critical mismatch, specify the exact file, current value, and correct value (from HTML)
-2. **Inform the user** and recommend they invoke the implementation skill to fix:
+1. Save audit report with fix instructions: file, line, current value, correct value.
+2. Tell the user:
 
-```
-Critical mismatches found. To fix them:
+   ```
+   Critical issues found ({N} token mismatches, {N} M3 violations). To fix:
 
-  /modifying-kmp-feature {featurename}
+     /modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md
+   ```
 
-The audit report at .claude/docs/{featurename}/designs/{featurename}_audit.md
-contains exact fix instructions for each mismatch. The implementation skill
-will auto-detect this in design-aware mode.
-```
+This skill does not invoke `/modifying-kmp-feature` — the user controls the pipeline.
 
-**This skill does NOT invoke `/modifying-kmp-feature`** — the user controls the pipeline.
-
-### If only minor mismatches exist
-
-Present them to the user and ask:
+### Only minor mismatches
 
 | Option | Description |
 |--------|-------------|
 | Accept (Recommended) | Minor differences are acceptable |
-| Fix all | Fix every minor mismatch (user should invoke implementation skill) |
+| Fix all | User invokes `/modifying-kmp-feature` |
 
 ---
 
-## Step 7: Cleanup
+## Step 9: Cleanup
 
-After user confirms:
+1. Preserve HTML and token inventories in `.claude/docs/{featurename}/designs/extracted/`.
+2. Update `stitch.json` (replace the existing `verification` object):
 
-1. **Delete the verification test file**:
-   ```
-   feature/{name}/src/desktopTest/kotlin/{PKG_PATH}/{name}/verification/VerificationScreenshot.kt
-   ```
-   Remove the `verification/` directory if empty. Remove `desktopTest/` directory tree if empty.
-
-2. **Delete HTML source files** (no longer needed after verification):
-   ```bash
-   rm -f /tmp/stitch_{featurename}_*.html
-   ```
-
-3. **Update stitch.json** with verification results:
    ```json
    {
      "verification": {
        "verified": true,
-       "verifiedAt": "{date}",
+       "verifiedAt": "2026-05-02",
        "auditReport": "designs/{featurename}_audit.md",
-       "deviceScreenshots": {
-         "{screen_name}": "designs/device/desktop_{screen_name}.png"
-       },
-       "attempts": {number}
+       "extractedSources": "designs/extracted/",
+       "xComponentsCompliant": true,
+       "criticalIssues": 0,
+       "attempts": 1
      }
    }
    ```
 
-4. Show completion report.
+3. Show the completion report.
 
 ---
 
@@ -259,15 +270,19 @@ After user confirms:
 ```
 ## Verify UI Complete: {FeatureName}
 
-### Audit Results
+### Token Audit Results
 | State | Critical | Minor | Status |
 |-------|----------|-------|--------|
 | Success | {N} | {N} | {PASS/FAIL} |
 | Loading | {N} | {N} | {PASS/FAIL} |
 | Failed | {N} | {N} | {PASS/FAIL} |
 
-Desktop screenshots: .claude/docs/{featurename}/designs/device/
+### X-Components Compliance
+| Check | Violations | Status |
+|-------|------------|--------|
+| No Material3 usage | {N} | {PASS/FAIL} |
+
 Audit report: .claude/docs/{featurename}/designs/{featurename}_audit.md
 
-{If critical mismatches: "To fix: /modifying-kmp-feature {featurename}"}
+{If critical issues: "To fix: /modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md"}
 ```
