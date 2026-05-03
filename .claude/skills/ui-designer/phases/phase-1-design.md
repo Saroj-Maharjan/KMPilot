@@ -17,11 +17,11 @@ Design Progress:
 - [ ] Step 1.4: Iterate on feedback (if needed)
 - [ ] Step 1.5: Finalize approved success design
 - [ ] Step 1.6: Generate state designs (loading, failed, empty)
-- [ ] Step 1.6.5: Acquire HTML & Token Inventories (MANDATORY)
-- [ ] Step 1.6.6: Color Audit — reconciled against HTML inventories (MANDATORY)
-- [ ] Step 1.6.7: Generate Implementation Blueprint
-- [ ] Step 1.7: Update stitch.json
-- [ ] Step 1.8: User final approval
+- [ ] Step 1.7: Acquire HTML & Token Inventories (MANDATORY)
+- [ ] Step 1.8: Color Audit — reconciled against HTML inventories (MANDATORY)
+- [ ] Step 1.9: Generate Implementation Blueprint
+- [ ] Step 1.10: Update stitch.json
+- [ ] Step 1.11: User final approval
 ```
 
 ---
@@ -68,7 +68,7 @@ Steps 1.2–1.5 handle the **success state** variant selection. Step 1.6 generat
 Read: core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt
 ```
 
-Parse the color scheme that matches the `defaultTheme` established in Phase 0 Step 0.1.5:
+Parse the color scheme that matches the `defaultTheme` established in Phase 0 Step 0.1:
 - `defaultTheme = light` → parse `XLightColors` / `lightColorScheme(...)`
 - `defaultTheme = dark` → parse `XDarkColors` / `darkColorScheme(...)`
 
@@ -367,7 +367,13 @@ Save `.claude/docs/{featurename}/designs/{featurename}.md`:
 
 ---
 
-## Step 1.6.5: Acquire HTML & Token Inventories (MANDATORY)
+## Step 1.7: Acquire HTML & Token Inventories (MANDATORY)
+
+After all state designs are approved (success + loading + failed + empty), download each state's HTML once and run the shared token extractor. The outputs are persisted to `.claude/docs/{featurename}/designs/extracted/` so Steps 1.8 (Color Audit), 1.9 (blueprint), and `/verify-ui` all read the same files. Stitch URLs are typically one-time use — re-downloading at verify-time is fragile, so we capture the design-time snapshot here and let downstream steps reuse it.
+
+### Resume Check (Partial Failure Recovery)
+
+Before downloading or tokenizing, check `.claude/docs/{featurename}/designs/extracted/` for existing files. For each state, only run the procedure below if **either** of these is missing:
 
 After all state designs are approved (success + loading + failed + empty), download each state's HTML once and run the shared token extractor. The outputs are persisted to `.claude/docs/{featurename}/designs/extracted/` so Steps 1.6.6 (Color Audit), 1.6.7 (blueprint), and `/verify-ui` all read the same files. Stitch URLs are typically one-time use — re-downloading at verify-time is fragile, so we capture the design-time snapshot here and let downstream steps reuse it.
 
@@ -396,9 +402,9 @@ After all state designs are approved (success + loading + failed + empty), downl
 
 ---
 
-## Step 1.6.6: Color Audit (MANDATORY)
+## Step 1.8: Color Audit (MANDATORY)
 
-Audit every color used across all approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.6.5**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
+Audit every color used across all approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.7**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
 
 ### Procedure
 
@@ -451,11 +457,11 @@ This audit is the input for Phase 2, where missing roles are added to **both** `
 
 ---
 
-## Step 1.6.7: Generate Implementation Blueprint
+## Step 1.9: Generate Implementation Blueprint
 
 **Condition**: Always runs after design approval.
 
-This step parses the Stitch HTML export (already downloaded in Step 1.6.5) into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
+This step parses the Stitch HTML export (already downloaded in Step 1.7) into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
 
 ### Procedure
 
@@ -467,7 +473,7 @@ This step parses the Stitch HTML export (already downloaded in Step 1.6.5) into 
    - All HTML file contents (labeled by state: success, loading, failed, empty)
    - All token inventories (labeled by state) — authoritative for already-converted classes
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
-   - The Color Audit M3 role mappings (from Step 1.6.6 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
+   - The Color Audit M3 role mappings (from Step 1.8 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
 
 3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
    - The blueprint covers all states in a single file
@@ -478,7 +484,7 @@ This step parses the Stitch HTML export (already downloaded in Step 1.6.5) into 
 
 ---
 
-## Step 1.7: Update stitch.json
+## Step 1.10: Update stitch.json
 
 Update `.claude/docs/{featurename}/stitch.json` following the [stitch.json schema](../references/stitch-guide.md#stitchjson-schema).
 
@@ -490,7 +496,7 @@ Record `"blueprint": "designs/{featurename}_blueprint.md"` in the screen entry.
 
 ---
 
-## Step 1.8: User Final Approval
+## Step 1.11: User Final Approval
 
 Present all approved designs:
 

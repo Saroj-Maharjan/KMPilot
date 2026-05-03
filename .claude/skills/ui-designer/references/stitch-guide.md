@@ -101,7 +101,7 @@ Full M3 role catalog, color rules, and usage guidance: **[m3-colors.md](m3-color
 
 Key points (read the full reference when writing Stitch prompts or doing Color Audits):
 - **Source of truth**: `XTheme.kt` defines all active roles in `XLightColors` (lightColorScheme) and `XDarkColors` (darkColorScheme)
-- Use the scheme matching `defaultTheme` (from Phase 0 Step 0.1.5) when writing Stitch prompts
+- Use the scheme matching `defaultTheme` (from Phase 0 Step 0.1) when writing Stitch prompts
 - Every design color **must** map to an M3 role — annotate as `{hex} (M3: {role})`
 - Feature code uses `MaterialTheme.colorScheme.*` exclusively — never raw `Color()` hex
 - Missing roles must be added to **both** `XLightColors` and `XDarkColors` before implementation (Phase 2 Step 2.1)
@@ -206,7 +206,7 @@ When translating designs to code, use this mapping:
 
 ### Downloading Screenshots
 
-`get_screen` returns both `screenshot.downloadUrl` and `htmlCode.downloadUrl`. Use `screenshot.downloadUrl` for visual reference. The `htmlCode.downloadUrl` is used in the **HTML acquisition** step (Phase 1 Step 1.6.5) to download the per-state HTML that feeds the Color Audit (1.6.6) and the blueprint (1.6.7).
+`get_screen` returns both `screenshot.downloadUrl` (for `.png` previews) and `htmlCode.downloadUrl` (used in the HTML acquisition step, Phase 1 Step 1.7, which feeds the Color Audit (1.8) and the blueprint (1.9)). For the call signature, see [Get Screen Call Pattern](#get-screen-call-pattern).
 
 ```bash
 # 1. Get screen data (all 3 params required)
@@ -261,7 +261,7 @@ When the user requests **variants**:
 
 Stitch HTML is always parsed into a structured blueprint after design approval. The blueprint is the self-contained handoff artifact for implementation skills. Full spec, extraction prompt, and edge cases: **[blueprint-spec.md](blueprint-spec.md)**
 
-See Phase 1 Step 1.6.7.
+See Phase 1 Step 1.9.
 
 ---
 

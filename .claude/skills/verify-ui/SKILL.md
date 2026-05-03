@@ -40,7 +40,7 @@ If any prerequisite is missing, stop and inform the user.
 
 ## Step 2: Acquire HTML (reuse or download)
 
-`/ui-designer` Step 1.6.5 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
+`/ui-designer` Step 1.7 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
 2. For each state (success, loading, failed, empty if applicable):
@@ -157,7 +157,7 @@ Skip a row entirely when the X-component isn't used in the feature. Do **not** w
 
 ### 5.3.5 Component Overrides Check — feature-specific traps from the blueprint
 
-The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.6.6 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
+The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.8 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
 
 1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. Do not read any other blueprint section. If the blueprint is missing, skip 5.3.5 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
 2. For each row (`Component | Property | HTML Value | X-component Default | Override Required`):

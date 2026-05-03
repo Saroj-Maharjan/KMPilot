@@ -136,7 +136,7 @@ Feed this prompt with:
 1. Raw HTML content (all state files, labeled by state)
 2. **Token inventories** from `extract_tokens.py` (one per state, labeled by state) — authoritative for already-converted classes
 3. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
-4. Color Audit M3 role mappings (from Phase 1 Step 1.6.6)
+4. Color Audit M3 role mappings (from Phase 1 Step 1.8)
 
 ```
 You are a design-to-code translator. Convert this Stitch HTML export into a Compose Implementation Blueprint.

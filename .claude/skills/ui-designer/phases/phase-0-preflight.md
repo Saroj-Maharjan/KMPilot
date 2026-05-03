@@ -8,10 +8,10 @@
 
 ```
 Preflight Progress:
-- [ ] Step 0.1.5: Theme & color setup
+- [ ] Step 0.1: Theme & color setup
 - [ ] Step 0.2: Verify Stitch MCP availability
-- [ ] Step 0.4: Resolve feature context
-- [ ] Step 0.5: Set up Stitch project and initialize stitch.json
+- [ ] Step 0.3: Resolve feature context
+- [ ] Step 0.4: Set up Stitch project and initialize stitch.json
 ```
 
 ---
@@ -22,7 +22,7 @@ The model is always `GEMINI_3_FLASH` for all Stitch generation calls. Device typ
 
 ---
 
-## Step 0.1.5: Theme & Color Setup
+## Step 0.1: Theme & Color Setup
 
 **Purpose**: Establish the app's color palette for both light and dark themes before any design or code work begins.
 
@@ -201,7 +201,7 @@ The Stitch MCP server is required for all UI Designer modes.
 
 ---
 
-## Step 0.4: Resolve Feature Context
+## Step 0.3: Resolve Feature Context
 
 Extract feature information from arguments, user's request, or ask for it.
 
@@ -226,7 +226,7 @@ Note: Feature existence is informational — it helps the user decide which impl
 
 ---
 
-## Step 0.5: Set Up Stitch Project and Initialize stitch.json
+## Step 0.4: Set Up Stitch Project and Initialize stitch.json
 
 Each feature gets its **own Stitch project** to isolate designs and avoid clutter (Stitch MCP has no delete screen API, so shared projects accumulate orphaned screens across iterations).
 
