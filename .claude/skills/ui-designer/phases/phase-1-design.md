@@ -315,6 +315,18 @@ Generate the remaining states by **editing the approved success screen**. This u
 
 **Important**: Each `edit_screens` call generates a new screen. The original success screen remains unchanged.
 
+### Resume Check (Partial Failure Recovery)
+
+Before generating any state, check `.claude/docs/{featurename}/designs/` for already-generated state screenshots:
+
+- `{featurename}_loading.png`
+- `{featurename}_failed.png`
+- `{featurename}_empty.png` (list screens only)
+
+For each state whose screenshot **already exists**, skip the State Generation Procedure for that state — its screen ID is already recorded in `stitch.json` from a prior run. For each **missing** state, run the procedure below.
+
+This makes the skill safely resumable: if a previous invocation generated `loading` and `failed` but errored out before `empty`, re-invoking `/ui-designer` regenerates only `empty`.
+
 ### State Generation Procedure
 
 For each state below, follow this procedure:
@@ -389,7 +401,10 @@ After all state designs are approved (success + loading + failed + empty), downl
 
 Before downloading or tokenizing, check `.claude/docs/{featurename}/designs/extracted/` for existing files. For each state, only run the procedure below if **either** of these is missing:
 
-After all state designs are approved (success + loading + failed + empty), download each state's HTML once and run the shared token extractor. The outputs are persisted to `.claude/docs/{featurename}/designs/extracted/` so Steps 1.6.6 (Color Audit), 1.6.7 (blueprint), and `/verify-ui` all read the same files. Stitch URLs are typically one-time use — re-downloading at verify-time is fragile, so we capture the design-time snapshot here and let downstream steps reuse it.
+- `stitch_{state}.html`
+- `tokens_{state}.md`
+
+If both exist for a state, skip it — the prior run's snapshot is the canonical source of truth and re-fetching the HTML may fail due to Stitch's one-time URLs.
 
 ### Procedure
 
