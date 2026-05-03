@@ -30,6 +30,20 @@ Design Progress:
 
 > **Scope**: This skill handles **one screen per invocation**. For multi-screen features, invoke `/ui-designer` once per screen.
 
+### Screen Count Check (Fail Fast)
+
+**Before parsing requirements**, count distinct screens implied by the user's prompt, the spec, or the PRD. Indicators of multiple screens: explicit lists ("login and dashboard"), connectives ("then", "after that", "followed by"), or screen-name plurals.
+
+If **>1 screen** is detected, fail fast — do **not** silently scope down. Use `AskUserQuestion`:
+
+> "Detected {N} screens in your request: {comma-separated list}. `/ui-designer` handles one screen per invocation. Which would you like to design first?"
+
+Each option = one screen name (max 4; if more, show top 4 plus "Other"). Use the user's pick as the sole screen for this invocation. The remaining screens stay for subsequent `/ui-designer` runs.
+
+If exactly **1 screen** is detected, proceed.
+
+### Determine Screen Details
+
 Determine what the screen needs to show. Sources (in priority order):
 
 1. **User's prompt**: "design a login screen with email/password fields"
