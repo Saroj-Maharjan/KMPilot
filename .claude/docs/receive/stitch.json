@@ -1,0 +1,40 @@
+{
+  "projectId": "13801905064393327993",
+  "projectName": "projects/13801905064393327993",
+  "featureName": "receive",
+  "deviceType": "MOBILE",
+  "modelId": "GEMINI_3_FLASH",
+  "blueprintConsumed": true,
+  "theme": {
+    "defaultTheme": "dark",
+    "primaryHex": "#9D70FF",
+    "paletteCustomized": false
+  },
+  "screens": {
+    "receive_screen": {
+      "screenId": "ec86fae367fc49d99c58120dd2f807cb",
+      "screenName": "projects/13801905064393327993/screens/ec86fae367fc49d99c58120dd2f807cb",
+      "description": "Receive crypto screen with asset/network selector, truncated wallet address pill, network safety warning banner, and Share + Copy Address CTA buttons",
+      "designFile": "designs/receive.md",
+      "screenshot": "designs/receive.png",
+      "stateScreenshots": {
+        "loading": "designs/receive_loading.png",
+        "failed": "designs/receive_failed.png"
+      },
+      "stateScreenIds": {
+        "loading": "ec34d36d798f4958b661f9123fe3b080",
+        "failed": "d586a0cd416a4850abe2261e5b079266"
+      },
+      "blueprint": "designs/receive_blueprint.md",
+      "dimensions": {
+        "success": { "width": 780, "height": 1768 },
+        "loading": { "width": 780, "height": 1768 },
+        "failed": { "width": 780, "height": 1768 }
+      },
+      "approved": true,
+      "approvedAt": "2026-05-03"
+    }
+  },
+  "createdAt": "2026-05-03T00:00:00Z",
+  "updatedAt": "2026-05-03T15:02:00Z"
+}
