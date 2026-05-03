@@ -34,7 +34,7 @@ ls -la .claude/docs/{featurename}/spec.md
 Remove temporary planning files:
 
 ```bash
-rm -f .claude/docs/{featurename}/prd.txt
+rm -f .claude/docs/{featurename}/prd.md
 rm -f .claude/docs/{featurename}/tasks.md
 rm -f .claude/docs/{featurename}/task-*.md
 ```
@@ -43,7 +43,7 @@ rm -f .claude/docs/{featurename}/task-*.md
 
 | File | Purpose | Why Delete |
 |------|---------|------------|
-| `prd.txt` | Planning document | Superseded by spec.md |
+| `prd.md` | Planning document | Superseded by spec.md |
 | `tasks.md` | Task summary | Work complete |
 | `task-*.md` | Individual tasks | Work complete |
 

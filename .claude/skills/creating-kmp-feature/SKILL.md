@@ -51,7 +51,7 @@ Entering design-aware mode. Blueprint will drive UI layer implementation.
 If blueprint exists and `blueprintConsumed == false`, the blueprint's Pre-Implementation Contract will auto-populate the UI section of the PRD in Phase 1.
 
 ### Phase 1: PRD Generation
-Analyze prompt → Generate PRD → Save to `.claude/docs/{name}/prd.txt`
+Analyze prompt → Generate PRD → Save to `.claude/docs/{name}/prd.md`
 Template: @templates/prd-simple.md or @templates/prd-complex.md
 See: @phases/phase-1-prd.md
 
@@ -74,7 +74,7 @@ See: @phases/phase-3-implementation.md
 | `integration-agent` | DI, 4 integration points, spec.md | Last |
 
 ### Phase 4: Cleanup
-Verify spec.md → Remove prd.txt + tasks.md + task-*.md
+Verify spec.md → Remove prd.md + tasks.md + task-*.md
 See: @phases/phase-4-cleanup.md
 
 ## Critical Rules

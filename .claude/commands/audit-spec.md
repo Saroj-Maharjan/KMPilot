@@ -43,7 +43,7 @@ Audit, generate, or compare specifications for existing features.
 
 4. **Check for PRD** (preserve WHY):
    ```bash
-   cat .claude/docs/{featurename}/prd.txt
+   cat .claude/docs/{featurename}/prd.md
    ```
    Copy: Goals, Non-Goals, Background & Rationale, Design Decisions
 

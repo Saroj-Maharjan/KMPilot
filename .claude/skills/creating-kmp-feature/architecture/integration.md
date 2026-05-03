@@ -33,7 +33,7 @@ Before PRD is deleted during cleanup, the integration agent MUST copy these sect
 | Design Decisions | Design Decisions | Preserves architectural context |
 
 **Process:**
-1. Read PRD at `.claude/docs/{featurename}/prd.txt`
+1. Read PRD at `.claude/docs/{featurename}/prd.md`
 2. Extract Goals, Non-Goals, Background & Rationale, Design Decisions
 3. Include these sections verbatim in generated spec.md
 4. Add implementation details from actual code

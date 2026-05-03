@@ -34,7 +34,7 @@ Determine what the screen needs to show. Sources (in priority order):
 
 1. **User's prompt**: "design a login screen with email/password fields"
 2. **Existing spec**: Load `.claude/docs/{featurename}/spec.md` if available (Section 4.5 UI Design)
-3. **Existing PRD**: Load `.claude/docs/{featurename}/prd.txt` if available
+3. **Existing PRD**: Load `.claude/docs/{featurename}/prd.md` if available
 4. **Ask user**: If requirements are unclear, use `AskUserQuestion`
 
 For the screen, capture:

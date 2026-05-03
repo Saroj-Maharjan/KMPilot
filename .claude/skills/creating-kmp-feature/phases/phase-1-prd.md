@@ -114,7 +114,7 @@ Load the appropriate template and fill in:
 
 2. **Save PRD**:
    ```
-   Write to: .claude/docs/{featurename}/prd.txt
+   Write to: .claude/docs/{featurename}/prd.md
    ```
 
 3. **Display PRD to user** (Read tool)
@@ -147,6 +147,6 @@ Load the appropriate template and fill in:
 ## Output
 
 After user confirms PRD:
-- PRD saved to `.claude/docs/{featurename}/prd.txt`
+- PRD saved to `.claude/docs/{featurename}/prd.md`
 - User has approved the approach
 - Ready to proceed to **Phase 2: Task Generation**
