@@ -178,7 +178,7 @@ After each `generate_screen_from_text` call:
    - If contains **suggestions**: Present the suggestions to the user via `AskUserQuestion` (each suggestion as an option). If the user accepts one, call `generate_screen_from_text` again with the accepted suggestion as `prompt`. Repeat until the response contains no more suggestions.
 
 3. **Run the Screen Sync Procedure**, then **download only new screenshots**: Call `mcp__stitch__list_screens` to get the current screen list. Compare with the screen list from before the generation call to identify only the **newly created screens**. For each new screen:
-   - Call `mcp__stitch__get_screen` with all 3 required params: `name: "projects/{projectId}/screens/{screenId}"`, `projectId: "{projectId}"`, `screenId: "{screenId}"` — use `screenshot.downloadUrl` from the response
+   - Call `get_screen` for the new `screenId` (see [Get Screen Call Pattern](../references/stitch-guide.md#get-screen-call-pattern)) and use `screenshot.downloadUrl` from the response
    - Download hi-res via `curl -sL "{downloadUrl}=s0" -o {path}` (always use `=s0` suffix for full resolution)
    - Save to `.claude/docs/{featurename}/designs/{featurename}_v{N}.png` (N = 1, 2, 3...)
 
@@ -385,7 +385,7 @@ After all state designs are approved (success + loading + failed + empty), downl
    ```
 
 2. **Download HTML and record dimensions** for each approved screen state (success + loading + failed + empty if applicable). **Sequentially** (concurrent downloads can race the URL's single-use semantics):
-   a. Call `mcp__stitch__get_screen` with all 3 required params to get `htmlCode.downloadUrl`, `width`, and `height`
+   a. Call `get_screen` for the state's `screenId` (see [Get Screen Call Pattern](../references/stitch-guide.md#get-screen-call-pattern)) and use `htmlCode.downloadUrl`, `width`, `height` from the response
    b. Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
    c. Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once
    d. Record the screen dimensions (`width`, `height`) — needed later for stitch.json and any optional desktop verification

@@ -12,10 +12,26 @@ Quick reference for using Google Stitch MCP tools effectively within the UI Desi
 | `mcp__stitch__create_project` | Create a new Stitch project | When no project exists for the feature |
 | `mcp__stitch__get_project` | Get project details | Verify project exists, get metadata |
 | `mcp__stitch__list_screens` | List all screens in a project | After generation, to find screen IDs |
-| `mcp__stitch__get_screen` | Get screen details + screenshot URL | Retrieve screen data. **Requires all 3 params**: `name` (full resource name), `projectId`, `screenId`. Use `screenshot.downloadUrl` from response |
+| `mcp__stitch__get_screen` | Get screen details + screenshot URL | Retrieve screen data. **Requires all 3 params** — see [Get Screen Call Pattern](#get-screen-call-pattern) below |
 | `mcp__stitch__generate_screen_from_text` | Generate a new screen from prompt | Initial screen design |
 | `mcp__stitch__edit_screens` | Edit existing screens with prompt | Design iteration based on feedback |
 | `mcp__stitch__generate_variants` | Generate design variants | When user wants to explore alternatives |
+
+---
+
+## Get Screen Call Pattern
+
+`mcp__stitch__get_screen` requires three params that are derivable from a single `screenId` plus the `projectId` already in `stitch.json`. Construct them like this **every time** the tool is called — never document the three params separately at each call site:
+
+```
+projectId = stitch.json.projectId
+name      = "projects/{projectId}/screens/{screenId}"
+screenId  = {screenId}
+```
+
+Throughout this skill, instructions of the form *"call `get_screen` for {screenId}"* mean: build the three params using the pattern above, then invoke the tool.
+
+The response carries both `screenshot.downloadUrl` (for `.png` screenshots) and `htmlCode.downloadUrl` (for raw HTML — used in Step 1.7 only).
 
 ---
 
@@ -209,13 +225,8 @@ When translating designs to code, use this mapping:
 `get_screen` returns both `screenshot.downloadUrl` (for `.png` previews) and `htmlCode.downloadUrl` (used in the HTML acquisition step, Phase 1 Step 1.7, which feeds the Color Audit (1.8) and the blueprint (1.9)). For the call signature, see [Get Screen Call Pattern](#get-screen-call-pattern).
 
 ```bash
-# 1. Get screen data (all 3 params required)
-mcp__stitch__get_screen:
-  name: "projects/{projectId}/screens/{screenId}"
-  projectId: "{projectId}"
-  screenId: "{screenId}"
-→ use response.screenshot.downloadUrl for screenshots
-→ use response.htmlCode.downloadUrl for HTML acquisition (Step 1.6.5 only)
+# 1. Call get_screen for {screenId} per the Get Screen Call Pattern
+#    → use response.screenshot.downloadUrl
 
 # 2. Download screenshot
 curl -sL -o .claude/docs/{featurename}/designs/{featurename}_v{N}.png {downloadUrl}
