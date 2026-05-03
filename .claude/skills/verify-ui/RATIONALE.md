@@ -36,17 +36,25 @@ The audit has three sources: HTML inventory, code, and the catalog. The blueprin
 
 ---
 
-## Why we dropped the blueprint as an audit source
+## Why we dropped the blueprint as an audit source (with one exception)
 
-The implementation blueprint is the design ground truth at *implementation time*. It is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode) so the developer writes Compose that matches the design. By the time `/verify-ui` runs, the blueprint has already done its job.
+The implementation blueprint is the design ground truth at *implementation time*. It is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode) so the developer writes Compose that matches the design. By the time `/verify-ui` runs, most of the blueprint has already done its job.
 
-Reading the blueprint a second time in verify-ui caused three problems:
+Reading the blueprint's **token data** a second time in verify-ui caused three problems:
 
 1. **It duplicated the HTML.** Every Design Token / Typography Scale / Spacing Grid value in the blueprint is derivable from the HTML (`text-xl → 20sp`, `mt-4 → 16dp`, `bg-primary` resolves through the Tailwind config). The blueprint column in past audits paraphrased either HTML or Code in every row — it never resolved a real disagreement.
 2. **It defined verdicts that never fired.** `BLUEPRINT MISMATCH` and `BLUEPRINT + CODE MISMATCH` were both defined, both told the LLM to "fix the code using HTML," and neither produced a different action than the simpler `CODE MISMATCH` verdict.
 3. **It was expensive.** ~5–7K tokens per run for an artifact that produced no extra signal.
 
-The audit is now `HTML ↔ Code`, with the catalog as a render-behaviour overlay. Any conflict between the design and the implementation is reduced to one verdict: the code disagrees with the HTML, fix the code.
+So the token-level audit is `HTML ↔ Code` with the catalog as a render-behaviour overlay. Any conflict between the design and the implementation is reduced to one verdict: the code disagrees with the HTML, fix the code.
+
+### The exception: Component Overrides (Step 5.3.5)
+
+The blueprint's `Pre-Implementation Contract → Component Overrides` table is the **only** blueprint section verify-ui consults. It records concrete X-component override decisions that the blueprint generator made by reconciling the HTML inventory against `X_COMPONENTS_CATALOG.md` defaults — e.g. "this `XCard` needs `containerColor = surface` because the X default doesn't match the HTML hex."
+
+This data is derivable in principle (HTML inventory + catalog), but the fixed 7-trap checklist in Step 5.3 deliberately does **not** walk every `X-component × every catalog property` combination — full sweeps were churn-y false-positive machines (see *Why Step 5.3 is a fixed Trap Checklist* below). The Component Overrides table is the catalog-style sweep, but pre-curated to the few rows that actually apply to **this** feature. Walking it costs ~N rows of work (typically 0–5) instead of the hundreds a full sweep generated.
+
+If the blueprint is missing or its Component Overrides table is empty, 5.3.5 silently skips. The token audit + 5.3 trap checklist still run as before.
 
 ---
 

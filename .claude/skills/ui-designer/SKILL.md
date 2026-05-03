@@ -1,18 +1,18 @@
 ---
-description: Design UI screens in Google Stitch and produce a self-contained Compose Implementation Blueprint.
+description: Design UI screens in Google Stitch and produce a Compose Implementation Blueprint with HTML + token inventories persisted for downstream skills.
 argument-hint: [feature-name]
-allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(touch *), AskUserQuestion, mcp__stitch__create_project, mcp__stitch__get_project, mcp__stitch__list_projects, mcp__stitch__list_screens, mcp__stitch__get_screen, mcp__stitch__generate_screen_from_text, mcp__stitch__edit_screens, mcp__stitch__generate_variants
+allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(touch *), Bash(python3 *), AskUserQuestion, mcp__stitch__create_project, mcp__stitch__get_project, mcp__stitch__list_projects, mcp__stitch__list_screens, mcp__stitch__get_screen, mcp__stitch__generate_screen_from_text, mcp__stitch__edit_screens, mcp__stitch__generate_variants
 ---
 
 # UI Designer
 
-Design UI screens in Google Stitch and produce a self-contained Compose Implementation Blueprint.
+Design UI screens in Google Stitch and produce a Compose Implementation Blueprint with HTML + token inventories persisted for downstream skills.
 
 **Architecture Reference:** @../_shared/patterns.md
 
 ## Purpose
 
-`ui-designer` is a **design-only** skill. It handles all Stitch MCP design work and produces a self-contained blueprint file as the handoff artifact. It does NOT implement code or invoke other skills.
+`ui-designer` is a **design-only** skill. It handles all Stitch MCP design work and produces a Compose Implementation Blueprint plus persisted HTML + token inventories under `.claude/docs/{featurename}/designs/extracted/`. The blueprint references project-wide rules (`patterns.md`, `m3-colors.md`, `X_COMPONENTS_CATALOG.md`) rather than restating them. It does NOT implement code or invoke other skills.
 
 After `ui-designer` completes, the user can invoke `/modifying-kmp-feature` or `/creating-kmp-feature` to implement the design. Those skills auto-detect the blueprint and enter design-aware mode.
 

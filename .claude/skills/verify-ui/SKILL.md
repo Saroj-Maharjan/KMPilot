@@ -19,7 +19,7 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 ## Workflow
 
 ```
-[USER INVOKES] → Preflight → Download HTML → Token Extraction → Catalog → Token Audit → Trap Checklist → X-Components Check → Present Results → Handle Mismatches → Cleanup → DONE
+[USER INVOKES] → Preflight → Acquire HTML (reuse or download) → Token Extraction → Catalog → Token Audit → Trap Checklist → Component Overrides Check → X-Components Check → Present Results → Handle Mismatches → Cleanup → DONE
 ```
 
 ---
@@ -38,33 +38,36 @@ If any prerequisite is missing, stop and inform the user.
 
 ---
 
-## Step 2: Download HTML from Stitch
+## Step 2: Acquire HTML (reuse or download)
+
+`/ui-designer` Step 1.6.5 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
 2. For each state (success, loading, failed, empty if applicable):
-   - Get screen ID from `stitch.json` (`screens.{key}.screenId` for success, `screens.{key}.stateScreenIds.{state}` for others).
-   - Call `mcp__stitch__get_screen` with all 3 required params.
-   - Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
-   - Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
-3. Download states **sequentially**.
+   - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call.
+   - **Download path** (only when the file is missing or empty):
+     - Get screen ID from `stitch.json` (`screens.{key}.screenId` for success, `screens.{key}.stateScreenIds.{state}` for others).
+     - Call `mcp__stitch__get_screen` with all 3 required params.
+     - Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
+     - Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
+   - Download states **sequentially** (concurrent downloads can race the URL's single-use semantics).
 
 ---
 
 ## Step 3: Token Extraction
 
-For each state's HTML file:
+For each state, reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
 
-```bash
-python3 .claude/skills/verify-ui/extract_tokens.py \
-  .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
-  > .claude/docs/{featurename}/designs/extracted/tokens_{state}.md
-```
-
-Then:
-
-1. Read each generated `tokens_{state}.md`.
-2. **Do not read the raw HTML.** Use only the script output.
-3. Trust the auto-converted dp/sp/color values directly.
+1. **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/tokens_{state}.md` exists and is non-empty, use it as-is.
+2. **Re-extract path** (only when the inventory is missing or you re-downloaded the HTML in Step 2):
+   ```bash
+   python3 .claude/skills/_shared/extract_tokens.py \
+     .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
+     > .claude/docs/{featurename}/designs/extracted/tokens_{state}.md
+   ```
+3. Read each `tokens_{state}.md`.
+4. **Do not read the raw HTML.** Use only the script output.
+5. Trust the auto-converted dp/sp/color values directly.
 
 The inventories are the complete element/class checklist for Step 5 — Step 5.2 must inspect every visual element, but only mismatches are emitted in the audit.
 
@@ -104,7 +107,7 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
 - **Code files**: `feature/{name}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
 - **X-components catalog**: from Step 4.1.
 
-> **No blueprint.** The implementation blueprint already drove the code. Re-reading it during verification was redundant — the design ground truth is the HTML, and the code is what we audit. The blueprint is consumed by `/creating-kmp-feature` / `/modifying-kmp-feature`, not here.
+> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.3.5.
 
 ### 5.2 Convert and compare — Success state
 
@@ -152,6 +155,28 @@ The reverse sweep is a **fixed checklist** of the seven X-component default-rend
 
 Skip a row entirely when the X-component isn't used in the feature. Do **not** walk catalog properties beyond this list — full sweeps were removed because they produced churn-y false positives without proportionate catch.
 
+### 5.3.5 Component Overrides Check — feature-specific traps from the blueprint
+
+The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.6.6 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
+
+1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. Do not read any other blueprint section. If the blueprint is missing, skip 5.3.5 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
+2. For each row (`Component | Property | HTML Value | X-component Default | Override Required`):
+   - Locate every instance of that `Component` in the feature's `presentation/ui/` (use the instance map from Step 4.2).
+   - Check the parameter named in `Property` against `Override Required`.
+   - If the override is missing → emit a **CRITICAL** block in the same format as Step 5.2:
+     ```markdown
+     ### CRITICAL — Missing component override: {Component}.{Property}
+     - **Where:** `{File.kt:LINE}`
+     - **HTML:** {HTML Value from blueprint}
+     - **Code:** {actual rendered value — typically the X-component default named in the table}
+     - **Fix:** {Override Required value}
+     - **Source:** Blueprint Component Overrides
+     ```
+   - If the override is present and matches → silent pass (no row).
+3. If the blueprint table is empty, skip 5.3.5 — the blueprint generator detected no per-feature divergences.
+
+This step is **additive** to 5.3, not a replacement. The seven generic traps still run.
+
 ### 5.4 Loading and Failed states — brief checklist
 
 These states are typically trivial (a spinner or an error illustration). Inspect the inventory and code for each state:
@@ -165,7 +190,7 @@ No "OK" bullets — silence means OK.
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
-| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3** | Must fix |
+| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.3.5** | Must fix |
 | **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width) | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
@@ -211,7 +236,7 @@ All M3 component violations are Critical.
 ### X-Components Compliance
 - Material3 violations: {N} ({PASS if 0, FAIL otherwise})
 
-{Mismatch blocks from Step 5.2 / 5.3 / 5.4 — only the blocks, no OK rows.}
+{Mismatch blocks from Step 5.2 / 5.3 / 5.3.5 / 5.4 — only the blocks, no OK rows.}
 
 {Compliance violations table (if any).}
 ```

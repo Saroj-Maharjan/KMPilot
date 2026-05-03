@@ -17,8 +17,9 @@ Design Progress:
 - [ ] Step 1.4: Iterate on feedback (if needed)
 - [ ] Step 1.5: Finalize approved success design
 - [ ] Step 1.6: Generate state designs (loading, failed, empty)
-- [ ] Step 1.6.5: Color Audit — map all design colors to M3 roles (MANDATORY)
-- [ ] Step 1.6.6: Generate Implementation Blueprint
+- [ ] Step 1.6.5: Acquire HTML & Token Inventories (MANDATORY)
+- [ ] Step 1.6.6: Color Audit — reconciled against HTML inventories (MANDATORY)
+- [ ] Step 1.6.7: Generate Implementation Blueprint
 - [ ] Step 1.7: Update stitch.json
 - [ ] Step 1.8: User final approval
 ```
@@ -366,22 +367,55 @@ Save `.claude/docs/{featurename}/designs/{featurename}.md`:
 
 ---
 
-## Step 1.6.5: Color Audit (MANDATORY)
+## Step 1.6.5: Acquire HTML & Token Inventories (MANDATORY)
 
-After all state designs are approved (success + loading + failed + empty), audit every color used across all designs and map them to M3 roles.
+After all state designs are approved (success + loading + failed + empty), download each state's HTML once and run the shared token extractor. The outputs are persisted to `.claude/docs/{featurename}/designs/extracted/` so Steps 1.6.6 (Color Audit), 1.6.7 (blueprint), and `/verify-ui` all read the same files. Stitch URLs are typically one-time use — re-downloading at verify-time is fragile, so we capture the design-time snapshot here and let downstream steps reuse it.
 
 ### Procedure
 
-1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`)
-2. **Collect all colors from Stitch prompts**: Gather every color specified in the "Defined colors" and "Proposed colors" blocks from all Stitch prompts used during this phase (Steps 1.2b and 1.6). These prompts are the authoritative source of color values — do NOT attempt to extract hex values from screenshots via vision, as that is imprecise.
+1. **Create extraction directory:**
+   ```bash
+   mkdir -p .claude/docs/{featurename}/designs/extracted
+   ```
 
-   **Also collect component visual properties from the HTML** (Step 1.6.6 downloads the HTML — read it before deleting). For every component visible in the design, extract two things and flag any divergence in a "Component Overrides" section of the Color Audit:
+2. **Download HTML and record dimensions** for each approved screen state (success + loading + failed + empty if applicable). **Sequentially** (concurrent downloads can race the URL's single-use semantics):
+   a. Call `mcp__stitch__get_screen` with all 3 required params to get `htmlCode.downloadUrl`, `width`, and `height`
+   b. Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
+   c. Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once
+   d. Record the screen dimensions (`width`, `height`) — needed later for stitch.json and any optional desktop verification
 
-   - **Colors per visual state**: For every component, read the actual CSS colors for every visual state from the HTML. For each, verify that the mapped M3 role in `XTheme.kt` resolves to that exact hex. If it diverges, flag it — the blueprint must use an explicit color override instead of the semantic role.
+3. **Tokenize each state's HTML** with the shared extractor:
+   ```bash
+   python3 .claude/skills/_shared/extract_tokens.py \
+     .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
+     > .claude/docs/{featurename}/designs/extracted/tokens_{state}.md
+   ```
+   These inventories are the canonical, deterministic Tailwind→Compose conversion (spacing, font-size, colors with opacity, custom border-radius config, arbitrary values). Same script `/verify-ui` runs at audit time, so blueprint values and audit values come from the same source by construction.
 
-   - **Sizing**: For every component, read the explicit dimensions from the HTML. Compare to the X-component's actual rendered default. If they differ, flag it — the blueprint must include an explicit size override.
-3. **Map each color to an M3 role** using the [Complete M3 Role Catalog](../references/m3-colors.md#complete-m3-role-catalog)
-4. **Classify each role**:
+4. **Do not delete.** The HTML and token inventories live in `extracted/` from now on. `/verify-ui` will detect and reuse them — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
+
+---
+
+## Step 1.6.6: Color Audit (MANDATORY)
+
+Audit every color used across all approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.6.5**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
+
+### Procedure
+
+1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`).
+
+2. **Collect every color from the inventories** in `.claude/docs/{featurename}/designs/extracted/tokens_*.md`. The extractor resolves each color class to its hex (custom Tailwind config + default palette + arbitrary values), so iterate through every inventory entry whose conversion contains a color.
+
+3. **Reconcile against prompts.** Compare the inventory hexes against the "Defined" / "Proposed" hexes you specified in the Stitch prompts (Steps 1.2b and 1.6). If a color drifted (e.g., prompt asked for `#181228`, Stitch produced `#1A1A1F`), **the inventory wins** — record the inventory hex. Flag any drift in a single line at the top of the Color Audit so it's visible to the user.
+
+4. **Component visual properties from the inventories.** For every component in the design, extract two things and flag any divergence in a "Component Overrides" section:
+
+   - **Colors per visual state**: For each visual state of each component, look up the M3 role in `XTheme.kt`. If the role's hex matches the inventory hex → use the role. If it diverges → record an explicit color override.
+   - **Sizing**: For each component, read the dp values from the inventory and compare to the X-component's actual rendered default in [`X_COMPONENTS_CATALOG.md`](../../_shared/X_COMPONENTS_CATALOG.md). If they differ → record an explicit size override.
+
+5. **Map each color to an M3 role** using the [Complete M3 Role Catalog](../references/m3-colors.md#complete-m3-role-catalog).
+
+6. **Classify each role**:
    - **Defined**: Already in the active scheme in `XTheme.kt`
    - **Missing**: Used in the design but not yet defined — must be added to **both** `XLightColors` and `XDarkColors` before implementation (Phase 2 Step 2.1 handles this)
    - **Custom**: Cannot map to any M3 role (gradients, decorative) — will use `XTheme.Colors.*` extension (must justify)
@@ -395,10 +429,12 @@ Append to the design description file (`.claude/docs/{featurename}/designs/{feat
 
 Default theme for design: {light|dark}
 
+> **Prompt drift**: {N} colors differ from the Stitch prompt — inventory values used. (Omit this line if N = 0.)
+
 ### Defined M3 Roles (already in active scheme — XLightColors or XDarkColors)
-| Role | Hex | Usage in Design |
-|------|-----|-----------------|
-| {role} | {hex from XTheme.kt} | {usage} |
+| Role | Hex (inventory) | Usage in Design |
+|------|-----------------|-----------------|
+| {role} | {hex} | {usage} |
 
 ### Missing M3 Roles (must add to BOTH XLightColors and XDarkColors before implementation)
 | Role | Active Scheme Hex | Counterpart Scheme Hex | Usage in Design |
@@ -415,36 +451,30 @@ This audit is the input for Phase 2, where missing roles are added to **both** `
 
 ---
 
-## Step 1.6.6: Generate Implementation Blueprint
+## Step 1.6.7: Generate Implementation Blueprint
 
 **Condition**: Always runs after design approval.
 
-This step parses the Stitch HTML export into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation. The HTML is transient — downloaded, parsed, deleted.
+This step parses the Stitch HTML export (already downloaded in Step 1.6.5) into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
 
 ### Procedure
 
-1. **Download HTML and record dimensions** for each approved screen state (success + loading + failed + empty if applicable):
-   a. Call `mcp__stitch__get_screen` with all 3 required params to get `htmlCode.downloadUrl`, `width`, and `height`
-   b. Download: `curl -sL -o /tmp/stitch_{featurename}_{state}.html {htmlCode.downloadUrl}`
-   c. Read the downloaded HTML file content
-   d. Record the screen dimensions (`width`, `height`) — these are needed for Mode 3 verification screenshots
+1. **Read the persisted inputs** from `.claude/docs/{featurename}/designs/extracted/`:
+   - `stitch_{state}.html` per state (raw HTML)
+   - `tokens_{state}.md` per state (token inventory — authoritative for already-converted classes)
 
-2. **Generate the blueprint**: Feed ALL state HTML files together with context to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
-   - All downloaded HTML file contents (labeled by state: success, loading, failed, empty)
+2. **Generate the blueprint**: Feed ALL state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
+   - All HTML file contents (labeled by state: success, loading, failed, empty)
+   - All token inventories (labeled by state) — authoritative for already-converted classes
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
-   - The Color Audit M3 role mappings (from Step 1.6.5 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
+   - The Color Audit M3 role mappings (from Step 1.6.6 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
 
 3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
    - The blueprint covers all states in a single file
    - Shared scaffold (toolbar, background, bottom nav) is described once
    - Per-state content sections capture only the differences
 
-4. **Delete HTML files** — HTML is transient and not needed after blueprint extraction:
-   ```bash
-   rm -f /tmp/stitch_{featurename}_*.html
-   ```
-
-5. **Verify** the blueprint file was written and contains all expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with all states)
+4. **Verify** the blueprint file was written and contains all expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with all states, Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
 
 ---
 
@@ -494,6 +524,7 @@ After Phase 1 completes:
 - Empty screenshot: `.claude/docs/{featurename}/designs/{featurename}_empty.png` (list screens)
 - Design description: `.claude/docs/{featurename}/designs/{featurename}.md`
 - Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+- Persisted HTML + token inventories: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`)
 - stitch.json updated with approved screen, all state screenshots, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received

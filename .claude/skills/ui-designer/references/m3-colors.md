@@ -83,6 +83,6 @@ Every color in a design **must** map to one of these roles. All roles are access
 
 1. **Every design color → M3 role**: Every color in the design MUST map to an M3 role from the catalog above. No exceptions except Rule 5.
 2. **No silent defaults**: Every M3 role that a design uses **must** be explicitly defined in `lightColorScheme` in `XTheme.kt`. Do NOT rely on M3 default values.
-3. **Grow the theme after approval**: Run a Color Audit (Phase 1 Step 1.6.5). Every missing M3 role must be added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` BEFORE any feature code is written.
+3. **Grow the theme after approval**: Run a Color Audit (Phase 1 Step 1.6.6). Every missing M3 role must be added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` BEFORE any feature code is written.
 4. **Feature code = `MaterialTheme.colorScheme.*` only**: Never use raw `Color()` hex values.
 5. **`XTheme.Colors.*` is last resort**: Only for truly non-semantic colors (gradients, decorative accents). Must add a code comment explaining why.

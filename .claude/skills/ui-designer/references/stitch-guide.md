@@ -206,7 +206,7 @@ When translating designs to code, use this mapping:
 
 ### Downloading Screenshots
 
-`get_screen` returns both `screenshot.downloadUrl` and `htmlCode.downloadUrl`. Use `screenshot.downloadUrl` for visual reference. The `htmlCode.downloadUrl` is used in the **Compose Implementation Blueprint** step (Phase 1 Step 1.6.6) to extract structured design data for implementation.
+`get_screen` returns both `screenshot.downloadUrl` and `htmlCode.downloadUrl`. Use `screenshot.downloadUrl` for visual reference. The `htmlCode.downloadUrl` is used in the **HTML acquisition** step (Phase 1 Step 1.6.5) to download the per-state HTML that feeds the Color Audit (1.6.6) and the blueprint (1.6.7).
 
 ```bash
 # 1. Get screen data (all 3 params required)
@@ -215,7 +215,7 @@ mcp__stitch__get_screen:
   projectId: "{projectId}"
   screenId: "{screenId}"
 → use response.screenshot.downloadUrl for screenshots
-→ use response.htmlCode.downloadUrl for blueprint extraction (Step 1.6.6 only)
+→ use response.htmlCode.downloadUrl for HTML acquisition (Step 1.6.5 only)
 
 # 2. Download screenshot
 curl -sL -o .claude/docs/{featurename}/designs/{featurename}_v{N}.png {downloadUrl}
@@ -261,7 +261,7 @@ When the user requests **variants**:
 
 Stitch HTML is always parsed into a structured blueprint after design approval. The blueprint is the self-contained handoff artifact for implementation skills. Full spec, extraction prompt, and edge cases: **[blueprint-spec.md](blueprint-spec.md)**
 
-See Phase 1 Step 1.6.6.
+See Phase 1 Step 1.6.7.
 
 ---
 

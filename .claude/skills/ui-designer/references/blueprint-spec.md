@@ -2,7 +2,7 @@
 
 The Stitch HTML export is parsed into a structured blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
 
-**Condition**: Always generated after design approval. Used as the self-contained handoff artifact for implementation skills.
+**Condition**: Always generated after design approval. Used as the handoff artifact for implementation skills (paired with the persisted HTML + token inventories in `extracted/`).
 
 ---
 
@@ -57,23 +57,18 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 
 ## Pre-Implementation Contract
 
+> Architecture rules, color rules, and X-component defaults are project-wide and live in their canonical sources — do not restate them here:
+> - Architecture rules → [`_shared/patterns.md`](../../_shared/patterns.md)
+> - Color rules → [`m3-colors.md`](m3-colors.md) (sections "Color Rules (Strict)" and "Complete M3 Role Catalog")
+> - X-component default-render behavior → [`_shared/X_COMPONENTS_CATALOG.md`](../../_shared/X_COMPONENTS_CATALOG.md)
+>
+> This contract captures only feature-specific data the implementer cannot derive from those references.
+
 ### XTheme Updates Required
 
 | Role | Active Scheme Hex | Counterpart Scheme Hex | Usage |
 |------|-------------------|----------------------|-------|
 | {role} | {hex} | {hex} | {usage} |
-
-### Architecture Rules
-- Use X-components exclusively (no Material3) — see core:designsystem
-- Follow ScreenRoot pattern: FeatureScreen (ViewModel wrapper) + FeatureScreenRoot (testable)
-- Handle all 4 UI states: Uninitialized / Loading / Success / Failed
-- Use setState { copy() } for state updates, never _state.value =
-- Use ImmutableList for collections in state
-- Callbacks for navigation (onBackClick), not navController
-
-### Color Rules
-- ALL colors MUST use MaterialTheme.colorScheme.{role} — never raw Color() hex values
-- If a needed role is missing, add it to XTheme.kt BOTH schemes first, then continue
 
 ### Color Audit
 
@@ -92,6 +87,9 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 |------|-----|---------------|
 
 #### Component Overrides (divergences from X-component defaults)
+
+> **Audit-aware**: `/verify-ui` reads this table directly (its only blueprint dependency). Every row here is a CRITICAL check at audit time — if the override is missing in code, verify-ui flags it. Keep one row per concrete divergence between the HTML inventory and the X-component default in `X_COMPONENTS_CATALOG.md`.
+
 | Component | Property | HTML Value | X-component Default | Override Required |
 |-----------|----------|-----------|-------------------|------------------|
 
@@ -136,27 +134,27 @@ Example annotation in the blueprint component tree:
 
 Feed this prompt with:
 1. Raw HTML content (all state files, labeled by state)
-2. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
-3. Color Audit M3 role mappings (from Phase 1 Step 1.6.5)
+2. **Token inventories** from `extract_tokens.py` (one per state, labeled by state) — authoritative for already-converted classes
+3. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
+4. Color Audit M3 role mappings (from Phase 1 Step 1.6.6)
 
 ```
 You are a design-to-code translator. Convert this Stitch HTML export into a Compose Implementation Blueprint.
 
 INPUT:
 - HTML content (Tailwind CSS classes encode all visual properties)
+- Token inventories (one per state) from extract_tokens.py — pre-resolves dp/sp/colors deterministically
 - X-Component mapping table (maps HTML elements to Compose X-components)
 - Color Audit (maps hex colors to M3 roles)
 
 RULES:
-1. Convert CSS px to dp (1px = 1dp for mobile). Convert font-size px to sp.
-2. Map Tailwind classes to Compose modifiers:
-   - p-{N} → Modifier.padding({N*4}.dp). **Compound overrides**: when shorthand + directional
-     coexist (e.g., `p-4 pt-8`), the directional class overrides ONLY that side — other sides
-     keep the shorthand value. `p-4 pt-8` → padding(start=16, end=16, top=32, bottom=16).
-   - px-{N}/py-{N} → horizontal/vertical padding. Same override rule applies: `px-4 pl-6` → start=24, end=16
-   - gap-{N} → Arrangement.spacedBy({N*4}.dp)
-   - rounded-{N} → RoundedCornerShape (see Rule 11 for value mapping)
-   - w-full → Modifier.fillMaxWidth(), h-{N} → Modifier.height({N*4}.dp)
+1. Use the dp/sp/color values from the token inventory directly. The script handles px→dp,
+   font-size→sp, opacity slashes (`bg-x/N`), arbitrary values (`text-[40px]`), tailwind config
+   color resolution, and custom border-radius config. Do NOT re-derive these from raw HTML.
+   Only consult the HTML directly when the inventory leaves a class unannotated (the script's
+   auto-conversion rate is ~65%; the rest are layout primitives and unrecognised classes).
+2. Map structural Tailwind classes to Compose containers and arrangements (the script does not
+   handle these — they require translation, not conversion):
    - flex/flex-col → Column, flex-row → Row
    - items-center → CenterVertically/CenterHorizontally
      ⚠ Compose caveat: In CSS, `items-center` on a full-width flex container centers
@@ -167,32 +165,30 @@ RULES:
        Column(Modifier.fillMaxWidth(), horizontalAlignment = CenterHorizontally)
        with fillMaxWidth() on each XText child.
    - justify-center → Arrangement.Center, justify-between → Arrangement.SpaceBetween
-   - text-{size} → fontSize (xs=12sp, sm=14sp, base=16sp, lg=18sp, xl=20sp, 2xl=24sp, 3xl=30sp).
-     No text class = text-base = 16sp. Arbitrary values: `text-[38px]` → 38.sp, `text-[10px]` → 10.sp
-   - font-medium → Medium, font-semibold → SemiBold, font-bold → Bold,
-     font-extrabold → ExtraBold, font-black → Black
-   - tracking-tighter → -0.05em, tracking-tight → -0.025em, tracking-normal → 0,
-     tracking-wide → 0.025em, tracking-wider → 0.05em, tracking-widest → 0.1em.
-     Convert to sp: `em × fontSize`. Example: tracking-widest on text-xs(12sp) → 0.1×12 = 1.2.sp
-   - space-y-{N} → Arrangement.spacedBy({N*4}.dp) (same effect as gap-{N})
-   - size-{N} → Modifier.size({N*4}.dp). Example: size-14 → 56.dp, size-10 → 40.dp
-   - divide-y divide-{color} → XHorizontalDivider between items with explicit color param
-   - mb-{N} → margin-bottom. In LazyColumn items, absorbed by spacedBy. Standalone: Spacer or padding
+   - gap-{N} / space-y-{N} → Arrangement.spacedBy(...) — value already in inventory
+   - w-full → Modifier.fillMaxWidth()
+   - overflow-y-auto → LazyColumn or verticalScroll
+   - grid grid-cols-{N} → LazyVerticalGrid(columns = GridCells.Fixed(N)). If grid items have
+     different heights (no uniform aspect-* or h-*), use LazyVerticalStaggeredGrid instead.
+   - grid gap-{N} → horizontalArrangement + verticalArrangement spacedBy(...)
+   - fixed/sticky bottom → XScaffold bottomBar
    - shadow-sm/shadow/shadow-md/shadow-lg/shadow-xl/shadow-2xl → Modifier.shadow(elevation, shape).
      Map: sm=1dp, default=2dp, md=4dp, lg=8dp, xl=12dp, 2xl=16dp.
      Custom `shadow-[...]` glow effects → note as `[decorative shadow — omit or use drawBehind]`
    - shrink-0 → no effect if using fixed-size Modifier.size(); for flex children use weight()
-   - overflow-y-auto → LazyColumn or verticalScroll
-   - grid grid-cols-{N} → LazyVerticalGrid(columns = GridCells.Fixed(N)). If grid items have different heights (no uniform aspect-* or h-*), use LazyVerticalStaggeredGrid instead.
-   - grid gap-{N} → horizontalArrangement + verticalArrangement spacedBy({N*4}.dp)
-   - fixed/sticky bottom → XScaffold bottomBar
+   - divide-y divide-{color} → XHorizontalDivider between items with explicit color param
+   - mb-{N} on LazyColumn items → absorbed by spacedBy. Standalone: Spacer or padding
+   **Compound padding override** (judgment, not in inventory): when shorthand + directional
+   coexist (e.g., `p-4 pt-8`), the directional class overrides ONLY that side — other sides
+   keep the shorthand value. The inventory lists each class separately; the LLM must compose
+   them into a single PaddingValues(...) call.
 3. Map HTML elements to X-components using the provided mapping table.
 4. Map all colors to M3 roles using the Color Audit. Use MaterialTheme.colorScheme.{role}, never hex.
 4b. **Component visual fidelity verification (MANDATORY for every component)**:
-    For every component in the blueprint, extract two things directly from the HTML — never assume X-component defaults match:
-    (a) **Colors**: Read the actual CSS color for every visual state of every component (bg-*, text-*, border-*, etc.). For each, look up the M3 role via the Color Audit, then verify that role's hex in `XTheme.kt` equals the CSS hex. If it matches → use `MaterialTheme.colorScheme.{role}`. If it diverges → write an explicit color override using the actual hex value, annotated with the mismatch reason.
-    (b) **Sizing**: Read explicit dimensions from the HTML for every component. Compare to the X-component's actual rendered default. If they differ → write an explicit size override in the blueprint.
-    The principle: the HTML is always the source of truth. X-component defaults are assumptions that must be verified, not trusted.
+    For every component in the blueprint, verify two things — never assume X-component defaults match:
+    (a) **Colors**: Use the inventory's resolved color value for every visual state of every component (bg-*, text-*, border-*, etc.). Look up the M3 role via the Color Audit, then verify that role's hex in `XTheme.kt` equals the inventory hex. If it matches → use `MaterialTheme.colorScheme.{role}`. If it diverges → write an explicit color override using the inventory's hex, annotated with the mismatch reason.
+    (b) **Sizing**: Use the inventory's resolved dp values for every component. Compare to the X-component's actual rendered default. If they differ → write an explicit size override in the blueprint.
+    The principle: the inventory (derived from the HTML) is the source of truth. X-component defaults are assumptions that must be verified, not trusted.
 5. Identify shared scaffold common across all states — describe ONCE.
 6. Per state, describe only the differing content area.
 7. Extract repeated patterns (2+ occurrences) as named components.
@@ -209,19 +205,10 @@ RULES:
     in Compose. CSS backgrounds are not inherited by child composables — if a card has
     bg-surface, the Compose Column/Box for that card MUST declare .background(surface)
     explicitly, even if the parent already has a different background set.
-11. **Border radius from Tailwind config**: ALWAYS check the `tailwind.config` `borderRadius`
-    section in the HTML `<script>` tag for custom overrides. Stitch often defines custom values
-    (e.g., `"DEFAULT": "1rem"`, `"lg": "2rem"`, `"xl": "3rem"`). Map the actual computed
-    pixel value to dp (1px = 1dp). Do NOT assume default Tailwind values — the config overrides them.
-    Conversion: `rem × 16 = px = dp`. Examples with custom config `{"DEFAULT":"1rem","lg":"2rem","xl":"3rem"}`:
-    - `rounded` (DEFAULT) → 1rem → 16dp
-    - `rounded-lg` → 2rem → 32dp
-    - `rounded-xl` → 3rem → 48dp
-    - `rounded-full` → 9999dp (use `CircleShape` or `RoundedCornerShape(50)`)
-    If a custom config exists but a class is NOT listed in it (e.g. `rounded-2xl` when only `DEFAULT`, `lg`, `xl` are defined), use the standard Tailwind default for that class — never extrapolate from the defined keys.
-    If no custom config exists, use standard Tailwind defaults:
-    - `rounded-sm` → 2dp, `rounded` → 4dp, `rounded-md` → 6dp,
-      `rounded-lg` → 8dp, `rounded-xl` → 12dp, `rounded-2xl` → 16dp, `rounded-3xl` → 24dp
+11. **Border radius**: Use the dp value from the inventory directly — the script resolves
+    `tailwind.config.borderRadius` overrides and falls back to standard Tailwind defaults when
+    no custom config exists. `rounded-full` resolves to `CircleShape`. Map the inventory's dp
+    value to `RoundedCornerShape(N.dp)`.
 12. **System inset padding**: Stitch HTML assumes padding starts from the screen edge (no system
     bars). On device, `XScaffold`'s `paddingValues` already includes system bar insets (status bar,
     navigation bar). When the HTML has a top padding like `pt-6` (24dp) or `pt-12` (48dp) on the
@@ -267,13 +254,16 @@ RULES:
     Every visual property in the HTML must appear in the blueprint — either as a Compose value
     or as an explicit omission note.
 19. **Pre-Implementation Contract**: After the Component Tree, emit a `## Pre-Implementation Contract`
-    section containing:
-    - **XTheme Updates Required** table: Every M3 role from the Color Audit that is missing from XTheme.kt,
-      with hex values for both active and counterpart schemes
-    - **Architecture Rules**: The standard architecture rules (X-components only, ScreenRoot pattern,
-      4 UI states, setState, ImmutableList, callbacks)
-    - **Color Rules**: Strict color usage rules (MaterialTheme.colorScheme only, no raw hex)
-    - **Color Audit**: Full color audit tables (Defined, Missing, Custom, Component Overrides)
+    section. **Do not restate** project-wide architecture rules, color rules, or X-component defaults —
+    they live in `_shared/patterns.md`, `m3-colors.md`, and `_shared/X_COMPONENTS_CATALOG.md`. Open the
+    section with the boilerplate reference block from blueprint-spec.md, then include only the
+    feature-specific tables:
+    - **XTheme Updates Required**: Every M3 role from the Color Audit that is missing from XTheme.kt,
+      with hex values for both active and counterpart schemes.
+    - **Color Audit**: Full color audit tables (Defined, Missing, Custom).
+    - **Component Overrides**: One row per concrete divergence between the HTML inventory and the
+      X-component default in `X_COMPONENTS_CATALOG.md`. `/verify-ui` reads this table directly and
+      treats each missing override as a CRITICAL — keep it accurate and minimal.
 20. **Post-Implementation Checklist**: After the Pre-Implementation Contract, emit a
     `## Post-Implementation Checklist` with verification items: XTheme updates, component completeness,
     modifier fidelity, color fidelity, component override application, build validation, ktlint format.
@@ -283,6 +273,9 @@ X-COMPONENT MAPPING TABLE:
 
 COLOR AUDIT:
 {paste from design description .md}
+
+TOKEN INVENTORIES:
+{paste contents of .claude/docs/{featurename}/designs/extracted/tokens_{state}.md for each state, labeled by state}
 
 HTML CONTENT:
 {paste all state HTML files, labeled by state}
