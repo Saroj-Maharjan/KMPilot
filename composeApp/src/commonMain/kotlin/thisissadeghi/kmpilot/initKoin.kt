@@ -11,6 +11,7 @@ import thisissadeghi.common.di.CommonModules
 import thisissadeghi.common.di.base.FeatureRegistry
 import thisissadeghi.data.config.BuildOptionProvider
 import thisissadeghi.data.di.DataModules
+import thisissadeghi.receive.di.ReceiveModules
 import thisissadeghi.sample.di.SampleModules
 import thisissadeghi.send.di.SendModules
 
@@ -25,6 +26,7 @@ private fun initializeFeatures() {
     DataModules.initialize()
     SampleModules.initialize()
     SendModules.initialize()
+    ReceiveModules.initialize()
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication {

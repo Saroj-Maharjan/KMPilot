@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import thisissadeghi.designsystem.XNavHost
+import thisissadeghi.receive.presentation.navigation.ReceiveRoute
+import thisissadeghi.receive.presentation.navigation.receive
 import thisissadeghi.sample.presentation.navigation.SampleRoute
 import thisissadeghi.sample.presentation.navigation.sample
 import thisissadeghi.send.presentation.navigation.SendRoute
@@ -26,9 +28,13 @@ fun BaseAppNavHost(modifier: Modifier) {
                 if (actionId == "send") {
                     navController.navigate(SendRoute)
                 }
+                if (actionId == "receive") {
+                    navController.navigate(ReceiveRoute)
+                }
                 // Handle action — navigation or action handling to be wired later
             },
         )
         send(onBackClick = { navController.popBackStack() })
+        receive(onBackClick = { navController.popBackStack() })
     }
 }
