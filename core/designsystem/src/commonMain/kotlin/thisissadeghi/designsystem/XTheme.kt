@@ -16,17 +16,15 @@ object XTheme {
         // Semantic status colors — no M3 role equivalent
         val Success = Color(0xFF4ADE80) // Income, savings progress, on-track budgets
         val Danger = Color(0xFFFF6B6B) // Over-budget, expenses, overdue bills
+        val Bitcoin = Color(0xFFF7931A) // Bitcoin brand orange for coin icon bg
     }
 }
 
 @Composable
-fun XTheme(
-    darkTheme: Boolean = true,
-    content: @Composable () -> Unit,
-) {
+fun XTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         content = content,
-        colorScheme = if (darkTheme) XDarkColors else XLightColors,
+        colorScheme = XDarkColors,
         shapes = Shapes,
         typography = MaterialTheme.typography,
     )
@@ -41,18 +39,18 @@ private val Shapes =
 
 internal val XLightColors =
     lightColorScheme(
-        primary = Color(0xFF7B2FFF),
+        primary = Color(0xFF6B5000),
         onPrimary = Color(0xFFFFFFFF),
-        primaryContainer = Color(0xFFEDE0FF),
-        onPrimaryContainer = Color(0xFF21005D),
-        background = Color(0xFFF8F5FF),
-        surface = Color(0xFFFFFBFF),
-        onBackground = Color(0xFF1C1B1F),
-        onSurface = Color(0xFF1C1B1F),
-        onSurfaceVariant = Color(0xFF49454E),
-        surfaceVariant = Color(0xFFE7E0EC),
-        outline = Color(0xFF7A757F),
-        outlineVariant = Color(0xFFCAC4CF),
+        primaryContainer = Color(0xFFFDEDB5),
+        onPrimaryContainer = Color(0xFF221A00),
+        background = Color(0xFFFFFBF0),
+        surface = Color(0xFFFFFDF6),
+        onBackground = Color(0xFF1E1B10),
+        onSurface = Color(0xFF1E1B10),
+        onSurfaceVariant = Color(0xFF4E4730),
+        surfaceVariant = Color(0xFFEAE0C5),
+        outline = Color(0xFF7A7250),
+        outlineVariant = Color(0xFFCDC1A0),
         error = Color(0xFFB3261E),
         onError = Color(0xFFFFFFFF),
         errorContainer = Color(0xFFF9DEDC),
@@ -61,19 +59,19 @@ internal val XLightColors =
 
 internal val XDarkColors =
     darkColorScheme(
-        primary = Color(0xFF9D70FF), // Design primary accent
-        onPrimary = Color(0xFF1A0054), // Text on primary buttons
-        primaryContainer = Color(0xFF350070), // Tinted container
-        onPrimaryContainer = Color(0xFFEDE0FF),
-        background = Color(0xFF0D0919), // Deep dark indigo background
-        surface = Color(0xFF181228), // Card / elevated surface
-        onBackground = Color(0xFFE9E0FF), // Primary text (bright)
-        onSurface = Color(0xFFE9E0FF), // Primary text on surface
-        onSurfaceVariant = Color(0xFFC5BCE0), // Muted text
-        surfaceVariant = Color(0xFF231A38), // Slightly elevated over surface
-        outline = Color(0xFF4A3F6B), // Subtle border
-        outlineVariant = Color(0xFF1E1A2E), // Divider / progress track
-        error = Color(0xFFFFB4AB), // Error / coral accent
+        primary = Color(0xFFF5D76E),
+        onPrimary = Color(0xFF2C1900),
+        primaryContainer = Color(0xFF4A3200),
+        onPrimaryContainer = Color(0xFFFFF0C0),
+        background = Color(0xFF0F0D09),
+        surface = Color(0xFF1C1910),
+        onBackground = Color(0xFFEDE8D5),
+        onSurface = Color(0xFFEDE8D5),
+        onSurfaceVariant = Color(0xFFC4BA94),
+        surfaceVariant = Color(0xFF302B1C),
+        outline = Color(0xFF726A48),
+        outlineVariant = Color(0xFF3F3822),
+        error = Color(0xFFFFB4AB),
         onError = Color(0xFF690005),
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
