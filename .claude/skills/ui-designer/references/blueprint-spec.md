@@ -47,10 +47,14 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
     - `XCard` → `Row` → `AsyncImage` + `Column` with `XText` elements
 
 ### Loading State
+Shared screen — see: `.claude/docs/_shared/designs/loading.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_loading.md`
 - `Box` (fillMaxSize, Center) → `XCircularProgressIndicator`
 
 ### Failed State
-- `Column` (fillMaxSize, center) → `XIcon` + `XText` + `XButton("Retry")`
+Shared screen — see: `.claude/docs/_shared/designs/failed.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
+- `Column` (fillMaxSize, center) → `XIcon` + `XText("Something went wrong")` + `XButton("Retry")`
 
 ### Empty State (list screens only)
 - `Column` (fillMaxSize, center) → `XIcon` + `XText("No {items} yet")`
@@ -134,7 +138,15 @@ Example annotation in the blueprint component tree:
 
 Feed this prompt with:
 1. Raw HTML content (all state files, labeled by state)
+   - success: `.claude/docs/{featurename}/designs/extracted/stitch_success.html`
+   - loading: `.claude/docs/_shared/designs/extracted/stitch_loading.html` **(shared state)**
+   - failed: `.claude/docs/_shared/designs/extracted/stitch_failed.html` **(shared state)**
+   - empty: `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` (if applicable)
 2. **Token inventories** from `extract_tokens.py` (one per state, labeled by state) — authoritative for already-converted classes
+   - success: `.claude/docs/{featurename}/designs/extracted/tokens_success.md`
+   - loading: `.claude/docs/_shared/designs/extracted/tokens_loading.md` **(shared state)**
+   - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared state)**
+   - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (if applicable)
 3. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
 4. Color Audit M3 role mappings (from Phase 1 Step 1.8)
 

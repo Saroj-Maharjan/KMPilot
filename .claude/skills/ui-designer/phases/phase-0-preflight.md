@@ -1,17 +1,31 @@
-# Phase 0: Preflight Checks
+# Phase 0: Per-Feature Preflight Checks
 
-**Purpose**: Verify MCP availability, resolve feature context, and set up Stitch project.
+**Purpose**: Load and validate the project-wide config, verify MCP availability, resolve feature context, and register or resume the feature in the shared Stitch project.
+
+---
+
+## Project Init Gate
+
+Before running per-feature preflight, check:
+
+1. Does `.claude/docs/_project/stitch-project.json` exist?
+2. Is `initState.completedAt` non-null?
+
+If either check fails → **run Project Init now** by following `phases/phase-init.md` end-to-end. Return here when `initState.completedAt` is set.
+
+If both pass → continue with per-feature preflight below.
 
 ---
 
 ## Checklist
 
 ```
-Preflight Progress:
-- [ ] Step 0.1: Theme & color setup
+Per-Feature Preflight Progress:
+- [ ] Step 0.1: Load and validate project-wide config
 - [ ] Step 0.2: Verify Stitch MCP availability
 - [ ] Step 0.3: Resolve feature context
-- [ ] Step 0.4: Set up Stitch project and initialize stitch.json
+- [ ] Step 0.4: Resolve or register feature in project-wide config
+- [ ] Step 0.5: Create per-feature docs directory and stitch.json
 ```
 
 ---
@@ -22,160 +36,51 @@ The model is always `GEMINI_3_FLASH` for all Stitch generation calls. Device typ
 
 ---
 
-## Step 0.1: Theme & Color Setup
+## Step 0.1: Load and Validate Project-Wide Config
 
-**Purpose**: Establish the app's color palette for both light and dark themes before any design or code work begins.
+**Purpose**: Load the shared Stitch project configuration and detect any design system drift.
 
-### Detect Existing Setup
+1. Read `.claude/docs/_project/stitch-project.json`.
 
-Read `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`.
+2. Call `mcp__stitch__get_project` with `name` set to `stitch-project.json.projectName` to verify the shared project is still accessible.
+   - If 404 or project not found:
+     ```
+     The shared Stitch project ({projectId}) no longer exists. Re-run /ui-designer without
+     arguments to run Project Init again. Existing blueprints and screenshots in .claude/docs/
+     are preserved.
+     ```
+     **STOP** — do not proceed.
+   - If valid: proceed.
 
-**If both `XLightColors` (lightColorScheme) and `XDarkColors` (darkColorScheme) already exist** in `XTheme.kt`:
+3. Load the following into working context (do NOT re-read XTheme.kt here — deferred to Step 1.2a):
+   - `projectId` — from `stitch-project.json.projectId`
+   - `projectName` — from `stitch-project.json.projectName`
+   - `designSystemAssetId` — from `stitch-project.json.designSystem.assetId`
+   - `defaultTheme` — from `stitch-project.json.designSystem.themeSnapshot.defaultTheme`
+   - `primaryHex` — from `stitch-project.json.designSystem.themeSnapshot.primaryHex`
+   - `paletteCustomized` — from `stitch-project.json.designSystem.themeSnapshot.paletteCustomized`
 
-```
-The app already has both light and dark color schemes configured.
+4. **Drift detection**: Read `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`. Extract the `primary` hex from the scheme matching `defaultTheme`. Compare it against `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary`.
 
-Would you like to:
-- Keep existing palette — proceed with the current colors
-- Reconfigure — set a new palette from a primary brand color
-```
+   If they differ, surface:
+   ```
+   Design system drift detected:
+   XTheme.kt primary: {live hex} (updated since last sync)
+   Stitch design system primary: {snapshot hex} (last synced: {syncedAt})
 
-Use `AskUserQuestion` with these two options. If **Reconfigure**: proceed with full setup below.
+   Options:
+   - Update Stitch design system to match XTheme.kt (recommended)
+   - Ignore for this session
+   ```
+   Use `AskUserQuestion` with these two options.
 
-If **Keep existing**:
+   If user picks **Update**:
+   - Call `mcp__stitch__update_design_system` with the new primary color and any other changed roles.
+   - Update `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary` to the live hex.
+   - Update `stitch-project.json.designSystem.syncedAt` to current ISO timestamp.
+   - Update `stitch-project.json.updatedAt`. Write the file.
 
-1. **Check completeness** — verify both `XLightColors` and `XDarkColors` define all of these M3 roles: `primary`, `onPrimary`, `primaryContainer`, `onPrimaryContainer`, `background`, `surface`, `onBackground`, `onSurface`, `onSurfaceVariant`, `surfaceVariant`, `outline`, `outlineVariant`, `error`, `onError`, `errorContainer`, `onErrorContainer`.
-
-2. **If complete**: read the current primary color and default theme choice from `XTheme.kt` (infer default from which scheme `XTheme()` composable passes to `MaterialTheme`). Store in context and skip to **Output**.
-
-3. **If NOT complete**: extract the `primary` hex value from the existing scheme (prefer `XLightColors`; fall back to `XDarkColors` if light is absent). Set this value as `primaryHex` and proceed with **Ask Default Theme** → **Generate Both Color Palettes** → **Update XTheme.kt Structure** — exactly as if the user had selected **Reconfigure**.
-
-**If only `lightColorScheme` / `XColors` exists** (no dark scheme): proceed with full setup.
-
----
-
-### Ask Default Theme
-
-Using `AskUserQuestion`: **"What should the app's default theme be?"**
-
-| Option | Description |
-|--------|-------------|
-| Light | App always uses the light color scheme |
-| Dark | App always uses the dark color scheme |
-
-Store as `defaultTheme`.
-
----
-
-### Ask Color Palette
-
-Using `AskUserQuestion`: **"Which color palette do you want to use?"**
-
-| Option | Description |
-|--------|-------------|
-| Keep current | Use the colors already defined in XTheme.kt |
-| Customize | Provide a primary brand color to generate a full palette |
-
-**If Keep current**: note the existing primary hex. Skip to **Update XTheme.kt Structure**.
-
-**If Customize**: ask (free text via `AskUserQuestion`): **"Enter your primary brand color as a HEX value (e.g., #B02418):"**
-
-Store the user's answer as `primaryHex`.
-
----
-
-### Generate Both Color Palettes
-
-From `primaryHex`, derive complete M3-compliant palettes for both themes. Apply the primary color's hue undertone consistently across the neutral tones.
-
-**Light theme (`XLightColors = lightColorScheme(...)`)** — bright backgrounds, dark text:
-
-| Role | Derivation rule |
-|------|----------------|
-| `primary` | `primaryHex` as-is |
-| `onPrimary` | High-contrast on primary: white if primary is dark, near-black if primary is light |
-| `primaryContainer` | Primary hue desaturated and lightened to ~90% tonal value (very light tint) |
-| `onPrimaryContainer` | Primary hue darkened to ~10% tonal value (very dark tint) |
-| `background` | Near-white neutral with a subtle undertone derived from the primary hue |
-| `surface` | Same as background or marginally lighter |
-| `onBackground` | Near-black with the primary hue's subtle undertone |
-| `onSurface` | Same as onBackground |
-| `onSurfaceVariant` | Medium gray with primary hue undertone — lower contrast than onSurface |
-| `surfaceVariant` | Light gray with primary hue undertone — visually distinct from surface |
-| `outline` | Medium-weight gray with primary hue undertone, readable against surface |
-| `outlineVariant` | Lighter/softer variant of outline for decorative or low-emphasis borders |
-| `error` | Standard M3 light error color |
-| `onError` | Standard M3 onError for light theme |
-| `errorContainer` | Standard M3 errorContainer for light theme |
-| `onErrorContainer` | Standard M3 onErrorContainer for light theme |
-
-**Dark theme (`XDarkColors = darkColorScheme(...)`)** — dark backgrounds, light text:
-
-| Role | Derivation rule |
-|------|----------------|
-| `primary` | Primary hue lightened to ~80% tonal value — bright enough to stand out on dark bg |
-| `onPrimary` | Primary hue darkened to ~20% tonal value |
-| `primaryContainer` | Primary hue darkened to ~30% tonal value (dark container) |
-| `onPrimaryContainer` | Primary hue lightened to ~90% tonal value |
-| `background` | Very dark neutral with the primary hue's subtle undertone |
-| `surface` | Slightly elevated over background — same undertone, marginally lighter |
-| `onBackground` | Near-white with the primary hue's subtle undertone |
-| `onSurface` | Same as onBackground |
-| `onSurfaceVariant` | Muted light gray with primary hue undertone — lower contrast than onSurface |
-| `surfaceVariant` | Dark elevated surface with primary hue undertone |
-| `outline` | Medium gray readable against dark surface, with primary hue undertone |
-| `outlineVariant` | Softer/darker variant of outline for subtle borders |
-| `error` | Standard M3 dark error color (brighter than light theme for dark bg legibility) |
-| `onError` | Standard M3 onError for dark theme |
-| `errorContainer` | Standard M3 errorContainer for dark theme |
-| `onErrorContainer` | Standard M3 onErrorContainer for dark theme |
-
-Apply the primary color's hue undertone consistently across all neutral roles. Generate precise hex values — do not leave placeholders. Only include roles the current project uses.
-
----
-
-### Update XTheme.kt Structure
-
-Edit `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`:
-
-1. If the old private val was named `XColors`, rename it to `XLightColors`.
-2. Add `XDarkColors` using `darkColorScheme(...)` with the generated dark palette.
-3. Update the `XTheme()` composable to always use the scheme matching `defaultTheme`:
-
-```kotlin
-// defaultTheme = light
-@Composable
-fun XTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        content = content,
-        colorScheme = XLightColors,
-        shapes = Shapes,
-        typography = MaterialTheme.typography,
-    )
-}
-
-// defaultTheme = dark
-@Composable
-fun XTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        content = content,
-        colorScheme = XDarkColors,
-        shapes = Shapes,
-        typography = MaterialTheme.typography,
-    )
-}
-```
-
-4. Verify the build compiles: `./gradlew :core:designsystem:assembleAndroidMain`
-
----
-
-### Output
-
-Store in context for downstream phases:
-- `defaultTheme`: `light` or `dark`
-- `primaryHex`: effective primary color hex
-- `paletteCustomized`: `true` or `false`
+   If user picks **Ignore**: proceed without changes.
 
 ---
 
@@ -197,7 +102,7 @@ Stitch MCP is not configured. To use the UI Designer skill:
 
 The Stitch MCP server is required for all UI Designer modes.
 ```
-**STOP** - Do not proceed without Stitch MCP.
+**STOP** — do not proceed without Stitch MCP.
 
 ---
 
@@ -226,69 +131,93 @@ Note: Feature existence is informational — it helps the user decide which impl
 
 ---
 
-## Step 0.4: Set Up Stitch Project and Initialize stitch.json
+## Step 0.4: Resolve or Register Feature in Project-Wide Config
 
-Each feature gets its **own Stitch project** to isolate designs and avoid clutter (Stitch MCP has no delete screen API, so shared projects accumulate orphaned screens across iterations).
+This is the **only place** feature ↔ screen identity is established. Never assume "latest screen in the shared project" is the right one — the project is shared across all features.
 
-### Find or Create Per-Feature Project
+1. Look up `stitch-project.json.features[featurename]`.
 
-1. **Load stitch.json**: Look for `.claude/docs/{featurename}/stitch.json` (see [stitch.json schema](../references/stitch-guide.md#stitchjson-schema) for format)
-2. **If exists and has `projectId`**: Call `mcp__stitch__get_project` with `name` set to the stored `projectName` to verify it still exists. If valid, use it. Skip to "Create Docs Directory."
-3. **If not exists or project invalid**: Create a new project:
+2. If entry **exists**:
+   - Call `mcp__stitch__get_screen` with the stored `successScreenId`:
+     ```
+     projectId = stitch-project.json.projectId
+     name      = "projects/{projectId}/screens/{successScreenId}"
+     screenId  = {successScreenId}
+     ```
+   - If 404 or screen not found: the screen was deleted from Stitch UI. Prompt:
+     ```
+     The success screen for '{featurename}' (screenId: {id}) no longer exists in Stitch.
+     Options:
+     - Regenerate: Re-run screen generation for this feature
+     - Cancel
+     ```
+     Use `AskUserQuestion` with these options.
+     If Regenerate: set `features[featurename].successScreenId = null` and `features[featurename].emptyScreenId = null` in `stitch-project.json`. Write the file. Continue as new-feature flow (step 3 below).
+     If Cancel: stop.
+   - If valid: set mode to **resume**. Load `successScreenId`, `emptyScreenId` (may be null) into working context.
+
+3. If entry **does not exist**:
+   - Create a new entry in `stitch-project.json.features`:
+     ```json
+     "{featurename}": {
+       "successScreenId": null,
+       "successScreenName": null,
+       "emptyScreenId": null,
+       "screenshot": null,
+       "htmlPath": null,
+       "tokensPath": null,
+       "dimensions": null,
+       "designFile": null,
+       "blueprintFile": null,
+       "approved": false,
+       "approvedAt": null,
+       "createdAt": "{ISO timestamp}",
+       "updatedAt": "{ISO timestamp}"
+     }
+     ```
+   - Update `stitch-project.json.updatedAt`. Write the file.
+   - Mode: **new feature**.
+
+---
+
+## Step 0.5: Per-Feature Docs and stitch.json
+
+1. Create the feature docs directory if it does not exist:
+   ```bash
+   mkdir -p .claude/docs/{featurename}/designs
    ```
-   mcp__stitch__create_project
+
+2. If per-feature `.claude/docs/{featurename}/stitch.json` does **not** exist, create it with the slim format:
+   ```json
+   {
+     "featureName": "{featurename}",
+     "blueprintConsumed": false,
+     "screens": {},
+     "updatedAt": "{ISO date}"
+   }
    ```
-   Stitch auto-generates the project title. Store the returned `projectId` and `projectName` (format: `projects/{id}`).
 
-### Create Docs Directory
-```bash
-mkdir -p .claude/docs/{featurename}/designs
-```
-
-### Create Initial stitch.json
-
-If stitch.json doesn't exist, create `.claude/docs/{featurename}/stitch.json` with the initial fields:
-
-```json
-{
-  "projectId": "{projectId}",
-  "projectName": "projects/{projectId}",
-  "featureName": "{featurename}",
-  "deviceType": "MOBILE",
-  "modelId": "GEMINI_3_FLASH",
-  "blueprintConsumed": false,
-  "theme": {
-    "defaultTheme": "{light|dark}",
-    "primaryHex": "{primaryHex}",
-    "paletteCustomized": "{true|false}"
-  },
-  "screens": {},
-  "createdAt": "{ISO date}",
-  "updatedAt": "{ISO date}"
-}
-```
-
-If stitch.json already exists (reusing an existing project), update `updatedAt`.
+3. If it **already exists**: update `updatedAt`. Do **not** touch `blueprintConsumed`.
 
 ---
 
 ## Output
 
-After preflight completes, the following context is available:
+After preflight completes, the following context is available for Phase 1:
 
 ```
 Model ID: GEMINI_3_FLASH
 Feature: {featurename}
 Feature Exists: {yes|no}
-Stitch Project ID: {projectId}
-Stitch Project Name: {projectName}
-Device Type: MOBILE
+Mode: {new|resume}
+Stitch Project ID: {projectId} (shared project)
+Design System ID: {designSystemAssetId}
 Docs Path: .claude/docs/{featurename}/
 Designs Path: .claude/docs/{featurename}/designs/
 Stitch Config: .claude/docs/{featurename}/stitch.json
-Default Theme: {light|dark}
+Project Config: .claude/docs/_project/stitch-project.json
+Default Theme: {defaultTheme}
 Primary Color: {primaryHex}
-Palette Customized: {true|false}
 ```
 
 Proceed to **Phase 1: Design in Stitch**.

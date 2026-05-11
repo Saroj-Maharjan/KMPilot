@@ -9,25 +9,31 @@ Quick reference for using Google Stitch MCP tools effectively within the UI Desi
 | Tool | Purpose | When to Use |
 |------|---------|-------------|
 | `mcp__stitch__list_projects` | List all accessible Stitch projects | Preflight check, finding existing projects |
-| `mcp__stitch__create_project` | Create a new Stitch project | When no project exists for the feature |
+| `mcp__stitch__create_project` | Create a new Stitch project | Project Init only (one shared project per repo) |
 | `mcp__stitch__get_project` | Get project details | Verify project exists, get metadata |
 | `mcp__stitch__list_screens` | List all screens in a project | After generation, to find screen IDs |
 | `mcp__stitch__get_screen` | Get screen details + screenshot URL | Retrieve screen data. **Requires all 3 params** — see [Get Screen Call Pattern](#get-screen-call-pattern) below |
 | `mcp__stitch__generate_screen_from_text` | Generate a new screen from prompt | Initial screen design |
 | `mcp__stitch__edit_screens` | Edit existing screens with prompt | Design iteration based on feedback |
 | `mcp__stitch__generate_variants` | Generate design variants | When user wants to explore alternatives |
+| `mcp__stitch__apply_design_system` | Apply a design system to selected screens | Not needed — screens auto-inherit the project design system on generation. Reserved for manual re-sync if drift is detected. |
+| `mcp__stitch__create_design_system` | Create a new design system for a project | Project Init only (Init-4) |
+| `mcp__stitch__update_design_system` | Update an existing design system | When drift detected between XTheme.kt and Stitch |
+| `mcp__stitch__list_design_systems` | List all design systems in a project | Debugging, verifying design system exists |
 
 ---
 
 ## Get Screen Call Pattern
 
-`mcp__stitch__get_screen` requires three params that are derivable from a single `screenId` plus the `projectId` already in `stitch.json`. Construct them like this **every time** the tool is called — never document the three params separately at each call site:
+`mcp__stitch__get_screen` requires three params that are derivable from a single `screenId` plus the `projectId` from `stitch-project.json`. Construct them like this **every time** the tool is called — never document the three params separately at each call site:
 
 ```
-projectId = stitch.json.projectId
+projectId = stitch-project.json.projectId   ← always the shared project
 name      = "projects/{projectId}/screens/{screenId}"
 screenId  = {screenId}
 ```
+
+**`projectId` is always read from `stitch-project.json.projectId` (the shared project). Never use a per-feature `stitch.json` for `projectId` — per-feature stitch.json files no longer contain a projectId field after the shared-project migration.**
 
 Throughout this skill, instructions of the form *"call `get_screen` for {screenId}"* mean: build the three params using the pattern above, then invoke the tool.
 
@@ -212,7 +218,9 @@ When translating designs to code, use this mapping:
 
 **Problem**: After `generate_screen_from_text` or `edit_screens` completes successfully, `list_screens` returns empty — the newly created screen is not queryable via MCP. The screen exists server-side (`get_project` returns a valid `thumbnailScreenshot`), but it is not indexed for `list_screens` or `get_screen` until the project is opened in a browser.
 
-**Workaround**: After any Stitch generation or edit operation, the skill must ask the user to open the project in their browser to trigger screen sync. See the **Screen Sync Procedure** in Phase 1.
+**Workaround**: A timeout/connection error from `generate_screen_from_text` or `edit_screens` does NOT mean the generation failed — it often succeeded in the background. Always call `list_screens` immediately after a timeout to check if the new screen appeared. If it did, proceed normally. Only ask the user to open the browser in their browser as a last resort when `list_screens` still shows nothing after the diff. See the **Screen Sync Procedure** in Phase 1.
+
+**`edit_screens` vs `generate_screen_from_text`**: Use `edit_screens` to modify an existing screen (fix layout, change colors, remove elements). Use `generate_screen_from_text` only when creating a brand new screen from scratch. Using `generate_screen_from_text` to "fix" an existing screen creates a duplicate and pollutes the project.
 
 **Tracking**: Reported on the [Google AI Developers Forum — Stitch](https://discuss.ai.google.dev/c/stitch/61). Remove this workaround once Google fixes the API.
 
@@ -276,65 +284,131 @@ See Phase 1 Step 1.9.
 
 ---
 
-## stitch.json Schema
+## Config File Architecture
 
-The tracking file stored at `.claude/docs/{featurename}/stitch.json`:
+The `/ui-designer` skill uses a **two-file architecture**:
+
+| File | Scope | Purpose |
+|------|-------|---------|
+| `.claude/docs/_project/stitch-project.json` | Repo-wide | Shared Stitch project, design system, shared state screens, all feature registrations |
+| `.claude/docs/{featurename}/stitch.json` | Per-feature (slim) | `blueprintConsumed` flag, per-screen description/approval metadata, verification results |
+
+---
+
+### Project-Wide Config: `.claude/docs/_project/stitch-project.json`
+
+Created once by Project Init (`phase-init.md`). The `projectId` in this file is the only valid source for all Stitch API calls.
 
 ```json
 {
-  "projectId": "string - Stitch project ID",
-  "projectName": "string - Full resource name (projects/{id})",
-  "featureName": "string - KMP feature name (lowercase)",
-  "deviceType": "string - Always MOBILE",
-  "modelId": "string - Always GEMINI_3_FLASH",
-  "blueprintConsumed": "boolean - false when ui-designer saves a new blueprint, true after implementation skill consumes it",
-  "theme": {
-    "defaultTheme": "string - light or dark",
-    "primaryHex": "string - effective primary brand color hex",
-    "paletteCustomized": "boolean - true if user provided a custom primary hex"
-  },
-  "screens": {
-    "screen_key": {
-      "screenId": "string - Stitch screen ID (success state)",
-      "screenName": "string - Full resource name",
-      "description": "string - What the screen shows",
-      "designFile": "string - Path to design description .md file",
-      "screenshot": "string - Path to approved success screenshot .png file",
-      "stateScreenshots": {
-        "loading": "string - Path to loading state screenshot",
-        "failed": "string - Path to failed state screenshot",
-        "empty": "string - Path to empty state screenshot (list screens only)"
+  "projectId": "string — Stitch project ID (shared across the entire repo)",
+  "projectName": "string — Full resource name (projects/{id})",
+  "repoName": "string — KMP repo name",
+  "deviceType": "string — Always MOBILE",
+  "modelId": "string — Always GEMINI_3_FLASH",
+  "designSystem": {
+    "assetId": "string — Design system asset ID",
+    "name": "string — Design system resource name",
+    "colorMode": "string — LIGHT or DARK",
+    "sourceOfTruth": "string — Always XTheme.kt",
+    "syncedAt": "string — ISO timestamp of last XTheme.kt → Stitch sync",
+    "themeSnapshot": {
+      "defaultTheme": "string — light or dark",
+      "primaryHex": "string — primary brand color hex",
+      "paletteCustomized": "boolean",
+      "light": {
+        "primary": "string — hex",
+        "background": "string — hex",
+        "surface": "string — hex",
+        "error": "string — hex",
+        "onSurfaceVariant": "string — hex"
       },
-      "stateScreenIds": {
-        "loading": "string - Stitch screen ID for loading state",
-        "failed": "string - Stitch screen ID for failed state",
-        "empty": "string - Stitch screen ID for empty state (list screens only)"
-      },
-      "blueprint": "string - Path to blueprint .md file",
-      "dimensions": {
-        "success": { "width": "number - Stitch pixel width", "height": "number - Stitch pixel height" },
-        "loading": { "width": "number", "height": "number" },
-        "failed": { "width": "number", "height": "number" }
-      },
-      "approved": "boolean - User approved this design",
-      "approvedAt": "string - ISO date"
+      "dark": {
+        "primary": "string — hex",
+        "background": "string — hex",
+        "surface": "string — hex",
+        "error": "string — hex",
+        "onSurfaceVariant": "string — hex"
+      }
     }
   },
-  "implementation": {
-    "implemented": "boolean - Code implementation completed",
-    "implementedAt": "string - ISO date",
-    "method": "string - Implementation method (e.g., 'blueprint')"
+  "sharedStateScreens": {
+    "loading": {
+      "screenId": "string — Stitch screen ID",
+      "screenName": "string — Full resource name",
+      "screenshot": "string — path to .png",
+      "htmlPath": "string — path to .html",
+      "tokensPath": "string — path to tokens .md",
+      "dimensions": { "width": "number", "height": "number" },
+      "generatedAt": "string — ISO timestamp",
+      "designSystemApplied": "boolean"
+    },
+    "failed": {
+      "screenId": "string — Stitch screen ID",
+      "screenName": "string — Full resource name",
+      "screenshot": "string — path to .png",
+      "htmlPath": "string — path to .html",
+      "tokensPath": "string — path to tokens .md",
+      "dimensions": { "width": "number", "height": "number" },
+      "generatedAt": "string — ISO timestamp",
+      "designSystemApplied": "boolean"
+    }
+  },
+  "features": {
+    "{featurename}": {
+      "successScreenId": "string — Stitch screen ID for success state",
+      "successScreenName": "string — Full resource name",
+      "emptyScreenId": "string or null — Stitch screen ID for empty state (list screens only)",
+      "screenshot": "string — path to success .png",
+      "htmlPath": "string — path to success .html",
+      "tokensPath": "string — path to success tokens .md",
+      "dimensions": { "width": "number", "height": "number" },
+      "designFile": "string — path to .md design description",
+      "blueprintFile": "string — path to _blueprint.md",
+      "approved": "boolean",
+      "approvedAt": "string — ISO date",
+      "createdAt": "string — ISO timestamp",
+      "updatedAt": "string — ISO timestamp",
+      "legacyProject": "boolean — optional, true if migrated from legacy per-feature project",
+      "legacyProjectId": "string — optional, old per-feature projectId"
+    }
+  },
+  "initState": {
+    "projectCreated": "boolean",
+    "designSystemCreated": "boolean",
+    "sharedScreensGenerated": "boolean",
+    "completedAt": "string or null — ISO timestamp when Init-8 completed"
+  },
+  "createdAt": "string — ISO timestamp",
+  "updatedAt": "string — ISO timestamp"
+}
+```
+
+---
+
+### Per-Feature Config: `.claude/docs/{featurename}/stitch.json`
+
+Slim format. Does NOT contain `projectId`, `theme`, `deviceType`, `modelId`, or `stateScreenIds` — those live in the project-wide config.
+
+```json
+{
+  "featureName": "string — KMP feature name (lowercase)",
+  "blueprintConsumed": "boolean — false when ui-designer saves a new blueprint, true after implementation skill consumes it",
+  "screens": {
+    "{featurename}_screen": {
+      "description": "string — What the screen shows",
+      "approved": "boolean",
+      "approvedAt": "string — ISO date"
+    }
   },
   "verification": {
-    "verified": "boolean - Token-level verification completed",
-    "verifiedAt": "string - ISO date",
-    "auditReport": "string - Path to three-way audit report .md",
-    "deviceScreenshots": {
-      "screen_key": "string - Path to desktop-rendered screenshot"
-    },
-    "attempts": "number - Number of verification attempts"
+    "verified": "boolean — Token-level verification completed",
+    "verifiedAt": "string — ISO date",
+    "auditReport": "string — Path to three-way audit report .md",
+    "xComponentsCompliant": "boolean",
+    "criticalIssues": "number",
+    "attempts": "number"
   },
-  "createdAt": "string - ISO date",
-  "updatedAt": "string - ISO date"
+  "updatedAt": "string — ISO date"
 }
 ```

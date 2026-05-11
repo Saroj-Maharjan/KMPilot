@@ -32,6 +32,10 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
    - `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/`
 3. Verify build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`.
 
+Additionally read `.claude/docs/_project/stitch-project.json` if it exists.
+- This provides `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`).
+- If `stitch-project.json` is absent: fall back to reading `projectId` from the per-feature `stitch.json.projectId` (legacy mode — repos not yet migrated).
+
 If any prerequisite is missing, stop and inform the user.
 
 > The implementation blueprint is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode). Verify-ui does **not** read it — the audit compares HTML directly against the implemented code, with the X-components catalog as the third source for default-render checks.
@@ -46,10 +50,18 @@ If any prerequisite is missing, stop and inform the user.
 2. For each state (success, loading, failed, empty if applicable):
    - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call.
    - **Download path** (only when the file is missing or empty):
-     - Get screen ID from `stitch.json` (`screens.{key}.screenId` for success, `screens.{key}.stateScreenIds.{state}` for others).
-     - Call `mcp__stitch__get_screen` with all 3 required params.
-     - Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
-     - Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
+
+     **For loading and failed states — screenId lookup:**
+     - Primary (new shared-project repos): use `stitch-project.json.sharedStateScreens.{state}.screenId` and `stitch-project.json.projectId`
+     - Fallback (legacy — repos not yet migrated to shared project): use `stitch.json.screens[key].stateScreenIds.{state}` and `stitch.json.projectId`
+
+     **For success and empty states — screenId lookup:**
+     - Primary: use `stitch-project.json.features[featurename].successScreenId` (or `emptyScreenId`) and `stitch-project.json.projectId`
+     - Fallback (legacy): use `stitch.json.screens[key].screenId` and `stitch.json.projectId`
+
+     Call `mcp__stitch__get_screen` with all 3 required params.
+     Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
+     Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
    - Download states **sequentially** (concurrent downloads can race the URL's single-use semantics).
 
 ---
