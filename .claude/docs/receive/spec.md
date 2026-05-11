@@ -4,7 +4,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Status | Active |
 | Created | 2026-05-03 |
 | Updated | 2026-05-03 |
@@ -44,14 +44,18 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 |----------|--------|--------------|-----------|
 | Address source | Hardcoded static data in ViewModel | Remote API | Feature is offline-only; no network dependency required at this stage |
 | Address truncation | `TextOverflow.Ellipsis` | Show full address | Pills overflow on short screens; tap-to-copy exposes full value |
-| Warning style | Error-tinted banner (`surface` bg + `error` border @40%) | Toast / snackbar | Persistent visibility — user must see it before acting |
-| Bottom bar | Sticky gradient + button row in `bottomBar` slot | Floating buttons | `XScaffold` handles insets correctly via `bottomBar` |
+| Warning style | Error-tinted banner (`errorContainer` bg @20% + `error` border @40%) | Toast / snackbar | Persistent visibility — user must see it before acting |
+| Bottom bar | Sticky `surface`-bg bar with rounded top corners in `bottomBar` slot | Floating buttons | `XScaffold` handles insets correctly via `bottomBar` |
 | No loading state | ViewModel jumps Uninitialized → Success synchronously | Show loading spinner | No async work; a visible loading flash would be a lie |
+| Top bar | Custom `Row` layout | `XTopAppBar` | `XTopAppBar` center-aligns titles; design requires left-aligned title next to back arrow |
+| Address card | `AddressCard` wraps private `AddressPill` | Standalone `AddressPill` | Design requires gold border + "Your Bitcoin address" label around the pill |
+| Warning banner | Hardcoded strings (no parameters) | Parameterised heading/body | Banner is Bitcoin-specific; generalisation adds complexity without value |
 
 ---
 
 ## Last Updated
 
+- 2026-05-11 — Design-aware update: aligned to Stitch gold/warm theme; AddressCard replaces AddressPill; custom Row top bar; redesigned bottom bar
 - 2026-05-03 — Initial spec generated from implementation
 
 ---
@@ -66,7 +70,7 @@ The system SHALL display the wallet address in Success state as soon as the scre
 - GIVEN the user navigates to the Receive screen
 - WHEN the ViewModel initialises
 - THEN the screen MUST immediately show Success state
-- AND the `AssetSelectorCard`, `AddressPill`, and `NetworkWarningBanner` MUST be visible
+- AND the `AssetSelectorCard`, `AddressCard`, and `NetworkWarningBanner` MUST be visible
 - AND the sticky bottom bar with Share and Copy Address buttons MUST be visible
 
 #### Scenario: Back navigation
@@ -104,7 +108,7 @@ feature/receive/src/commonMain/kotlin/thisissadeghi/receive/
 │   ├── ui/
 │   │   ├── ReceiveScreen.kt
 │   │   └── components/
-│   │       ├── AddressPill.kt
+│   │       ├── AddressCard.kt
 │   │       ├── AssetSelectorCard.kt
 │   │       └── NetworkWarningBanner.kt
 │   └── navigation/
@@ -134,7 +138,7 @@ No DataSource or Repository — data never leaves the ViewModel.
 | `ReceiveScreen` | ViewModel wrapper — collects state, delegates to ScreenRoot | `presentation/ui/` |
 | `ReceiveScreenRoot` | Testable composable — all UI implemented here | `presentation/ui/` |
 | `AssetSelectorCard` | Tappable coin + network selector row card | `presentation/ui/components/` |
-| `AddressPill` | Monospace address with inline copy icon button | `presentation/ui/components/` |
+| `AddressCard` | Gold-bordered card with "Your Bitcoin address" label + private `AddressPill` | `presentation/ui/components/` |
 | `NetworkWarningBanner` | Error-tinted network safety warning banner | `presentation/ui/components/` |
 | `ReceiveRoute` | `@Serializable object` for type-safe navigation | `presentation/navigation/` |
 | `ReceiveModules` | Koin DI — registers `ReceiveViewModel` | `di/` |
@@ -215,39 +219,44 @@ From Stitch design — approved 2026-05-03. Blueprint: `.claude/docs/receive/des
 
 | Hex | M3 Role | Usage |
 |-----|---------|-------|
-| #0D0919 | `background` | Screen bg, app bar bg, bottom bar backdrop |
-| #181228 | `surface` | Warning banner bg |
-| #231A38 | `surfaceVariant` | Asset selector fill, address pill fill, Share button fill |
-| #4A3F6B | `outline` | Asset selector border, address pill border, Share button border |
-| #E9E0FF | `onSurface` | App bar title, coin name, address text, warning heading, CTA label |
-| #C5BCE0 | `onSurfaceVariant` | Network subtitle, expand icon, warning body, failed subtitle |
-| #9D70FF | `primary` | Copy icon bg (@10%), Copy Address button fill, loading spinner |
-| #1A0054 | `onPrimary` | Copy Address button label |
-| #FFB4AB | `error` | Warning icon, warning border (@40%), failed icon + container bg (@10%) |
-| #EAB308 | inline `Color(0xFFEAB308)` | Bitcoin coin circle bg (brand color — not an M3 role) |
+| #0F0D09 | `background` | Screen canvas, app bar bg |
+| #1C1910 | `surface` | Asset selector fill, address card fill, bottom bar bg |
+| #302B1C | `surfaceVariant` | Address pill bg, Share button bg |
+| #726A48 | `outline` | All borders, chevron |
+| #EDE8D5 | `onSurface` | App bar title, coin name, address text, warning heading, Share label |
+| #C4BA94 | `onSurfaceVariant` | Network subtitle, address label, warning body |
+| #F5D76E | `primary` | Back arrow, address card border, copy icon, Copy Address button fill |
+| #2C1900 | `onPrimary` | Copy Address button label |
+| #FFB4AB | `error` | Warning icon, warning border (40% alpha), failed icon + container bg (@10%) |
+| #93000A | `errorContainer` | Warning banner bg (20% alpha) |
+| #F7931A | `XTheme.Colors.Bitcoin` | Bitcoin coin icon container bg (already in XTheme.kt) |
+| #FFFFFF | `Color.White` | "₿" symbol text on Bitcoin orange circle |
 
 ### Typography
 
 | Usage | Size (sp) | Weight |
 |-------|-----------|--------|
 | App bar title | 20 | Bold, −0.5sp tracking |
-| Coin name | 16 | Bold |
-| Network subtitle | 12 | Medium, +0.5sp tracking |
-| Address text | 14 | Normal (JetBrains Mono) |
+| Coin name | 14 | Bold |
+| Network subtitle | 12 | Normal |
+| Address label | 14 | Medium |
+| Address text | 12 | Normal (Monospace), −0.025em tracking |
 | Warning heading | 14 | Bold |
-| Warning body | 12 | Medium, +0.5sp tracking, 1.625× line height |
+| Warning body | 12 | Normal, 1.625× line height |
 | Failed heading | 24 | Bold |
 | Failed subtitle | 16 | Normal, 1.625× line height |
 
 ### Spacing & Shapes
 
-- Screen padding: 16dp horizontal, 24dp vertical
+- Screen horizontal padding: 16dp
 - Section gap: 24dp
-- Asset selector corner radius: `RoundedCornerShape(24.dp)`
-- Address pill: `CircleShape`
-- Warning banner corner radius: `RoundedCornerShape(12.dp)`
-- Bottom bar: 24dp horizontal, 40dp bottom, 16dp top
-- Button height: 56dp
+- Asset selector: 64dp height, `CircleShape`
+- Asset selector coin icon: 40dp circle (`XTheme.Colors.Bitcoin`)
+- Address card border: 1dp `primary`, `RoundedCornerShape(20.dp)`, 32dp internal padding
+- Address pill: `RoundedCornerShape(24.dp)`, 16dp horizontal / 12dp vertical padding
+- Warning banner corner radius: `RoundedCornerShape(24.dp)`
+- Bottom bar: `surface` bg, `RoundedCornerShape(topStart=20, topEnd=20)`, 16dp horizontal, 16dp top, 32dp bottom
+- Button height: 56dp, `RoundedCornerShape(24.dp)`
 - Loading spinner: 48dp, 4dp stroke
 - Failed icon container: 96dp, `RoundedCornerShape(24.dp)`
 - Failed icon: 80dp

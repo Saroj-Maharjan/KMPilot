@@ -3,173 +3,125 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Receive Crypto | KMPilot Gold</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "surface": "#15121a",
-                        "on-primary": "#3d008f",
-                        "on-primary-container": "#35007f",
-                        "error": "#ffb4ab",
-                        "inverse-surface": "#e7e0ec",
-                        "on-background": "#e7e0ec",
-                        "primary": "#d1bcff",
-                        "secondary-container": "#00b55d",
-                        "on-secondary-fixed-variant": "#005227",
-                        "on-secondary": "#003919",
-                        "surface-container": "#211e27",
-                        "surface-container-high": "#2c2831",
-                        "secondary": "#4de082",
-                        "on-tertiary-container": "#3b2600",
-                        "error-container": "#93000a",
-                        "surface-variant": "#37333d",
-                        "on-tertiary-fixed-variant": "#604100",
-                        "on-primary-fixed-variant": "#561eb5",
-                        "inverse-on-surface": "#322f38",
-                        "outline": "#958e9f",
-                        "primary-container": "#a277ff",
-                        "secondary-fixed": "#6dfe9c",
-                        "surface-dim": "#15121a",
-                        "surface-container-low": "#1d1a23",
-                        "on-error": "#690005",
-                        "primary-fixed-dim": "#d1bcff",
-                        "primary-fixed": "#eaddff",
-                        "tertiary-fixed": "#ffddae",
-                        "outline-variant": "#4a4454",
-                        "on-primary-fixed": "#24005b",
-                        "tertiary-fixed-dim": "#feba46",
-                        "surface-tint": "#d1bcff",
-                        "on-surface": "#e7e0ec",
-                        "on-surface-variant": "#ccc3d6",
-                        "surface-container-lowest": "#0f0d15",
-                        "tertiary": "#feba46",
-                        "inverse-primary": "#6e3ecd",
-                        "secondary-fixed-dim": "#4de082",
-                        "background": "#15121a",
-                        "surface-container-highest": "#37333d",
-                        "on-secondary-fixed": "#00210c",
-                        "on-tertiary": "#432c00",
-                        "tertiary-container": "#c0850a",
-                        "on-secondary-container": "#003e1c",
-                        "on-error-container": "#ffdad6",
-                        "surface-bright": "#3b3841",
-                        "on-tertiary-fixed": "#281800"
+                    colors: {
+                        background: '#0F0D09',
+                        surface: '#1C1910',
+                        'surface-variant': '#302B1C',
+                        'on-surface': '#EDE8D5',
+                        'on-surface-variant': '#C4BA94',
+                        outline: '#726A48',
+                        'outline-variant': '#3F3822',
+                        primary: '#F5D76E',
+                        'on-primary': '#2C1900',
+                        'primary-container': '#4A3200',
+                        'on-primary-container': '#FFF0C0',
+                        error: '#FFB4AB',
+                        'on-error': '#690005',
+                        'error-container': '#93000A',
+                        'on-error-container': '#FFDAD6',
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "2xl": "1.5rem",
-                        "full": "9999px"
+                    borderRadius: {
+                        'DEFAULT': '0.5rem',
+                        'lg': '1rem',
+                        'xl': '1.5rem',
+                        '2xl': '20px',
+                        'full': '9999px'
                     },
-                    "spacing": {
-                        "margin-mobile": "20px",
-                        "xs": "4px",
-                        "lg": "24px",
-                        "margin-desktop": "40px",
-                        "sm": "8px",
-                        "md": "16px",
-                        "unit": "4px",
-                        "gutter": "16px",
-                        "xl": "32px"
-                    },
-                    "fontFamily": {
-                        "body-md": ["Manrope"],
-                        "headline-lg": ["Manrope"],
-                        "display-lg": ["Manrope"],
-                        "headline-md": ["Manrope"],
-                        "title-lg": ["Manrope"],
-                        "label-md": ["Manrope"],
-                        "body-lg": ["Manrope"],
-                        "label-lg": ["Manrope"],
-                        "mono": ["JetBrains Mono"]
-                    },
-                    "fontSize": {
-                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
-                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
-                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
-                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
-                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600"}]
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif'],
+                        label: ['Manrope', 'sans-serif'],
                     }
-                },
-            },
+                }
+            }
         }
     </script>
 <style>
-        body { background-color: #0D0919; color: #e7e0ec; }
+        body { font-family: 'Manrope', sans-serif; background-color: #0F0D09; color: #EDE8D5; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .qr-card { background-color: #FFFFFF; }
-        .warning-border { border-color: rgba(255, 180, 171, 0.4); }
-        .bottom-gradient { background: linear-gradient(to top, #0D0919 0%, transparent 100%); }
-    </style>
-<style>
-        body {
-            min-height: max(884px, 100dvh);
+        .qr-gradient-halo {
+            background: radial-gradient(circle, rgba(245, 215, 110, 0.15) 0%, rgba(15, 13, 9, 0) 70%);
         }
     </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
 </head>
-<body class="font-body-md antialiased min-h-screen flex flex-col">
-<!-- TopAppBar -->
-<nav class="flex justify-between items-center px-4 py-4 w-full bg-[#0D0919] sticky top-0 z-50">
-<button class="text-[#E9E0FF] hover:bg-white/5 transition-colors active:scale-95 duration-200 p-2 rounded-full">
-<span class="material-symbols-outlined">arrow_back</span>
+<body class="antialiased min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 flex items-center px-4 h-16 bg-transparent">
+<button class="flex items-center justify-center w-10 h-10 rounded-full active:scale-90 transition-transform" style="color: #F5D76E;">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
 </button>
-<h1 class="text-[20px] font-bold text-[#E9E0FF] font-manrope antialiased tracking-[-0.5px]">Receive</h1>
-<div class="w-11"></div> <!-- Empty space to balance the center title -->
-</nav>
-<!-- Main Content -->
-<main class="flex-1 px-4 py-6 overflow-y-auto pb-48">
-<div class="max-w-md mx-auto space-y-6">
+<h1 class="ml-2 font-bold tracking-tight text-[#EDE8D5] text-xl" style="letter-spacing: -0.025em;">Receive</h1>
+<div class="ml-auto w-10 h-10"></div>
+</header>
+<main class="flex-1 mt-16 px-4 pb-32">
 <!-- Asset Selector -->
-<button class="w-full flex items-center justify-between p-4 bg-[#231A38] border border-[#4A3F6B] rounded-2xl hover:bg-[#2c2146] transition-colors active:scale-[0.98] duration-200">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-full bg-[#EAB308] flex items-center justify-center border-2 border-white/10">
-<span class="text-white font-bold text-xl">B</span>
+<section class="mt-6">
+<button class="w-full bg-surface border border-outline rounded-full p-3 flex items-center justify-between hover:bg-surface-variant transition-colors active:scale-[0.98]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-[#F7931A] flex items-center justify-center shadow-lg">
+<span class="text-white font-bold text-xl">₿</span>
 </div>
-<div class="text-left">
-<p class="text-body-lg font-bold text-[#E9E0FF]">Bitcoin (BTC)</p>
-<p class="text-label-md text-[#C5BCE0]">Bitcoin Network</p>
+<div class="flex flex-col items-start">
+<span class="font-bold text-[#EDE8D5] text-sm">Bitcoin</span>
+<span class="text-[#C4BA94] text-xs">Bitcoin Network</span>
 </div>
 </div>
-<span class="material-symbols-outlined text-[#C5BCE0]">expand_more</span>
+<span class="material-symbols-outlined text-outline pr-2" data-icon="expand_more">expand_more</span>
 </button>
-<!-- Wallet Address Pill -->
-<div class="w-full flex items-center justify-between pl-6 pr-2 py-2 bg-[#231A38] border border-[#4A3F6B] rounded-full">
-<span class="font-mono text-body-md text-[#E9E0FF] truncate mr-4">bc1qxy2k...5mdq3w0c0</span>
-<button class="w-10 h-10 flex items-center justify-center bg-[#9D70FF]/10 rounded-full hover:bg-[#9D70FF]/20 active:scale-90 transition-all">
-<span class="material-symbols-outlined text-[#9D70FF] text-[20px]">content_copy</span>
-</button>
-</div>
-<!-- Warning Banner -->
-<div class="p-4 bg-[#181228] border warning-border rounded-xl flex gap-4">
-<span class="material-symbols-outlined text-[#FFB4AB] flex-shrink-0">warning</span>
-<div class="space-y-1">
-<p class="text-body-md font-bold text-[#E9E0FF]">Bitcoin Network only</p>
-<p class="text-label-md text-[#C5BCE0] leading-relaxed">Sending coins or tokens via any other network will result in permanent loss.</p>
+</section>
+<!-- QR Code Card -->
+<section class="mt-6 relative">
+<div class="bg-surface border border-primary rounded-2xl p-8 flex flex-col items-center relative overflow-hidden">
+<!-- Subtle Glow effect -->
+<span class="text-[#C4BA94] text-sm mb-6 font-medium">Your Bitcoin address</span>
+<!-- QR Code Tile -->
+<!-- Address Pill -->
+<div class="w-full bg-surface-variant border border-outline rounded-xl px-4 py-3 flex items-center justify-between group active:bg-outline-variant transition-colors">
+<span class="font-mono text-xs text-[#EDE8D5] tracking-tight">bc1qxy2kgf86gnvkv0u9vnm7p9nq3f9z6n77h0wlh</span>
+<span class="material-symbols-outlined text-primary text-xl" data-icon="content_copy">content_copy</span>
 </div>
 </div>
+</section>
+<!-- Network Warning -->
+<section class="mt-6">
+<div class="bg-error-container/20 border border-error/40 rounded-xl p-4 flex gap-3">
+<span class="material-symbols-outlined text-error shrink-0" data-icon="warning">warning</span>
+<div class="flex flex-col gap-1">
+<p class="font-bold text-[#EDE8D5] text-sm">Only send Bitcoin (BTC)</p>
+<p class="text-[#C4BA94] text-xs leading-relaxed">Sending any other asset to this address may result in permanent loss.</p>
 </div>
+</div>
+</section>
 </main>
-<!-- Sticky Bottom Actions -->
-<div class="fixed bottom-0 left-0 w-full z-40 pointer-events-none">
-<div class="h-24 bottom-gradient"></div>
-<div class="bg-[#0D0919]/80 backdrop-blur-xl px-6 pb-10 pt-4 flex gap-4 pointer-events-auto">
-<button class="flex-1 h-14 flex items-center justify-center gap-2 bg-[#231A38] border border-[#4A3F6B] rounded-full text-[#E9E0FF] font-semibold hover:bg-[#2c2146] active:scale-95 transition-all">
-<span class="material-symbols-outlined text-[20px]">share</span>
+<!-- Bottom Action Bar -->
+<footer class="fixed bottom-0 w-full z-50 bg-[#1C1910] rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.6)] px-4 pt-4 pb-8 border-t border-[#726A48]/30">
+<div class="flex gap-4">
+<button class="flex-1 h-14 bg-surface-variant border border-outline rounded-xl flex items-center justify-center gap-2 text-[#EDE8D5] font-semibold active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-xl" data-icon="share">share</span>
                 Share
             </button>
-<button class="flex-[1.5] h-14 flex items-center justify-center gap-2 bg-[#9D70FF] rounded-full text-[#1A0054] font-bold shadow-[0_0_20px_rgba(157,112,255,0.3)] hover:opacity-90 active:scale-95 transition-all">
-<span class="material-symbols-outlined text-[20px]">content_copy</span>
+<button class="flex-1 h-14 bg-primary rounded-xl flex items-center justify-center gap-2 text-on-primary font-bold active:scale-95 transition-transform shadow-[0_4px_12px_rgba(245,215,110,0.2)]">
+<span class="material-symbols-outlined text-xl" data-icon="content_copy" style="font-variation-settings: 'FILL' 1;">content_copy</span>
                 Copy Address
             </button>
 </div>
-</div>
+</footer>
+<!-- Bottom Navigation Shell (Inactive for task-focused screen) -->
+<!-- Suppressed to prioritize the "Receive" focused journey -->
 </body></html>

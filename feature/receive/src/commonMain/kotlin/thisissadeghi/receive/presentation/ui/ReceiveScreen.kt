@@ -2,6 +2,7 @@ package thisissadeghi.receive.presentation.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
@@ -31,7 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,14 +40,12 @@ import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
-import thisissadeghi.designsystem.XOutlinedButton
 import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XText
-import thisissadeghi.designsystem.toolbar.XTopAppBar
 import thisissadeghi.receive.presentation.ReceiveUiModel
 import thisissadeghi.receive.presentation.ReceiveUiState
 import thisissadeghi.receive.presentation.ReceiveViewModel
-import thisissadeghi.receive.presentation.ui.components.AddressPill
+import thisissadeghi.receive.presentation.ui.components.AddressCard
 import thisissadeghi.receive.presentation.ui.components.AssetSelectorCard
 import thisissadeghi.receive.presentation.ui.components.NetworkWarningBanner
 
@@ -78,38 +74,44 @@ fun ReceiveScreenRoot(
     XScaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            XTopAppBar(
-                title = {
-                    XText(
-                        text = "Receive",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                        color = MaterialTheme.colorScheme.onSurface,
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(Color.Transparent)
+                        .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                XIconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.size(40.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                ) {
+                    XIcon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
                     )
-                },
-                backgroundColor = MaterialTheme.colorScheme.background,
-                navigationIcon = {
-                    XIconButton(
-                        onClick = onBackClick,
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = MaterialTheme.colorScheme.onSurface,
-                            ),
-                    ) {
-                        XIcon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-            )
+                }
+                XText(
+                    text = "Receive",
+                    modifier = Modifier.padding(start = 8.dp),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
         },
         bottomBar = {
             when (uiState.state) {
                 is UiState.Success ->
-                    ReceiveSuccessBottomBar(
+                    ReceiveBottomBar(
                         onShareClick = onShareClick,
                         onCopyClick = onCopyClick,
                     )
@@ -164,99 +166,80 @@ private fun ReceiveSuccessContent(
             Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-                .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
     ) {
         AssetSelectorCard(
             coinName = uiModel.coinName,
             networkName = uiModel.networkName,
             onClick = onAssetSelectorClick,
         )
-        AddressPill(
-            address = uiModel.walletAddress,
+        Spacer(modifier = Modifier.height(24.dp))
+        AddressCard(
+            walletAddress = uiModel.walletAddress,
             onCopyClick = onCopyClick,
         )
-        NetworkWarningBanner(
-            heading = "Bitcoin Network only",
-            body = "Sending coins or tokens via any other network will result in permanent loss.",
-        )
+        Spacer(modifier = Modifier.height(24.dp))
+        NetworkWarningBanner()
     }
 }
 
 @Composable
-private fun ReceiveSuccessBottomBar(
+private fun ReceiveBottomBar(
     onShareClick: () -> Unit,
     onCopyClick: () -> Unit,
 ) {
-    Box {
-        Box(
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .shadow(8.dp, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(bottom = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        XButton(
+            onClick = onShareClick,
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .align(Alignment.TopCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background),
-                        ),
-                    ),
-        )
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f))
-                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 40.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .weight(1f)
+                    .height(56.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         ) {
-            XOutlinedButton(
-                onClick = onShareClick,
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                shape = CircleShape,
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
+            XIcon(imageVector = Icons.Default.Share, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.size(8.dp))
+            XText(text = "Share", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+        XButton(
+            onClick = onCopyClick,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                     ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-            ) {
-                XIcon(
-                    imageVector = Icons.Default.Share,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.size(8.dp))
-                XText(
-                    text = "Share",
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            XButton(
-                onClick = onCopyClick,
-                modifier =
-                    Modifier
-                        .weight(1.5f)
-                        .height(56.dp),
-                shape = CircleShape,
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-            ) {
-                XIcon(
-                    imageVector = Icons.Default.ContentCopy,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(modifier = Modifier.size(8.dp))
-                XText(
-                    text = "Copy Address",
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            shape = RoundedCornerShape(24.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+        ) {
+            XIcon(imageVector = Icons.Default.ContentCopy, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.size(8.dp))
+            XText(text = "Copy Address", fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
