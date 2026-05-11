@@ -43,10 +43,10 @@ See: [Phase 1: Design](phases/phase-1-design.md)
 1. **User Confirmation Required** after Phase 1 (design approval) - never proceed without explicit approval
 2. **All design changes go through Stitch** - never modify designs outside of Stitch MCP tools
 3. **Screenshots stored at** `.claude/docs/{featurename}/designs/` - visible to user
-4. **Two-file config architecture**: Project-wide config: `.claude/docs/_project/stitch-project.json`. Per-feature config: `.claude/docs/{featurename}/stitch.json`. Project-wide config is the source of projectId and shared screen IDs. Per-feature config tracks blueprintConsumed and per-feature screen metadata.
+4. **Single config architecture**: All Stitch state lives in `.claude/docs/_project/stitch-project.json`. It is the source of projectId, shared screen IDs, per-feature screen metadata, and `blueprintConsumed`. There are no per-feature `stitch.json` files.
 5. **Stitch MCP is mandatory** - if not available, stop and ask user to configure it
-6. **Blueprint is the handoff artifact** — contains Pre-Implementation Contract + Post-Implementation Checklist. Implementation skills consume it via `blueprintConsumed` flag in stitch.json
-7. **`blueprintConsumed` lifecycle** — ui-designer sets `blueprintConsumed: false` when saving a new blueprint. Implementation skills set it to `true` after consuming the blueprint
+6. **Blueprint is the handoff artifact** — contains Pre-Implementation Contract + Post-Implementation Checklist. Implementation skills consume it via `blueprintConsumed` flag in `stitch-project.json.features[featurename]`
+7. **`blueprintConsumed` lifecycle** — ui-designer sets `blueprintConsumed: false` in `stitch-project.json.features[featurename]` when saving a new blueprint. Implementation skills set it to `true` after consuming the blueprint
 8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `XLightColors` and `XDarkColors`. After design approval, a Color Audit identifies missing roles which are documented in the blueprint's Pre-Implementation Contract. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
 9. **Project Init is a prerequisite** — Phase 0 preflight checks for `.claude/docs/_project/stitch-project.json` before proceeding. If absent or incomplete, the user must run Project Init first (invoke `/ui-designer` without a feature name argument).
 
@@ -84,8 +84,8 @@ Project config: .claude/docs/_project/stitch-project.json
 
 Design spec: designs/{featurename}.md
 Blueprint: designs/{featurename}_blueprint.md
-Feature config: .claude/docs/{featurename}/stitch.json
-blueprintConsumed: false
+Project config: .claude/docs/_project/stitch-project.json
+blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 
 ## Next Steps
 

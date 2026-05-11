@@ -25,7 +25,7 @@ Per-Feature Preflight Progress:
 - [ ] Step 0.2: Verify Stitch MCP availability
 - [ ] Step 0.3: Resolve feature context
 - [ ] Step 0.4: Resolve or register feature in project-wide config
-- [ ] Step 0.5: Create per-feature docs directory and stitch.json
+- [ ] Step 0.5: Create per-feature docs directory
 ```
 
 ---
@@ -180,24 +180,14 @@ This is the **only place** feature ↔ screen identity is established. Never ass
 
 ---
 
-## Step 0.5: Per-Feature Docs and stitch.json
+## Step 0.5: Per-Feature Docs Directory
 
-1. Create the feature docs directory if it does not exist:
-   ```bash
-   mkdir -p .claude/docs/{featurename}/designs
-   ```
+Create the feature docs directory if it does not exist:
+```bash
+mkdir -p .claude/docs/{featurename}/designs
+```
 
-2. If per-feature `.claude/docs/{featurename}/stitch.json` does **not** exist, create it with the slim format:
-   ```json
-   {
-     "featureName": "{featurename}",
-     "blueprintConsumed": false,
-     "screens": {},
-     "updatedAt": "{ISO date}"
-   }
-   ```
-
-3. If it **already exists**: update `updatedAt`. Do **not** touch `blueprintConsumed`.
+No per-feature `stitch.json` is created. All Stitch state lives in `.claude/docs/_project/stitch-project.json`.
 
 ---
 
@@ -214,7 +204,6 @@ Stitch Project ID: {projectId} (shared project)
 Design System ID: {designSystemAssetId}
 Docs Path: .claude/docs/{featurename}/
 Designs Path: .claude/docs/{featurename}/designs/
-Stitch Config: .claude/docs/{featurename}/stitch.json
 Project Config: .claude/docs/_project/stitch-project.json
 Default Theme: {defaultTheme}
 Primary Color: {primaryHex}

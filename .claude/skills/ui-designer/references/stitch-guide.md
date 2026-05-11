@@ -286,12 +286,11 @@ See Phase 1 Step 1.9.
 
 ## Config File Architecture
 
-The `/ui-designer` skill uses a **two-file architecture**:
+The `/ui-designer` skill uses a **single config file** for all Stitch state:
 
 | File | Scope | Purpose |
 |------|-------|---------|
-| `.claude/docs/_project/stitch-project.json` | Repo-wide | Shared Stitch project, design system, shared state screens, all feature registrations |
-| `.claude/docs/{featurename}/stitch.json` | Per-feature (slim) | `blueprintConsumed` flag, per-screen description/approval metadata, verification results |
+| `.claude/docs/_project/stitch-project.json` | Repo-wide | Shared Stitch project, design system, shared state screens, all feature registrations, `blueprintConsumed` flag, verification results |
 
 ---
 
@@ -365,12 +364,19 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
       "dimensions": { "width": "number", "height": "number" },
       "designFile": "string — path to .md design description",
       "blueprintFile": "string — path to _blueprint.md",
+      "blueprintConsumed": "boolean — false when ui-designer saves a new blueprint, true after implementation skill consumes it",
       "approved": "boolean",
       "approvedAt": "string — ISO date",
       "createdAt": "string — ISO timestamp",
       "updatedAt": "string — ISO timestamp",
-      "legacyProject": "boolean — optional, true if migrated from legacy per-feature project",
-      "legacyProjectId": "string — optional, old per-feature projectId"
+      "verification": {
+        "verified": "boolean — Token-level verification completed",
+        "verifiedAt": "string — ISO date",
+        "auditReport": "string — Path to audit report .md",
+        "xComponentsCompliant": "boolean",
+        "criticalIssues": "number",
+        "attempts": "number"
+      }
     }
   },
   "initState": {
@@ -384,31 +390,3 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
 }
 ```
 
----
-
-### Per-Feature Config: `.claude/docs/{featurename}/stitch.json`
-
-Slim format. Does NOT contain `projectId`, `theme`, `deviceType`, `modelId`, or `stateScreenIds` — those live in the project-wide config.
-
-```json
-{
-  "featureName": "string — KMP feature name (lowercase)",
-  "blueprintConsumed": "boolean — false when ui-designer saves a new blueprint, true after implementation skill consumes it",
-  "screens": {
-    "{featurename}_screen": {
-      "description": "string — What the screen shows",
-      "approved": "boolean",
-      "approvedAt": "string — ISO date"
-    }
-  },
-  "verification": {
-    "verified": "boolean — Token-level verification completed",
-    "verifiedAt": "string — ISO date",
-    "auditReport": "string — Path to three-way audit report .md",
-    "xComponentsCompliant": "boolean",
-    "criticalIssues": "number",
-    "attempts": "number"
-  },
-  "updatedAt": "string — ISO date"
-}
-```

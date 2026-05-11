@@ -167,7 +167,7 @@ The earlier version of this skill always rendered the implemented screen headles
 
 If a human still wants a side-by-side, you can render screens manually:
 
-1. Read screen dimensions from `stitch.json` (`screens.{key}.dimensions`).
+1. Read screen dimensions from `stitch-project.json` (`features[{featurename}].dimensions`).
 2. Create a temporary `desktopTest` file at `feature/{name}/src/desktopTest/kotlin/{PKG_PATH}/{name}/verification/VerificationScreenshot.kt`:
    - Imports: `ImageComposeScene`, `Density`, `EncodedImageFormat` from Compose/Skia.
    - `@OptIn(ExperimentalComposeUiApi::class)`.

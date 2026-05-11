@@ -14,7 +14,7 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 ## Prerequisites
 
 - Feature implemented (build passes)
-- `stitch.json` exists at `.claude/docs/{featurename}/stitch.json`
+- `.claude/docs/_project/stitch-project.json` exists with a `features[{featurename}]` entry
 
 ## Workflow
 
@@ -28,13 +28,13 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 
 1. Parse feature name from `$ARGUMENTS` or ask the user.
 2. Verify files exist:
-   - `.claude/docs/{featurename}/stitch.json`
+   - `.claude/docs/_project/stitch-project.json` with `features[{featurename}]` entry
    - `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/`
 3. Verify build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`.
 
-Additionally read `.claude/docs/_project/stitch-project.json` if it exists.
-- This provides `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`).
-- If `stitch-project.json` is absent: fall back to reading `projectId` from the per-feature `stitch.json.projectId` (legacy mode — repos not yet migrated).
+Read `.claude/docs/_project/stitch-project.json` to load:
+- `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`)
+- Per-feature screen IDs (`features[featurename].successScreenId`, `.emptyScreenId`)
 
 If any prerequisite is missing, stop and inform the user.
 
@@ -52,12 +52,10 @@ If any prerequisite is missing, stop and inform the user.
    - **Download path** (only when the file is missing or empty):
 
      **For loading and failed states — screenId lookup:**
-     - Primary (new shared-project repos): use `stitch-project.json.sharedStateScreens.{state}.screenId` and `stitch-project.json.projectId`
-     - Fallback (legacy — repos not yet migrated to shared project): use `stitch.json.screens[key].stateScreenIds.{state}` and `stitch.json.projectId`
+     - Use `stitch-project.json.sharedStateScreens.{state}.screenId` and `stitch-project.json.projectId`
 
      **For success and empty states — screenId lookup:**
-     - Primary: use `stitch-project.json.features[featurename].successScreenId` (or `emptyScreenId`) and `stitch-project.json.projectId`
-     - Fallback (legacy): use `stitch.json.screens[key].screenId` and `stitch.json.projectId`
+     - Use `stitch-project.json.features[featurename].successScreenId` (or `emptyScreenId`) and `stitch-project.json.projectId`
 
      Call `mcp__stitch__get_screen` with all 3 required params.
      Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
@@ -282,21 +280,21 @@ This skill does not invoke `/modifying-kmp-feature` — the user controls the pi
 ## Step 9: Cleanup
 
 1. Preserve HTML and token inventories in `.claude/docs/{featurename}/designs/extracted/`.
-2. Update `stitch.json` (replace the existing `verification` object):
+2. Update `.claude/docs/_project/stitch-project.json` — set `features[{featurename}].verification` (replace if exists):
 
    ```json
    {
-     "verification": {
-       "verified": true,
-       "verifiedAt": "2026-05-02",
-       "auditReport": "designs/{featurename}_audit.md",
-       "extractedSources": "designs/extracted/",
-       "xComponentsCompliant": true,
-       "criticalIssues": 0,
-       "attempts": 1
-     }
+     "verified": true,
+     "verifiedAt": "2026-05-02",
+     "auditReport": "designs/{featurename}_audit.md",
+     "extractedSources": "designs/extracted/",
+     "xComponentsCompliant": true,
+     "criticalIssues": 0,
+     "attempts": 1
    }
    ```
+
+   Also update `stitch-project.json.updatedAt`.
 
 3. Show the completion report.
 

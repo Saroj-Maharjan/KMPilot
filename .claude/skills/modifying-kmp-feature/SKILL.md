@@ -37,7 +37,7 @@ If missing: Run `/audit-spec {featurename}` first
 Check for a Stitch design blueprint:
 
 1. **Check blueprint exists**: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-2. **Check stitch.json**: `.claude/docs/{featurename}/stitch.json` — read `blueprintConsumed` field
+2. **Check stitch-project.json**: `.claude/docs/_project/stitch-project.json` — read `features[featurename].blueprintConsumed`
 3. **Determine mode**:
 
 | Blueprint exists? | `blueprintConsumed` | Mode |
@@ -131,7 +131,7 @@ Version bump: Patch (X.Y.Z+1) for fixes, Minor (X.Y+1.0) for features
 
 **Design-aware branch**: Also:
 - Add UI Design section to spec referencing the blueprint and design screenshots
-- Set `"blueprintConsumed": true` in `.claude/docs/{featurename}/stitch.json`
+- Set `"blueprintConsumed": true` in `.claude/docs/_project/stitch-project.json` under `features[{featurename}]`
 
 ## Error Handling
 
@@ -146,4 +146,4 @@ Design system: Activate `/using-design-system`
 - [ ] Spec updated with approved changes
 - [ ] Changelog entry added
 - [ ] Version bumped
-- [ ] (Design-aware) blueprintConsumed set to true in stitch.json
+- [ ] (Design-aware) blueprintConsumed set to true in stitch-project.json

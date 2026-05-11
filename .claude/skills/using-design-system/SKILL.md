@@ -12,7 +12,7 @@ Use X-components from `:core:designsystem` instead of Material3 in feature modul
 
 ## Design-Aware Mode
 
-If a Stitch design blueprint exists (`.claude/docs/{featurename}/designs/{featurename}_blueprint.md` with `blueprintConsumed == false` in stitch.json), implementation skills auto-detect it and use the blueprint's component tree for UI implementation. This skill provides component mappings for existing code.
+If a Stitch design blueprint exists (`.claude/docs/{featurename}/designs/{featurename}_blueprint.md` with `blueprintConsumed == false` in `stitch-project.json.features[featurename]`), implementation skills auto-detect it and use the blueprint's component tree for UI implementation. This skill provides component mappings for existing code.
 
 ## Core Rule
 

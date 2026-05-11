@@ -33,7 +33,7 @@ See: @phases/phase-0-context.md
 Check for a Stitch design blueprint:
 
 1. **Check blueprint exists**: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-2. **Check stitch.json**: `.claude/docs/{featurename}/stitch.json` — read `blueprintConsumed` field
+2. **Check stitch-project.json**: `.claude/docs/_project/stitch-project.json` — read `features[featurename].blueprintConsumed`
 3. **Determine mode**:
 
 | Blueprint exists? | `blueprintConsumed` | Mode |
@@ -100,7 +100,7 @@ On build failure, load troubleshooting:
 - Build passing + ktlint formatted
 - Living spec: .claude/docs/{featurename}/spec.md
 - Ephemeral artifacts cleaned
-{Design-aware: "- blueprintConsumed set to true in stitch.json"}
+{Design-aware: "- blueprintConsumed set to true in stitch-project.json"}
 
 Next: navController.navigate({FeatureName}Route)
 ```

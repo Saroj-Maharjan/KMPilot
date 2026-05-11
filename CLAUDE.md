@@ -26,7 +26,7 @@ The skills contain workflows that handle exploration, planning, and implementati
 
 The design pipeline uses a **blueprint artifact contract** for decoupled skill coordination:
 
-1. `/ui-designer` designs screens in Stitch and produces a self-contained blueprint (sets `blueprintConsumed: false` in stitch.json)
+1. `/ui-designer` designs screens in Stitch and produces a self-contained blueprint (sets `blueprintConsumed: false` in `stitch-project.json`)
 2. `/creating-kmp-feature` or `/modifying-kmp-feature` auto-detect the blueprint and enter **design-aware mode** (sets `blueprintConsumed: true` after implementation)
 3. `/verify-ui` audits the implementation against the Stitch design (three-way token audit)
 

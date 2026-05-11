@@ -20,9 +20,9 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 Implementation skills (`/modifying-kmp-feature`, `/creating-kmp-feature`) auto-detect Stitch design blueprints:
 
 1. Check for `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-2. Check `blueprintConsumed == false` in `.claude/docs/{featurename}/stitch.json`
+2. Check `blueprintConsumed == false` in `.claude/docs/_project/stitch-project.json` under `features[featurename]`
 3. If both conditions met → **design-aware mode**: blueprint drives UI implementation (XTheme updates, component tree, post-implementation checklist)
-4. After implementation → set `blueprintConsumed: true` in stitch.json
+4. After implementation → set `blueprintConsumed: true` in `stitch-project.json.features[featurename]`
 
 `/using-design-system` auto-activates for UI work and does not need explicit invocation.
 

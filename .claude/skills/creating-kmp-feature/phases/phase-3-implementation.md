@@ -148,7 +148,7 @@ Invoke kmp-integration-agent with:
 If in **design-aware mode**, after all agents complete successfully:
 
 1. **Verify Post-Implementation Checklist** from the blueprint
-2. **Set `blueprintConsumed: true`** in `.claude/docs/{featurename}/stitch.json`
+2. **Set `blueprintConsumed: true`** in `.claude/docs/_project/stitch-project.json` under `features[{featurename}]`
 
 ---
 
@@ -210,5 +210,5 @@ After all agents complete:
 - Integration complete (4 points)
 - Build passing + ktlint formatted
 - spec.md generated
-- (Design-aware) blueprintConsumed set to true in stitch.json
+- (Design-aware) blueprintConsumed set to true in stitch-project.json
 - Ready to proceed to **Phase 4: Cleanup**

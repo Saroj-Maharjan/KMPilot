@@ -6,44 +6,6 @@
 
 ---
 
-## Migration Detection (Runs Before Init-1)
-
-Before starting Init-1, check for legacy per-feature Stitch projects:
-
-```bash
-Glob: .claude/docs/*/stitch.json
-```
-
-If any legacy per-feature `stitch.json` files exist, prompt the user:
-
-```
-This repo has per-feature Stitch projects from an older skill version:
-- {featurename} (projectId: {id})
-...
-
-The ui-designer skill now uses one shared Stitch project for the whole repo.
-
-Option A — Full migration (recommended):
-  Create a new shared project. Migrate screen registrations to the new config.
-  Old per-feature Stitch projects stay in your account (delete them manually).
-  Old screenshots, HTML, and blueprints are preserved in .claude/docs/.
-  Future /ui-designer runs use the new shared project.
-
-Option B — Start fresh:
-  Same as A. Old blueprintConsumed=true features won't get design-system
-  coverage on old screens — those are already implemented, no loss.
-
-Option C — Cancel:
-  Stop. No changes made.
-```
-
-- If **C**: stop immediately. No changes made.
-- If **A or B**: run Init-1 through Init-8, then for each legacy `stitch.json`:
-  - `blueprintConsumed: true` → write `features[featurename]` entry in `stitch-project.json` with old file paths, marked `"legacyProject": true, "legacyProjectId": "{old-projectId}"`.
-  - `blueprintConsumed: false` → warn: "{featurename} has an in-flight blueprint. Re-run /ui-designer {featurename} to regenerate its success screen in the new shared project."
-  - Slim each legacy `stitch.json` to the new per-feature format: remove `projectId`, `theme`, `deviceType`, `modelId`, `stateScreenIds` fields. Retain `featureName`, `blueprintConsumed`, `screens` (description, approved, approvedAt only), `updatedAt`.
-
----
 
 ## Init Checklist
 

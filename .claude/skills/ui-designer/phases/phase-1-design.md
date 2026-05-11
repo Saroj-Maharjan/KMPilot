@@ -20,7 +20,7 @@ Design Progress:
 - [ ] Step 1.7: Acquire HTML & Token Inventories (MANDATORY)
 - [ ] Step 1.8: Color Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.9: Generate Implementation Blueprint
-- [ ] Step 1.10: Update stitch.json
+- [ ] Step 1.10: Update stitch-project.json
 - [ ] Step 1.11: User final approval
 ```
 
@@ -99,7 +99,7 @@ This is the **only** color palette you can reference as "defined" in the Stitch 
 
 ### Model Selection
 
-Use the `modelId` resolved in Phase 0 (stored in stitch.json) for **all** Stitch generation calls in this phase.
+Use `modelId: GEMINI_3_FLASH` for **all** Stitch generation calls in this phase.
 
 ### Step 1.2b: Generate Screens
 
@@ -255,7 +255,7 @@ projectId: {projectId}
 selectedScreenIds: [{screenId of variant to edit}]
 prompt: {user's edit request}
 deviceType: MOBILE
-modelId: {from stitch.json}
+modelId: GEMINI_3_FLASH
 ```
 3. Follow the **After Any Stitch Operation** procedure above.
 
@@ -269,7 +269,7 @@ projectId: {projectId}
 selectedScreenIds: [{screenId}]
 prompt: "Generate variants of the {screen description} design with different {user-specified aspects or 'layout and color'}"
 deviceType: MOBILE
-modelId: {from stitch.json}
+modelId: GEMINI_3_FLASH
 variantOptions:
   variantCount: 3
   creativeRange: "EXPLORE"
@@ -550,25 +550,9 @@ This step parses the Stitch HTML export (already downloaded in Step 1.7) into a 
 
 ---
 
-## Step 1.10: Update stitch.json and stitch-project.json
+## Step 1.10: Update stitch-project.json
 
-Update **both** config files after design approval.
-
-### 1. Per-Feature stitch.json (slim format)
-
-Update `.claude/docs/{featurename}/stitch.json`:
-
-- `screens[{featurename}_screen]`:
-  - `description`: what the screen shows
-  - `approved`: `true`
-  - `approvedAt`: current ISO date
-- **Set `"blueprintConsumed": false`** at the top level — this signals to implementation skills that a new blueprint is available.
-- Update `updatedAt`.
-- Do **NOT** write `stateScreenIds`, `projectId`, `theme`, `deviceType`, or `modelId` — those are no longer in the per-feature format.
-
-### 2. Project-Wide stitch-project.json
-
-Update `.claude/docs/_project/stitch-project.json`:
+Update `.claude/docs/_project/stitch-project.json` after design approval:
 
 - `features[{featurename}]`:
   - `successScreenId`: captured in Step 1.5
@@ -579,6 +563,7 @@ Update `.claude/docs/_project/stitch-project.json`:
   - `dimensions`: width/height from Step 1.7
   - `designFile`: `"designs/{featurename}.md"`
   - `blueprintFile`: `"designs/{featurename}_blueprint.md"`
+  - **`"blueprintConsumed": false`** — signals to implementation skills that a new blueprint is available
   - `approved`: `true`
   - `approvedAt`: current ISO date
   - `updatedAt`: current ISO timestamp
@@ -606,8 +591,7 @@ Design System ID: {designSystemAssetId}
 Design spec: designs/{featurename}.md
 Blueprint: designs/{featurename}_blueprint.md
 Project config: .claude/docs/_project/stitch-project.json
-Feature config: .claude/docs/{featurename}/stitch.json
-blueprintConsumed: false
+blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 ```
 
 Show completion report from SKILL.md and stop. The user controls the next step — they can invoke an implementation skill if they want to proceed with code.
@@ -624,7 +608,7 @@ After Phase 1 completes:
 - Design description: `.claude/docs/{featurename}/designs/{featurename}.md`
 - Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
 - Persisted HTML + token inventories: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`)
-- stitch.json updated with approved screen, all state screenshots, and `blueprintConsumed: false`
+- stitch-project.json updated with approved screen, all state screenshots, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received
 
