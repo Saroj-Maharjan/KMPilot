@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Send Assets | KMPilot Gold</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0F0D09;
+            color: #EDE8D5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(245, 215, 110, 0.15);
+        }
+        .glass-surface {
+            background: linear-gradient(135deg, rgba(28, 25, 16, 0.8) 0%, rgba(28, 25, 16, 1) 100%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F0D09',
+                        surface: '#1C1910',
+                        'surface-variant': '#302B1C',
+                        'on-surface': '#EDE8D5',
+                        'on-surface-variant': '#C4BA94',
+                        outline: '#726A48',
+                        'outline-variant': '#3F3822',
+                        primary: '#F5D76E',
+                        'on-primary': '#2C1900',
+                        'primary-container': '#4A3200',
+                        'on-primary-container': '#FFF0C0',
+                        error: '#FFB4AB',
+                        'on-error': '#690005',
+                        success: '#4ADE80',
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif'],
+                        label: ['Manrope', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'DEFAULT': '0.5rem',
+                        'lg': '1rem',
+                        'xl': '1.5rem',
+                        '2xl': '2rem',
+                        'full': '9999px',
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="flex items-center w-full px-4 h-16 bg-transparent fixed top-0 z-50">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/20 transition-colors duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="ml-2 text-headline-sm font-headline tracking-tight text-on-surface font-bold">Send</h1>
+<div class="ml-auto w-10 h-10"></div> <!-- Spacer for balance -->
+</header>
+<main class="flex-1 w-full max-w-lg mx-auto px-6 pt-24 pb-32">
+<!-- Hero Amount Section -->
+<section class="flex flex-col items-center mb-10">
+<div class="flex items-baseline gap-2 mb-2">
+<span class="text-[64px] font-extrabold tracking-tighter text-on-surface leading-none">0.00</span>
+<div class="bg-surface-variant px-3 py-1 rounded-full flex items-center gap-1.5 border border-outline-variant">
+<span class="text-xs font-bold text-primary tracking-widest">BTC</span>
+</div>
+</div>
+<!-- Animated Cursor Underline -->
+<div class="w-32 h-[1px] bg-primary mb-4 shadow-[0_0_8px_rgba(245,215,110,0.5)]"></div>
+<p class="text-on-surface-variant font-medium text-sm mb-6">
+                Balance 1.24 BTC · <span class="text-on-surface">$78,420</span>
+</p>
+<!-- Quick Chips -->
+<div class="flex gap-3">
+<button class="px-5 py-2 rounded-lg bg-surface-variant text-primary text-xs font-bold border border-outline-variant hover:border-primary transition-all active:scale-95">25%</button>
+<button class="px-5 py-2 rounded-lg bg-surface-variant text-primary text-xs font-bold border border-outline-variant hover:border-primary transition-all active:scale-95">50%</button>
+<button class="px-5 py-2 rounded-lg bg-surface-variant text-primary text-xs font-bold border border-outline-variant hover:border-primary transition-all active:scale-95 uppercase">MAX</button>
+</div>
+</section>
+<!-- Recipient Card -->
+<div class="bg-surface border border-outline-variant rounded-xl p-5 mb-5 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<label class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">To Recipient</label>
+<div class="flex items-center gap-4">
+<input class="bg-transparent border-none p-0 flex-1 text-on-surface placeholder:text-on-surface-variant/50 italic focus:ring-0 text-md" placeholder="Wallet address or ENS name" type="text"/>
+<div class="flex items-center gap-3">
+<button class="text-primary hover:opacity-80">
+<span class="material-symbols-outlined" data-icon="content_paste">content_paste</span>
+</button>
+<button class="text-primary hover:opacity-80">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner">qr_code_scanner</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Asset & Network Row -->
+<div class="grid grid-cols-2 gap-4 mb-8">
+<!-- Asset Card -->
+<div class="bg-surface border border-outline-variant rounded-xl p-4 hover:border-outline transition-colors cursor-pointer group">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Asset</span>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-[#F7931A] flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="currency_bitcoin" data-weight="fill">currency_bitcoin</span>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-bold truncate">Bitcoin</p>
+<p class="text-[10px] text-on-surface-variant">BTC</p>
+</div>
+<span class="material-symbols-outlined text-primary text-sm group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Network Card -->
+<div class="bg-surface border border-outline-variant rounded-xl p-4 hover:border-outline transition-colors cursor-pointer group">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Network</span>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="public">public</span>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-bold truncate">Bitcoin</p>
+<p class="text-[10px] text-on-surface-variant">ERC-20</p>
+</div>
+<span class="material-symbols-outlined text-primary text-sm group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Transaction Summary -->
+<div class="bg-surface-variant border border-primary/30 rounded-xl p-5 mb-8">
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Network Fee</span>
+<span class="text-sm font-medium">~$7.54</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Total Deduct</span>
+<span class="text-sm font-bold text-on-surface">0.00 BTC</span>
+</div>
+<div class="pt-3 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Estimated Arrival</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-success text-sm" data-icon="bolt" data-weight="fill">bolt</span>
+<span class="text-sm font-bold text-success text-on-surface">Fast · ~10 min</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Security Badge -->
+<div class="flex items-center justify-center gap-2 opacity-50 mb-4">
+<span class="material-symbols-outlined text-xs" data-icon="verified_user">verified_user</span>
+<span class="text-[10px] uppercase font-bold tracking-[0.2em]">Secured by KMPilot Vault</span>
+</div>
+</main>
+<!-- Sticky Footer -->
+<footer class="fixed bottom-0 left-0 w-full p-6 bg-background/80 backdrop-blur-md z-50">
+<button class="w-full h-14 bg-primary text-on-primary font-bold text-md rounded-xl gold-glow hover:opacity-90 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2">
+<span>Send Bitcoin</span>
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+<!-- Attribution -->
+</footer>
+<!-- Background Decorative Element -->
+<div class="fixed top-0 right-0 -z-10 w-[300px] h-[300px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-primary/5 blur-[150px] rounded-full pointer-events-none"></div>
+</body></html>

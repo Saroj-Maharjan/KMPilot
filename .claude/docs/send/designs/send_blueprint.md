@@ -1,8 +1,8 @@
 # Compose Implementation Blueprint: Send
 
-> Decomposed layout — >3 visual sections (Recipient, Amount, Asset, Network, Summary, Button).
-> Source: Stitch HTML exports for success (6670B), loading (78 lines), failed (85 lines).
-> Screen dimensions: success 780×1874px, loading 780×1768px, failed 780×1768px.
+> **Decomposed** — 6 distinct visual sections. Screen dimensions: 800×1774px (success), 780×1768px (loading/failed, shared).
+> Token inventory: `.claude/docs/send/designs/extracted/tokens_success.md`
+> HTML source: `.claude/docs/send/designs/extracted/stitch_success.html`
 
 ---
 
@@ -10,28 +10,17 @@
 
 | Hex | M3 Role | Usage |
 |-----|---------|-------|
-| #0D0919 | background | Screen bg, app bar, bottom gradient |
-| #181228 | surface | Transaction summary card |
-| #9D70FF | primary | CTA buttons, paste icon, coin ticker label, quick-% tint |
-| #1A0054 | onPrimary | CTA button text |
-| #E9E0FF | onSurface | Amount value, coin/network names, fee values |
-| #C5BCE0 | onSurfaceVariant | Section labels, muted subtitles, expand icons |
-| #231A38 | surfaceVariant | Input fill, asset selector fill |
-| #4A3F6B | outline | Input + selector 1dp borders |
-| #FFB4AB | error | Failed state error icon |
-| #4ADE80 | XTheme.Colors.Success | "Fast" arrival indicator |
-| #EAB308 | inline Color(0xFFEAB308) | Bitcoin coin icon tint (brand color) |
-
-### Tailwind Config (per-state, verified identical across all 3 HTML files)
-
-```
-borderRadius:
-  DEFAULT (rounded):  0.5rem = 8dp
-  lg (rounded-lg):    1rem   = 16dp
-  xl (rounded-xl):    1.5rem = 24dp
-  full (rounded-full): 9999px = CircleShape
-font: Manrope
-```
+| #0F0D09 | background | Screen canvas, footer bg (80% opacity), decorative ambient glows |
+| #1C1910 | surface | Recipient card, Asset card, Network card background |
+| #302B1C | surfaceVariant | Quick chip fill, network icon bg, transaction summary card bg |
+| #EDE8D5 | onSurface | Hero amount, coin names, summary values, input text |
+| #C4BA94 | onSurfaceVariant | Balance label, section labels, placeholder (50%), coin subtitles, summary labels |
+| #3F3822 | outlineVariant | All card borders, chip borders, summary divider |
+| #726A48 | outline | Hover-state borders only (not static) |
+| #F5D76E | primary | Back arrow, BTC pill text, cursor line, chip text, icon buttons, chevrons, left accent bar, summary border (30% alpha), CTA fill |
+| #2C1900 | onPrimary | CTA button text |
+| #4ADE80 | XTheme.Colors.Success | Estimated Arrival value + bolt icon |
+| #F7931A | XTheme.Colors.Bitcoin (add to XTheme.kt) | Bitcoin coin icon background |
 
 ---
 
@@ -39,21 +28,22 @@ font: Manrope
 
 | Usage | Size (sp) | Weight | Letter Spacing | Notes |
 |-------|-----------|--------|----------------|-------|
-| App bar title | 20 | Bold | -0.5sp | text-xl tracking-tight (-0.025em × 20) |
-| Section labels | 14 | Medium | 0 | text-sm font-medium |
-| Summary section header | 12 | Bold | 0.6sp | text-xs tracking-wider (0.05em × 12), uppercase |
-| Amount value | 40 | Bold | 0 | text-[40px] |
-| Coin ticker (beside amount) | 20 | SemiBold | 0 | text-xl font-semibold |
-| Balance / muted text | 14 | Normal | 0 | text-sm |
-| Coin/network primary name | 16 | Bold | 0 | font-bold (no text class = text-base = 16sp) |
-| Coin/network subtitle | 12 | Normal | 0 | text-xs |
-| Quick % button labels | 12 | Bold | 0 | text-xs font-bold |
-| Fee row labels/values | 14 | Normal | 0 | text-sm |
-| Total row value | 14 | SemiBold | 0 | text-sm font-semibold |
-| Arrival label/value | 12 | Normal | 0 | text-xs |
-| Error heading | 24 | Bold | 0 | text-2xl (failed state) |
-| Error subtitle | 16 | Normal | 1.625 line-height | text-base leading-relaxed (failed state) |
-| Button labels | 16 | Bold | 0 | font-bold, no text class = 16sp |
+| App bar title | headline-sm (forced by XTopAppBar) | SemiBold (forced) | -0.025em | XTopAppBar overrides to headlineSmall SemiBold |
+| Hero amount "0.00" | 64 | ExtraBold 800 | -0.05em (tracking-tighter) | `FontWeight.ExtraBold` |
+| BTC pill | 12 | Bold 700 | 0.1em (tracking-widest) | uppercase |
+| Balance text (label) | 14 | Medium 500 | 0 | |
+| Balance dollar value | 14 | Medium 500 | 0 | onSurface inline |
+| Quick chips | 12 | Bold 700 | 0 | MAX is uppercase |
+| Card section labels | 10 | Bold 700 | 0.1em (tracking-widest) | uppercase |
+| Input placeholder | 14 | Normal 400 | 0 | italic |
+| Coin name | 14 | Bold 700 | 0 | |
+| Coin subtitle (BTC / ERC-20) | 10 | Normal 400 | 0 | onSurfaceVariant |
+| Summary label | 14 | Normal 400 | 0 | onSurfaceVariant |
+| Summary value (Fee) | 14 | Medium 500 | 0 | onSurface (implied) |
+| Summary value (Total Deduct) | 14 | Bold 700 | 0 | onSurface |
+| Estimated Arrival value | 14 | Bold 700 | 0 | XTheme.Colors.Success |
+| Security badge | 10 | Bold 700 | 0.2em | uppercase |
+| CTA button | ~16 (text-md) | Bold 700 | 0 | |
 
 ---
 
@@ -61,44 +51,32 @@ font: Manrope
 
 | Context | Property | Value (dp) |
 |---------|----------|------------|
-| App bar | horizontal padding | 16 (px-4) |
-| App bar | vertical padding | 16 (py-4) |
-| Main column | horizontal padding | 16 (px-4) |
-| Main column | bottom padding | 128 (pb-32, absorbed by XScaffold paddingValues) |
-| Recipient section | top spacing | 16 (mt-4) |
-| Input field | vertical padding | 16 (py-4) |
-| Input field | leading padding | 16 (pl-4) |
-| Input field | trailing padding | 48 (pr-12, room for paste icon) |
-| Label → input | bottom gap | 8 (mb-2 on label) |
-| Amount section | top spacing | 32 (mt-8) |
-| Amount value + ticker | gap | 8 (gap-2) |
-| Amount → balance | top spacing | 8 (mt-2) |
-| Balance → % buttons | top spacing | 16 (mt-4) |
-| % buttons | gap | 8 (gap-2) |
-| % button | horizontal padding | 16 (px-4) |
-| % button | vertical padding | 6 (py-1.5) |
-| Asset selectors section | top spacing | 40 (mt-10) |
-| Asset selectors | vertical gap | 16 (space-y-4) |
-| Asset selector row | all-sides padding | 16 (p-4) |
-| Coin icon | size | 40×40 (w-10 h-10) |
-| Coin icon → text | gap | 12 (gap-3) |
-| Summary card | top spacing | 32 (mt-8) |
-| Summary card | all-sides padding | 16 (p-4) |
-| Summary header | bottom spacing | 16 (mb-4) |
-| Summary rows | vertical gap | 12 (space-y-3) |
-| Divider → arrival row | top spacing | 4+12=16 (mt-1 + pt-3) |
-| Arrival icon → text | gap | 4 (gap-1) |
-| Bottom button area | all-sides padding | 24 (p-6) |
-| Button (Send/Retry) | vertical padding | 16 (py-4) |
-| Home indicator spacer | height | 16 (h-4) |
-| Failed main | horizontal padding | 24 (px-6, differs from success 16dp) |
-| Error icon container | bottom spacing | 32 (mb-8) |
-| Error icon container | all-sides padding | 24 (p-6) |
-| Error icon | size | 80 |
-| Error heading | bottom spacing | 16 (mb-4) |
-| Error heading | horizontal padding | 16 (px-4) |
-| Error subtitle | max width | 280 |
-| Loading spinner | size | 48×48 (h-12 w-12) |
+| Screen | horizontal padding (main) | 24 |
+| Screen | top padding (app bar clearance) | 96 |
+| Screen | bottom padding (footer clearance) | 128 |
+| Hero section | bottom margin | 40 |
+| Amount row | bottom margin | 8 |
+| Cursor underline | bottom margin | 16 |
+| Balance text | bottom margin | 24 |
+| Quick chips | gap | 12 |
+| Recipient card | bottom margin | 20 |
+| Recipient card | padding | 20 all sides |
+| Recipient label | bottom margin | 12 |
+| Recipient input row | gap between input and icons | 16 |
+| Recipient icon buttons | gap | 12 |
+| Selector grid | gap | 16 |
+| Selector grid | bottom margin | 32 |
+| Asset/Network card | padding | 16 all sides |
+| Summary card | padding | 20 all sides |
+| Summary card | bottom margin | 32 |
+| Summary rows | vertical spacing | 16 (space-y-4) |
+| Estimated Arrival row | top padding + top border | 12dp top padding |
+| Estimated Arrival icon+text | gap | 6 |
+| Security badge | gap between icon and text | 8 |
+| Security badge | bottom margin | 16 |
+| Footer | padding all sides | 24 |
+| BTC pill | horizontal padding | 12, vertical padding: 4 |
+| Chip | horizontal padding | 20, vertical padding: 8 |
 
 ---
 
@@ -109,156 +87,602 @@ font: Manrope
 ```
 // → SendScreen.kt
 XScaffold(
-  topBar = XTopAppBar(
-    title = "Send",
-    navigationIcon = XIconButton(
-      icon = Icons.Default.ArrowBack,
-      onClick = onBackClick,
-      modifier = Modifier.padding(8.dp),  // p-2
-      shape = CircleShape                 // rounded-full
-    ),
-    actions = [
-      XIconButton(
-        icon = Icons.Default.QrCodeScanner,
-        onClick = onQrScanClick,          // hidden (opacity-0) in loading state
-        modifier = Modifier.padding(8.dp)
-      )
-    ],
-    colors = TopAppBarDefaults.topAppBarColors(
-      containerColor = MaterialTheme.colorScheme.background
-    )
-  ),
-  bottomBar = [state-specific bottom bar slot],
-  containerColor = MaterialTheme.colorScheme.background
+    containerColor = MaterialTheme.colorScheme.background,
+    topBar = {
+        XTopAppBar(
+            backgroundColor = Color.Transparent,         // transparent — no surface bg
+            title = "Send",
+            navigationIcon = {
+                XIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    colors = XIconButtonDefaults.iconButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary   // gold back arrow
+                    ),
+                    onClick = onBackClick
+                )
+            }
+        )
+    }
 ) { paddingValues ->
-  [state-specific content slot]
+    // [state-specific content slot]
 }
 ```
+
+**XTopAppBar notes**:
+- Title is always center-aligned (XTopAppBar uses CenterAlignedTopAppBar) — design appears left-aligned due to `ml-2` but XTopAppBar cannot replicate this exactly. This is a known catalog limitation; accept center-aligned title.
+- Title style is forced to `headlineSmall SemiBold` by XTopAppBar internals.
 
 ---
 
 ### Success State
 
-#### Bottom Bar
-
 ```
+// → SendScreen.kt (state routing + LazyColumn scaffold)
+Column(
+    modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState())
+        .padding(paddingValues)
+        .padding(horizontal = 24.dp, top = 8.dp, bottom = 128.dp)  // 96dp top = paddingValues handles ~88dp status bar; use 8dp extra
+) {
+    HeroAmountSection()        // → components/HeroAmountSection.kt
+    Spacer(40.dp)
+    RecipientCard(...)         // → components/RecipientCard.kt
+    Spacer(20.dp)
+    AssetNetworkGrid(...)      // → components/AssetNetworkGrid.kt
+    Spacer(32.dp)
+    TransactionSummaryCard(...)// → components/TransactionSummaryCard.kt
+    Spacer(32.dp)
+    SecurityBadge()            // inline in SendScreen.kt (structural glue)
+}
+
+// Sticky footer — XScaffold bottomBar slot:
 // → SendScreen.kt
 Box(
-  modifier = Modifier
-    .fillMaxWidth()
-    .background(
-      brush = Brush.verticalGradient(
-        colors = listOf(
-          Color.Transparent,
-          MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-          MaterialTheme.colorScheme.background
+    modifier = Modifier
+        .fillMaxWidth()
+        .background(
+            Brush.verticalGradient(
+                colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = 0.8f)),
+            )
         )
-      )
-    )
-    .padding(24.dp)                       // p-6
+        .padding(24.dp)
 ) {
-  Column {
     XButton(
-      text = "Send Bitcoin",
-      onClick = onSendClick,
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(24.dp),  // rounded-xl = 24dp
-      colors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-      ),
-      elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
-      // [omitted: shadow-primary/20 — decorative color shadow, use default elevation shadow]
-      // [omitted: hover:scale-[0.98] active:scale-95 — no Compose equivalent]
-      contentPadding = PaddingValues(vertical = 16.dp)
+        text = "Send Bitcoin",
+        leadingIcon = Icons.AutoMirrored.Filled.Send,    // "send" material icon
+        onClick = onSendClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .shadow(elevation = 0.dp, shape = RoundedCornerShape(24.dp))
+            .drawBehind {
+                // gold-glow: box-shadow 0 0 20px rgba(245,215,110,0.15)
+                // [decorative glow — implement via drawBehind Canvas if desired, omit if not critical]
+            },
+        shape = RoundedCornerShape(24.dp),              // OVERRIDE: XButton default is CircleShape
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     )
-    Spacer(modifier = Modifier.height(16.dp))  // h-4 home indicator
-  }
 }
 ```
 
-#### Content
+---
 
-```
-// → SendScreen.kt (orchestrator — sequences all sections)
-Column(
-  modifier = Modifier
-    .fillMaxSize()
-    .padding(paddingValues)
-    .verticalScroll(rememberScrollState())
-    .padding(horizontal = 16.dp)         // px-4 on main
+### components/HeroAmountSection.kt
+
+```kotlin
+// → components/HeroAmountSection.kt
+@Composable
+fun HeroAmountSection(
+    amount: String,
+    coinSymbol: String,
+    balanceBtc: String,
+    balanceUsd: String,
+    onQuickAmountClick: (String) -> Unit
 ) {
-  Spacer(modifier = Modifier.height(16.dp))          // mt-4
-  RecipientAddressInput(                             // → components/RecipientAddressInput.kt
-    value = uiState.recipientAddress,
-    onValueChange = onAddressChange,
-    onPasteClick = onPasteClick
-  )
-  Spacer(modifier = Modifier.height(32.dp))          // mt-8
-  AmountInput(                                       // → components/AmountInput.kt
-    amount = uiState.amount,
-    coinSymbol = uiState.selectedCoin.symbol,
-    balance = uiState.availableBalance,
-    onPercentClick = onPercentClick,
-    onMaxClick = onMaxClick
-  )
-  Spacer(modifier = Modifier.height(40.dp))          // mt-10
-  Column(
-    verticalArrangement = Arrangement.spacedBy(16.dp) // space-y-4
-  ) {
-    AssetSelectorRow(                                // → components/AssetSelectorRow.kt
-      label = "Asset",
-      iconVector = Icons.Default.CurrencyBitcoin,
-      iconTint = Color(0xFFEAB308),                  // yellow-500 — BTC brand color
-      iconBackground = Color(0xFFEAB308).copy(alpha = 0.2f),
-      name = uiState.selectedCoin.name,
-      subtitle = uiState.selectedCoin.symbol,
-      onClick = onCoinSelectClick
-    )
-    AssetSelectorRow(                                // → components/AssetSelectorRow.kt
-      label = "Network",
-      iconVector = Icons.Default.Lan,
-      iconTint = MaterialTheme.colorScheme.primary,
-      iconBackground = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-      name = uiState.selectedNetwork.name,
-      subtitle = uiState.selectedNetwork.description,
-      onClick = onNetworkSelectClick
-    )
-  }
-  Spacer(modifier = Modifier.height(32.dp))          // mt-8
-  TransactionSummaryCard(                            // → components/TransactionSummaryCard.kt
-    networkFee = uiState.networkFee,
-    totalDeduct = uiState.totalDeduct,
-    estimatedArrival = uiState.estimatedArrival
-  )
-  Spacer(modifier = Modifier.height(24.dp))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = CenterHorizontally
+    ) {
+        // Amount + BTC pill
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            XText(
+                text = amount,         // "0.00"
+                style = TextStyle(
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.05 * 64).sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 64.sp   // leading-none
+                )
+            )
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                XText(
+                    text = coinSymbol,   // "BTC"
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (0.1 * 12).sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        }
+
+        Spacer(16.dp)
+
+        // Gold cursor underline (128dp wide, 1px tall, primary color with glow)
+        Box(
+            modifier = Modifier
+                .width(128.dp)
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.primary)
+                // [gold glow: shadow-[0_0_8px_rgba(245,215,110,0.5)] — use drawBehind if desired]
+        )
+
+        Spacer(16.dp)
+
+        // Balance row: "Balance 1.24 BTC · $78,420"
+        Row {
+            XText(
+                text = "Balance $balanceBtc · ",
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+            XText(
+                text = "$${balanceUsd}",
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+
+        Spacer(24.dp)
+
+        // Quick chips row: 25% / 50% / MAX
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            listOf("25%", "50%", "MAX").forEach { label ->
+                QuickChip(label = label, onClick = { onQuickAmountClick(label) })
+            }
+        }
+    }
 }
+
+// Private helper — stays in HeroAmountSection.kt
+@Composable
+private fun QuickChip(label: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        XText(
+            text = label,
+            style = TextStyle(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        )
+    }
+}
+```
+
+> **Note**: `XFilterChip` defaults (CircleShape, surface bg, onSurfaceVariant text) diverge from design. Use custom `Box` composable for chips — avoids excessive param overrides.
+
+---
+
+### components/RecipientCard.kt
+
+```kotlin
+// → components/RecipientCard.kt
+@Composable
+fun RecipientCard(
+    address: String,
+    onAddressChange: (String) -> Unit,
+    onPasteClick: () -> Unit,
+    onQrClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+            .padding(20.dp)
+    ) {
+        // Gold left accent bar (absolute-positioned, 4dp wide, full height)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = (-20).dp)    // overlap with card edge
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.primary)
+                .clip(RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp))
+        )
+        // NOTE: The gold accent bar is absolute-positioned on the left edge of the card.
+        // Implement as a Box overlay inside a Box with clip + overflow-hidden.
+
+        Column {
+            XText(
+                text = "TO RECIPIENT",
+                style = TextStyle(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = (0.1 * 10).sp
+                ),
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                BasicTextField(
+                    value = address,
+                    onValueChange = onAddressChange,
+                    modifier = Modifier.weight(1f),
+                    textStyle = TextStyle(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp,
+                        fontStyle = FontStyle.Italic
+                    ),
+                    decorationBox = { innerTextField ->
+                        if (address.isEmpty()) {
+                            XText(
+                                text = "Wallet address or ENS name",
+                                style = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    fontSize = 14.sp,
+                                    fontStyle = FontStyle.Italic
+                                )
+                            )
+                        }
+                        innerTextField()
+                    }
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    XIconButton(
+                        icon = Icons.Default.ContentPaste,
+                        onClick = onPasteClick,
+                        colors = XIconButtonDefaults.iconButtonColors(
+                            containerColor = Color.Transparent,   // REQUIRED: avoid surface circle default
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    XIconButton(
+                        icon = Icons.Default.QrCodeScanner,
+                        onClick = onQrClick,
+                        colors = XIconButtonDefaults.iconButtonColors(
+                            containerColor = Color.Transparent,   // REQUIRED
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
+> **XIconButton override**: Must pass `containerColor = Color.Transparent` — default renders a visible `surface`-colored circle.
+
+---
+
+### components/AssetNetworkGrid.kt
+
+```kotlin
+// → components/AssetNetworkGrid.kt
+@Composable
+fun AssetNetworkGrid(
+    coinName: String,
+    coinSymbol: String,
+    networkName: String,
+    networkSubtitle: String,
+    onAssetClick: () -> Unit,
+    onNetworkClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        AssetSelectorCard(
+            label = "ASSET",
+            iconContent = {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(XTheme.Colors.Bitcoin, CircleShape),  // #F7931A
+                    contentAlignment = Alignment.Center
+                ) {
+                    XIcon(
+                        icon = Icons.Default.CurrencyBitcoin,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            },
+            primaryText = coinName,
+            secondaryText = coinSymbol,
+            onClick = onAssetClick,
+            modifier = Modifier.weight(1f)
+        )
+        AssetSelectorCard(
+            label = "NETWORK",
+            iconContent = {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    XIcon(
+                        icon = Icons.Default.Public,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            },
+            primaryText = networkName,
+            secondaryText = networkSubtitle,
+            onClick = onNetworkClick,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+// Private helper — stays in AssetNetworkGrid.kt
+@Composable
+private fun AssetSelectorCard(
+    label: String,
+    iconContent: @Composable () -> Unit,
+    primaryText: String,
+    secondaryText: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        XText(
+            text = label,
+            style = TextStyle(
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (0.1 * 10).sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            iconContent()
+            Column(modifier = Modifier.weight(1f)) {
+                XText(
+                    text = primaryText,
+                    style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                XText(
+                    text = secondaryText,
+                    style = TextStyle(
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            }
+            XIcon(
+                icon = Icons.Default.ChevronRight,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+```
+
+> **XTheme.Colors.Bitcoin**: Must add `val Bitcoin = Color(0xFFF7931A)` to `XTheme.Colors` in `XTheme.kt` before implementation.
+
+---
+
+### components/TransactionSummaryCard.kt
+
+```kotlin
+// → components/TransactionSummaryCard.kt
+@Composable
+fun TransactionSummaryCard(
+    networkFee: String,
+    totalDeduct: String,
+    estimatedArrival: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp))
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),  // border-primary/30
+                RoundedCornerShape(24.dp)
+            )
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)   // space-y-4
+    ) {
+        // Row 1: Network Fee
+        SummaryRow(
+            label = "Network Fee",
+            value = networkFee,           // "~$7.54"
+            valueStyle = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        )
+        // Row 2: Total Deduct
+        SummaryRow(
+            label = "Total Deduct",
+            value = totalDeduct,          // "0.00 BTC"
+            valueStyle = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        )
+        // Row 3: Estimated Arrival (with top border — partial divider)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBehind {
+                    // border-t border-outline-variant/30 — top border only
+                    drawLine(
+                        color = Color(0xFF3F3822).copy(alpha = 0.3f),
+                        start = Offset(0f, 0f),
+                        end = Offset(size.width, 0f),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+                .padding(top = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                XText(
+                    text = "Estimated Arrival",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    XIcon(
+                        icon = Icons.Default.Bolt,
+                        tint = XTheme.Colors.Success,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    XText(
+                        text = estimatedArrival,    // "Fast · ~10 min"
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = XTheme.Colors.Success
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Private helper
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    valueStyle: TextStyle
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        XText(
+            text = label,
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+        XText(text = value, style = valueStyle)
+    }
+}
+```
+
+---
+
+### SecurityBadge (inline in SendScreen.kt)
+
+```kotlin
+// → inline in SendScreen.kt (structural glue, too simple for own file)
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .alpha(0.5f),
+    horizontalArrangement = Arrangement.Center,
+    verticalAlignment = Alignment.CenterVertically
+) {
+    XIcon(
+        icon = Icons.Default.VerifiedUser,
+        modifier = Modifier.size(12.dp),
+        tint = LocalContentColor.current
+    )
+    Spacer(8.dp)
+    XText(
+        text = "SECURED BY KMPILOT VAULT",
+        style = TextStyle(
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (0.2 * 10).sp
+        )
+    )
+}
+```
+
+---
+
+### Decorative Ambient Glows (optional)
+
+```kotlin
+// The HTML has two fixed radial blur glow overlays at top-right and bottom-left corners.
+// These use `bg-primary/5` (primary at 5% opacity) with massive blur (120-150px).
+// In Compose: Box(Modifier.fillMaxSize()) with two Box overlays using drawBehind + BlurMaskFilter.
+// [decorative — implement only if visual fidelity is critical; omit for initial implementation]
 ```
 
 ---
 
 ### Loading State
 
-#### Bottom Bar
-```
-// → SendScreen.kt
-// No bottom bar in loading state — pass null or empty Box
-```
+Shared screen — see: `.claude/docs/_shared/designs/loading.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_loading.md`
 
-#### Content
 ```
-// → SendScreen.kt
-Box(
-  modifier = Modifier
-    .fillMaxSize()
-    .padding(paddingValues),
-  contentAlignment = Alignment.Center
-) {
-  XCircularProgressIndicator(
-    modifier = Modifier.size(48.dp),     // h-12 w-12 = 48dp
-    color = MaterialTheme.colorScheme.primary
-    // opacity-25 on track: XCircularProgressIndicator handles track opacity internally
-  )
+Box(Modifier.fillMaxSize(), contentAlignment = Center) {
+    XCircularProgressIndicator()
 }
 ```
 
@@ -266,466 +690,18 @@ Box(
 
 ### Failed State
 
-#### Bottom Bar
-```
-// → SendScreen.kt
-// Same gradient Box as Success state, different button label and action
-Box(
-  modifier = Modifier
-    .fillMaxWidth()
-    .background(
-      brush = Brush.verticalGradient(
-        colors = listOf(
-          Color.Transparent,
-          MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-          MaterialTheme.colorScheme.background
-        )
-      )
-    )
-    .padding(24.dp)
-) {
-  Column {
-    XButton(
-      text = "Retry",
-      onClick = onRetryClick,
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(24.dp),
-      colors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-      ),
-      elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
-      contentPadding = PaddingValues(vertical = 16.dp)
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-  }
-}
-```
-
-#### Content
-```
-// → SendScreen.kt
-// NOTE: failed state uses px-6 = 24dp horizontal padding (NOT 16dp like success)
-Column(
-  modifier = Modifier
-    .fillMaxSize()
-    .padding(paddingValues)
-    .padding(horizontal = 24.dp),        // px-6 (different from success px-4)
-  horizontalAlignment = Alignment.CenterHorizontally,
-  verticalArrangement = Arrangement.Center
-) {
-  Box(
-    modifier = Modifier
-      .padding(bottom = 32.dp)           // mb-8
-      .background(
-        color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),  // bg-error-soft/10
-        shape = CircleShape
-      )
-      .padding(24.dp),                   // p-6
-    contentAlignment = Alignment.Center
-  ) {
-    XIcon(
-      imageVector = Icons.Default.ErrorOutline,  // material-symbols error, FILL=0, wght=300
-      contentDescription = "Error",
-      modifier = Modifier.size(80.dp),   // text-[80px]
-      tint = MaterialTheme.colorScheme.error
-    )
-  }
-  XText(
-    text = "Transaction Failed",
-    style = TextStyle(
-      fontSize = 24.sp,                  // text-2xl
-      fontWeight = FontWeight.Bold,
-      color = MaterialTheme.colorScheme.onSurface  // text-text-heading = #E9E0FF = onSurface
-    ),
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 16.dp, bottom = 16.dp),  // px-4 mb-4
-    textAlign = TextAlign.Center
-  )
-  XText(
-    text = "Something went wrong. Please check your details and try again.",
-    style = TextStyle(
-      fontSize = 16.sp,                  // text-base (no text class)
-      color = MaterialTheme.colorScheme.onSurfaceVariant,  // text-text-muted = #C5BCE0
-      lineHeight = 26.sp                 // leading-relaxed = 1.625 × 16sp ≈ 26sp
-    ),
-    modifier = Modifier.widthIn(max = 280.dp),        // max-w-[280px]
-    textAlign = TextAlign.Center
-  )
-}
-```
-
----
-
-## Named Components
-
-### RecipientAddressInput
-**File**: `components/RecipientAddressInput.kt`
-**Reason**: Self-contained form field with label, text input, and paste button — independent unit with its own internal structure.
+Shared screen — see: `.claude/docs/_shared/designs/failed.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 
 ```
-@Composable
-fun RecipientAddressInput(
-  value: String,
-  onValueChange: (String) -> Unit,
-  onPasteClick: () -> Unit,
-  modifier: Modifier = Modifier
-) {
-  Column(modifier = modifier) {
-    XText(
-      text = "Recipient Address",
-      style = TextStyle(
-        fontSize = 14.sp,                // text-sm
-        fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-400 → onSurfaceVariant
-      ),
-      modifier = Modifier.padding(bottom = 8.dp)  // mb-2
-    )
-    Box {
-      XTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { XText("Paste or scan address", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-        // override: placeholder slate-500 → onSurfaceVariant
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),   // rounded-xl = 24dp
-        colors = OutlinedTextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          focusedBorderColor = MaterialTheme.colorScheme.primary,  // focus:ring-primary
-          unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-          focusedTextColor = MaterialTheme.colorScheme.onSurface,   // override: slate-100 → onSurface
-          unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-        ),
-        contentPadding = PaddingValues(
-          top = 16.dp, bottom = 16.dp,
-          start = 16.dp, end = 48.dp   // pl-4 pr-12
-        )
-        // [omitted: transition-all, focus:ring-2 — no Compose equivalent]
-      )
-      XIconButton(
-        icon = Icons.Default.ContentPaste,
-        onClick = onPasteClick,
-        modifier = Modifier
-          .align(Alignment.CenterEnd)
-          .padding(end = 12.dp),       // right-3 = 12dp
-        tint = MaterialTheme.colorScheme.primary,
-        contentPadding = PaddingValues(4.dp)  // p-1
-      )
-    }
-  }
-}
-```
-
----
-
-### AmountInput
-**File**: `components/AmountInput.kt`
-**Reason**: Self-contained amount display with balance info and quick percentage shortcuts — own visual identity and domain logic.
-
-```
-@Composable
-fun AmountInput(
-  amount: String,
-  coinSymbol: String,
-  balance: String,
-  onPercentClick: (Int) -> Unit,
-  onMaxClick: () -> Unit,
-  modifier: Modifier = Modifier
-) {
-  Column(
-    modifier = modifier.fillMaxWidth(),
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    XText(
-      text = "Amount",
-      style = TextStyle(
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-400 → onSurfaceVariant
-      ),
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(bottom = 8.dp),       // mb-2
-      textAlign = TextAlign.Center
-    )
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.Center,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      XText(
-        text = amount,                 // "0.00"
-        style = TextStyle(
-          fontSize = 40.sp,            // text-[40px]
-          fontWeight = FontWeight.Bold,
-          color = MaterialTheme.colorScheme.onSurface,  // override: text-white → onSurface
-          lineHeight = 40.sp           // leading-none
-        )
-      )
-      Spacer(modifier = Modifier.width(8.dp))  // gap-2
-      XText(
-        text = coinSymbol,             // "BTC"
-        style = TextStyle(
-          fontSize = 20.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = MaterialTheme.colorScheme.primary
-        )
-      )
-    }
-    XText(
-      text = balance,                  // "Balance: 1.24 BTC (~$78,420.00)"
-      style = TextStyle(
-        fontSize = 14.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-500 → onSurfaceVariant
-      ),
-      modifier = Modifier.padding(top = 8.dp)  // mt-2
-    )
-    Row(
-      modifier = Modifier.padding(top = 16.dp),  // mt-4
-      horizontalArrangement = Arrangement.spacedBy(8.dp)  // gap-2
-    ) {
-      // 25% button
-      OutlinedButton(
-        onClick = { onPercentClick(25) },
-        shape = CircleShape,           // rounded-full
-        colors = ButtonDefaults.outlinedButtonColors(
-          containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),  // bg-primary/10
-          contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),  // border-primary/20
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)  // px-4 py-1.5
-      ) { XText("25%", style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold)) }
-      // 50% button — same as 25%
-      OutlinedButton(
-        onClick = { onPercentClick(50) },
-        shape = CircleShape,
-        colors = ButtonDefaults.outlinedButtonColors(
-          containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-          contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
-      ) { XText("50%", style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold)) }
-      // MAX button — filled primary
-      XButton(
-        text = "MAX",
-        onClick = onMaxClick,
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-          containerColor = MaterialTheme.colorScheme.primary,
-          contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
-      )
-    }
-  }
-}
-```
-
----
-
-### AssetSelectorRow
-**File**: `components/AssetSelectorRow.kt`
-**Reason**: Reused twice (Coin + Network) with same structure — extracted repeated pattern (2 occurrences).
-
-```
-@Composable
-fun AssetSelectorRow(
-  label: String,
-  iconVector: ImageVector,
-  iconTint: Color,
-  iconBackground: Color,
-  name: String,
-  subtitle: String,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier
-) {
-  Column(modifier = modifier) {
-    XText(
-      text = label,
-      style = TextStyle(
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-400 → onSurfaceVariant
-      ),
-      modifier = Modifier.padding(bottom = 8.dp)  // mb-2
-    )
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .background(
-          color = MaterialTheme.colorScheme.surfaceVariant,  // bg-surface-variant
-          shape = RoundedCornerShape(24.dp)                  // rounded-xl = 24dp
-        )
-        .border(
-          width = 1.dp,
-          color = MaterialTheme.colorScheme.outline,         // border-outline
-          shape = RoundedCornerShape(24.dp)
-        )
-        .clickable(onClick = onClick)
-        // [omitted: hover:border-primary/50 — no Compose hover equivalent]
-        .padding(16.dp),                                     // p-4
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp) // gap-3
-      ) {
-        Box(
-          modifier = Modifier
-            .size(40.dp)                                     // w-10 h-10
-            .background(color = iconBackground, shape = CircleShape),  // rounded-full
-          contentAlignment = Alignment.Center
-        ) {
-          XIcon(
-            imageVector = iconVector,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = iconTint
-          )
-        }
-        Column {
-          XText(
-            text = name,
-            style = TextStyle(
-              fontSize = 16.sp,                // font-bold text-base
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onSurface  // override: slate-100 → onSurface
-            )
-          )
-          XText(
-            text = subtitle,
-            style = TextStyle(
-              fontSize = 12.sp,               // text-xs
-              color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-500 → onSurfaceVariant
-            )
-          )
-        }
-      }
-      XIcon(
-        imageVector = Icons.Default.ExpandMore,
-        contentDescription = null,
-        modifier = Modifier.size(24.dp),
-        tint = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-400 → onSurfaceVariant
-      )
-    }
-  }
-}
-```
-
----
-
-### TransactionSummaryCard
-**File**: `components/TransactionSummaryCard.kt`
-**Reason**: Self-contained card with its own internal layout (rows, divider, arrival indicator) — independent visual unit.
-
-```
-@Composable
-fun TransactionSummaryCard(
-  networkFee: String,
-  totalDeduct: String,
-  estimatedArrival: String,
-  modifier: Modifier = Modifier
-) {
-  Column(
-    modifier = modifier
-      .fillMaxWidth()
-      .background(
-        color = MaterialTheme.colorScheme.surface,        // bg-surface = #181228
-        shape = RoundedCornerShape(24.dp)                 // rounded-xl = 24dp
-      )
-      .border(
-        width = 1.dp,
-        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),  // border-outline/30
-        shape = RoundedCornerShape(24.dp)
-      )
-      .padding(16.dp)                                     // p-4
-  ) {
-    XText(
-      text = "TRANSACTION SUMMARY",                       // uppercase via textTransform
-      style = TextStyle(
-        fontSize = 12.sp,                                 // text-xs
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 0.6.sp,                          // tracking-wider = 0.05em × 12sp
-        color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-500 → onSurfaceVariant
-      ),
-      modifier = Modifier.padding(bottom = 16.dp)        // mb-4
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {  // space-y-3
-      // Network Fee row
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-      ) {
-        XText(
-          text = "Network Fee",
-          style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-          // override: slate-400 → onSurfaceVariant
-        )
-        XText(
-          text = networkFee,
-          style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
-          // override: slate-100 → onSurface
-        )
-      }
-      // Total to Deduct row
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-      ) {
-        XText(
-          text = "Total to Deduct",
-          style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        )
-        XText(
-          text = totalDeduct,
-          style = TextStyle(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,            // font-semibold
-            color = MaterialTheme.colorScheme.onSurface
-          )
-        )
-      }
-    }
-    // Spacer for mt-1 = 4dp, then divider, then pt-3 = 12dp padding
-    Spacer(modifier = Modifier.height(4.dp))             // mt-1
-    XHorizontalDivider(
-      color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)  // border-outline/20
-    )
-    Spacer(modifier = Modifier.height(12.dp))            // pt-3
-    // Estimated arrival row
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      XText(
-        text = "Est. Arrival Time",
-        style = TextStyle(
-          fontSize = 12.sp,
-          color = MaterialTheme.colorScheme.onSurfaceVariant  // override: slate-500 → onSurfaceVariant
-        )
-      )
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)  // gap-1
-      ) {
-        XIcon(
-          imageVector = Icons.Default.Bolt,
-          contentDescription = null,
-          modifier = Modifier.size(14.dp),               // text-sm ≈ 14dp
-          tint = XTheme.Colors.Success                   // green-400 = #4ADE80
-        )
-        XText(
-          text = estimatedArrival,                       // "Fast (10 min)"
-          style = TextStyle(fontSize = 12.sp, color = XTheme.Colors.Success)
-        )
-      }
-    }
-  }
+Column(Modifier.fillMaxSize(), verticalArrangement = Center, horizontalAlignment = CenterHorizontally) {
+    XIcon(Icons.Default.Warning, Modifier.size(80.dp), tint = MaterialTheme.colorScheme.error)
+    Spacer(32.dp)
+    XText("Something went wrong", style = TextStyle(fontSize = 20.sp, fontWeight = SemiBold, color = onSurfaceVariant))
+    Spacer(8.dp)
+    XText("An unexpected error occurred...", style = TextStyle(fontSize = 14.sp, color = outline))
+    Spacer(32.dp)
+    XButton("Retry", onClick = onRetry, shape = RoundedCornerShape(12.dp), modifier = Modifier.width(200.dp).height(56.dp))
 }
 ```
 
@@ -733,94 +709,77 @@ fun TransactionSummaryCard(
 
 ## Pre-Implementation Contract
 
+> Architecture rules, color rules, and X-component defaults are project-wide and live in their canonical sources — do not restate them here:
+> - Architecture rules → [`_shared/patterns.md`](../../_shared/patterns.md)
+> - Color rules → [`m3-colors.md`](../references/m3-colors.md)
+> - X-component default-render behavior → [`_shared/X_COMPONENTS_CATALOG.md`](../../_shared/X_COMPONENTS_CATALOG.md)
+>
+> This contract captures only feature-specific data the implementer cannot derive from those references.
+
 ### XTheme Updates Required
 
-*No missing roles. All design colors map to existing XDarkColors roles.*
+| Action | File | Change |
+|--------|------|--------|
+| Add `Bitcoin` custom color | `XTheme.kt` → `XTheme.Colors` object | `val Bitcoin = Color(0xFFF7931A)` |
 
-### Architecture Rules
-
-- Use X-components exclusively (no Material3 directly) — see `:core:designsystem`
-- Follow ScreenRoot pattern: `SendScreen` (ViewModel wrapper) + `SendScreenRoot` (testable)
-- Handle all 4 UI states: `Uninitialized` / `Loading` / `Success` / `Failed`
-- Use `_uiState.setState { copy() }` for state updates — never `_state.value =`
-- Use `ImmutableList` for collections in state
-- Callbacks for navigation (`onBackClick`) — never `navController`
-- ViewModel invokes repository directly — no UseCases
-
-### Color Rules
-
-- ALL colors MUST use `MaterialTheme.colorScheme.{role}` — never raw `Color()` hex values
-- Exception: `XTheme.Colors.Success` (#4ADE80) for arrival indicator
-- Exception: `Color(0xFFEAB308)` for Bitcoin coin brand tint (no M3 equivalent)
-- Bottom gradient: `Brush.verticalGradient` using `MaterialTheme.colorScheme.background`
+> **No M3 role changes needed** — all design colors already map to existing XDarkColors/XLightColors roles.
 
 ### Color Audit
 
-#### Defined Roles (all in XDarkColors)
+#### Defined Roles
 
 | Role | Hex | Usage |
 |------|-----|-------|
-| background | #0D0919 | Screen bg, app bar bg, bottom gradient |
-| surface | #181228 | Transaction summary card bg |
-| primary | #9D70FF | CTA buttons, paste icon, coin ticker label, tint |
-| onPrimary | #1A0054 | CTA button text |
-| onSurface | #E9E0FF | Amount value, names, fee values |
-| onSurfaceVariant | #C5BCE0 | Labels, muted text, expand icons |
-| surfaceVariant | #231A38 | Input field fill, selector fill |
-| outline | #4A3F6B | Input/selector borders |
-| error | #FFB4AB | Failed state error icon |
+| background | #0F0D09 | Screen canvas, footer gradient |
+| surface | #1C1910 | Recipient, Asset, Network cards |
+| surfaceVariant | #302B1C 	| Chip fill, network icon bg, summary card bg |
+| onSurface | #EDE8D5 | Hero amount, coin names, total deduct value |
+| onSurfaceVariant | #C4BA94 | Labels, balance text, placeholder, subtitles |
+| outlineVariant | #3F3822 | Card borders, chip borders, summary divider |
+| primary | #F5D76E | Gold accents, CTA fill, cursor, left bar |
+| onPrimary | #2C1900 | CTA button text |
 
-#### Missing Roles (must add before implementation)
+#### Missing Roles
 
 *None.*
 
-#### Custom Colors (justified exceptions only)
+#### Custom Colors
 
 | Name | Hex | Justification |
 |------|-----|---------------|
-| XTheme.Colors.Success | #4ADE80 | Semantic success/fast status indicator — no M3 role |
-| Bitcoin brand yellow | #EAB308 | Coin-specific brand color — no M3 equivalent |
+| XTheme.Colors.Success | #4ADE80 | Semantic success green — already in XTheme.Colors |
+| XTheme.Colors.Bitcoin | #F7931A | Bitcoin brand orange for coin icon — add to XTheme.Colors |
 
-#### Component Overrides (divergences from X-component defaults)
+### Component Overrides
 
-| Component | Property | HTML CSS Value | M3 Role Hex | Action |
-|-----------|----------|---------------|-------------|--------|
-| All section labels | color | slate-400 = #94A3B8 | onSurfaceVariant = #C5BCE0 | Use onSurfaceVariant |
-| Amount value | color | text-white = #FFFFFF | onSurface = #E9E0FF | Use onSurface |
-| Input text | color | slate-100 = #F1F5F9 | onSurface = #E9E0FF | Use onSurface |
-| Placeholder text | color | slate-500 = #64748B | onSurfaceVariant = #C5BCE0 | Use onSurfaceVariant |
-| Coin/network names | color | slate-100 = #F1F5F9 | onSurface = #E9E0FF | Use onSurface |
-| Muted subtitles | color | slate-500 = #64748B | onSurfaceVariant = #C5BCE0 | Use onSurfaceVariant |
-| XTextField corner | shape | rounded-xl = 24dp | XTextField default | Apply RoundedCornerShape(24.dp) |
-| Asset selector corner | shape | rounded-xl = 24dp | — | Apply RoundedCornerShape(24.dp) |
-| CTA button corner | shape | rounded-xl = 24dp | XButton default | Apply RoundedCornerShape(24.dp) |
-| CTA button elevation | shadow | shadow-lg = 8dp | XButton default | Apply elevation 8.dp |
-| Bottom area bg | brush | bg-gradient-to-t from #0D0919 | — | Brush.verticalGradient(transparent→background) |
-| Arrival indicator | color | green-400 = #4ADE80 | — custom | XTheme.Colors.Success |
-| Bitcoin icon | color | yellow-500 = #EAB308 | — custom | Color(0xFFEAB308) inline |
-| Failed horizontal pad | value | px-6 = 24dp | — | Use 24dp (not 16dp like success) |
+| Component | Property | HTML Value | X-component Default | Override Required |
+|-----------|----------|-----------|-------------------|------------------|
+| `XButton` (CTA) | shape | 24dp (rounded-xl) | CircleShape | `shape = RoundedCornerShape(24.dp)` |
+| `XButton` (CTA) | gold-glow shadow | `box-shadow 0 0 20px rgba(245,215,110,0.15)` | none | `drawBehind` glow or omit (decorative) |
+| `XIconButton` (paste) | containerColor | transparent | surface | `containerColor = Color.Transparent` |
+| `XIconButton` (QR) | containerColor | transparent | surface | `containerColor = Color.Transparent` |
+| `XTopAppBar` | navigationIcon contentColor | primary (#F5D76E) | contentColor (surface-based) | Pass `contentColor = primary` via `XTopAppBar` colors param |
+| `XTopAppBar` | title alignment | left-adjacent to back arrow (ml-2) | always center-aligned | Accept center alignment — catalog limitation |
+| Recipient card | background | surface (#1C1910) | — (custom Box, not XCard) | Use `Box.background(surface, RoundedCornerShape(24.dp))` |
+| Asset/Network cards | background, shape | surface, 24dp | XCard: surfaceVariant, 12dp | Use `Column.background(surface, RoundedCornerShape(24.dp))` not XCard |
+| Transaction summary | background, shape, border | surfaceVariant, 24dp, primary/30 | XCard: surfaceVariant, 12dp, no border | Use `Column.background(surfaceVariant, RoundedCornerShape(24.dp))` + border modifier |
+| Quick chips | shape, bg, text color | 16dp, surfaceVariant, primary | XFilterChip: CircleShape, surface, onSurfaceVariant | Use custom `Box` — do not use XFilterChip |
 
 ---
 
 ## Post-Implementation Checklist
 
-- [ ] All XTheme missing roles added to BOTH XLightColors and XDarkColors *(none required)*
-- [ ] `SendScreen` + `SendScreenRoot` composables exist with ViewModel wrapper + testable root
-- [ ] All 4 UI states handled: Uninitialized, Loading, Success, Failed
-- [ ] `RecipientAddressInput` component exists in `components/RecipientAddressInput.kt`
-- [ ] `AmountInput` component exists in `components/AmountInput.kt`
-- [ ] `AssetSelectorRow` component exists in `components/AssetSelectorRow.kt` (reused for Coin + Network)
-- [ ] `TransactionSummaryCard` component exists in `components/TransactionSummaryCard.kt`
-- [ ] Success state: Column with correct section spacing (16/32/40/32dp spacers)
-- [ ] Failed state: 24dp horizontal padding (NOT 16dp)
-- [ ] Bottom gradient `Brush.verticalGradient` applied to both Send and Retry bottom bars
-- [ ] All `rounded-xl` = `RoundedCornerShape(24.dp)` applied explicitly
-- [ ] CTA button elevation = 8.dp applied
-- [ ] All slate-* colors replaced with proper M3 roles (onSurface/onSurfaceVariant)
-- [ ] `XTheme.Colors.Success` used for arrival indicator (not raw `Color(0xFF4ADE80)`)
-- [ ] Bitcoin yellow `Color(0xFFEAB308)` used inline for BTC icon only
-- [ ] `XHorizontalDivider` with `outline.copy(alpha=0.2f)` in TransactionSummaryCard
-- [ ] Loading state: `XCircularProgressIndicator(Modifier.size(48.dp))`
-- [ ] Failed state: error icon 80dp, container `error.copy(alpha=0.1f)` CircleShape with 24dp padding
+- [ ] `XTheme.Colors.Bitcoin = Color(0xFFF7931A)` added to `XTheme.kt` `XTheme.Colors` object
+- [ ] `HeroAmountSection` component implemented with 64sp ExtraBold amount, BTC pill, gold cursor underline, balance row, 3 quick chips
+- [ ] `RecipientCard` with gold left accent bar (4dp), transparent `BasicTextField`, paste + QR `XIconButton`s with `Color.Transparent` containerColor
+- [ ] `AssetNetworkGrid` 2-column `Row` with `AssetSelectorCard` (private helper)
+- [ ] `TransactionSummaryCard` with `primary.copy(0.3f)` border, `drawBehind` top-border divider before Estimated Arrival row
+- [ ] Security badge inline in `SendScreen.kt` with `Modifier.alpha(0.5f)`
+- [ ] Sticky footer `Box` in `XScaffold` bottomBar with vertical gradient + `XButton` (24dp corners)
+- [ ] `XIconButton` paste and QR: `containerColor = Color.Transparent` — verify no surface circle visible
+- [ ] `XButton` CTA: `shape = RoundedCornerShape(24.dp)` — verify not CircleShape
+- [ ] No raw `Color(hex)` values in feature code except `XTheme.Colors.*` references
+- [ ] No `MaterialTheme` direct imports — use `MaterialTheme.colorScheme.*` for all M3 roles
+- [ ] All 4 UI states wired: Uninitialized, Loading (`XCircularProgressIndicator`), Success (full form), Failed (error icon + retry)
 - [ ] Build passes: `./gradlew :feature:send:assembleAndroidMain`
 - [ ] Code formatted: `./gradlew :feature:send:ktlintFormat`

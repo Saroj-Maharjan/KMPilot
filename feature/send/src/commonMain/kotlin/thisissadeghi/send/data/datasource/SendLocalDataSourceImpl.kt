@@ -12,11 +12,12 @@ class SendLocalDataSourceImpl : SendLocalDataSource {
                 recipientAddress = "",
                 amount = "0.00",
                 selectedCoin = CoinInfo("Bitcoin", "BTC"),
-                availableBalance = "Balance: 1.24 BTC (~\$78,420.00)",
+                balanceBtc = "1.24 BTC",
+                balanceUsd = "78,420",
                 selectedNetwork = NetworkInfo("Bitcoin Network", "BTC \u2022 ERC-20"),
-                networkFee = "0.00012 BTC (~\$7.54)",
+                networkFee = "~\$7.54",
                 totalDeduct = "0.00012 BTC",
-                estimatedArrival = "Fast (10 min)",
+                estimatedArrival = "Fast · ~10 min",
             ),
         )
 }
