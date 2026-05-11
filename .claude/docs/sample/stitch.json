@@ -1,55 +1,12 @@
 {
-  "projectId": "3450000335577208531",
-  "projectName": "projects/3450000335577208531",
   "featureName": "sample",
-  "deviceType": "MOBILE",
-  "modelId": "GEMINI_3_FLASH",
-  "theme": {
-    "defaultTheme": "dark",
-    "primaryHex": "#9D70FF",
-    "paletteCustomized": true
-  },
+  "blueprintConsumed": true,
   "screens": {
-    "dashboard": {
-      "screenId": "050d5cfd574a4eeb91539a8ff5800fdc",
-      "screenName": "projects/3450000335577208531/screens/050d5cfd574a4eeb91539a8ff5800fdc",
-      "description": "Premium Finance Dashboard — success state with net worth, quick actions, budgets, savings, portfolio, transactions",
-      "designFile": "designs/sample.md",
-      "screenshot": "designs/sample.png",
-      "stateScreenshots": {
-        "loading": "designs/sample_loading.png",
-        "failed": "designs/sample_failed.png"
-      },
-      "stateScreenIds": {
-        "loading": "e8887bcbe5f5462eac6dd5fea03f53f8",
-        "failed": "43b3b3d46124403fb0b96dca5960a975"
-      },
-      "blueprint": "designs/sample_blueprint.md",
-      "dimensions": {
-        "success": { "width": 780, "height": 4094 },
-        "loading": { "width": 780, "height": 1768 },
-        "failed": { "width": 780, "height": 1768 }
-      },
+    "sample_screen": {
+      "description": "Finance dashboard — balance hero card, quick actions (Send/Receive/Pay/Top Up), insight banner, monthly summary (combined split bar), budgets (2-col grid), savings goals, upcoming bills (single card + dividers), portfolio (3-col grid), recent transactions (individual cards). Gold/champagne theme on warm obsidian.",
       "approved": true,
-      "approvedAt": "2026-02-23"
+      "approvedAt": "2026-05-11"
     }
   },
-  "implementation": {
-    "implemented": true,
-    "implementedAt": "2026-02-23",
-    "method": "blueprint"
-  },
-  "verification": {
-    "verified": true,
-    "verifiedAt": "2026-02-25",
-    "auditReport": "designs/sample_audit.md",
-    "deviceScreenshots": {
-      "dashboard": "designs/device/desktop_sample.png",
-      "loading": "designs/device/desktop_sample_loading.png",
-      "failed": "designs/device/desktop_sample_failed.png"
-    },
-    "attempts": 1
-  },
-  "createdAt": "2026-02-23",
-  "updatedAt": "2026-02-25"
+  "updatedAt": "2026-05-11T10:00:00Z"
 }

@@ -1,46 +1,56 @@
 package thisissadeghi.sample.presentation.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyBitcoin
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import thisissadeghi.designsystem.XCard
-import thisissadeghi.designsystem.XHorizontalDivider
+import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
 import thisissadeghi.sample.data.model.PortfolioAsset
-import thisissadeghi.sample.presentation.ui.formatMoney
 
 @Composable
 internal fun PortfolioSection(assets: List<PortfolioAsset>) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        XText("Portfolio Assets", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        XCard(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(0.dp),
-        ) {
-            Column {
-                assets.forEachIndexed { index, asset ->
-                    PortfolioAssetItem(asset, index)
-                    if (index < assets.lastIndex) {
-                        XHorizontalDivider()
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        XText(
+            "Portfolio",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        val rows = assets.chunked(3)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            rows.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    rowItems.forEach { asset ->
+                        PortfolioAssetCard(asset, modifier = Modifier.weight(1f))
+                    }
+                    repeat(3 - rowItems.size) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -49,52 +59,65 @@ internal fun PortfolioSection(assets: List<PortfolioAsset>) {
 }
 
 @Composable
-private fun PortfolioAssetItem(
+private fun PortfolioAssetCard(
     asset: PortfolioAsset,
-    index: Int,
+    modifier: Modifier = Modifier,
 ) {
-    val opacity =
-        when (index) {
-            0 -> 1.0f
-            1 -> 0.8f
-            else -> 0.6f
+    val isPositive = asset.changePercent >= 0
+    val circleBackground =
+        if (asset.symbol == "ETH") {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+        } else {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
         }
-    val changeColor = if (asset.changePercent >= 0) XTheme.Colors.Success else XTheme.Colors.Danger
-    val sign = if (asset.changePercent >= 0) "+" else ""
-    Row(
+    val circleIconTint =
+        if (asset.symbol == "ETH") {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
+
+    Column(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            modifier
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
                 .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             modifier =
                 Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = opacity), CircleShape),
+                    .size(32.dp)
+                    .background(circleBackground, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            XText(
-                asset.symbol.take(3),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+            XIcon(
+                imageVector = portfolioIcon(asset.symbol),
+                contentDescription = null,
+                tint = circleIconTint,
+                modifier = Modifier.size(18.dp),
             )
         }
-        Column(modifier = Modifier.weight(1f)) {
-            XText(asset.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            XText("${asset.balance} ${asset.symbol}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            XText(
-                "$${ asset.value.formatMoney() }",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            XText("$sign${asset.changePercent}%", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = changeColor)
-        }
+        Spacer(Modifier.height(0.dp))
+        XText(
+            asset.symbol,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        XText(
+            if (isPositive) "+${asset.changePercent}%" else "${asset.changePercent}%",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isPositive) XTheme.Colors.Success else XTheme.Colors.Danger,
+        )
     }
 }
+
+private fun portfolioIcon(symbol: String): ImageVector =
+    when (symbol.uppercase()) {
+        "BTC" -> Icons.Filled.CurrencyBitcoin
+        "ETH" -> Icons.Filled.CurrencyExchange
+        else -> Icons.Filled.MonetizationOn
+    }

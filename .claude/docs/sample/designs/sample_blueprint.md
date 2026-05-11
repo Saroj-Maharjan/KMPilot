@@ -1,7 +1,6 @@
-# Compose Implementation Blueprint: Sample (KMPilot Dashboard)
+# Compose Implementation Blueprint: Sample (Finance Dashboard)
 
-> Source: Stitch HTML export — 3 state screens (success, loading, failed)
-> Style: **Decomposed** (HTML >150 lines, >9 visual sections)
+> **Decomposed blueprint** — 185 HTML elements, 9 sections. Shared scaffold described once; per-section components annotated with target files.
 
 ---
 
@@ -9,78 +8,101 @@
 
 | Hex | M3 Role / Custom | Usage |
 |-----|-----------------|-------|
-| #0D0919 | `background` | Screen background |
-| #181228 | `surface` | All card backgrounds |
-| #9D70FF | `primary` | Accent: amounts, icons, buttons |
-| #1A0054 | `onPrimary` | Text on primary button |
-| #E9E0FF | `onBackground` / `onSurface` | Primary text |
-| #C5BCE0 | `onSurfaceVariant` | Muted/subtitle text |
-| #1E1A2E | `outlineVariant` | Progress track, dividers |
-| #FFB4AB | `error` | Error accent bar + icon |
-| #4ADE80 | `XTheme.Colors.Success` | Income, savings, on-track |
-| #FF6B6B | `XTheme.Colors.Danger` | Over-budget, overdue, expenses |
+| #0F0D09 | background | Screen + header background |
+| #1C1910 | surface | All card backgrounds |
+| #302B1C | surfaceVariant | Progress bar tracks, quick action button bg, expense/neutral icon circles |
+| #F5D76E | primary | Balance amount, gold top strip, action icons, on-track progress fill |
+| #2C1900 | onPrimary | Text on gold (retry button) |
+| #4A3200 | primaryContainer | Action button circle (@ 30%), insight icon bg (@10%), BTC/SOL circles (@10%) |
+| #FFF0C0 | onPrimaryContainer | Text on primary container chips |
+| #EDE8D5 | onSurface | Primary text everywhere — titles, amounts, bill names, transaction names |
+| #C4BA94 | onSurfaceVariant | Muted text, subtitle labels, due dates, quick action labels |
+| #726A48 | outline | Card 1dp borders |
+| #3F3822 | outlineVariant | Bill section dividers (@30%), budget/savings card borders |
+| #FFB4AB | error | Failed state icon + glow |
+| #4ADE80 | XTheme.Colors.Success | Income amounts, positive %, savings progress, income icon circles |
+| #FF6B6B | XTheme.Colors.Danger | Expenses, over-budget, OVERDUE badge, negative % |
 
 ---
 
 ## Typography Scale
 
-| Usage | Size (sp) | Weight | Notes |
-|-------|-----------|--------|-------|
-| "Good morning" subtitle | 14 | Medium (500) | `onSurfaceVariant` |
-| "Dashboard" screen title | 24 | ExtraBold (800) | `onBackground` |
-| Section titles ("Budgets", etc.) | 18 | Bold (700) | `onSurface` |
-| Balance amount | 38 | ExtraBold (800) | `primary` |
-| Balance label ("Total Net Worth") | 10 | ExtraBold (800) | uppercase, wide letter-spacing, `onSurfaceVariant` |
-| Card item title | 14 | Bold (700) | `onSurface` |
-| Card item subtitle | 12 | Regular (400) | `onSurfaceVariant` |
-| Trend/badge text | 12 | Bold (700) | `Success` |
-| OVER/OVERDUE badge | 10 | Black (900) | uppercase |
-| Change percentage | 10 | Bold (700) | `Success` or `Danger` |
-| Quick action label | 12 | Medium (500) | `onSurfaceVariant` |
-| "View All" | 12 | Bold (700) | `primary` |
-| "Loading dashboard..." | 14 | Medium (500) | wide letter-spacing, `onSurfaceVariant` |
-| Error title | 20 | Bold (700) | `onSurface`, textAlign=Center |
-| Error body | 14 | Regular | `onSurfaceVariant`, textAlign=Center |
-| Button label | 14 | Bold (700) | `onPrimary` |
+| Usage | Size (sp) | Weight | Letter Spacing | Text Transform | Color Role |
+|-------|-----------|--------|----------------|----------------|------------|
+| "Good morning," subtitle | 14 | Medium (500) | 0 | none | onSurfaceVariant |
+| "Dashboard" header title | 20 | Bold (700) | -0.025em × 20sp | none | onSurface |
+| "TOTAL NET WORTH" label | 12 | Bold (700) | 0.1em × 12sp | uppercase | onSurfaceVariant |
+| Balance amount | 36 | ExtraBold (800) | -0.025em × 36sp | none | primary |
+| Trend pill text | 12 | Bold (700) | 0 | none | XTheme.Colors.Success |
+| "vs last month" | 12 | Normal | 0 | none | onSurfaceVariant |
+| Section headers (h3) | 18 | Bold (700) | 0 | none | onSurface |
+| Monthly Income/Expenses labels | 14 | Bold (700) | 0.05em × 14sp | uppercase | onSurfaceVariant |
+| Monthly amounts | 24 | Bold (700) | 0 | none | Success / Danger |
+| Budget category names | 12 | Bold (700) | 0 | none | onSurfaceVariant (normal) / Danger (over) |
+| Budget spent amounts | 12 | Bold (700) | 0 | none | onSurface (normal) / Danger (over) |
+| Insight title | 14 (body default) | Bold (700) | 0 | none | onSurface |
+| Insight description | 14 | Normal | 0 | none | onSurfaceVariant |
+| Savings goal name | 14 (body default) | Bold (700) | 0 | none | onSurface |
+| Savings goal % | 14 | Bold (700) | 0 | none | XTheme.Colors.Success |
+| Bill name | 14 (body default) | Bold (700) | 0 | none | onSurface |
+| Bill due date | 12 | Normal | 0 | none | onSurfaceVariant |
+| Bill amount | 14 (body default) | Bold (700) | 0 | none | onSurface / Danger (overdue) |
+| OVERDUE badge | 10 | Bold (700) | 0 | uppercase | Danger |
+| Portfolio symbol | 14 (body default) | Bold (700) | 0 | none | onSurface |
+| Portfolio change % | 12 | Bold (700) | 0 | none | Success / Danger |
+| Transaction name | 14 (body default) | Bold (700) | 0 | none | onSurface |
+| Transaction subtitle | 12 | Normal | 0 | none | onSurfaceVariant |
+| Transaction amount | 14 (body default) | Bold (700) | 0 | none | Success (income) / onSurface (expense) |
+| Quick action label | 12 | Medium (500) | 0 | none | onSurfaceVariant |
 
 ---
 
 ## Spacing Grid
 
-| Context | Value (dp) |
-|---------|------------|
-| Screen horizontal padding | 16 |
-| Header top padding | 32 |
-| Header bottom padding | 8 |
-| Section gap (between LazyColumn items) | 24 |
-| Card internal padding | 16 |
-| Balance card internal padding | 24 |
-| Row item gap (icon + text) | 12 |
-| Progress bar height (summary) | 6 |
-| Progress bar height (savings, budget track) | 8 |
-| Card top accent bar height | 3 |
-| Section header bottom gap | 16 |
-| Quick action icon size | 56 × 56 |
-| Quick action icon inner size | 24 |
-| Category icon container size | 40 × 40 |
-| Portfolio/tx icon container | 40 × 40 |
-| Error icon size | 24 |
-| Loading spinner size | 48 × 48 |
-| Loading spinner stroke width | 4 |
-
----
-
-## Border Radius (from tailwind config)
-
-```
-"DEFAULT": 0.5rem = 8dp
-"lg": 1rem = 16dp
-"xl": 1.5rem = 24dp
-"full": CircleShape
-"rounded-2xl" (not in config): standard Tailwind = 16dp
-```
-
-**Failed screen config**: `"card": 12px = 12dp`  — error card uses 12dp radius
+| Context | Property | Value (dp) |
+|---------|----------|------------|
+| Screen | horizontal padding (px-6) | 24 |
+| Screen | bottom padding (pb-12) | 48 |
+| Sections | vertical gap (space-y-6) | 24 |
+| Balance card | padding (p-6) | 24 |
+| Balance card top strip | height | 3 |
+| Balance amount row | gap (gap-2) | 8 |
+| Balance label → amount | margin-bottom (mb-2) | 8 |
+| Quick actions grid | gap (gap-4) | 16 |
+| Quick action item | vertical gap (gap-2) | 8 |
+| Quick action circle | size (w-14 h-14) | 56 × 56 |
+| Insight banner | padding (p-5) | 20 |
+| Insight banner | row gap (gap-4) | 16 |
+| Insight icon circle | size (w-10 h-10) | 40 × 40 |
+| Insight icon corner radius | (rounded-xl) | 20 |
+| Monthly summary card | padding (p-6) | 24 |
+| Monthly summary header | margin-bottom (mb-6) | 24 |
+| Monthly summary bar | height (h-3) | 12 |
+| Budget grid | gap (gap-4) | 16 |
+| Budget card | padding (p-4) | 16 |
+| Budget card inner | spacing (space-y-3) | 12 |
+| Budget progress bar | height (h-1.5) | 6 |
+| Savings goals inner | spacing (space-y-3) | 12 |
+| Savings goal card | padding (p-5) | 20 |
+| Savings goal header | margin-bottom (mb-3) | 12 |
+| Savings goal header | gap (gap-3) | 12 |
+| Savings goal bar | height (h-2) | 8 |
+| Bills card row | padding (p-4) | 16 |
+| Bills row | gap (gap-4) | 16 |
+| Bill icon circle | size (w-10 h-10) | 40 × 40 |
+| Bill icon circle | corner radius (rounded-xl) | 20 |
+| Portfolio grid | gap (gap-3) | 12 |
+| Portfolio card | padding (p-4) | 16 |
+| Portfolio card inner | gap (gap-2) | 8 |
+| Portfolio symbol circle | size (w-8 h-8) | 32 × 32 |
+| Portfolio symbol margin | (mb-1) | 4 |
+| Transactions inner | spacing (space-y-3) | 12 |
+| Transaction card | padding (p-4) | 16 |
+| Transaction row | gap (gap-4) | 16 |
+| Transaction icon circle | size (w-10 h-10) | 40 × 40 |
+| OVERDUE badge | horizontal padding (px-1.5) | 6 |
+| OVERDUE badge | vertical padding (py-0.5) | 2 |
+| OVERDUE badge | corner radius (rounded) | 8 |
 
 ---
 
@@ -88,649 +110,611 @@
 
 ### Shared Scaffold (all states)
 
-No `XTopAppBar`. Entire screen is a `Box` background + `Column`:
-
-```kotlin
-Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-    Column(Modifier.fillMaxSize()) {
-        DashboardHeader()         // "Good morning" + "Dashboard" inline
-        [state-specific content]  // fills remaining space
+```
+// → SampleScreen.kt
+XScaffold(containerColor = MaterialTheme.colorScheme.background)
+  content: paddingValues →
+    when (uiState.dashboardState) {
+      Uninitialized, Loading → LoadingContent()     // → SampleScreen.kt
+      Failed              → ErrorContent(onRetry)   // → SampleScreen.kt
+      Success             → DashboardContent(data, onActionClick)  // → SampleScreen.kt
     }
-}
 ```
 
-#### `DashboardHeader` (shared across all states)
-
-```kotlin
-Column(
-    modifier = Modifier
-        .fillMaxWidth()
-        .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 8.dp)
-) {
-    XText(
-        text = "Good morning",
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    XText(
-        text = "Dashboard",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.ExtraBold,
-        color = MaterialTheme.colorScheme.onBackground,
-    )
-}
-```
+> **CRITICAL**: `XScaffold` default `containerColor` references `XTheme.Colors.PaleLavender` which is undefined — always pass `containerColor = MaterialTheme.colorScheme.background` explicitly.
 
 ---
 
 ### Success State
 
-`LazyColumn` filling remaining space after the header:
-
-```kotlin
-LazyColumn(
-    modifier = Modifier.fillMaxSize(),
-    contentPadding = PaddingValues(horizontal = 16.dp, bottom = 48.dp),
-    verticalArrangement = Arrangement.spacedBy(24.dp),
-) {
-    item { NetWorthCard(data.accountBalance) }
-    item { QuickActionsRow(data.quickActions, onActionClick) }
-    item { SmartInsightBanner(data.spendingInsight) }
-    item { MonthlySummarySection(data.monthlySummary) }
-    item { BudgetsSection(data.budgetCategories, onViewAllClick) }
-    item { SavingsGoalsSection(data.savingsGoals) }
-    item { UpcomingBillsSection(data.upcomingBills) }
-    item { PortfolioSection(data.portfolioAssets) }
-    item { RecentTransactionsSection(data.recentTransactions) }
-}
 ```
+// → SampleScreen.kt
+fun DashboardContent(data: DashboardData, onActionClick: (String) -> Unit)
+  Column(modifier = Modifier.fillMaxSize()) {
+    // Sticky header — outside LazyColumn so it stays fixed while list scrolls
+    DashboardHeader()                                       // inline in SampleScreen.kt
 
----
-
-#### `NetWorthCard`
-
-Design: XCard with 3dp primary top accent bar, wallet icon watermark at 10% opacity top-right, "Total Net Worth" label, balance amount in primary, trend chip.
-
-```kotlin
-XCard(
-    modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    elevation = CardDefaults.cardElevation(0.dp),
-    shape = RoundedCornerShape(24.dp),  // rounded-xl = 1.5rem = 24dp
-) {
-    Box {
-        // Wallet icon watermark — absolute top-right, 10% opacity
-        XIcon(
-            imageVector = Icons.Default.AccountBalanceWallet,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .size(64.dp),
-        )
-        Column {
-            // 3dp primary top accent bar
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            Column(modifier = Modifier.padding(24.dp)) {
-                XText(
-                    text = "TOTAL NET WORTH",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 2.sp,
-                )
-                Spacer(Modifier.height(4.dp))
-                XText(
-                    text = "$${balance.totalBalance.formatMoney()}",
-                    fontSize = 38.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.height(16.dp))
-                // Trend chip
-                Row(
-                    modifier = Modifier
-                        .background(
-                            XTheme.Colors.Success.copy(alpha = 0.10f),
-                            RoundedCornerShape(50),
-                        )
-                        .border(
-                            1.dp,
-                            XTheme.Colors.Success.copy(alpha = 0.20f),
-                            RoundedCornerShape(50),
-                        )
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    XIcon(
-                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                        contentDescription = null,
-                        tint = XTheme.Colors.Success,
-                        modifier = Modifier.size(14.dp),
-                    )
-                    XText(
-                        text = "+${balance.changePercent}% trend",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = XTheme.Colors.Success,
-                    )
-                }
-            }
-        }
-    }
-}
-```
-
----
-
-#### `QuickActionsRow`
-
-Design: Row of 4 actions. Each action = Column(icon box + label). Icon container is 56×56dp, rounded-2xl (16dp, standard Tailwind not in config), background=primary@15%, border=primary@20%.
-
-```kotlin
-@Composable
-fun QuickActionsRow(actions: List<QuickAction>, onActionClick: (String) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+    LazyColumn(
+      modifier = Modifier.fillMaxSize(),
+      contentPadding = PaddingValues(horizontal = 24.dp, bottom = 48.dp),
+      verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        actions.forEach { action ->
-            QuickActionItem(action, onClick = { onActionClick(action.id) })
-        }
+      item { BalanceCard(data.accountBalance) }                     // → components/BalanceCard.kt
+      item { QuickActionsSection(data.quickActions, onActionClick) }// → components/QuickActionsSection.kt
+      item { InsightBanner(data.spendingInsight) }                   // → components/InsightBanner.kt
+      item { MonthlySummaryCard(data.monthlySummary) }               // → components/MonthlySummaryCard.kt
+      item { BudgetsSection(data.budgetCategories) }                 // → components/BudgetsSection.kt
+      item { SavingsGoalsSection(data.savingsGoals) }                // → components/SavingsGoalsSection.kt
+      item { UpcomingBillsCard(data.upcomingBills) }                 // → components/UpcomingBillsCard.kt
+      item { PortfolioSection(data.portfolioAssets) }                // → components/PortfolioSection.kt
+      item { RecentTransactionsSection(data.recentTransactions) }    // → components/RecentTransactionsSection.kt
     }
-}
+  }
+```
 
-@Composable
-private fun QuickActionItem(action: QuickAction, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    RoundedCornerShape(16.dp),  // rounded-2xl standard = 16dp
-                )
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-                    RoundedCornerShape(16.dp),
-                )
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            XIcon(
-                imageVector = quickActionIcon(action.iconName),
-                contentDescription = action.label,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        XText(
-            text = action.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+---
+
+#### DashboardHeader (inline in SampleScreen.kt)
+
+> HTML: `<header>` with `sticky top-0 bg-background px-6 py-4 z-50`. In Compose: place header as sibling before `LazyColumn` in a wrapping `Column`.
+
+```
+Box(
+  modifier = Modifier
+    .fillMaxWidth()
+    .background(MaterialTheme.colorScheme.background)
+    .padding(horizontal = 24.dp, vertical = 16.dp)
+) {
+  Column {
+    XText("Good morning,",
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          fontSize = 14.sp, fontWeight = FontWeight.Medium)
+    XText("Dashboard",
+          color = MaterialTheme.colorScheme.onSurface,
+          fontSize = 20.sp, fontWeight = FontWeight.Bold,
+          letterSpacing = (-0.5).sp)
+  }
 }
 ```
 
 ---
 
-#### `SmartInsightBanner`
+#### BalanceCard — `components/BalanceCard.kt`
 
-Design: XCard with success@5% background, success@20% border, lightbulb icon in green box, title + message.
-
-```kotlin
-XCard(
-    modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(
-        containerColor = XTheme.Colors.Success.copy(alpha = 0.05f)
-    ),
-    shape = RoundedCornerShape(24.dp),
-    border = BorderStroke(1.dp, XTheme.Colors.Success.copy(alpha = 0.20f)),
-    elevation = CardDefaults.cardElevation(0.dp),
+```
+Box(
+  modifier = Modifier
+    .fillMaxWidth()
+    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(24.dp))
+    .clip(RoundedCornerShape(24.dp))
 ) {
-    Row(
-        modifier = Modifier.padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+  // 3dp gold top accent strip
+  Box(
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(3.dp)
+      .background(MaterialTheme.colorScheme.primary)
+      .align(Alignment.TopStart)
+  )
+
+  Column(modifier = Modifier.padding(24.dp)) {
+    XText("TOTAL NET WORTH",
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          fontSize = 12.sp, fontWeight = FontWeight.Bold,
+          letterSpacing = 1.2.sp)
+    Spacer(Modifier.height(8.dp))
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      XText(
+        balance.formattedAmount,
+        color = MaterialTheme.colorScheme.primary,
+        fontSize = 36.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = (-0.9).sp
+      )
+      Row(
         verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(XTheme.Colors.Success.copy(alpha = 0.20f), RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        // Trend pill — bg-success/10 rounded-full
+        Row(
+          modifier = Modifier
+            .background(XTheme.Colors.Success.copy(alpha = 0.1f), CircleShape)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+          verticalAlignment = Alignment.CenterVertically
         ) {
-            XIcon(
-                imageVector = Icons.Default.Lightbulb,
-                contentDescription = null,
+          XIcon(Icons.Default.TrendingUp,
                 tint = XTheme.Colors.Success,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Column {
-            XText(
-                text = "Smart Insight",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            XText(
-                text = insight.message,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-```
-
----
-
-#### `MonthlySummarySection`
-
-Design: "Monthly Summary" heading + XCard with 2 progress rows.
-
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    XText(
-        text = "Monthly Summary",
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
-    XCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(0.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            SummaryProgressRow(
-                label = "Income Performance",
-                amount = summary.income,
-                fraction = 0.85f,  // from data
+                modifier = Modifier.size(14.dp))
+          Spacer(Modifier.width(4.dp))
+          XText("+${balance.changePercent}% ($${balance.changeAmount})",
                 color = XTheme.Colors.Success,
-            )
-            SummaryProgressRow(
-                label = "Expenses Used",
-                amount = summary.expenses,
-                fraction = summary.expenses / summary.income,
-                color = XTheme.Colors.Danger,
-            )
+                fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
+        XText("vs last month",
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              fontSize = 12.sp)
+      }
     }
-}
-```
-
-`SummaryProgressRow`:
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        XText(label, 12.sp, Medium, color = onSurfaceVariant)
-        XText("$${amount.formatMoney()}", 12.sp, Bold, color = color)
-    }
-    // Progress track
-    Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape)
-            .background(MaterialTheme.colorScheme.outlineVariant)) {
-        Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().background(color))
-    }
+  }
 }
 ```
 
 ---
 
-#### `BudgetsSection`
+#### QuickActionsSection — `components/QuickActionsSection.kt`
 
-Design: Row header "Budgets" + "View All", then vertical list of BudgetItem cards (gap=12dp).
+> HTML: `grid grid-cols-4 gap-4`. 4 items with identical structure — repeated pattern.
 
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-        XText("Budgets", 18.sp, Bold, color = onSurface)
-        XText("View All", 12.sp, Bold, color = primary)
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        budgets.forEach { BudgetItem(it) }
-    }
-}
 ```
-
-`BudgetItem` — Card with 4dp left accent border. Use `Modifier.drawBehind` or a left-bordered Box:
-
-```kotlin
-// IMPORTANT: XCard does not support border-l-4 natively.
-// Implement as Row: Box(4dp wide, bg=accentColor) + Column(content, weight=1f)
-// Wrap in a Box with surface background and 24dp corner radius.
-Box(
-    modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-        .clip(RoundedCornerShape(24.dp)),
-) {
-    Row {
-        // Left accent bar
-        Box(
-            Modifier
-                .width(4.dp)
-                .height(72.dp)   // match card height
-                .background(if (category.isOverBudget) XTheme.Colors.Danger else MaterialTheme.colorScheme.primary)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                val accentColor = if (category.isOverBudget) XTheme.Colors.Danger else MaterialTheme.colorScheme.primary
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(accentColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    XIcon(budgetIcon(category.name), 24.dp, tint = accentColor)
-                }
-                Column {
-                    XText(category.name, 14.sp, Bold, color = onSurface)
-                    XText(
-                        "$${category.spent.formatMoney()} of $${category.total.formatMoney()}",
-                        12.sp, color = onSurfaceVariant,
-                    )
-                }
-            }
-            // Status badge
-            if (category.isOverBudget) {
-                Box(
-                    modifier = Modifier
-                        .background(XTheme.Colors.Danger, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    XText("OVER", 10.sp, FontWeight.Black, color = Color.White)
-                }
-            } else {
-                XText("On track", 10.sp, Bold, color = XTheme.Colors.Success)
-            }
-        }
-    }
-}
-```
-
----
-
-#### `SavingsGoalsSection`
-
-Design: "Savings Goals" heading, vertical list of SavingsGoalItem cards (gap=12dp). Each card: XCard with outlineVariant border, goal name + % on same row, amount below, 8dp progress bar.
-
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    XText("Savings Goals", 18.sp, Bold, color = onSurface)
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        goals.forEach { SavingsGoalItem(it) }
-    }
-}
-```
-
-`SavingsGoalItem`:
-```kotlin
-XCard(
-    modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    shape = RoundedCornerShape(24.dp),
-    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    elevation = CardDefaults.cardElevation(0.dp),
-) {
-    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
-            Column {
-                XText(goal.name, 14.sp, Bold, color = onSurface)
-                XText(
-                    "$${goal.current.formatMoney()} of $${goal.target.formatMoney()}",
-                    10.sp, color = onSurfaceVariant,
-                )
-            }
-            XText(
-                "${(goal.progress * 100).toInt()}%",
-                14.sp, ExtraBold, color = XTheme.Colors.Success,
-            )
-        }
-        // Progress bar (8dp)
-        Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.outlineVariant)) {
-            Box(Modifier.fillMaxWidth(goal.progress).fillMaxHeight()
-                    .background(XTheme.Colors.Success))
-        }
-    }
-}
-```
-
----
-
-#### `UpcomingBillsSection`
-
-Design: "Upcoming Bills" heading, vertical list of BillItem (gap=12dp). Each item: card with 4dp left accent (Danger for overdue, outlineVariant color for upcoming).
-
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    XText("Upcoming Bills", 18.sp, Bold, color = onSurface)
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        bills.forEach { BillItem(it) }
-    }
-}
-```
-
-`BillItem` — Same left-accent pattern as BudgetItem:
-```kotlin
-Box(
-    modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-        .clip(RoundedCornerShape(24.dp)),
-) {
-    Row {
-        val accentColor = if (bill.isOverdue) XTheme.Colors.Danger else MaterialTheme.colorScheme.outlineVariant
-        Box(Modifier.width(4.dp).matchParentSize().background(accentColor))
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(Arrangement.spacedBy(12.dp), Alignment.CenterVertically) {
-                val iconTint = if (bill.isOverdue) XTheme.Colors.Danger else MaterialTheme.colorScheme.onSurfaceVariant
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(iconTint.copy(alpha = 0.10f), RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    XIcon(billIcon(bill.name), 24.dp, tint = iconTint)
-                }
-                Column {
-                    XText(bill.name, 14.sp, Bold, color = onSurface)
-                    if (bill.isOverdue) {
-                        XText("OVERDUE", 12.sp, Bold, color = XTheme.Colors.Danger)
-                    } else {
-                        XText("Due ${bill.dueDate}", 12.sp, color = onSurfaceVariant)
-                    }
-                }
-            }
-            XText("$${bill.amount.formatMoney()}", 16.sp, Bold, color = onSurface)
-        }
-    }
-}
-```
-
----
-
-#### `PortfolioSection`
-
-Design: "Portfolio Assets" heading + single XCard containing all items separated by XHorizontalDividers.
-
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    XText("Portfolio Assets", 18.sp, Bold, color = onSurface)
-    XCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(0.dp),
-    ) {
-        Column {
-            assets.forEachIndexed { index, asset ->
-                PortfolioAssetItem(asset)
-                if (index < assets.lastIndex) {
-                    XHorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-            }
-        }
-    }
-}
-```
-
-`PortfolioAssetItem`:
-```kotlin
 Row(
-    modifier = Modifier.fillMaxWidth().padding(16.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
-    verticalAlignment = Alignment.CenterVertically,
+  modifier = Modifier.fillMaxWidth(),
+  horizontalArrangement = Arrangement.spacedBy(16.dp)
 ) {
-    // Circle avatar with symbol — opacity varies per rank: BTC=1.0, ETH=0.8, SOL=0.6
-    val opacity = when (index) { 0 -> 1.0f; 1 -> 0.8f; else -> 0.6f }
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(
-                MaterialTheme.colorScheme.primary.copy(alpha = opacity),
-                CircleShape,
-            ),
-        contentAlignment = Alignment.Center,
+  actions.forEach { action ->
+    Column(
+      modifier = Modifier.weight(1f),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        XText(asset.symbol.take(3), 12.sp, Bold, color = Color.White)
+      Box(
+        modifier = Modifier
+          .size(56.dp)
+          .background(
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+            CircleShape
+          )
+          .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+          .clickable { onActionClick(action.id) },
+        contentAlignment = Alignment.Center
+      ) {
+        XIcon(icon = action.icon,
+              tint = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.size(24.dp))
+      }
+      XText(action.label,
+            fontSize = 12.sp, fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    Column(modifier = Modifier.weight(1f)) {
-        XText(asset.name, 14.sp, Bold, color = onSurface)
-        XText("${asset.balance} ${asset.symbol}", 12.sp, color = onSurfaceVariant)
+  }
+}
+```
+
+Icon mapping: Send → `Icons.Default.Send`, Receive → `Icons.Default.Download`, Pay → `Icons.Default.Payments`, Top Up → `Icons.Default.AddCircle`
+
+---
+
+#### InsightBanner — `components/InsightBanner.kt`
+
+```
+Row(
+  modifier = Modifier
+    .fillMaxWidth()
+    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+    .padding(20.dp),
+  verticalAlignment = Alignment.Top,
+  horizontalArrangement = Arrangement.spacedBy(16.dp)
+) {
+  Box(
+    modifier = Modifier
+      .size(40.dp)
+      .background(
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        RoundedCornerShape(20.dp)
+      ),
+    contentAlignment = Alignment.Center
+  ) {
+    XIcon(Icons.Default.Lightbulb, tint = MaterialTheme.colorScheme.primary)
+  }
+  Column {
+    XText("Smart Insight", fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onSurface)
+    XText(insight.message, fontSize = 14.sp,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          lineHeight = 22.75.sp)  // 1.625 × 14sp
+  }
+}
+```
+
+---
+
+#### MonthlySummaryCard — `components/MonthlySummaryCard.kt`
+
+> **Key note**: HTML uses a SINGLE combined progress bar (`h-3` = 12dp, `rounded-full`) with two fills side by side (income on left, expense on right). Not two separate bars. Income fill: 61.7%, expense fill: 38.3% (inline styles from HTML).
+
+```
+Column(
+  modifier = Modifier
+    .fillMaxWidth()
+    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+    .padding(24.dp)
+) {
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.Bottom
+  ) {
+    Column {
+      XText("INCOME", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 0.7.sp)
+      XText(summary.formattedIncome, fontSize = 24.sp, fontWeight = FontWeight.Bold,
+            color = XTheme.Colors.Success)
     }
     Column(horizontalAlignment = Alignment.End) {
-        XText("$${asset.value.formatMoney()}", 14.sp, Bold, color = onSurface)
-        val changeColor = if (asset.changePercent >= 0) XTheme.Colors.Success else XTheme.Colors.Danger
-        val sign = if (asset.changePercent >= 0) "+" else ""
-        XText("$sign${asset.changePercent}%", 10.sp, Bold, color = changeColor)
+      XText("EXPENSES", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 0.7.sp)
+      XText(summary.formattedExpenses, fontSize = 24.sp, fontWeight = FontWeight.Bold,
+            color = XTheme.Colors.Danger)
     }
+  }
+
+  // Combined split progress bar
+  val total = summary.income + summary.expenses
+  val incomeRatio = if (total > 0) (summary.income / total).toFloat() else 0f
+  Box(
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(12.dp)
+      .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+      .clip(CircleShape)
+  ) {
+    Row(modifier = Modifier.fillMaxSize()) {
+      Box(modifier = Modifier.fillMaxHeight().weight(incomeRatio)
+            .background(XTheme.Colors.Success))
+      Box(modifier = Modifier.fillMaxHeight().weight(1f - incomeRatio)
+            .background(XTheme.Colors.Danger))
+    }
+  }
 }
 ```
 
 ---
 
-#### `RecentTransactionsSection`
+#### BudgetsSection — `components/BudgetsSection.kt`
 
-Design: Row header "Recent Transactions" + filter icon, then single XCard with items and dividers.
+> HTML: `grid grid-cols-2 gap-4`. Use chunked Row approach (nested lazy not allowed inside LazyColumn item).
 
-```kotlin
-Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-        XText("Recent Transactions", 18.sp, Bold, color = onSurface)
-        XIcon(Icons.Default.Tune, 24.dp, tint = onSurfaceVariant)
-    }
-    XCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(0.dp),
-    ) {
-        Column {
-            transactions.forEachIndexed { index, tx ->
-                TransactionItem(tx)
-                if (index < transactions.lastIndex) {
-                    XHorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-            }
-        }
-    }
-}
 ```
+Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  XText("Monthly Budgets", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface)
 
-`TransactionItem`:
-```kotlin
-Row(
-    modifier = Modifier.fillMaxWidth().padding(16.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    // Icon box — unique background per category
+  val rows = budgets.chunked(2)
+  Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    rows.forEach { rowItems ->
+      Row(modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        rowItems.forEach { budget ->
+          BudgetCard(budget, modifier = Modifier.weight(1f))
+        }
+        if (rowItems.size == 1) Spacer(modifier = Modifier.weight(1f))
+      }
+    }
+  }
+}
+
+// BudgetCard (private helper)
+@Composable
+private fun BudgetCard(budget: BudgetCategory, modifier: Modifier = Modifier) {
+  val isOver = budget.spent > budget.total
+  val accentColor = if (isOver) XTheme.Colors.Danger else MaterialTheme.colorScheme.primary
+  val borderColor = if (isOver)
+    XTheme.Colors.Danger.copy(alpha = 0.3f)
+    else MaterialTheme.colorScheme.outlineVariant
+
+  Column(
+    modifier = modifier
+      .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+      .border(1.dp, borderColor, RoundedCornerShape(24.dp))
+      .padding(16.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp)
+  ) {
+    Row(modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween) {
+      XText(budget.name, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            color = if (isOver) XTheme.Colors.Danger
+                    else MaterialTheme.colorScheme.onSurfaceVariant)
+      XText("$${budget.spent.toInt()}/${budget.total.toInt()}", fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isOver) XTheme.Colors.Danger
+                    else MaterialTheme.colorScheme.onSurface)
+    }
+    // Progress bar (h-1.5 = 6dp)
     Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(categoryBackground(tx.category), RoundedCornerShape(16.dp)),
-        contentAlignment = Alignment.Center,
+      modifier = Modifier.fillMaxWidth().height(6.dp)
+        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+        .clip(CircleShape)
     ) {
-        // For Netflix: "N" text in red italic; for others: category icon
-        if (tx.category == "streaming") {
-            XText("N", 14.sp, Black, color = Color.Red, fontStyle = FontStyle.Italic)
-        } else {
-            XIcon(categoryIcon(tx.category), 24.dp, tint = categoryTint(tx.category))
-        }
+      Box(
+        modifier = Modifier.fillMaxHeight()
+          .fillMaxWidth((budget.spent / budget.total).toFloat().coerceAtMost(1f))
+          .background(accentColor, CircleShape)
+      )
     }
-    Column(modifier = Modifier.weight(1f)) {
-        XText(tx.title, 14.sp, Bold, color = onSurface, maxLines = 1, overflow = Ellipsis)
-        XText("${tx.category} • ${tx.date}", 12.sp, color = onSurfaceVariant)
-    }
-    val amountColor = if (tx.isIncome) XTheme.Colors.Success else MaterialTheme.colorScheme.onSurface
-    val sign = if (tx.isIncome) "+" else "-"
-    XText("$sign$${tx.amount.formatMoney()}", 14.sp, Bold, color = amountColor)
+  }
 }
 ```
 
-Category backgrounds from design:
-- "streaming" / Netflix: `Color(0xFFDC2626).copy(alpha=0.20f)` (red-600/20)
-- "income" / Salary: `XTheme.Colors.Success.copy(alpha=0.20f)`
-- "food" / Coffee: `MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.30f)`
+---
+
+#### SavingsGoalsSection — `components/SavingsGoalsSection.kt`
+
+```
+Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  XText("Savings Goals", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface)
+
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    goals.forEach { goal -> SavingsGoalCard(goal) }
+  }
+}
+
+// SavingsGoalCard (private)
+@Composable
+private fun SavingsGoalCard(goal: SavingsGoal) {
+  val progress = (goal.current / goal.target).toFloat().coerceIn(0f, 1f)
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+      .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+      .padding(20.dp)
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+          verticalAlignment = Alignment.CenterVertically) {
+        XIcon(icon = goal.icon, tint = MaterialTheme.colorScheme.primary)
+        XText(goal.name, fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface)
+      }
+      XText("${(progress * 100).roundToInt()}%",
+            fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            color = XTheme.Colors.Success)
+    }
+    // Progress bar (h-2 = 8dp)
+    Box(
+      modifier = Modifier.fillMaxWidth().height(8.dp)
+        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+        .clip(CircleShape)
+    ) {
+      Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(progress)
+            .background(XTheme.Colors.Success, CircleShape))
+    }
+  }
+}
+```
+
+Goal icon mapping: Emergency Fund → `Icons.Default.Savings`, Vacation → `Icons.Default.Flight`
+
+---
+
+#### UpcomingBillsCard — `components/UpcomingBillsCard.kt`
+
+> HTML: single card with `divide-y divide-outline-variant/30`. Implement as Column with `XHorizontalDivider(color = outlineVariant.copy(0.3f))` between rows.
+
+```
+Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  XText("Upcoming Bills", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface)
+
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+      .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+      .clip(RoundedCornerShape(24.dp))
+  ) {
+    bills.forEachIndexed { index, bill ->
+      BillRow(bill)
+      if (index < bills.lastIndex) {
+        XHorizontalDivider(
+          color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
+      }
+    }
+  }
+}
+
+// BillRow (private)
+@Composable
+private fun BillRow(bill: UpcomingBill) {
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(16.dp),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+      Box(
+        modifier = Modifier
+          .size(40.dp)
+          .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(20.dp)),
+        contentAlignment = Alignment.Center
+      ) {
+        XIcon(icon = bill.icon,
+              tint = if (bill.isOverdue) XTheme.Colors.Danger
+                     else MaterialTheme.colorScheme.onSurfaceVariant)
+      }
+      Column {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+          XText(bill.name, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface)
+          if (bill.isOverdue) {
+            Box(
+              modifier = Modifier
+                .background(XTheme.Colors.Danger.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+              XText("OVERDUE", fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                    color = XTheme.Colors.Danger)
+            }
+          }
+        }
+        if (!bill.isOverdue) {
+          XText(bill.dueDate, fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+      }
+    }
+    XText(bill.formattedAmount, fontWeight = FontWeight.Bold,
+          color = if (bill.isOverdue) XTheme.Colors.Danger
+                  else MaterialTheme.colorScheme.onSurface)
+  }
+}
+```
+
+Bill icon mapping: Netflix → `Icons.Default.Subscriptions`, Internet → `Icons.Default.Wifi`, Electricity → `Icons.Default.Bolt`
+
+---
+
+#### PortfolioSection — `components/PortfolioSection.kt`
+
+> HTML: `grid grid-cols-3 gap-3`. Each asset card is a small Column with centered icon circle, symbol, and change %. BTC/SOL use `primary/10` circle; ETH uses `on-surface-variant/10` (intentional — negative performer gets muted circle).
+
+```
+Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  XText("Portfolio", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface)
+
+  val rows = assets.chunked(3)
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    rows.forEach { rowItems ->
+      Row(modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        rowItems.forEach { asset ->
+          PortfolioAssetCard(asset, modifier = Modifier.weight(1f))
+        }
+        repeat(3 - rowItems.size) { Spacer(modifier = Modifier.weight(1f)) }
+      }
+    }
+  }
+}
+
+// PortfolioAssetCard (private)
+@Composable
+private fun PortfolioAssetCard(asset: PortfolioAsset, modifier: Modifier = Modifier) {
+  val isPositive = asset.changePercent >= 0
+  // ETH (negative) gets muted circle; others get gold circle
+  val circleBackground = if (asset.symbol == "ETH")
+    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+    else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+  val circleIconTint = if (asset.symbol == "ETH")
+    MaterialTheme.colorScheme.onSurfaceVariant
+    else MaterialTheme.colorScheme.primary
+
+  Column(
+    modifier = modifier
+      .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+      .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+      .padding(16.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.spacedBy(8.dp)
+  ) {
+    Box(
+      modifier = Modifier
+        .size(32.dp)
+        .padding(bottom = 4.dp)
+        .background(circleBackground, CircleShape),
+      contentAlignment = Alignment.Center
+    ) {
+      XIcon(icon = asset.icon, tint = circleIconTint)
+    }
+    XText(asset.symbol, fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onSurface)
+    XText(
+      if (isPositive) "+${asset.changePercent}%" else "${asset.changePercent}%",
+      fontSize = 12.sp, fontWeight = FontWeight.Bold,
+      color = if (isPositive) XTheme.Colors.Success else XTheme.Colors.Danger
+    )
+  }
+}
+```
+
+Asset icon mapping: BTC → `Icons.Default.CurrencyBitcoin`, ETH → `Icons.Default.CurrencyExchange`, SOL → `Icons.Default.Token`
+
+---
+
+#### RecentTransactionsSection — `components/RecentTransactionsSection.kt`
+
+> **Key note**: Each transaction is its OWN card (`bg-surface rounded-2xl border`), NOT rows in a single card. Space between them is 12dp (`space-y-3`). No `XHorizontalDivider`.
+
+```
+Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  XText("Recent Transactions", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface)
+
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    transactions.forEach { tx -> TransactionCard(tx) }
+  }
+}
+
+// TransactionCard (private)
+@Composable
+private fun TransactionCard(tx: Transaction) {
+  val iconBackground = if (tx.isIncome)
+    XTheme.Colors.Success.copy(alpha = 0.1f)
+    else MaterialTheme.colorScheme.surfaceVariant
+  val iconTint = if (tx.isIncome)
+    XTheme.Colors.Success
+    else MaterialTheme.colorScheme.onSurfaceVariant
+
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+      .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+      .padding(16.dp),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+      Box(
+        modifier = Modifier.size(40.dp).background(iconBackground, CircleShape),
+        contentAlignment = Alignment.Center
+      ) {
+        XIcon(icon = tx.icon, tint = iconTint)
+      }
+      Column {
+        XText(tx.title, fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface)
+        XText(tx.subtitle, fontSize = 12.sp,
+              color = MaterialTheme.colorScheme.onSurfaceVariant)
+      }
+    }
+    XText(
+      if (tx.isIncome) "+${tx.formattedAmount}" else tx.formattedAmount,
+      fontWeight = FontWeight.Bold,
+      color = if (tx.isIncome) XTheme.Colors.Success
+              else MaterialTheme.colorScheme.onSurface
+    )
+  }
+}
+```
+
+Transaction icon mapping: Salary → `Icons.Default.Work`, Starbucks → `Icons.Default.Coffee`, Amazon → `Icons.Default.ShoppingBag`, Freelance → `Icons.Default.LaptopMac`, Uber → `Icons.Default.DirectionsCar`
 
 ---
 
 ### Loading State
 
-```kotlin
-// After DashboardHeader in the same Box > Column
+Shared screen — see: `.claude/docs/_shared/designs/loading.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_loading.md`
+
+```
+// → SampleScreen.kt
 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        // Manual spinner: 48dp box, 4dp stroke, primary color, primary@20 track
-        XCircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
-            strokeWidth = 4.dp,
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-        )
-        XText(
-            text = "Loading dashboard...",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 0.5.sp,
-        )
-    }
+  XCircularProgressIndicator()
 }
 ```
 
@@ -738,110 +722,118 @@ Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
 ### Failed State
 
-```kotlin
-// After DashboardHeader in the same Box > Column
-Box(
-    modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 24.dp),
-    contentAlignment = Alignment.Center,
+Shared screen — see: `.claude/docs/_shared/designs/failed.png`
+Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
+
+```
+// → SampleScreen.kt
+Column(
+  modifier = Modifier.fillMaxSize().padding(32.dp),
+  horizontalAlignment = Alignment.CenterHorizontally,
+  verticalArrangement = Arrangement.Center
 ) {
-    // Error card — rounded-card = 12dp (failed screen custom config)
-    XCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(12.dp),  // rounded-card from failed screen config
-        elevation = CardDefaults.cardElevation(0.dp),
-    ) {
-        Column {
-            // Error accent bar (3dp, error color)
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(MaterialTheme.colorScheme.error)
-            )
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                XIcon(
-                    imageVector = Icons.Default.Error,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(24.dp),
-                )
-                XText(
-                    text = "Something went wrong",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                XText(
-                    text = "Unable to load your dashboard. Please try again.",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(16.dp))
-                XButton(
-                    onClick = onRetry,
-                    modifier = Modifier.fillMaxWidth(),
-                    // Primary background, onPrimary text
-                    // rounded-xl standard = 12dp (not in failed config, use standard)
-                ) {
-                    XText(
-                        text = "Try Again",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        }
-    }
+  XIcon(Icons.Default.Warning,
+        tint = MaterialTheme.colorScheme.error,
+        modifier = Modifier.size(80.dp))
+  Spacer(Modifier.height(32.dp))
+  XText("Something went wrong",
+        fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth())
+  Spacer(Modifier.height(8.dp))
+  XText("An unexpected error occurred. Please try again.",
+        fontSize = 14.sp,
+        color = MaterialTheme.colorScheme.outline,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().widthIn(max = 240.dp))
+  Spacer(Modifier.height(32.dp))
+  XButton(
+    onClick = onRetry,
+    modifier = Modifier.widthIn(max = 200.dp).height(56.dp),
+    shape = RoundedCornerShape(12.dp)
+  ) {
+    XText("Retry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+  }
 }
 ```
 
 ---
 
-## Icon Mappings
+## Pre-Implementation Contract
 
-| Context | Icon |
-|---------|------|
-| Quick Action: Send | `Icons.AutoMirrored.Filled.Send` |
-| Quick Action: Receive | `Icons.Filled.CallReceived` |
-| Quick Action: Pay | `Icons.Filled.Payments` |
-| Quick Action: Top Up | `Icons.Filled.AddCircle` |
-| Balance watermark | `Icons.Filled.AccountBalanceWallet` |
-| Smart Insight | `Icons.Filled.Lightbulb` |
-| Budget: Shopping | `Icons.Filled.ShoppingBag` |
-| Budget: Dining | `Icons.Filled.Restaurant` |
-| Bill: Internet | `Icons.Filled.Wifi` |
-| Bill: Electricity | `Icons.Filled.ElectricBolt` |
-| Error | `Icons.Filled.Error` |
-| Trend up | `Icons.AutoMirrored.Filled.TrendingUp` |
-| Transaction: Income | `Icons.Filled.Work` |
-| Transaction: Food | `Icons.Filled.LocalCafe` |
-| Filter | `Icons.Filled.Tune` |
+> Architecture rules, color rules, and X-component defaults are project-wide and live in their canonical sources — do not restate them here:
+> - Architecture rules → [`_shared/patterns.md`](../../_shared/patterns.md)
+> - Color rules → [`m3-colors.md`](m3-colors.md) (sections "Color Rules (Strict)" and "Complete M3 Role Catalog")
+> - X-component default-render behavior → [`_shared/X_COMPONENTS_CATALOG.md`](../../_shared/X_COMPONENTS_CATALOG.md)
+>
+> This contract captures only feature-specific data the implementer cannot derive from those references.
+
+### XTheme Updates Required
+
+None — all design colors are already defined in `XDarkColors` / `XLightColors` or as `XTheme.Colors` custom extensions. No changes to `XTheme.kt` needed before implementation.
+
+### Color Audit
+
+#### Defined Roles
+| Role | Hex | Usage |
+|------|-----|-------|
+| background | #0F0D09 | Screen + header background |
+| surface | #1C1910 | All card backgrounds |
+| surfaceVariant | #302B1C | Progress bar tracks, quick action buttons, expense icon circles |
+| primary | #F5D76E | Balance amount, top strip, action icons, on-track progress fill |
+| onPrimary | #2C1900 | Text on gold |
+| primaryContainer | #4A3200 | Action button bg (@30%), insight icon bg (@10%), BTC/SOL circles (@10%) |
+| onPrimaryContainer | #FFF0C0 | Available for chips/labels on container bg |
+| onSurface | #EDE8D5 | Primary text throughout |
+| onSurfaceVariant | #C4BA94 | Muted text, labels, due dates, ETH circle |
+| outline | #726A48 | Card 1dp borders |
+| outlineVariant | #3F3822 | Dividers (@30%), weaker card borders |
+| error | #FFB4AB | Failed state icon |
+
+#### Missing Roles
+None.
+
+#### Custom Colors (justified exceptions only)
+| Name | Hex | Justification |
+|------|-----|---------------|
+| XTheme.Colors.Success | #4ADE80 | Income amounts, savings bars, positive %, income icon bg — no M3 "success" role |
+| XTheme.Colors.Danger | #FF6B6B | Expense amounts, over-budget, OVERDUE badge, negative % — distinct from error (#FFB4AB) |
+
+### Component Overrides (divergences from X-component defaults)
+
+| Component | Property | HTML Value | X-component Default | Override Required |
+|-----------|----------|------------|---------------------|-------------------|
+| All cards | shape | RoundedCornerShape(24.dp) | XCard: 12.dp (medium) | Use custom Box/Column — do NOT use XCard |
+| All cards | containerColor | surface (#1C1910) | XCard: surfaceVariant | Modifier.background(surface) explicitly |
+| XScaffold | containerColor | background | XTheme.Colors.PaleLavender (undefined) | Pass containerColor = MaterialTheme.colorScheme.background |
+| Quick action buttons | background | primaryContainer @ 30% | XIconButton: surface | Use raw Box, not XIconButton |
+| XHorizontalDivider (bills) | color | outlineVariant @ 30% | outlineVariant (100%) | Pass color = outlineVariant.copy(alpha = 0.3f) |
+| XButton (retry) | shape | RoundedCornerShape(12.dp) | CircleShape | Pass shape = RoundedCornerShape(12.dp) |
+| Monthly summary bar | height | 12.dp (h-3) | N/A (custom) | Single split Box with two weight() fills |
+| Budget progress bars | height | 6.dp (h-1.5) | N/A (custom) | Custom Box, not XLinearProgressIndicator |
+| Savings progress bars | height | 8.dp (h-2) | N/A (custom) | Custom Box, not XLinearProgressIndicator |
+| ETH portfolio circle | background | onSurfaceVariant @ 10% | N/A | Intentional — ETH is negative performer; muted circle |
+| Insight icon circle | corner radius | 20dp (rounded-xl) | N/A | RoundedCornerShape(20.dp), not CircleShape |
 
 ---
 
-## Key Changes From Current Implementation
+## Post-Implementation Checklist
 
-1. **Remove `XScaffold` + `XTopAppBar`** — Replace with plain `Box(background)` + `Column` + inline `DashboardHeader`
-2. **Balance card**: Change label to "Total Net Worth", show trend chip (not change line), add wallet icon watermark
-3. **Quick actions**: Increase size to 56×56dp squares with 16dp radius; adjust spacing to `SpaceEvenly`
-4. **Section order**: NetWorth → QuickActions → SmartInsight → MonthlySummary → Budgets → SavingsGoals → UpcomingBills → Portfolio → Transactions
-5. **Replace `IncomeGreen`/`ExpenseRed` with `XTheme.Colors.Success`/`XTheme.Colors.Danger`**
-6. **Budgets**: Add card with left-accent border pattern (4dp colored bar) + icon
-7. **Bills**: Add card with left-accent border + icon
-8. **Portfolio**: Wrap all items in single XCard with dividers
-9. **Transactions**: Wrap all items in single XCard with dividers
-10. **All section cards**: Use `RoundedCornerShape(24.dp)` (not medium 12dp)
-11. **Section headers**: Remove divider line; use plain `XText(18sp, Bold)` + optional "View All" right label
-12. **Loading state**: Keep `XCircularProgressIndicator` with primary color; keep "Loading dashboard..." text
-13. **Error state**: Use `RoundedCornerShape(12.dp)` for error card; show error icon above title; use `XButton` full-width
+- [ ] `XScaffold` called with `containerColor = MaterialTheme.colorScheme.background` (not default)
+- [ ] No `XCard` used — all cards are Box/Column with `Modifier.background(surface, RoundedCornerShape(24.dp)) + border(1.dp, outline, ...) + clip(...)`
+- [ ] Header is a sticky Box OUTSIDE the `LazyColumn`, not `XTopAppBar`
+- [ ] Monthly summary uses a SINGLE split progress bar (Row with two weight() fills, 12dp height), not two separate bars
+- [ ] Budget section uses 2-column chunked Row layout, not LazyVerticalGrid (nesting lazy not allowed)
+- [ ] Portfolio section uses 3-column chunked Row layout, not LazyVerticalGrid
+- [ ] Each transaction is its OWN card (no XHorizontalDivider between transactions)
+- [ ] Bills section uses single card + `XHorizontalDivider(color = outlineVariant.copy(0.3f))` between rows
+- [ ] ETH portfolio circle uses `onSurfaceVariant.copy(0.1f)` bg (not primaryContainer/10)
+- [ ] Expense transaction icon circles use `surfaceVariant` bg (not success/10)
+- [ ] Income transaction icon circles use `XTheme.Colors.Success.copy(0.1f)` bg
+- [ ] Quick action circles use `primaryContainer.copy(0.3f)` + `border(outlineVariant)` — not XIconButton
+- [ ] XButton (retry) has `shape = RoundedCornerShape(12.dp)` override
+- [ ] All `XTheme.Colors.*` usages: `Success` and `Danger` only — no raw Color() hex
+- [ ] All M3 colors use `MaterialTheme.colorScheme.{role}` — no hardcoded Color()
+- [ ] Build passes: `./gradlew :feature:sample:assembleAndroidMain`
+- [ ] Code formatted: `./gradlew :feature:sample:ktlintFormat`

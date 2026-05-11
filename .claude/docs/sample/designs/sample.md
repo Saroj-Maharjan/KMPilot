@@ -1,36 +1,40 @@
-# KMPilot Sample Dashboard
+# KMPilot Gold Dashboard
 
-**Approved**: 2026-02-23
+**Approved**: 2026-05-11
 
 ## Design Description
 
-A premium dark financial dashboard displaying total net worth, quick actions, smart insight, monthly summary, budgets, savings goals, upcoming bills, portfolio assets, and recent transactions.
+A premium dark finance dashboard with a champagne gold (#F5D76E) accent theme on a warm obsidian (#0F0D09) background. The screen is fully scrollable with 9 sections: balance hero card, quick actions, smart insight banner, monthly summary, budgets (2-column grid), savings goals, upcoming bills, portfolio (3-column grid), and recent transactions (individual cards).
 
-The design uses a deep dark indigo background (`#0D0919`) with a purple accent (`#9D70FF`). All cards use a slightly elevated surface (`#181228`). Success/income data uses green (`#4ADE80`); danger/expense data uses red (`#FF6B6B`).
+The header is a sticky inline Column — no XTopAppBar — showing "Good morning," in muted text and "Dashboard" in bold white. No avatar or notification bell.
 
-The header is an inline column (no top app bar) showing "Good morning" in muted text + "Dashboard" in bold bright text.
+All cards use surface (#1C1910) background with 1dp outline (#726A48) border and 24dp corner radius. Progress bars use surfaceVariant (#302B1C) as track color.
 
 ## Visual Specifications
 
-- **Background**: `#0D0919` (M3: background)
-- **Card surfaces**: `#181228` (M3: surface)
-- **Primary accent**: `#9D70FF` (M3: primary)
-- **Primary text**: `#E9E0FF` (M3: onBackground / onSurface)
-- **Muted text**: `#C5BCE0` (M3: onSurfaceVariant)
-- **Dividers / progress track**: `#1E1A2E` (M3: outlineVariant)
-- **Error accent**: `#FFB4AB` (M3: error)
-- **Custom Success**: `#4ADE80` (XTheme.Colors.Success)
-- **Custom Danger**: `#FF6B6B` (XTheme.Colors.Danger)
-- **Typography**: System default (Manrope in design — no custom font loaded yet)
-- **Card shape**: rounded-xl = 1.5rem = 24dp (from tailwind config)
-- **Section gap**: 24dp between sections
-- **Screen padding**: 16dp horizontal
+- **Background**: `#0F0D09` (M3: background)
+- **Card/Surface**: `#1C1910` (M3: surface)
+- **Surface variant / progress tracks**: `#302B1C` (M3: surfaceVariant)
+- **Primary accent (gold)**: `#F5D76E` (M3: primary)
+- **Text on primary**: `#2C1900` (M3: onPrimary)
+- **Primary container (30% opacity on actions)**: `#4A3200` (M3: primaryContainer)
+- **On primary container**: `#FFF0C0` (M3: onPrimaryContainer)
+- **Primary text**: `#EDE8D5` (M3: onSurface / onBackground)
+- **Muted text**: `#C4BA94` (M3: onSurfaceVariant)
+- **Card borders**: `#726A48` (M3: outline)
+- **Dividers / progress tracks**: `#3F3822` (M3: outlineVariant)
+- **Income/positive**: `#4ADE80` (XTheme.Colors.Success)
+- **Expense/negative**: `#FF6B6B` (XTheme.Colors.Danger)
+- **Typography**: Manrope font throughout
+- **Card shape**: 24dp (rounded-2xl = 1.5rem from Tailwind config)
+- **Section gap**: 24dp
+- **Screen padding**: 24dp horizontal
 
 ## Screenshots
 
 - Success: `sample.png`
-- Loading: `sample_loading.png`
-- Failed: `sample_failed.png`
+- Loading: `.claude/docs/_shared/designs/loading.png` (shared)
+- Failed: `.claude/docs/_shared/designs/failed.png` (shared)
 
 ---
 
@@ -40,42 +44,27 @@ Default theme for design: **dark**
 
 ### Defined M3 Roles (already in XDarkColors)
 
-| Role | Hex | Usage in Design |
-|------|-----|-----------------|
-| background | #0D0919 | Screen background |
-| surface | #181228 | Card backgrounds (card-dark) |
-| primary | #9D70FF | Balance amount, icons, buttons, accent borders |
-| onPrimary | #1A0054 | Text on primary-colored button |
-| onBackground | #E9E0FF | Dashboard title, primary text labels |
-| onSurface | #E9E0FF | Text inside cards |
-| onSurfaceVariant | #C5BCE0 | Muted/subtitle text, section labels |
-| outlineVariant | #1E1A2E | Progress bar track, card dividers (≈slate-800) |
-| error | #FFB4AB | Error accent bar + icon in failed state |
-| onError | #690005 | (not visible, for completeness) |
+| Role | Hex (inventory) | Usage in Design |
+|------|-----------------|-----------------|
+| background | #0F0D09 | Screen background, header background |
+| surface | #1C1910 | All card backgrounds |
+| surfaceVariant | #302B1C | Progress bar tracks, quick action button bg, expense/neutral icon circles |
+| primary | #F5D76E | Balance amount, balance top strip, action icons, section icons, progress fills (on-track budgets), savings icons |
+| onPrimary | #2C1900 | Text on gold (retry button in failed state) |
+| primaryContainer | #4A3200 | Quick action button circle background (@ 30% opacity), insight icon bg (@10% opacity), BTC/SOL symbol circles (@10% opacity) |
+| onSurface | #EDE8D5 | Primary text everywhere — titles, amounts, bill names, transaction names |
+| onSurfaceVariant | #C4BA94 | "Good morning," subtitle, section labels, muted amounts, due dates, quick action labels, ETH symbol circle |
+| outline | #726A48 | Card borders (1dp) |
+| outlineVariant | #3F3822 | Bill section dividers (@30%), budget/savings card borders, insight/summary card borders |
+| error | #FFB4AB | Failed state icon, failed state glow |
 
 ### Missing M3 Roles
 
-None — all design colors are mapped to existing XDarkColors roles.
+None — all design colors map to existing XDarkColors roles or XTheme.Colors custom extensions.
 
 ### Custom Colors (XTheme.Colors.* — justified exceptions)
 
 | Name | Hex | Justification |
 |------|-----|---------------|
-| Success | #4ADE80 | Income/positive state — M3 has no "success" semantic role |
-| Danger | #FF6B6B | Over-budget/expense — distinct from error (#FFB4AB coral); represents destructive financial status |
-
-### Component Overrides / Divergences
-
-| Component | CSS Color | M3 Role | XDarkColors Hex | Action |
-|-----------|-----------|---------|-----------------|--------|
-| Progress track | slate-800 (#1E293B) | outlineVariant | #1E1A2E | Minor divergence — use `outlineVariant` |
-| Portfolio asset circles | bg-primary (#9D70FF) | primary | #9D70FF | ✓ Exact match |
-| Error accent bar | #FFB4AB | error | #FFB4AB | ✓ Exact match |
-| "Try Again" button text | #1A0054 | onPrimary | #1A0054 | ✓ Exact match |
-
-All component sizes extracted from HTML (Tailwind):
-- Quick action icons: 56×56dp (`size-14`), rounded-2xl → not in tailwind config → standard 16dp
-- Budget/bill icon containers: 40×40dp (`size-10`), rounded-lg = 1rem = 16dp
-- Loading spinner: 48×48dp (`size-12`)
-- Card top accent bar: 3dp height
-- Error top accent bar: 3dp height (failed screen)
+| Success | #4ADE80 | Income amounts, savings progress bars, positive % changes, income icon circles (@10%), budget "On track" text — M3 has no "success" semantic role |
+| Danger | #FF6B6B | Expense amounts, over-budget borders/bars/text, OVERDUE badge, negative % changes — distinct from error (#FFB4AB coral); represents financial negative state |

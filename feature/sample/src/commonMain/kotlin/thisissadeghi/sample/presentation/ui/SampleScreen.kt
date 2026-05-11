@@ -1,6 +1,5 @@
 package thisissadeghi.sample.presentation.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,16 +8,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,25 +26,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.common.UiState
-import thisissadeghi.common.asString
 import thisissadeghi.designsystem.XButton
-import thisissadeghi.designsystem.XCard
 import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
+import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XText
 import thisissadeghi.sample.data.model.DashboardData
 import thisissadeghi.sample.presentation.SampleUiModel
 import thisissadeghi.sample.presentation.SampleViewModel
+import thisissadeghi.sample.presentation.ui.components.BalanceCard
 import thisissadeghi.sample.presentation.ui.components.BudgetsSection
 import thisissadeghi.sample.presentation.ui.components.DashboardHeader
-import thisissadeghi.sample.presentation.ui.components.MonthlySummarySection
-import thisissadeghi.sample.presentation.ui.components.NetWorthCard
+import thisissadeghi.sample.presentation.ui.components.InsightBanner
+import thisissadeghi.sample.presentation.ui.components.MonthlySummaryCard
 import thisissadeghi.sample.presentation.ui.components.PortfolioSection
-import thisissadeghi.sample.presentation.ui.components.QuickActionsRow
+import thisissadeghi.sample.presentation.ui.components.QuickActionsSection
 import thisissadeghi.sample.presentation.ui.components.RecentTransactionsSection
 import thisissadeghi.sample.presentation.ui.components.SavingsGoalsSection
-import thisissadeghi.sample.presentation.ui.components.SmartInsightBanner
-import thisissadeghi.sample.presentation.ui.components.UpcomingBillsSection
+import thisissadeghi.sample.presentation.ui.components.UpcomingBillsCard
 
 @Composable
 fun SampleScreen(
@@ -72,30 +67,25 @@ fun SampleScreenRoot(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding(),
-    ) {
-        DashboardHeader()
+    XScaffold(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { paddingValues ->
         when (val state = uiState.dashboardState) {
             UiState.Uninitialized, UiState.Loading ->
-                LoadingContent(modifier = Modifier.fillMaxSize())
+                LoadingContent(modifier = Modifier.padding(paddingValues).fillMaxSize())
+
+            is UiState.Failed ->
+                ErrorContent(
+                    onRetry = onRetry,
+                    modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                )
 
             is UiState.Success ->
                 DashboardContent(
                     data = state.value,
                     onActionClick = onActionClick,
-                    modifier = Modifier.fillMaxSize(),
-                )
-
-            is UiState.Failed ->
-                ErrorContent(
-                    error = state.error.asString(),
-                    onRetry = onRetry,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.padding(paddingValues).fillMaxSize(),
                 )
         }
     }
@@ -109,20 +99,23 @@ private fun DashboardContent(
     onActionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.navigationBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 48.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        item { NetWorthCard(data.accountBalance.totalBalance, data.accountBalance.changePercent) }
-        item { QuickActionsRow(data.quickActions, onActionClick) }
-        item { SmartInsightBanner(data.spendingInsight.message) }
-        item { MonthlySummarySection(data.monthlySummary.income, data.monthlySummary.expenses) }
-        item { BudgetsSection(data.budgetCategories) }
-        item { SavingsGoalsSection(data.savingsGoals) }
-        item { UpcomingBillsSection(data.upcomingBills) }
-        item { PortfolioSection(data.portfolioAssets) }
-        item { RecentTransactionsSection(data.recentTransactions) }
+    Column(modifier = modifier) {
+        DashboardHeader()
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            item { BalanceCard(data.accountBalance) }
+            item { QuickActionsSection(data.quickActions, onActionClick) }
+            item { InsightBanner(data.spendingInsight) }
+            item { MonthlySummaryCard(data.monthlySummary) }
+            item { BudgetsSection(data.budgetCategories) }
+            item { SavingsGoalsSection(data.savingsGoals) }
+            item { UpcomingBillsCard(data.upcomingBills) }
+            item { PortfolioSection(data.portfolioAssets) }
+            item { RecentTransactionsSection(data.recentTransactions) }
+        }
     }
 }
 
@@ -130,104 +123,51 @@ private fun DashboardContent(
 
 @Composable
 private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.navigationBarsPadding(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            XCircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                strokeWidth = 4.dp,
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-            )
-            XText(
-                text = "Loading dashboard...",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 0.5.sp,
-            )
-        }
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        XCircularProgressIndicator()
     }
 }
 
 @Composable
 private fun ErrorContent(
-    error: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier =
-            modifier
-                .navigationBarsPadding()
-                .padding(horizontal = 24.dp),
-        contentAlignment = Alignment.Center,
+    Column(
+        modifier = modifier.padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        XCard(
+        XIcon(
+            imageVector = Icons.Filled.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(80.dp),
+        )
+        Spacer(Modifier.height(32.dp))
+        XText(
+            "Something went wrong",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        )
+        Spacer(Modifier.height(8.dp))
+        XText(
+            "An unexpected error occurred. Please try again.",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().widthIn(max = 240.dp),
+        )
+        Spacer(Modifier.height(32.dp))
+        XButton(
+            onClick = onRetry,
+            modifier = Modifier.widthIn(max = 200.dp).height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(0.dp),
         ) {
-            Column {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(3.dp)
-                            .background(MaterialTheme.colorScheme.error),
-                )
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    XIcon(
-                        imageVector = Icons.Filled.Error,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(24.dp),
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    XText(
-                        text = "Something went wrong",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    XText(
-                        text = error,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(32.dp))
-                    XButton(
-                        onClick = onRetry,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                            ),
-                    ) {
-                        XText(
-                            text = "Try Again",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
+            XText("Retry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }

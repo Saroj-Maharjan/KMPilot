@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 3.1.0 |
+| Version | 3.2.0 |
 | Status | Approved |
 | Author | System |
 | Created | 2026-01-05 |
-| Updated | 2026-02-19 |
+| Updated | 2026-05-11 |
 | Design | `.claude/docs/sample/designs/sample_blueprint.md` |
 | Reviewers | N/A |
 
@@ -133,16 +133,16 @@ The sample feature was repurposed from a generic pattern demonstrator into a rea
 | SampleUiModel | UI state container with 4-state pattern |
 | SampleScreen | Main composable connecting ViewModel to UI |
 | SampleScreenRoot | ViewModel-independent root for testing |
-| BalanceSection | Total balance hero card with gold accent |
-| MonthlySummarySection | Income vs. expenses bar comparison |
-| QuickActionsSection | 4 stub action buttons in a row |
-| SectionHeader | Reusable labelled divider for dashboard sections |
-| TransactionRow | Single transaction row with category icon |
-| BudgetRow | Budget category with progress bar (red if over budget) |
-| SavingsGoalCard | Savings goal with progress bar and due date |
-| BillRow | Upcoming bill row (red if overdue) |
-| InsightBanner | Full-width spending insight card |
-| PortfolioAssetRow | Asset with symbol circle, balance, and change % |
+| BalanceCard | Total balance hero card — Box+border, no XCard, full AccountBalance |
+| QuickActionsSection | 4 stub action buttons — CircleShape circles, primaryContainer bg |
+| InsightBanner | Raw Row — surface bg, outlineVariant border, primary icon tint |
+| MonthlySummaryCard | Single combined split-bar, INCOME/EXPENSES side-by-side |
+| BudgetsSection | 2-column grid; plain cards with 6dp progress bar, no icon circles |
+| SavingsGoalsSection | Cards with 20dp padding; icon derived from goal name; success progress bars |
+| UpcomingBillsCard | Single card + XHorizontalDivider; OVERDUE inline badge |
+| PortfolioSection | 3-column grid; each asset its own card (symbol + change %) |
+| RecentTransactionsSection | Each transaction its OWN card (no dividers); CircleShape icon circles |
+| DashboardHeader | Sticky Box — "Good morning," + "Dashboard" 20sp Bold |
 | SampleRoute | Navigation route (@Serializable data object) |
 | SampleModules | DI configuration (BaseFeature object) |
 
@@ -210,9 +210,18 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 │   ├── SampleViewModel.kt           # MutableStateFlow + setState {}
 │   ├── SampleUiModel.kt             # @Stable data class
 │   ├── ui/
-│   │   ├── SampleScreen.kt          # Full dashboard screen + all section composables
+│   │   ├── SampleScreen.kt          # Screen + ScreenRoot + state routing
 │   │   └── components/
-│   │       └── SampleCard.kt        # Empty — components live in SampleScreen.kt
+│   │       ├── BalanceCard.kt
+│   │       ├── QuickActionsSection.kt
+│   │       ├── InsightBanner.kt
+│   │       ├── MonthlySummaryCard.kt
+│   │       ├── BudgetsSection.kt
+│   │       ├── SavingsGoalsSection.kt
+│   │       ├── UpcomingBillsCard.kt
+│   │       ├── PortfolioSection.kt
+│   │       ├── RecentTransactionsSection.kt
+│   │       └── DashboardHeader.kt
 │   └── navigation/
 │       └── SampleNavigation.kt      # @Serializable route + extension
 └── di/
@@ -221,27 +230,29 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 
 ### 4.5 UI Design
 
-**Theme:** Dark (background `#0D0919`, surface `#181228`, primary purple `#9D70FF`)
+**Theme:** Dark gold/champagne on warm obsidian — background `#0F0D09`, surface `#1C1910`, primary gold `#F5D76E`
 
 **Color tokens (M3 roles):**
-- Income/positive: `MaterialTheme.colorScheme.tertiary` (`#4ADE80`)
-- Expense/negative: `XTheme.Colors.ExpenseRed` (`#FF6B6B`)
-- All other colors via `MaterialTheme.colorScheme.*` — no hardcoded hex in feature code
+- All M3 roles via `MaterialTheme.colorScheme.*` — no hardcoded `Color()` hex in feature code
+- Income/positive: `XTheme.Colors.Success` (`#4ADE80`)
+- Expense/negative/overdue: `XTheme.Colors.Danger` (`#FF6B6B`)
 
-**Dashboard Layout (LazyColumn) — section order:**
-1. **BalanceCard** — "TOTAL NET WORTH" uppercase label; wallet watermark icon (alpha 0.10); large purple `$` amount (38sp); trend pill with tertiary green bg + icon; 3dp primary top strip; 24dp card corners
-2. **QuickActionsSection** — centered Row with 24dp gaps; 56dp icon circles with 32dp corners + primary tint border
-3. **InsightBanner** — tertiary-tinted card with lightbulb icon + smart insight message
-4. **MonthlySummarySection** — section heading; single card with "Income Performance" (tertiary) and "Expenses Used" (ExpenseRed) bars; 6dp bar height
-5. **BudgetsSection** — section heading + "View All"; cards with 4dp left-accent border (ExpenseRed if over, primary otherwise); icon circles; "OVER" badge or "On track" label
-6. **SavingsGoalsSection** — section heading; cards with outlineVariant border; tertiary progress bars (8dp height); percentage label
-7. **UpcomingBillsSection** — section heading; cards with 4dp left-accent; icon circles; "OVERDUE" in ExpenseRed (no day count)
-8. **PortfolioSection** — section heading; single card wrapping all assets with XHorizontalDivider between rows; symbol circle with primary fill
-9. **RecentTransactionsSection** — section heading + tune icon; single card with XHorizontalDivider; category • date sub-label
+**Dashboard Layout (`XScaffold` + Column, LazyColumn `contentPadding = start/end 24dp, bottom 48dp`) — section order:**
+1. **BalanceCard** — Box+border+clip (not XCard); gold 3dp top strip; 36sp ExtraBold amount; trend pill CircleShape (no border); "vs last month" text
+2. **QuickActionsSection** — `spacedBy(16dp)` Row, `weight(1f)` columns; `CircleShape` circles; `primaryContainer.copy(0.3f)` bg + `outlineVariant` border
+3. **InsightBanner** — `surface` bg + `outlineVariant` border; `primary` icon bg `primary.copy(0.1f)` + `RoundedCornerShape(20dp)`; 20dp padding
+4. **MonthlySummaryCard** — section heading "Monthly Summary"; INCOME/EXPENSES side-by-side 24sp; single combined split bar 12dp
+5. **BudgetsSection** — section heading "Monthly Budgets"; 2-column chunked grid; plain cards with 6dp progress bar; no icon circles, no accent strips
+6. **SavingsGoalsSection** — section heading; cards 20dp padding; icon derived from goal name; `XTheme.Colors.Success` progress bars (8dp)
+7. **UpcomingBillsCard** — section heading; single card + `XHorizontalDivider(outlineVariant.copy(0.3f))`; icon circles `surfaceVariant + RoundedCornerShape(20dp)`; inline OVERDUE badge
+8. **PortfolioSection** — section heading "Portfolio"; 3-column chunked grid; each asset its own card (32dp circle + symbol + change%)
+9. **RecentTransactionsSection** — section heading; each transaction its OWN card (no dividers); `CircleShape` icon circles; income bg `Success.copy(0.1f)`, expense bg `surfaceVariant`
 
-**Header:** Custom Column (not XTopAppBar) — "Good morning" subtitle in onSurfaceVariant + "Dashboard" bold title in onSurface. No navigation icons.
+**Header:** Sticky `Box` OUTSIDE `LazyColumn` — "Good morning," subtitle 14sp Medium `onSurfaceVariant`; "Dashboard" title 20sp Bold `onSurface` letterSpacing (-0.5).sp; `background(background)`
 
-**All cards:** `RoundedCornerShape(24.dp)`. Progress bar track: `Color(0xFF1E293B)` (slate-800).
+**All cards:** `RoundedCornerShape(24.dp)` + `border(1.dp, outline/outlineVariant)` via `Modifier.background(surface, ...)` — **no XCard**
+
+**Progress bar tracks:** `MaterialTheme.colorScheme.surfaceVariant` — no hardcoded Color()
 
 ---
 
@@ -396,6 +407,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.0 | 2026-05-11 | Blueprint implementation (ui-designer skill): gold/champagne theme (#F5D76E primary), component renames (BalanceCard, QuickActionsSection, InsightBanner, MonthlySummaryCard, UpcomingBillsCard), XScaffold replacing manual Column, 2-col budget grid, 3-col portfolio grid, single split-bar monthly summary (12dp), individual transaction cards, single bills card with dividers, XTheme.Colors.Success/Danger replacing obsolete ExpenseRed/tertiary usage, DashboardHeader sticky Box with background. |
 | 3.1.0 | 2026-02-19 | UI redesign via Stitch (ui-designer skill): purple brand palette (#9D70FF primary), M3 tertiary for income (#4ADE80), XTheme.Colors.ExpenseRed for expenses, 24dp card corners, custom header Column, reordered sections (Insight Banner after Quick Actions), Budget/Bills redesigned as cards with 4dp left-accent borders, Portfolio/Transactions wrapped in single cards with dividers, removed private color vals in favour of MaterialTheme.colorScheme roles. |
 | 3.0.0 | 2026-02-19 | Major rewrite: replaced generic sample with finance dashboard mockup. New domain models (DashboardData + 9 sub-models), hard-coded local data, full dashboard UI with balance, summary, transactions, budget, savings goals, quick actions, bills, insights, portfolio. Navigation callback renamed to onActionClick. |
 | 2.2.0 | 2026-02-10 | Premium UI redesign: SampleCard with crimson accent bar + ghost index number. |

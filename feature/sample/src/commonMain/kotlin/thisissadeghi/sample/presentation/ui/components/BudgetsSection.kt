@@ -1,127 +1,111 @@
 package thisissadeghi.sample.presentation.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
 import thisissadeghi.sample.data.model.BudgetCategory
-import thisissadeghi.sample.presentation.ui.formatMoney
 
 @Composable
 internal fun BudgetsSection(categories: List<BudgetCategory>) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            XText("Budgets", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            XText("View All", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            categories.forEach { BudgetItem(it) }
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        XText(
+            "Monthly Budgets",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        val rows = categories.chunked(2)
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            rows.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    rowItems.forEach { budget ->
+                        BudgetCard(budget, modifier = Modifier.weight(1f))
+                    }
+                    if (rowItems.size == 1) {
+                        androidx.compose.foundation.layout
+                            .Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun BudgetItem(category: BudgetCategory) {
-    val accentColor = if (category.isOverBudget) XTheme.Colors.Danger else MaterialTheme.colorScheme.primary
-    Row(
+private fun BudgetCard(
+    budget: BudgetCategory,
+    modifier: Modifier = Modifier,
+) {
+    val isOver = budget.isOverBudget
+    val accentColor = if (isOver) XTheme.Colors.Danger else MaterialTheme.colorScheme.primary
+    val borderColor =
+        if (isOver) {
+            XTheme.Colors.Danger.copy(alpha = 0.3f)
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        }
+
+    Column(
         modifier =
-            Modifier
-                .fillMaxWidth()
+            modifier
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-                .clip(RoundedCornerShape(24.dp))
-                .height(IntrinsicSize.Min),
+                .border(1.dp, borderColor, RoundedCornerShape(24.dp))
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            XText(
+                budget.name,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isOver) XTheme.Colors.Danger else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            XText(
+                "$${budget.spent.toInt()}/${budget.total.toInt()}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isOver) XTheme.Colors.Danger else MaterialTheme.colorScheme.onSurface,
+            )
+        }
         Box(
             modifier =
                 Modifier
-                    .width(4.dp)
-                    .fillMaxHeight()
-                    .background(accentColor),
-        )
-        Row(
-            modifier =
-                Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+                    .height(6.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                    .clip(CircleShape),
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(40.dp)
-                            .background(accentColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    XIcon(
-                        imageVector = budgetIcon(category.name),
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                Column {
-                    XText(category.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    XText(
-                        "$${ category.spent.formatMoney() } of $${ category.total.formatMoney() }",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            if (category.isOverBudget) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(XTheme.Colors.Danger, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    XText("OVER", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
-                }
-            } else {
-                XText("On track", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = XTheme.Colors.Success)
-            }
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(budget.progress.coerceAtMost(1f))
+                        .background(accentColor, CircleShape),
+            )
         }
     }
 }
-
-private fun budgetIcon(name: String): ImageVector =
-    when (name.lowercase()) {
-        "shopping" -> Icons.Filled.ShoppingBag
-        "dining" -> Icons.Filled.Restaurant
-        else -> Icons.Filled.Receipt
-    }
