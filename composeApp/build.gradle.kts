@@ -41,18 +41,17 @@ kotlin {
             // android only
             implementation(libs.koin.android)
             implementation(libs.activityCompose)
-            implementation(compose.uiTooling)
-            implementation(compose.preview)
+            implementation(libs.compose.ui.tooling)
+            implementation(libs.compose.ui.tooling.preview)
         }
 
         commonMain.dependencies {
-            implementation(libs.kotlin.stdlib)
-            implementation(compose.foundation)
-            implementation(compose.ui)
-            implementation(compose.uiUtil)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.material3)
-            implementation(compose.components.resources)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.ui.util)
+            implementation(libs.compose.material.icons.extended)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.components.resources)
             implementation(libs.kotlinxSerialization)
             implementation(libs.jetbrains.compose.navigation)
             api(libs.koin.core)
@@ -131,8 +130,6 @@ android {
 
 buildkonfig {
     packageName = "thisissadeghi.kmpilot"
-
-    val iosTargets = listOf("iosX64", "iosArm64", "iosSimulatorArm64")
 
     defaultConfigs {
         buildConfigField(

@@ -1,5 +1,6 @@
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
-import com.android.build.gradle.TestedExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -39,7 +40,6 @@ plugins {
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinKsp) apply false
-    alias(libs.plugins.room) apply false
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
@@ -48,6 +48,14 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.mokkery) apply false
 }
+
+val koverIncludedClasses = listOf(
+    "*ViewModel", "*ViewModel\$*",
+    "*Repository", "*RepositoryImpl", "*Repository\$*",
+    "*DataSource", "*DataSourceImpl", "*RemoteDataSource", "*RemoteDataSourceImpl",
+    "*ScreenKt",
+)
+val koverExcludedClasses = listOf("*Test", "*Test\$*", "*Fixtures*")
 
 // Aggregate coverage from all feature modules
 dependencies {
@@ -74,15 +82,8 @@ allprojects {
 
                 reports {
                     filters {
-                        includes {
-                            classes("*ViewModel", "*ViewModel$*")
-                            classes("*Repository", "*RepositoryImpl", "*Repository$*")
-                            classes("*DataSource", "*DataSourceImpl", "*RemoteDataSource", "*RemoteDataSourceImpl")
-                            classes("*ScreenKt")
-                        }
-                        excludes {
-                            classes("*Test", "*Test$*", "*Fixtures*")
-                        }
+                        includes { classes(koverIncludedClasses) }
+                        excludes { classes(koverExcludedClasses) }
                     }
 
                     total {
@@ -119,8 +120,8 @@ allprojects {
 
     // Configure Android application/library modules
     pluginManager.withPlugin("com.android.application") {
-        extensions.configure<TestedExtension> {
-            setCompileSdkVersion(compileSdkVer)
+        extensions.configure<ApplicationExtension> {
+            compileSdk = compileSdkVer
             defaultConfig {
                 minSdk = minSdkVer
                 targetSdk = targetSdkVer
@@ -132,11 +133,10 @@ allprojects {
         }
     }
     pluginManager.withPlugin("com.android.library") {
-        extensions.configure<TestedExtension> {
-            setCompileSdkVersion(compileSdkVer)
+        extensions.configure<LibraryExtension> {
+            compileSdk = compileSdkVer
             defaultConfig {
                 minSdk = minSdkVer
-                targetSdk = targetSdkVer
             }
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_21
@@ -173,15 +173,8 @@ allprojects {
 kover {
     reports {
         filters {
-            includes {
-                classes("*ViewModel", "*ViewModel$*")
-                classes("*Repository", "*RepositoryImpl", "*Repository$*")
-                classes("*DataSource", "*DataSourceImpl", "*RemoteDataSource", "*RemoteDataSourceImpl")
-                classes("*ScreenKt")
-            }
-            excludes {
-                classes("*Test", "*Test$*", "*Fixtures*")
-            }
+            includes { classes(koverIncludedClasses) }
+            excludes { classes(koverExcludedClasses) }
         }
 
         total {

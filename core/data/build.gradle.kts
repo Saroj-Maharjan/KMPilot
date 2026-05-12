@@ -49,12 +49,9 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.kotlin.stdlib)
                 implementation(libs.kotlinCollection)
                 implementation(libs.kotlinxSerialization)
                 implementation(libs.bundles.ktor)
-                implementation(libs.koin.compose)
-                implementation(libs.koin.compose.viewmodel)
                 api(libs.koin.core)
                 api(libs.datastore.preferences)
                 api(libs.datastore)

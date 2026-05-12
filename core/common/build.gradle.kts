@@ -52,8 +52,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(compose.components.resources)
-                implementation(libs.kotlin.stdlib)
+                implementation(libs.compose.components.resources)
                 implementation(libs.kotlinCollection)
                 implementation(libs.kotlinxSerialization)
                 implementation(libs.androidx.lifecycle.viewmodel)

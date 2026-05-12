@@ -16,6 +16,7 @@ androidx-lifecycle = "2.10.0"
 ktor = "3.4.3"
 koin = "4.2.1"
 compose-plugin = "1.10.3"
+compose-material3 = "1.9.0"
 #minSDK alert check before update.
 datastore = "1.2.1"
 coil = "3.4.0"
@@ -59,25 +60,32 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 
 datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-compose-core = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
-coil-network-ktor2 = { module = "io.coil-kt.coil3:coil-network-ktor2", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 coil-mp = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 
 jetbrains-compose-navigation = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref= "navigationCompose"}
+
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-plugin" }
+compose-ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "compose-plugin" }
+compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose-plugin" }
+compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-plugin" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-plugin" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-plugin" }
+# Pinned: no longer updated in Compose Multiplatform; migrate to Material Symbols when ready
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
 compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
 google-recaptcha = { module = "com.google.android.recaptcha:recaptcha", version.ref = "recaptcha" }
 android-desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
@@ -110,7 +118,6 @@ ktor = [
 coil = [
     "coil-compose",
     "coil-compose-core",
-    "coil-network-ktor2",
     "coil-network-ktor3",
     "coil-mp"
 ]
