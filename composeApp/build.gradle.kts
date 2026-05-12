@@ -71,6 +71,8 @@ kotlin {
     }
 }
 
+base.archivesName.set("KMPilot-${libs.versions.android.versionName.get()}")
+
 android {
     namespace = "thisissadeghi.kmpilot"
 
@@ -83,7 +85,6 @@ android {
         versionName =
             libs.versions.android.versionName
                 .get()
-        setProperty("archivesBaseName", "KMPilot-$versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

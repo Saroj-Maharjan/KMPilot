@@ -1,8 +1,19 @@
-import com.android.build.api.dsl.androidLibrary
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.gradle.TestedExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+
+buildscript {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains" && requested.name == "annotations") {
+                useVersion("23.0.0")
+                because("AGP 9.2.1 requires annotations 23.0.0; overrides strict 13.0 from Kotlin plugin")
+            }
+        }
+    }
+}
 
 // Define SDK versions once at root
 val compileSdkVer: Int by lazy {
@@ -146,10 +157,10 @@ allprojects {
         compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
     }
 
-    // Configure Kotlin Multiplatform library modules (must apply plugin first)
+    // Configure Kotlin Multiplatform library modules
     pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
         extensions.configure<KotlinMultiplatformExtension> {
-            androidLibrary {
+            targets.withType(KotlinMultiplatformAndroidLibraryTarget::class.java).configureEach {
                 compileSdk = compileSdkVer
                 minSdk = minSdkVer
                 androidResources.enable = true

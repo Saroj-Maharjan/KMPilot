@@ -5,10 +5,10 @@ android-targetSdk = "36"
 android-versionCode = "1"
 android-versionName = "1.0.0"
 
-agp = "8.13.1"
+agp = "9.2.1"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
-ktlint = "14.0.1"
+ktlint = "14.2.0"
 ksp = "2.3.3"
 room = "2.8.4"
 androidx-lifecycle = "2.9.6"
@@ -22,7 +22,7 @@ coil = "3.3.0"
 #Do not upgrade navigation compose to newer versions until they release a version compatible with compose version. (Read compose plugin changelogs)
 #https://github.com/JetBrains/compose-multiplatform/releases?page=1
 navigationCompose = "2.9.1"
-buildkonfig = "0.17.1"
+buildkonfig = "0.20.0"
 kotlinxCollections = "0.4.0"
 #https://developer.android.com/jetpack/androidx/releases/activity#1.12.0-alpha06 - minSDK alert check before update.
 activityCompose = "1.11.0"
