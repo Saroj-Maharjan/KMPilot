@@ -47,7 +47,6 @@ android {
         }
         debug {
             versionNameSuffix = "-SNAPSHOT"
-            signingConfigs.findByName("mainKey")?.let { signingConfig = it }
         }
     }
 }
