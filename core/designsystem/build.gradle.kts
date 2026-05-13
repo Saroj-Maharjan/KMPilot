@@ -11,7 +11,7 @@ kotlin {
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    androidLibrary {
+    android {
         namespace = "thisissadeghi.designsystem"
     }
     jvm("desktop")
@@ -71,7 +71,6 @@ kotlin {
 
         androidMain {
             dependencies {
-                implementation(libs.compose.ui.tooling)
                 implementation(libs.compose.ui.tooling.preview)
             }
         }
@@ -86,4 +85,8 @@ kotlin {
             }
         }
     }
+}
+
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)
 }

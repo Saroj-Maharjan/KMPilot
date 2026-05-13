@@ -10,7 +10,7 @@ plugins {
 kotlin {
 
     // Target declarations
-    androidLibrary {
+    android {
         namespace = "thisissadeghi.receive"
     }
     jvm("desktop")
@@ -60,9 +60,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(libs.bundles.testing.common)
-
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                implementation(compose.uiTest)
+                implementation(libs.compose.ui.test)
             }
         }
 
