@@ -47,12 +47,19 @@ plugins {
     alias(libs.plugins.mokkery) apply false
 }
 
-val koverIncludedClasses = listOf(
-    "*ViewModel", "*ViewModel\$*",
-    "*Repository", "*RepositoryImpl", "*Repository\$*",
-    "*DataSource", "*DataSourceImpl", "*RemoteDataSource", "*RemoteDataSourceImpl",
-    "*ScreenKt",
-)
+val koverIncludedClasses =
+    listOf(
+        "*ViewModel",
+        "*ViewModel\$*",
+        "*Repository",
+        "*RepositoryImpl",
+        "*Repository\$*",
+        "*DataSource",
+        "*DataSourceImpl",
+        "*RemoteDataSource",
+        "*RemoteDataSourceImpl",
+        "*ScreenKt",
+    )
 val koverExcludedClasses = listOf("*Test", "*Test\$*", "*Fixtures*")
 
 // Aggregate coverage from all feature modules

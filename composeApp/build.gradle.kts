@@ -62,12 +62,14 @@ buildkonfig {
         buildConfigField(
             INT,
             "VERSION_CODE",
-            libs.versions.android.versionCode.get(),
+            libs.versions.android.versionCode
+                .get(),
         )
         buildConfigField(
             STRING,
             "VERSION_NAME",
-            libs.versions.android.versionName.get(),
+            libs.versions.android.versionName
+                .get(),
         )
     }
 

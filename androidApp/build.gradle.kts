@@ -12,8 +12,13 @@ android {
 
     defaultConfig {
         applicationId = "com.thisissadeghi.kmpilot"
-        versionCode = libs.versions.android.versionCode.get().toInt()
-        versionName = libs.versions.android.versionName.get()
+        versionCode =
+            libs.versions.android.versionCode
+                .get()
+                .toInt()
+        versionName =
+            libs.versions.android.versionName
+                .get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
