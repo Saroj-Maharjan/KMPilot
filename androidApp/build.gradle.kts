@@ -17,7 +17,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    val keystoreParent = File("${rootDir.path}/signing")
+    val keystoreParent = File("${projectDir.path}/signing")
     val keystorePropFile = File(keystoreParent, "base-keystore.properties")
     if (keystorePropFile.exists()) {
         signingConfigs {
