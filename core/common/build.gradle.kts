@@ -54,8 +54,8 @@ kotlin {
                 implementation(libs.compose.components.resources)
                 implementation(libs.kotlinCollection)
                 implementation(libs.kotlinxSerialization)
-                implementation(libs.androidx.lifecycle.viewmodel)
-                implementation(libs.androidx.lifecycle.runtime.compose)
+                api(libs.androidx.lifecycle.viewmodel)
+                api(libs.androidx.lifecycle.runtime.compose)
 
                 api(libs.koin.core)
                 implementation(libs.kotlinx.datetime)

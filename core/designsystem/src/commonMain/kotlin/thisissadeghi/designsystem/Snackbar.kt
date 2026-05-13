@@ -5,8 +5,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import thisissadeghi.common.setState
@@ -62,7 +62,7 @@ fun SnackbarController(
     snackbarHostState: SnackbarHostState,
     snackbarManager: SnackbarManager = SnackbarManager.getInstance(),
 ) {
-    val message by snackbarManager.snackbarMessage.collectAsState()
+    val message by snackbarManager.snackbarMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(message) {
         if (message.message.isNotEmpty()) {
