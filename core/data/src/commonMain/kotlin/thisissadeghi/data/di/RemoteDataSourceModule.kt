@@ -25,7 +25,6 @@ import thisissadeghi.data.remote.network.adapters.InstantSerializer
 import thisissadeghi.data.remote.network.adapters.PhoneJsonAdapter
 import thisissadeghi.data.remote.network.ktor.ApiClient
 import thisissadeghi.data.remote.network.ktor.TokenHeaderPlugin
-import kotlin.time.ExperimentalTime
 
 /**
  * Created by Ali Sadeghi
@@ -54,7 +53,6 @@ val RemoteDataSourceModule =
                     level = LogLevel.ALL
                 }
 
-                @OptIn(ExperimentalTime::class)
                 val serializers =
                     SerializersModule {
                         contextual(ColorHexJsonAdapter)
