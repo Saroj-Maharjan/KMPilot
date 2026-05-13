@@ -1,26 +1,18 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.kotlinKsp)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
-    androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
-        }
+    android {
+        namespace = "thisissadeghi.kmpilot"
     }
     jvm("desktop")
 
@@ -36,15 +28,6 @@ kotlin {
     }
 
     sourceSets {
-
-        androidMain.dependencies {
-            // android only
-            implementation(libs.koin.android)
-            implementation(libs.activityCompose)
-            implementation(libs.compose.ui.tooling)
-            implementation(libs.compose.ui.tooling.preview)
-        }
-
         commonMain.dependencies {
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)
@@ -72,62 +55,6 @@ kotlin {
 
 base.archivesName.set("KMPilot-${libs.versions.android.versionName.get()}")
 
-android {
-    namespace = "thisissadeghi.kmpilot"
-
-    defaultConfig {
-        applicationId = "com.thisissadeghi.kmpilot"
-        versionCode =
-            libs.versions.android.versionCode
-                .get()
-                .toInt()
-        versionName =
-            libs.versions.android.versionName
-                .get()
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    val keystoreParent = File("${rootDir.path}/signing")
-    val keystorePropFile = File(keystoreParent, "base-keystore.properties")
-    if (keystorePropFile.exists()) {
-        signingConfigs {
-            val props = Properties().apply { load(FileInputStream(keystorePropFile)) }
-            create("mainKey") {
-                storeFile = File(keystoreParent, props["storeFile"].toString())
-                storePassword = props["storePassword"].toString()
-                keyAlias = props["keyAlias"].toString()
-                keyPassword = props["keyPassword"].toString()
-            }
-        }
-    } else {
-        println("signing key not found!")
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfigs.findByName("mainKey")?.let { signingConfig = it }
-        }
-        debug {
-            versionNameSuffix = "-SNAPSHOT"
-            signingConfigs.findByName("mainKey")?.let { signingConfig = it }
-        }
-    }
-}
-
 buildkonfig {
     packageName = "thisissadeghi.kmpilot"
 
@@ -135,14 +62,12 @@ buildkonfig {
         buildConfigField(
             INT,
             "VERSION_CODE",
-            libs.versions.android.versionCode
-                .get(),
+            libs.versions.android.versionCode.get(),
         )
         buildConfigField(
             STRING,
             "VERSION_NAME",
-            libs.versions.android.versionName
-                .get(),
+            libs.versions.android.versionName.get(),
         )
     }
 
