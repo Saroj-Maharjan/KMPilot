@@ -21,7 +21,8 @@ feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/fixtures/{Feature}UiFixtu
 ```kotlin
 package {PKG_PREFIX}.{name}.fixtures
 
-import {PKG_PREFIX}.{name}.domain.model.*
+// Import entity + DTO types from this feature's actual model packages.
+// In this project, models live under `{name}.data.model.*` (no `domain` layer).
 import {PKG_PREFIX}.{name}.data.model.*
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.Either

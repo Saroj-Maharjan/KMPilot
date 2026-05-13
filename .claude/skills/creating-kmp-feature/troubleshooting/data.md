@@ -9,8 +9,8 @@ Quick fixes for common data layer errors.
 **Fix:** Add imports + dependency (use project's core package):
 ```kotlin
 // In file (replace {CORE_COMMON_PKG} with actual package):
-import {CORE_COMMON_PKG}.functional.Either
-import {CORE_COMMON_PKG}.error.ErrorModel
+import {CORE_COMMON_PKG}.Either
+import {CORE_COMMON_PKG}.ErrorModel
 
 // In build.gradle.kts commonMain:
 implementation(projects.core.common)

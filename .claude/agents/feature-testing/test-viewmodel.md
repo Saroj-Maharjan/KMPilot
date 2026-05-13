@@ -56,7 +56,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import {CORE_COMMON_PKG}.Either
 import {CORE_COMMON_PKG}.UiState
-import {PKG_PREFIX}.{name}.domain.repository.{Feature}Repository
+import {PKG_PREFIX}.{name}.data.repository.{Feature}Repository
 import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
 import kotlin.test.*
 

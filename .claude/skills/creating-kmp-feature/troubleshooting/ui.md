@@ -9,8 +9,8 @@ Quick fixes for common UI layer errors.
 **Fix:**
 ```kotlin
 // In file (replace {CORE_COMMON_PKG} with actual package):
-import {CORE_COMMON_PKG}.ui.UiState
-import {CORE_COMMON_PKG}.viewmodel.setState
+import {CORE_COMMON_PKG}.UiState
+import {CORE_COMMON_PKG}.setState
 
 // In build.gradle.kts commonMain:
 implementation(projects.core.common)

@@ -20,10 +20,10 @@ Quick fixes for common build errors. For layer-specific issues, see detailed fil
 
 ```kotlin
 // Either, ErrorModel, UiState, setState
-import {CORE_COMMON_PKG}.functional.Either
-import {CORE_COMMON_PKG}.error.ErrorModel
-import {CORE_COMMON_PKG}.ui.UiState
-import {CORE_COMMON_PKG}.viewmodel.setState
+import {CORE_COMMON_PKG}.Either
+import {CORE_COMMON_PKG}.ErrorModel
+import {CORE_COMMON_PKG}.UiState
+import {CORE_COMMON_PKG}.setState
 
 // X-components
 import {CORE_DESIGNSYSTEM_PKG}.XButton

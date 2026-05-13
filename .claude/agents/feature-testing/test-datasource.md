@@ -30,10 +30,10 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import {CORE_COMMON_PKG}.Either
-import {CORE_COMMON_PKG}.ErrorConst
 import {CORE_COMMON_PKG}.ErrorModel
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+import {CORE_DATA_PKG}.ErrorConst
 import {CORE_DATA_PKG}.ApiClient
+import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
 import kotlin.test.*
 
 class {Feature}RemoteDataSourceTest {
