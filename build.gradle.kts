@@ -1,6 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
-import com.android.build.api.dsl.LibraryExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -36,8 +35,6 @@ val targetSdkVer: Int by lazy {
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.androidApplication) apply false
-    alias(libs.plugins.androidLibrary) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinKsp) apply false
     alias(libs.plugins.ktlint) apply false
@@ -132,19 +129,6 @@ allprojects {
             }
         }
     }
-    pluginManager.withPlugin("com.android.library") {
-        extensions.configure<LibraryExtension> {
-            compileSdk = compileSdkVer
-            defaultConfig {
-                minSdk = minSdkVer
-            }
-            compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_21
-                targetCompatibility = JavaVersion.VERSION_21
-            }
-        }
-    }
-
     // Configure Java projects
     extensions.findByType<JavaPluginExtension>()?.apply {
         sourceCompatibility = JavaVersion.VERSION_21
