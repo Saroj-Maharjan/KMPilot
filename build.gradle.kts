@@ -3,6 +3,7 @@ import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 buildscript {
     configurations.all {
@@ -139,6 +140,15 @@ allprojects {
     // Configure Kotlin/JVM projects
     extensions.findByType<KotlinJvmProjectExtension>()?.apply {
         compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
+    }
+
+    // Configure JVM target for KMP jvm("desktop") targets
+    pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+        extensions.configure<KotlinMultiplatformExtension> {
+            targets.withType(KotlinJvmTarget::class.java).configureEach {
+                compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
+            }
+        }
     }
 
     // Configure Kotlin Multiplatform library modules

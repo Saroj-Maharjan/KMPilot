@@ -10,7 +10,6 @@ kotlin = "2.3.21"
 coreKtx = "1.18.0"
 ktlint = "14.2.0"
 ksp = "2.3.7"
-room = "2.8.4"
 androidx-lifecycle = "2.10.0"
 
 ktor = "3.4.3"
@@ -31,7 +30,6 @@ kotlinxSerialization = "1.11.0"
 kotlinxDatetime = "0.8.0"
 composeWebviewMultiplatform = "2.0.3"
 recaptcha = "18.8.0"
-desugar-jdk-libs = "2.1.5"
 kotlinx-coroutines-test = "1.11.0"
 turbine = "1.2.1"
 kover = "0.9.8"
@@ -83,8 +81,6 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
 compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
 google-recaptcha = { module = "com.google.android.recaptcha:recaptcha", version.ref = "recaptcha" }
-android-desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
-
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
@@ -97,7 +93,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 kotlinKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-room = { id = "androidx.room", version.ref = "room" }
+# room plugin removed: AppDatabase.kt is fully commented out; re-add when Room is needed
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
