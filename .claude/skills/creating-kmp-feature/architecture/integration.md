@@ -102,27 +102,31 @@ sourceSets {
 ```kotlin
 import {PKG_PREFIX}.productdetail.di.ProductDetailModules
 
-fun initKoin() {
-    startKoin {
-        // ... koin configuration
-    }
-
-    // Initialize features
-    LoginModules.initialize()
+private fun initializeFeatures() {
+    // ... existing CommonModules / DataModules / FeatureModules initialize() calls
     ProductDetailModules.initialize()
+}
+
+fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication {
+    initializeFeatures()
+
+    return startKoin {
+        appDeclaration()
+        modules(getAllModules())
+    }
 }
 ```
 
 **Key Points**:
-- Import must use correct package name (lowercase)
-- Call `initialize()` after `startKoin`
-- Order doesn't matter (features are independent)
-- Runtime crash if missing (dependency injection will fail)
+- Add the new `initialize()` call inside the existing `initializeFeatures()` private function (don't invent a new structure — match what's already in `initKoin.kt`).
+- Import must use correct package name (lowercase).
+- Order doesn't matter (features are independent).
+- Runtime crash if missing (Koin will fail to resolve the ViewModel/Repository).
 
 **Typical initKoin.kt structure**:
-- `startKoin { }` block with app configuration
-- Core module initialization
-- Feature module initialization (all `{Feature}Modules.initialize()` calls)
+- `private fun initializeFeatures()` listing every `{Feature}Modules.initialize()` call
+- `fun initKoin(appDeclaration: KoinAppDeclaration = {})` that calls `initializeFeatures()` then `startKoin`
+- `getAllModules()` aggregates `FeatureRegistry.getAllKoinModules()` plus the app-level module
 
 ## 4. Navigation Wiring (Route Registration)
 

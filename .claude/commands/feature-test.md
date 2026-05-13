@@ -51,11 +51,8 @@ alias(libs.plugins.mokkery)
 // Add after commonMain.dependencies:
 commonTest {
     dependencies {
-        implementation(libs.bundles.testing.common)
-
-        @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-        implementation(compose.uiTest)
-        implementation(libs.turbine)
+        implementation(libs.bundles.testing.common) // kotlin-test, kotlinx-coroutines-test, turbine
+        implementation(libs.compose.ui.test)
         implementation(libs.ktor.client.mock)
         implementation(libs.ktor.client.content.negotiation)
         implementation(libs.ktor.serialization.kotlinx.json)

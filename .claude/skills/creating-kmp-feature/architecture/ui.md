@@ -373,6 +373,8 @@ fun submit() {
 - Kotlinx Collections Immutable
 - Navigation Compose
 
+> AndroidX Lifecycle's `ViewModel` and `lifecycle.runtime.compose` (source of `collectAsStateWithLifecycle`) are `api`-exposed by `:core:common`. Feature modules **do not** need to declare these dependencies directly.
+
 ## Validation Strategy
 
 **Incremental build validation** (fast, per-feature):
