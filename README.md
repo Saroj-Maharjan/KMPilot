@@ -32,9 +32,9 @@ https://github.com/user-attachments/assets/ca64c2cb-e530-4e88-88e2-755932dc5493
 
 ## Why KMPilot?
 
-Every KMP project starts the same way. Create a feature module. Write the repository. Wire up the ViewModel. Add navigation. Configure DI. Promise yourself you'll document it later.
+KMPilot encodes an entire production architecture as a composable pipeline of AI skills. You describe a feature in plain English; specialized skills run in sequence — design, scaffold, modify, review, test — producing a working module that follows the same patterns every time.
 
-KMPilot inverts this. You describe what you want. Specialized agents build it — same patterns, every time. When they're done, you have working code and a living spec that updates when the code changes.
+The architecture happens to be KMP + Clean + Compose Multiplatform. The pattern is bigger than that.
 
 The tradeoff is intentional: **consistency over flexibility.**
 
@@ -44,16 +44,25 @@ The tradeoff is intentional: **consistency over flexibility.**
 
 **Prerequisites:** JDK 21+ · Android Studio · Xcode 15+ (iOS) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
+One-line install (clones, renames packages, fresh git init):
+
 ```bash
-git clone https://github.com/ThisIsSadeghi/KMPilot.git
-cd KMPilot
+curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh \
+  | sh -s MyProject com.example.myproject
 ```
 
-Sync Gradle, then:
+Or use GitHub's [**Use this template**](https://github.com/ThisIsSadeghi/KMPilot/generate) button, then rename after cloning:
 
 ```bash
+./scripts/rename.sh --name=MyProject --pkg=com.example.myproject
+```
+
+Then open Claude Code in your new project:
+
+```bash
+cd MyProject
 claude
-> Create a login feature with email and password authentication
+> /creating-kmp-feature build a product detail screen with reviews
 ```
 
 <br />
@@ -90,6 +99,18 @@ flowchart LR
 ```
 
 Every feature follows this flow. The spec becomes the source of truth.
+
+<br />
+
+## The Pattern
+
+KMPilot's deeper bet is that **production architectures can be encoded as composable AI-skill pipelines** — not just templates or scaffolds, but workflows where each skill owns one phase (design, scaffold, modify, review, test) and skills compose without coordinating.
+
+For users, this means a single command builds a complete, tested, reviewed feature.
+
+For the ecosystem, this is a pattern other opinionated stacks (Next.js, Rails, Flutter, iOS) can adopt. KMP is the proof point; the pattern is the export.
+
+Read the architecture rules in [CLAUDE.md](CLAUDE.md) and the skill catalog in `.claude/skills/`.
 
 <br />
 
