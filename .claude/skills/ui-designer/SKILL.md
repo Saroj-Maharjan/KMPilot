@@ -60,7 +60,8 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 | Error | Action |
 |-------|--------|
 | Stitch MCP not available | Stop. Ask user to configure Stitch MCP server |
-| Stitch generation fails | Retry with refined prompt. Max 3 attempts |
+| Stitch generation times out / connection reset | **Do NOT retry the generation call** (known Google Stitch bug — the generation often succeeded server-side and a retry creates a duplicate). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync. Wait for confirmation, then call `list_screens` to locate the new screen. |
+| Stitch generation fails with a non-timeout error | Retry with refined prompt. Max 3 attempts |
 | Stitch project not found | Create new project automatically |
 | stitch-project.json not found | Run Project Init first. Invoke `/ui-designer` without a feature name argument. |
 

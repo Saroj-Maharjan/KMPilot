@@ -362,10 +362,10 @@ The screen represents a raw generic loading state overlaid by the feature. Keep 
    - `deviceType`: MOBILE
    - `modelId`: GEMINI_3_FLASH
 
-3. **Timeout handling**: If the call times out or returns a connection error, do NOT immediately ask the user to open the browser. Instead:
-   - Call `mcp__stitch__list_screens` to check if the screen appeared in the diff.
-   - If a new screen ID is found → proceed normally (generation succeeded in background).
-   - If `list_screens` still shows nothing → only then ask the user to open the project in their browser to trigger sync: `https://stitch.withgoogle.com/projects/{projectId}`. Wait for confirmation, then call `list_screens` again. Max 2 retries.
+3. **Timeout / connection-reset handling**: If the call times out or returns a connection error, **do NOT retry `generate_screen_from_text`** — this is a known Google Stitch bug where the request usually completed server-side and a retry creates a duplicate screen. Instead:
+   - Ask the user to open the project in their browser to trigger sync: `https://stitch.withgoogle.com/projects/{projectId}`. Tell them this is a known Google Stitch limitation.
+   - Wait for the user's confirmation that they have opened the project and can see the new screen.
+   - Then call `mcp__stitch__list_screens` and diff against the baseline to identify the new screen ID. If `list_screens` still shows nothing after browser sync, ask the user to refresh the browser page once more. Max 2 sync attempts.
 
 4. Call `mcp__stitch__list_screens` again with `projectId`. Diff against baseline → identify the new screen ID.
 
@@ -445,7 +445,7 @@ Same baseline-diff procedure as Init-5:
    - `deviceType`: MOBILE
    - `modelId`: GEMINI_3_FLASH
 
-3. **Timeout handling**: Same as Init-5 — on timeout, call `mcp__stitch__list_screens` first to check if the screen appeared. Only ask the user to open the browser if `list_screens` still shows nothing after the diff. Max 2 retries.
+3. **Timeout / connection-reset handling**: Same as Init-5 — **do NOT retry `generate_screen_from_text`** on timeout/connection reset (known Google Stitch bug, causes duplicate screens). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync, wait for confirmation, then call `mcp__stitch__list_screens` and diff against the baseline. Max 2 sync attempts.
 
 4. Call `mcp__stitch__list_screens` again. Diff against baseline → identify the new screen ID.
 

@@ -185,7 +185,7 @@ This procedure is referenced as **"Screen Sync Procedure"** throughout this phas
 
 After each `generate_screen_from_text` call:
 
-1. **Handle connection errors**: If the tool call fails with a connection error, the generation may still be in progress. Wait ~30 seconds, then run the **Screen Sync Procedure** above. Only retry the generation (max 3 attempts) if the screen was NOT created.
+1. **Handle timeout / connection errors**: If the tool call times out or fails with a connection reset, **do NOT retry the generation call** — this is a known Google Stitch bug where the request usually completed server-side and retrying produces duplicate screens. Run the **Screen Sync Procedure** above immediately: ask the user to open the project in their browser, wait for confirmation, then call `list_screens` to locate the new screen. Only retry the generation if `list_screens` confirms no new screen was created after the browser sync (max 3 attempts total).
 
 2. **Check `output_components`** in the response:
    - If contains **text**: Display it to the user
@@ -344,8 +344,8 @@ If the screen is a list screen (shows a list of items), generate the empty state
    deviceType: MOBILE
    modelId: GEMINI_3_FLASH
    ```
-3. **Handle errors**: If the call fails with a connection error, wait ~30 seconds and run the **Screen Sync Procedure**. Retry max 3 times only if no new screen appeared.
-4. **Screen Sync Procedure**: Ask the user to open the project in their browser and confirm the new screen is visible. Wait for confirmation before calling `list_screens`. Max 2 retries.
+3. **Handle timeout / connection errors**: If the call times out or fails with a connection reset, **do NOT retry `edit_screens`** — this is a known Google Stitch bug where the request usually completed server-side and retrying produces duplicate screens. Run the **Screen Sync Procedure** below immediately. Only retry the edit if `list_screens` confirms no new screen appeared after the browser sync (max 3 attempts total).
+4. **Screen Sync Procedure**: Ask the user to open the project in their browser and confirm the new screen is visible. Wait for confirmation before calling `list_screens`. Max 2 sync attempts.
 5. **Identify new screen**: Compare screen list with baseline to find the newly created screen ID.
 6. **Download**: `curl -sL "{downloadUrl}=s0" -o .claude/docs/{featurename}/designs/{featurename}_empty.png`
 7. **Write emptyScreenId** to project-wide config:
