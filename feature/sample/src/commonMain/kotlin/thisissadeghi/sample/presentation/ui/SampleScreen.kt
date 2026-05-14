@@ -1,5 +1,7 @@
 package thisissadeghi.sample.presentation.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -20,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +35,7 @@ import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTextButton
 import thisissadeghi.sample.data.model.DashboardData
 import thisissadeghi.sample.presentation.SampleUiModel
 import thisissadeghi.sample.presentation.SampleViewModel
@@ -49,6 +54,7 @@ import thisissadeghi.sample.presentation.ui.components.UpcomingBillsCard
 fun SampleScreen(
     viewModel: SampleViewModel,
     onActionClick: (String) -> Unit,
+    onBackToDashboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiModelState.collectAsStateWithLifecycle()
@@ -56,6 +62,7 @@ fun SampleScreen(
         uiState = uiState,
         onActionClick = onActionClick,
         onRetry = viewModel::retry,
+        onBackToDashboard = onBackToDashboard,
         modifier = modifier,
     )
 }
@@ -65,6 +72,7 @@ fun SampleScreenRoot(
     uiState: SampleUiModel,
     onActionClick: (String) -> Unit,
     onRetry: () -> Unit,
+    onBackToDashboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     XScaffold(
@@ -78,6 +86,7 @@ fun SampleScreenRoot(
             is UiState.Failed ->
                 ErrorContent(
                     onRetry = onRetry,
+                    onBackToDashboard = onBackToDashboard,
                     modifier = Modifier.padding(paddingValues).fillMaxSize(),
                 )
 
@@ -124,13 +133,49 @@ private fun DashboardContent(
 @Composable
 private fun LoadingContent(modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        XCircularProgressIndicator()
+        Box(
+            modifier =
+                Modifier
+                    .size(96.dp)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                        shape = CircleShape,
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .border(
+                            width = 4.dp,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape,
+                        ),
+                contentAlignment = Alignment.Center,
+            ) {
+                XCircularProgressIndicator(
+                    modifier = Modifier.size(64.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    strokeWidth = 4.dp,
+                    trackColor = Color.Transparent,
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .size(8.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape),
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun ErrorContent(
     onRetry: () -> Unit,
+    onBackToDashboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -138,18 +183,31 @@ private fun ErrorContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        XIcon(
-            imageVector = Icons.Filled.Warning,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(80.dp),
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(80.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                            shape = CircleShape,
+                        ),
+            )
+            XIcon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(80.dp),
+            )
+        }
         Spacer(Modifier.height(32.dp))
         XText(
             "Something went wrong",
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = (-0.5).sp,
+            lineHeight = 32.5.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -161,13 +219,21 @@ private fun ErrorContent(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().widthIn(max = 240.dp),
         )
-        Spacer(Modifier.height(32.dp))
         XButton(
             onClick = onRetry,
             modifier = Modifier.widthIn(max = 200.dp).height(56.dp),
             shape = RoundedCornerShape(12.dp),
         ) {
             XText("Retry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+        Spacer(Modifier.height(16.dp))
+        XTextButton(onClick = onBackToDashboard) {
+            XText(
+                "Return to Dashboard",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

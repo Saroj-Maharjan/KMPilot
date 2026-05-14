@@ -99,7 +99,16 @@
       "approved": true,
       "approvedAt": "2026-05-11",
       "createdAt": "2026-02-23T00:00:00Z",
-      "updatedAt": "2026-05-11T10:00:00Z"
+      "updatedAt": "2026-05-15T00:00:00Z",
+      "verification": {
+        "verified": true,
+        "verifiedAt": "2026-05-15",
+        "auditReport": "designs/sample_audit.md",
+        "extractedSources": "designs/extracted/",
+        "xComponentsCompliant": true,
+        "criticalIssues": 4,
+        "attempts": 1
+      }
     }
   },
   "initState": {
@@ -109,5 +118,5 @@
     "completedAt": "2026-05-04T00:06:00Z"
   },
   "createdAt": "2026-05-04T00:00:00Z",
-  "updatedAt": "2026-05-11T14:30:00Z"
+  "updatedAt": "2026-05-15T00:00:00Z"
 }

@@ -33,6 +33,9 @@ fun BaseAppNavHost(modifier: Modifier) {
                 }
                 // Handle action — navigation or action handling to be wired later
             },
+            onBackToDashboard = {
+                navController.popBackStack(SampleRoute, inclusive = false)
+            },
         )
         send(onBackClick = { navController.popBackStack() })
         receive(onBackClick = { navController.popBackStack() })

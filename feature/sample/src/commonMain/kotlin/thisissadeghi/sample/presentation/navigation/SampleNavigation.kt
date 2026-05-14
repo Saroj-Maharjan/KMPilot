@@ -9,11 +9,15 @@ import thisissadeghi.sample.presentation.ui.SampleScreen
 @Serializable
 data object SampleRoute
 
-fun NavGraphBuilder.sample(onActionClick: (String) -> Unit) {
+fun NavGraphBuilder.sample(
+    onActionClick: (String) -> Unit,
+    onBackToDashboard: () -> Unit,
+) {
     composable<SampleRoute> {
         SampleScreen(
             viewModel = koinViewModel(),
             onActionClick = onActionClick,
+            onBackToDashboard = onBackToDashboard,
         )
     }
 }

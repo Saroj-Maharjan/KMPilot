@@ -100,7 +100,7 @@ private fun PortfolioAssetCard(
                 modifier = Modifier.size(18.dp),
             )
         }
-        Spacer(Modifier.height(0.dp))
+        Spacer(Modifier.height(4.dp))
         XText(
             asset.symbol,
             fontWeight = FontWeight.Bold,

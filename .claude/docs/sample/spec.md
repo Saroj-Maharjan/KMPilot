@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 3.2.0 |
+| Version | 3.2.1 |
 | Status | Approved |
 | Author | System |
 | Created | 2026-01-05 |
-| Updated | 2026-05-11 |
+| Updated | 2026-05-15 |
 | Design | `.claude/docs/sample/designs/sample_blueprint.md` |
 | Reviewers | N/A |
 
@@ -254,6 +254,10 @@ feature/sample/src/commonMain/kotlin/thisissadeghi/sample/
 
 **Progress bar tracks:** `MaterialTheme.colorScheme.surfaceVariant` — no hardcoded Color()
 
+**Loading state:** Layered loader (centered) — 96dp decorative outline ring (1dp `outlineVariant.copy(alpha = 0.3f)`, CircleShape) wrapping a 64dp track (4dp `surfaceVariant` border, CircleShape), a 4dp `primary.copy(alpha = 0.4f)` indeterminate arc, and a central 8dp `primary` dot.
+
+**Failed state:** Warning icon backed by an 80dp `error.copy(alpha = 0.1f)` circular glow; "Something went wrong" title 20sp SemiBold with `letterSpacing = (-0.5).sp` and `lineHeight = 32.5.sp`; primary `Retry` `XButton` followed by a secondary `XTextButton("Return to Dashboard", color = onSurfaceVariant, 14sp Medium)`.
+
 ---
 
 ## 5. Interfaces
@@ -292,6 +296,7 @@ interface SampleRepository {
 
 Navigation callbacks:
 - `onActionClick: (String) -> Unit` — Called when user taps a quick action button, passes action ID
+- `onBackToDashboard: () -> Unit` — Called from the Failed state "Return to Dashboard" secondary action; host pops navigation back to the dashboard start destination
 
 ---
 
@@ -318,6 +323,12 @@ Navigation callbacks:
 2. User taps "Try Again"
 3. ViewModel calls `retry()` → `loadDashboard()`
 4. State transitions back to Loading
+
+#### Return to Dashboard Flow
+1. User is in Failed state with Retry + "Return to Dashboard" buttons visible
+2. User taps "Return to Dashboard"
+3. `onBackToDashboard()` callback is invoked
+4. Host pops navigation back to the dashboard start destination
 
 ### 6.2 State Management
 
@@ -407,6 +418,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.1 | 2026-05-15 | UI fidelity fixes from `sample_audit.md`: removed extra "Monthly Summary" heading + outer Column wrapper in `MonthlySummaryCard`; fixed Portfolio icon→symbol spacing (0dp → 4dp); dropped "• {date}" suffix from `RecentTransactionsSection` category line; rebuilt layered Loading state (96dp outline ring + 64dp surface-variant track + 4dp primary arc + 8dp central dot); added "Return to Dashboard" secondary `XTextButton` + new `onBackToDashboard: () -> Unit` callback threaded through `SampleScreen`, `SampleScreenRoot`, the `sample()` nav extension, and `BaseAppNavHost` (pops to dashboard); added `letterSpacing = (-0.5).sp` + `lineHeight = 32.5.sp` to "Something went wrong" title; removed 32dp spacer between subtitle and Retry button; added 80dp `error.copy(alpha = 0.1f)` decorative glow behind the warning icon. |
 | 3.2.0 | 2026-05-11 | Blueprint implementation (ui-designer skill): gold/champagne theme (#F5D76E primary), component renames (BalanceCard, QuickActionsSection, InsightBanner, MonthlySummaryCard, UpcomingBillsCard), XScaffold replacing manual Column, 2-col budget grid, 3-col portfolio grid, single split-bar monthly summary (12dp), individual transaction cards, single bills card with dividers, XTheme.Colors.Success/Danger replacing obsolete ExpenseRed/tertiary usage, DashboardHeader sticky Box with background. |
 | 3.1.0 | 2026-02-19 | UI redesign via Stitch (ui-designer skill): purple brand palette (#9D70FF primary), M3 tertiary for income (#4ADE80), XTheme.Colors.ExpenseRed for expenses, 24dp card corners, custom header Column, reordered sections (Insight Banner after Quick Actions), Budget/Bills redesigned as cards with 4dp left-accent borders, Portfolio/Transactions wrapped in single cards with dividers, removed private color vals in favour of MaterialTheme.colorScheme roles. |
 | 3.0.0 | 2026-02-19 | Major rewrite: replaced generic sample with finance dashboard mockup. New domain models (DashboardData + 9 sub-models), hard-coded local data, full dashboard UI with balance, summary, transactions, budget, savings goals, quick actions, bills, insights, portfolio. Navigation callback renamed to onActionClick. |

@@ -98,7 +98,7 @@ private fun TransactionCard(tx: Transaction) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 XText(
-                    "${tx.category} • ${tx.date}",
+                    tx.category,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
