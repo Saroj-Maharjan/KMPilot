@@ -49,6 +49,7 @@ See: [Phase 1: Design](phases/phase-1-design.md)
 7. **`blueprintConsumed` lifecycle** — ui-designer sets `blueprintConsumed: false` in `stitch-project.json.features[featurename]` when saving a new blueprint. Implementation skills set it to `true` after consuming the blueprint
 8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `XLightColors` and `XDarkColors`. After design approval, a Color Audit identifies missing roles which are documented in the blueprint's Pre-Implementation Contract. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
 9. **Project Init is a prerequisite** — Phase 0 preflight checks for `.claude/docs/_project/stitch-project.json` before proceeding. If absent or incomplete, the user must run Project Init first (invoke `/ui-designer` without a feature name argument).
+10. **Cross-Screen Chrome Consistency** — When generating a screen for a project that already has approved features, the **shared chrome** (top app bar style, bottom navigation presence/style, screen background) must match the existing feature screens. The only exception is when the user **explicitly** asks for a different chrome ("no bottom nav", "centered title bar", "full-screen modal", etc.). The chrome snapshot is captured in Phase 1 Step 1.1.5 and injected as a "Shared Conventions" block into the Stitch generation prompt (Step 1.2b).
 
 ## Stitch MCP Reference
 

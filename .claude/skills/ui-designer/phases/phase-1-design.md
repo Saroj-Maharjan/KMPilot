@@ -11,6 +11,7 @@
 ```
 Design Progress:
 - [ ] Step 1.1: Gather screen requirements
+- [ ] Step 1.1.5: Cross-Screen Chrome Consistency Snapshot (MANDATORY when prior features exist)
 - [ ] Step 1.2a: Read current XTheme color scheme (MANDATORY)
 - [ ] Step 1.2b: Generate screens in Stitch
 - [ ] Step 1.3: Present designs to user
@@ -72,6 +73,93 @@ Steps 1.2–1.5 handle the **success state** variant selection. Step 1.6 generat
 
 ---
 
+## Step 1.1.5: Cross-Screen Chrome Consistency Snapshot (MANDATORY)
+
+**Purpose**: Project screens must share consistent chrome (top app bar, bottom navigation, screen background). Snapshot the existing convention from approved features so the new screen inherits it — unless the user explicitly asks for a different chrome.
+
+### When to run
+
+- Inspect `stitch-project.json.features` and collect every entry where `approved == true` **and** `featurename != current featurename`.
+- **If zero approved features exist** (this is the first feature being designed) → skip this step entirely and proceed to Step 1.2.
+- **If one or more approved features exist** → proceed.
+
+### Step 1.1.5a: Detect explicit user override
+
+Scan the user's prompt and the requirements gathered in Step 1.1 for explicit chrome instructions. Treat any of the following as an **explicit override**:
+
+- Top app bar: "no top bar", "no toolbar", "no app bar", "centered title", "large title", "transparent toolbar", "custom header", "hero header", "remove the top bar", "full-bleed".
+- Bottom navigation: "no bottom nav", "without bottom bar", "remove bottom nav", "add bottom navigation" (when current convention has none), "tab bar", "full-screen modal", "dialog".
+- Background: "different background", "image background", "gradient background".
+
+If an explicit override is detected, record which element(s) are overridden and proceed. The override-affected element(s) are excluded from the conventions block (Step 1.1.5c). All non-overridden elements still inherit from the snapshot.
+
+If no override is detected, all elements inherit.
+
+### Step 1.1.5b: Snapshot existing chrome
+
+Pick the **most recently approved** feature (max `approvedAt`) among the collected entries — this is the "reference feature".
+
+Read its token inventory: `.claude/docs/{reference_feature}/designs/extracted/tokens_success.md`. Also read the HTML excerpt if needed: `.claude/docs/{reference_feature}/designs/extracted/stitch_success.html` (header and footer regions only).
+
+Extract:
+
+| Element | What to capture |
+|---------|-----------------|
+| **Top app bar** | Presence (yes/no), height (dp), background color (hex + M3 role), title alignment (start/center), title typography (size/weight), leading icon (back arrow / menu / none), trailing icons (count + style) |
+| **Bottom navigation** | Presence (yes/no). If present: height (dp), background color (hex + M3 role), item count, item style (icon-only / icon+label), selected/unselected color treatment |
+| **Screen background** | Color (hex + M3 role) or surface treatment |
+
+If multiple approved features disagree on a property, surface the disagreement to the user via `AskUserQuestion`:
+
+> "Existing features differ on {property}: {feature A → value A}, {feature B → value B}. Which should the new screen follow?"
+
+Options = each distinct value seen, plus "Other (specify)".
+
+### Step 1.1.5c: Build the Shared Conventions block
+
+Produce a `Shared Conventions` markdown block to inject into the Stitch prompt in Step 1.2b. Only include elements that are **not** explicitly overridden by the user.
+
+Example:
+
+```
+Shared conventions inherited from existing project screens (reference: {reference_feature}):
+- Top app bar: present, 56dp height, background #1C1910 (M3 surface), title start-aligned in onSurface, leading back arrow icon, no trailing icons.
+- Bottom navigation: present, 80dp height, background #1C1910 (M3 surface), 4 items, icon+label, selected item in primary, unselected in onSurfaceVariant.
+- Screen background: #0F0D09 (M3 background).
+These elements MUST match the existing screens exactly. Do not introduce variations in height, color, alignment, or iconography.
+```
+
+If the user overrode an element, replace its line with an explicit instruction. Example for "no bottom nav":
+
+```
+- Bottom navigation: NONE for this screen (explicit override by user).
+```
+
+### Step 1.1.5d: Confirm with user (only when overriding)
+
+If any override was detected in Step 1.1.5a, present the conventions block to the user via `AskUserQuestion` so they can confirm the deviation is intentional:
+
+> "Existing features in this project use {summary of inherited chrome}. Your request overrides: {list of overridden elements}. Confirm or revise?"
+
+| Option | Description |
+|--------|-------------|
+| Confirm override | Proceed with the override as specified |
+| Inherit instead | Drop the override and inherit the existing convention |
+| Revise | Provide a different override |
+
+If user picks **Revise**, restart Step 1.1.5a with the new instruction.
+
+If no override was detected, **do not ask** — silently apply the inherited conventions.
+
+### Output
+
+Carry forward into Step 1.2b:
+- `sharedConventionsBlock` — the markdown block to paste verbatim into the Stitch prompt.
+
+Step 1.6 (empty state) does **not** need this output — its edit prompt says "Keep everything exactly the same", which automatically preserves whatever chrome the approved success screen ended up with.
+
+---
+
 ## Step 1.2: Generate Screens and Download Screenshots
 
 ### Step 1.2a: Read Current Color Scheme (MANDATORY)
@@ -118,20 +206,27 @@ modelId: GEMINI_3_FLASH
 
 Write detailed, visual prompts. Include:
 
-1. **Layout structure**: "A scrollable list with a top app bar..."
-2. **Component details**: "Each card has: left accent bar, title text, description text..."
-3. **M3 color block** (see below): Every color annotated with its M3 role
-4. **Typography**: "Bold title in light gray, muted description text..."
-5. **Spacing/sizing**: "16dp padding, 8dp gaps between cards..."
-6. **Interaction hints**: "Tappable cards with ripple effect..."
+1. **Shared Conventions block** from Step 1.1.5 (if it was produced) — paste verbatim near the top of the prompt, before layout description. Skip only if Step 1.1.5 was skipped (first feature).
+2. **Layout structure**: "A scrollable list with a top app bar..."
+3. **Component details**: "Each card has: left accent bar, title text, description text..."
+4. **M3 color block** (see below): Every color annotated with its M3 role
+5. **Typography**: "Bold title in light gray, muted description text..."
+6. **Spacing/sizing**: "16dp padding, 8dp gaps between cards..."
+7. **Interaction hints**: "Tappable cards with ripple effect..."
 
 ### Color Rules for Stitch Prompts
 
 Follow the [Color Rules (Strict)](../references/m3-colors.md#color-rules-strict) from the Stitch reference guide. Key point: every hex value in a prompt must be annotated with an M3 role as either **defined** (already in `lightColorScheme`) or **proposed** (to be added after approval).
 
-**Example prompt**:
+**Example prompt** (light theme, prior feature `receive` already approved):
 ```
 A mobile screen using the app's M3 color scheme.
+
+Shared conventions inherited from existing project screens (reference: receive):
+- Top app bar: present, 56dp height, background #FFFFFF (M3 surface), title start-aligned in onSurface, leading back arrow icon, no trailing icons.
+- Bottom navigation: present, 80dp height, background #FFFFFF (M3 surface), 4 items, icon+label, selected item in primary, unselected in onSurfaceVariant.
+- Screen background: #F3F2F7 (M3 background).
+These elements MUST match the existing screens exactly. Do not introduce variations in height, color, alignment, or iconography.
 
 Defined colors (from XTheme lightColorScheme):
 - Background: #F3F2F7 (M3: background)
@@ -144,7 +239,7 @@ Proposed colors (to be added to XTheme after approval):
 - Text on primary buttons: #FFFFFF (M3: onPrimary)
 - Subtle borders: #CAC4D0 (M3: outlineVariant)
 
-Top: App bar with background color, centered title "Products" in onSurface color, back arrow in onSurface.
+Top: App bar per Shared Conventions above, title "Products" in onSurface color.
 
 Body: Scrollable list of product cards. Each card:
 - Surface color (#FFFFFF) with 12dp corner radius
@@ -152,7 +247,7 @@ Body: Scrollable list of product cards. Each card:
 - Description in onSurfaceVariant text
 - Primary-colored action icon on the right
 
-Bottom: Primary-colored button with onPrimary text.
+Bottom navigation per Shared Conventions above (Products tab selected).
 
 16dp horizontal padding, 8dp vertical spacing between cards.
 ```
