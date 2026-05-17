@@ -4,7 +4,7 @@ Use this template when updating the spec after modifications.
 
 ## Format
 
-Add this section at the top of the regenerated spec:
+Add this section at the top of the updated spec:
 
 ```markdown
 ## Last Updated
@@ -47,11 +47,13 @@ Add this section at the top of the regenerated spec:
 
 ## Workflow
 
-1. **Before regenerating spec:**
-   - Copy existing "Last Updated" section from current spec
-   - Save entries temporarily
+> Spec updates are **incremental edits**, not full regenerations
+> (see `modifying-kmp-feature/SKILL.md` Step 9). Apply approved changes
+> in-place to the existing spec.
 
-2. **After regenerating spec:**
-   - Add new entry at top with today's date
-   - Paste previous entries below
-   - Ensure chronological order (newest first)
+1. **Before applying changes:**
+   - Locate the existing "Last Updated" section in the current spec
+
+2. **After applying approved changes:**
+   - Add a new entry at the top of "Last Updated" with today's date
+   - Keep previous entries below it in chronological order (newest first)
