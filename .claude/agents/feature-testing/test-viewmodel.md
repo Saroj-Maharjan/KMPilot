@@ -12,7 +12,7 @@ Test ViewModels using Turbine for StateFlow assertions. **Do NOT re-read source 
 
 ## Output Path
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/presentation/{Feature}ViewModelTest.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentation/{Feature}ViewModelTest.kt
 ```
 
 ## CRITICAL: Test Dispatcher Usage
@@ -40,7 +40,7 @@ val result = expectMostRecentItem()
 ## Template
 
 ```kotlin
-package {PKG_PREFIX}.{name}.presentation
+package {PKG_PREFIX}.{featurename}.presentation
 
 import app.cash.turbine.test
 import dev.mokkery.answering.returns
@@ -56,8 +56,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import {CORE_COMMON_PKG}.Either
 import {CORE_COMMON_PKG}.UiState
-import {PKG_PREFIX}.{name}.data.repository.{Feature}Repository
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+import {PKG_PREFIX}.{featurename}.data.repository.{Feature}Repository
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -224,5 +224,5 @@ expectNoEvents()
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*ViewModelTest"
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest --tests "*ViewModelTest"
 ```

@@ -94,7 +94,7 @@ If the catalog is missing or stale, see `RATIONALE.md` → *Regenerating the cat
 ### 4.2 Build the X-component instance map
 
 ```bash
-grep -rnHE "\bX[A-Z][[:alnum:]]*\s*\(" feature/{name}/src/commonMain/**/presentation/ui/
+grep -rnHE "\bX[A-Z][[:alnum:]]*\s*\(" feature/{featurename}/src/commonMain/**/presentation/ui/
 ```
 
 - Filter out import lines and comments.
@@ -114,7 +114,7 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
   - Layout-only one-liners are still scanned for **structural mismatches** (`flex-row` vs `Column`, `justify-between` vs `Arrangement.Start`, etc.) but produce rows only when something disagrees.
 - **Tailwind config overrides**: top of each inventory file.
 - **Global styles**: in the inventory file under "Global Styles".
-- **Code files**: `feature/{name}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
+- **Code files**: `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
 - **X-components catalog**: from Step 4.1.
 
 > **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.3.5.

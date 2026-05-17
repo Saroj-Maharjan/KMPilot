@@ -64,7 +64,7 @@ include(":feature:{featurename}")
 
 ```bash
 # Fast validation (per layer)
-./gradlew :feature:{name}:assembleAndroidMain
+./gradlew :feature:{featurename}:assembleAndroidMain
 
 # Full validation (integration)
 ./gradlew assembleDebug

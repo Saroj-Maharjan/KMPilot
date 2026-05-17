@@ -12,7 +12,7 @@ allowed-tools: ["Task", "Read", "Edit", "Glob", "Grep", "Bash(./gradlew:*)", "As
 ### 1.1 Detect Namespaces
 
 ```bash
-grep "namespace" feature/{name}/build.gradle.kts     # PKG_PREFIX
+grep "namespace" feature/{featurename}/build.gradle.kts     # PKG_PREFIX
 grep "namespace" core/common/build.gradle.kts        # CORE_COMMON_PKG
 grep "namespace" core/data/build.gradle.kts          # CORE_DATA_PKG
 ```
@@ -20,7 +20,7 @@ grep "namespace" core/data/build.gradle.kts          # CORE_DATA_PKG
 ### 1.2 Extract Context (YAML Only)
 
 ```
-Glob: feature/{name}/src/commonMain/kotlin/**/*.kt
+Glob: feature/{featurename}/src/commonMain/kotlin/**/*.kt
 ```
 
 **Extract 5-line YAML summaries** (not full code):
@@ -35,10 +35,10 @@ screen: {composable, rootComposable, callbacks}
 
 ### 1.3 Add Test Dependencies
 
-**Check if test dependencies exist in `feature/{name}/build.gradle.kts`:**
+**Check if test dependencies exist in `feature/{featurename}/build.gradle.kts`:**
 
 ```bash
-grep "commonTest" feature/{name}/build.gradle.kts
+grep "commonTest" feature/{featurename}/build.gradle.kts
 ```
 
 **If missing, add the following to the gradle file:**
@@ -90,8 +90,8 @@ options:
 
 ```
 Task: test-fixtures
-Prompt: "Feature: {name}
-Package: {PKG_PREFIX}.{name}
+Prompt: "Feature: {featurename}
+Package: {PKG_PREFIX}.{featurename}
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
 CORE_DATA_PKG: {CORE_DATA_PKG}
 
@@ -105,14 +105,14 @@ UiState: {yaml}"
 
 ```
 Task: test-datasource
-Prompt: "Feature: {name}, Package: {PKG_PREFIX}.{name}
-Fixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
+Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}, CORE_DATA_PKG: {CORE_DATA_PKG}
 DataSource: {yaml}"
 
 Task: test-repository
-Prompt: "Feature: {name}, Package: {PKG_PREFIX}.{name}
-Fixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
+Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
 Repository: {yaml}"
 ```
@@ -123,22 +123,22 @@ Repository: {yaml}"
 
 ```
 Task: test-viewmodel
-Prompt: "Feature: {name}, Package: {PKG_PREFIX}.{name}
-Fixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
+Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
 ViewModel: {yaml}"
 
 Task: test-ui
-Prompt: "Feature: {name}, Package: {PKG_PREFIX}.{name}
-Fixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
-UiFixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}UiFixtures
+Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
+Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
+UiFixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}UiFixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
 Screen: {yaml}
 Test ScreenRoot, NOT Screen."
 
 Task: test-integration
-Prompt: "Feature: {name}, Package: {PKG_PREFIX}.{name}
-Fixtures: {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
+Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}, CORE_DATA_PKG: {CORE_DATA_PKG}
 Stack: {yaml}"
 ```
@@ -146,16 +146,16 @@ Stack: {yaml}"
 ## Phase 4: Run Tests
 
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest
 ```
 
 ## Phase 5: Coverage
 
 ```bash
-./gradlew :feature:{name}:koverHtmlReport
+./gradlew :feature:{featurename}:koverHtmlReport
 ```
 
-Parse `feature/{name}/build/reports/kover/report.xml` for line/branch coverage.
+Parse `feature/{featurename}/build/reports/kover/report.xml` for line/branch coverage.
 
 ## Phase 6: Summary
 
@@ -174,7 +174,7 @@ Parse `feature/{name}/build/reports/kover/report.xml` for line/branch coverage.
 
 **Tests:** PASSED/FAILED | **Coverage:** Line X% / Branch Y%
 
-View: `open feature/{name}/build/reports/kover/html/index.html`
+View: `open feature/{featurename}/build/reports/kover/html/index.html`
 ```
 
 ## Execution Flow

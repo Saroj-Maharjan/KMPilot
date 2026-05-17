@@ -12,13 +12,13 @@ Test Repository implementations using Mokkery. **Do NOT re-read source files** -
 
 ## Output Path
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/data/{Feature}RepositoryImplTest.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/data/{Feature}RepositoryImplTest.kt
 ```
 
 ## Template
 
 ```kotlin
-package {PKG_PREFIX}.{name}.data
+package {PKG_PREFIX}.{featurename}.data
 
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.sequentiallyReturns
@@ -29,8 +29,8 @@ import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import {CORE_COMMON_PKG}.Either
 import {CORE_COMMON_PKG}.ErrorModel
-import {PKG_PREFIX}.{name}.data.datasource.{Feature}RemoteDataSource
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+import {PKG_PREFIX}.{featurename}.data.datasource.{Feature}RemoteDataSource
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 import kotlin.test.*
 
 class {Feature}RepositoryImplTest {
@@ -149,5 +149,5 @@ class {Feature}RepositoryImplTest {
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*RepositoryImplTest"
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest --tests "*RepositoryImplTest"
 ```

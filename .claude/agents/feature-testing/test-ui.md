@@ -19,18 +19,18 @@ Test Compose screens using runComposeUiTest. **Do NOT re-read source files** - u
 
 ## Output Path
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/presentation/ui/{Feature}ScreenTest.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentation/ui/{Feature}ScreenTest.kt
 ```
 
 ## Template
 
 ```kotlin
-package {PKG_PREFIX}.{name}.presentation.ui
+package {PKG_PREFIX}.{featurename}.presentation.ui
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.*
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
-import {PKG_PREFIX}.{name}.fixtures.{Feature}UiFixtures
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}UiFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -231,5 +231,5 @@ class {Feature}ScreenTest {
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*ScreenTest"
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest --tests "*ScreenTest"
 ```

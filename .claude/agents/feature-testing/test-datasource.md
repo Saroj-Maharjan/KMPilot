@@ -12,13 +12,13 @@ Test DataSource implementations using Ktor MockEngine. **Do NOT re-read source f
 
 ## Output Path
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/data/datasource/{Feature}RemoteDataSourceTest.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/data/datasource/{Feature}RemoteDataSourceTest.kt
 ```
 
 ## Template
 
 ```kotlin
-package {PKG_PREFIX}.{name}.data.datasource
+package {PKG_PREFIX}.{featurename}.data.datasource
 
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
@@ -33,7 +33,7 @@ import {CORE_COMMON_PKG}.Either
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_DATA_PKG}.ErrorConst
 import {CORE_DATA_PKG}.ApiClient
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 import kotlin.test.*
 
 class {Feature}RemoteDataSourceTest {
@@ -199,5 +199,5 @@ class {Feature}RemoteDataSourceTest {
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*RemoteDataSourceTest"
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest --tests "*RemoteDataSourceTest"
 ```

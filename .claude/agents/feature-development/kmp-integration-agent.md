@@ -18,8 +18,8 @@ Integrates completed features through 4 required integration points.
 
 | # | Point | File | Pattern |
 |---|-------|------|---------|
-| 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{name}")` |
-| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{name}"))` |
+| 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
+| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
 | 3 | DI Init | `{INIT_KOIN_PATH}` | `{Feature}Modules.initialize()` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 

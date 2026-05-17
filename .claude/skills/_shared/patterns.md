@@ -32,8 +32,8 @@ Every feature requires exactly these 4 integrations:
 
 | # | Point | File | Pattern |
 |---|-------|------|---------|
-| 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{name}")` |
-| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{name}"))` |
+| 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
+| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
 | 3 | DI Init | `{INIT_KOIN_PATH}` | `{Feature}Modules.initialize()` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 
@@ -150,8 +150,8 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 ## Build Commands
 
 ```bash
-./gradlew :feature:{name}:assembleAndroidMain  # Incremental (fast)
+./gradlew :feature:{featurename}:assembleAndroidMain  # Incremental (fast)
 ./gradlew assembleDebug                         # Full build
-./gradlew :feature:{name}:ktlintFormat          # Format
-./gradlew :feature:{name}:desktopTest           # Tests
+./gradlew :feature:{featurename}:ktlintFormat          # Format
+./gradlew :feature:{featurename}:desktopTest           # Tests
 ```

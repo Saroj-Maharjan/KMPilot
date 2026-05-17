@@ -168,7 +168,7 @@ The earlier version of this skill always rendered the implemented screen headles
 If a human still wants a side-by-side, you can render screens manually:
 
 1. Read screen dimensions from `stitch-project.json` (`features[{featurename}].dimensions`).
-2. Create a temporary `desktopTest` file at `feature/{name}/src/desktopTest/kotlin/{PKG_PATH}/{name}/verification/VerificationScreenshot.kt`:
+2. Create a temporary `desktopTest` file at `feature/{featurename}/src/desktopTest/kotlin/{PKG_PATH}/{featurename}/verification/VerificationScreenshot.kt`:
    - Imports: `ImageComposeScene`, `Density`, `EncodedImageFormat` from Compose/Skia.
    - `@OptIn(ExperimentalComposeUiApi::class)`.
    - Render at Stitch dimensions with `Density(2f)` (Stitch uses 2× CSS pixels for mobile).
@@ -179,7 +179,7 @@ If a human still wants a side-by-side, you can render screens manually:
    val projectRoot = File(System.getProperty("user.dir")).parentFile.parentFile
    val outputDir = File(projectRoot, ".claude/docs/{featurename}/designs/device").also { it.mkdirs() }
    ```
-4. Run `./gradlew :feature:{name}:desktopTest --tests "*VerificationScreenshot*"`.
+4. Run `./gradlew :feature:{featurename}:desktopTest --tests "*VerificationScreenshot*"`.
 5. **Delete the test file afterwards** — temporary scaffolding, not source code.
 
 Don't `Read` the resulting PNGs inline. The audit doesn't score against them.

@@ -13,7 +13,7 @@ Implements the data layer for Kotlin Multiplatform features.
 **Base Instructions:** @../_base/common.md
 **Architecture:** @../../skills/_shared/patterns.md (load on demand)
 **Data Patterns:** @../../skills/creating-kmp-feature/architecture/data.md (load on demand)
-**Gradle Template:** @../../skills/creating-kmp-feature/architecture/build-gradle-template.md (use when scaffolding `feature/{name}/build.gradle.kts`)
+**Gradle Template:** @../../skills/creating-kmp-feature/architecture/build-gradle-template.md (use when scaffolding `feature/{featurename}/build.gradle.kts`)
 
 ## Workflow
 

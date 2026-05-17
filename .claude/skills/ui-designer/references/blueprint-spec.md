@@ -104,8 +104,8 @@ Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 - [ ] Every Modifier in blueprint (border, shadow, alpha, padding, size) is present in code
 - [ ] All colors use MaterialTheme.colorScheme.{role} — no raw Color() hex
 - [ ] Component override sizes/colors from Pre-Implementation Contract applied
-- [ ] Build passes: `./gradlew :feature:{name}:assembleAndroidMain`
-- [ ] Code formatted: `./gradlew :feature:{name}:ktlintFormat`
+- [ ] Build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`
+- [ ] Code formatted: `./gradlew :feature:{featurename}:ktlintFormat`
 ```
 
 ---

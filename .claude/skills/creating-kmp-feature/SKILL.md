@@ -51,7 +51,7 @@ Entering design-aware mode. Blueprint will drive UI layer implementation.
 If blueprint exists and `blueprintConsumed == false`, the blueprint's Pre-Implementation Contract will auto-populate the UI section of the PRD in Phase 1.
 
 ### Phase 1: PRD Generation
-Analyze prompt → Generate PRD → Save to `.claude/docs/{name}/prd.md`
+Analyze prompt → Generate PRD → Save to `.claude/docs/{featurename}/prd.md`
 Template: @templates/prd-simple.md or @templates/prd-complex.md
 See: @phases/phase-1-prd.md
 
@@ -81,7 +81,7 @@ See: @phases/phase-4-cleanup.md
 
 1. **User Confirmation Required** after Phase 1 and Phase 2 - never proceed without explicit approval
 2. **Documentation**: `.claude/docs/{featurename}/` - PRD/tasks ephemeral, spec.md permanent
-3. **Validate build** after each layer: `./gradlew :feature:{name}:assembleAndroidMain`
+3. **Validate build** after each layer: `./gradlew :feature:{featurename}:assembleAndroidMain`
 
 ## Error Handling
 

@@ -28,7 +28,7 @@ This catches wiring bugs that unit tests miss.
 
 ## Output Path
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/integration/{Feature}IntegrationTest.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/integration/{Feature}IntegrationTest.kt
 ```
 
 ## CRITICAL: Test Dispatcher Usage
@@ -56,7 +56,7 @@ advanceUntilIdle() // Immediately after!
 ## Template
 
 ```kotlin
-package {PKG_PREFIX}.{name}.integration
+package {PKG_PREFIX}.{featurename}.integration
 
 import app.cash.turbine.test
 import io.ktor.client.*
@@ -72,10 +72,10 @@ import kotlinx.serialization.json.Json
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.UiState
 import {CORE_DATA_PKG}.ApiClient
-import {PKG_PREFIX}.{name}.data.datasource.{Feature}RemoteDataSourceImpl
-import {PKG_PREFIX}.{name}.data.repository.{Feature}RepositoryImpl
-import {PKG_PREFIX}.{name}.fixtures.{Feature}Fixtures
-import {PKG_PREFIX}.{name}.presentation.{Feature}ViewModel
+import {PKG_PREFIX}.{featurename}.data.datasource.{Feature}RemoteDataSourceImpl
+import {PKG_PREFIX}.{featurename}.data.repository.{Feature}RepositoryImpl
+import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
+import {PKG_PREFIX}.{featurename}.presentation.{Feature}ViewModel
 import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -381,5 +381,5 @@ fun `full flow - handles runtime exception`() = runTest(testDispatcher) {
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:cleanDesktopTest :feature:{name}:desktopTest --tests "*IntegrationTest"
+./gradlew :feature:{featurename}:cleanDesktopTest :feature:{featurename}:desktopTest --tests "*IntegrationTest"
 ```

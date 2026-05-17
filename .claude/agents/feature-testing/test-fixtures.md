@@ -12,18 +12,18 @@ Generate comprehensive domain + UI fixtures. **Do NOT re-read source files** - u
 
 ## Output Paths
 ```
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/fixtures/{Feature}Fixtures.kt
-feature/{name}/src/commonTest/kotlin/{PKG_PATH}/{name}/fixtures/{Feature}UiFixtures.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/fixtures/{Feature}Fixtures.kt
+feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/fixtures/{Feature}UiFixtures.kt
 ```
 
 ## Template: {Feature}Fixtures.kt
 
 ```kotlin
-package {PKG_PREFIX}.{name}.fixtures
+package {PKG_PREFIX}.{featurename}.fixtures
 
 // Import entity + DTO types from this feature's actual model packages.
-// In this project, models live under `{name}.data.model.*` (no `domain` layer).
-import {PKG_PREFIX}.{name}.data.model.*
+// In this project, models live under `{featurename}.data.model.*` (no `domain` layer).
+import {PKG_PREFIX}.{featurename}.data.model.*
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.Either
 import {CORE_DATA_PKG}.ErrorConst
@@ -133,13 +133,13 @@ object {Feature}Fixtures {
 ## Template: {Feature}UiFixtures.kt
 
 ```kotlin
-package {PKG_PREFIX}.{name}.fixtures
+package {PKG_PREFIX}.{featurename}.fixtures
 
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import {CORE_COMMON_PKG}.ErrorModel
 import {CORE_COMMON_PKG}.UiState
-import {PKG_PREFIX}.{name}.presentation.{Feature}UiModel
+import {PKG_PREFIX}.{featurename}.presentation.{Feature}UiModel
 
 object {Feature}UiFixtures {
 
@@ -229,5 +229,5 @@ object {Feature}UiFixtures {
 
 ## Verify
 ```bash
-./gradlew :feature:{name}:compileTestKotlinDesktop
+./gradlew :feature:{featurename}:compileTestKotlinDesktop
 ```
