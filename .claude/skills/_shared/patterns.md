@@ -155,3 +155,19 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 ./gradlew :feature:{featurename}:ktlintFormat          # Format
 ./gradlew :feature:{featurename}:desktopTest           # Tests
 ```
+
+## Hook Marker Contract
+
+A PreToolUse hook (`.claude/hooks/protect-feature-files.sh`, registered in `.claude/settings.json`) blocks direct `Edit`/`Write` on files under `feature/` unless a skill is active.
+
+| Aspect | Value |
+|--------|-------|
+| Marker file | `/tmp/.claude-kmpilot-skill-active` |
+| Activation | `touch /tmp/.claude-kmpilot-skill-active` before editing feature files |
+| Cleanup | `rm -f /tmp/.claude-kmpilot-skill-active` after completion or early exit |
+| Staleness | Marker auto-expires after 2 hours; hook removes stale markers |
+| Bypassed paths | `*/commonTest/*`, `*/desktopTest/*`, `*/androidTest/*`, `*/test/*`, any `build.gradle.kts` |
+
+**Skills that activate the marker:** `/creating-kmp-feature`, `/modifying-kmp-feature`. Both skills' allowlists include `Bash(touch:*)` and `Bash(rm -f /tmp/.claude-kmpilot-skill-active)`. Test agents write test files directly (bypassed by path rule), so they do NOT need the marker.
+
+If the hook blocks an edit, message shown: *"Blocked: Cannot edit feature source files directly. Use /creating-kmp-feature or /modifying-kmp-feature skill first."*
