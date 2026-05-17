@@ -1,7 +1,7 @@
 # Feature Spec: Send
 
 **Status:** Complete
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Module:** `:feature:send`
 **Package:** `thisissadeghi.send`
 **Generated:** 2026-02-25
@@ -128,9 +128,9 @@ data class NetworkInfo(val name: String, val description: String)
 | State | Layout |
 |-------|--------|
 | Uninitialized | Empty/idle before init — no visible content |
-| Loading | Centered `XCircularProgressIndicator` 48dp |
+| Loading | Centered `XCircularProgressIndicator` 64dp |
 | Success | Full form: `HeroAmountSection` + `RecipientCard` + `AssetNetworkGrid` + `TransactionSummaryCard` + `SecurityBadge` + sticky gold CTA footer |
-| Failed | Centered warning icon (80dp) + "Something went wrong" heading + subtitle |
+| Failed | Centered warning icon (80dp) + "Something went wrong" heading + subtitle + inline Retry button (max-width 200dp, 12dp corners) + "Return to Dashboard" text action |
 
 ---
 
@@ -169,8 +169,8 @@ All from Stitch design (KMPilot Gold theme) — approved 2026-05-11.
 | BTC pill | 12sp | Bold, tracking-widest, uppercase |
 | Balance text | 14sp | Medium |
 | Quick chips | 12sp | Bold |
-| Card section labels | 10sp | Bold, tracking-widest, uppercase |
-| Input placeholder | 14sp | Normal, italic |
+| Card section labels | 12sp | Bold, tracking-widest, uppercase |
+| Input placeholder | 16sp | Normal, italic |
 | Coin name | 14sp | Bold |
 | Coin subtitle | 10sp | Normal |
 | Summary label | 14sp | Normal |
@@ -182,12 +182,13 @@ All from Stitch design (KMPilot Gold theme) — approved 2026-05-11.
 
 ### Spacing & Shapes
 
-- Screen horizontal padding: 24dp
-- Screen bottom padding: 128dp (footer clearance)
+- Screen horizontal padding: 24dp (success) / 32dp (failed)
+- Screen bottom padding: 144dp (footer clearance)
 - `rounded-xl` = `RoundedCornerShape(24.dp)` — all cards, CTA button
+- Failed retry button: `RoundedCornerShape(12.dp)`, max-width 200dp
 - Bottom gradient: `Brush.verticalGradient(transparent → background.copy(0.8f))`
 - Gold cursor underline: 128dp wide, 1dp tall, `primary` color
-- Loading spinner: 48dp
+- Loading spinner: 64dp
 - Failed error icon: 80dp
 - Gold left accent bar: 4dp wide
 
@@ -278,3 +279,4 @@ navController.navigate(SendRoute)
 - 2026-04-30 — UI audit fixes: transparent XIconButton bg on app bar, XTextField contentPadding exposed (16dp default), removed unused M3 import (v1.0.2)
 - 2026-05-01 — UI audit fix: paste button XIconButton missing transparent colors override — added `containerColor = Color.Transparent, contentColor = primary` (v1.0.3)
 - 2026-05-11 — KMPilot Gold redesign: purple → gold color scheme, 64sp hero amount, card-based layout, 2-column asset/network grid, gold accent bar, SecurityBadge (v2.0.0)
+- 2026-05-17 — UI audit fixes (11 critical, 2 minor): top padding 32dp, bottom padding 144dp, cursor spacer 8dp, label font 12sp/1.2sp, input font 16sp, spinner 64dp, CTA icon right, failed padding 32dp, subtitle max 240dp, retry inline with 12dp corners, "Return to Dashboard" action, title letter-spacing + line-height, inner icons 14dp (v2.1.0)

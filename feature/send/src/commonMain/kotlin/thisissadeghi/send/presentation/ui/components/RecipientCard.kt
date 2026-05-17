@@ -60,9 +60,9 @@ fun RecipientCard(
                 text = "TO RECIPIENT",
                 style =
                     TextStyle(
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (1.0).sp,
+                        letterSpacing = (1.2).sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                 modifier = Modifier.padding(bottom = 12.dp),
@@ -79,7 +79,7 @@ fun RecipientCard(
                     textStyle =
                         TextStyle(
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             fontStyle = FontStyle.Italic,
                         ),
                     decorationBox = { innerTextField ->
@@ -89,7 +89,7 @@ fun RecipientCard(
                                 style =
                                     TextStyle(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                        fontSize = 14.sp,
+                                        fontSize = 16.sp,
                                         fontStyle = FontStyle.Italic,
                                     ),
                             )

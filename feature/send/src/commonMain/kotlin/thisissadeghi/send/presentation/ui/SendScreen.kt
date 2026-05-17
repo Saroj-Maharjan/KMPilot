@@ -1,6 +1,7 @@
 package thisissadeghi.send.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -125,7 +126,6 @@ fun SendScreenRoot(
         bottomBar = {
             when (uiState.state) {
                 is UiState.Success -> SendBottomBar(onSendClick = onSendClick)
-                is UiState.Failed -> RetryBottomBar(onRetryClick = onRetry)
                 else -> {}
             }
         },
@@ -148,7 +148,12 @@ fun SendScreenRoot(
                     onNetworkSelectClick = onNetworkSelectClick,
                 )
 
-            is UiState.Failed -> FailedContent(paddingValues = paddingValues)
+            is UiState.Failed ->
+                FailedContent(
+                    paddingValues = paddingValues,
+                    onRetry = onRetry,
+                    onReturnToDashboard = onBackClick,
+                )
         }
     }
 }
@@ -163,7 +168,7 @@ private fun LoadingContent(paddingValues: PaddingValues) {
         contentAlignment = Alignment.Center,
     ) {
         XCircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(64.dp),
             color = MaterialTheme.colorScheme.primary,
         )
     }
@@ -186,7 +191,7 @@ private fun SuccessContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 128.dp),
+                .padding(start = 24.dp, top = 32.dp, end = 24.dp, bottom = 144.dp),
     ) {
         HeroAmountSection(
             amount = uiModel.amount,
@@ -247,13 +252,17 @@ private fun SuccessContent(
 }
 
 @Composable
-private fun FailedContent(paddingValues: PaddingValues) {
+private fun FailedContent(
+    paddingValues: PaddingValues,
+    onRetry: () -> Unit,
+    onReturnToDashboard: () -> Unit,
+) {
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -271,6 +280,8 @@ private fun FailedContent(paddingValues: PaddingValues) {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = (-0.5).sp,
+                    lineHeight = 32.5.sp,
                 ),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
@@ -283,8 +294,46 @@ private fun FailedContent(paddingValues: PaddingValues) {
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.outline,
                 ),
-            modifier = Modifier.widthIn(max = 280.dp),
+            modifier = Modifier.widthIn(max = 240.dp),
             textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        XButton(
+            onClick = onRetry,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 200.dp)
+                    .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+        ) {
+            XText(
+                text = "Retry",
+                style =
+                    TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        XText(
+            text = "Return to Dashboard",
+            style =
+                TextStyle(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            modifier =
+                Modifier
+                    .padding(vertical = 8.dp)
+                    .clickable(onClick = onReturnToDashboard),
         )
     }
 }
@@ -317,12 +366,6 @@ private fun SendBottomBar(onSendClick: () -> Unit) {
                 ),
             contentPadding = PaddingValues(horizontal = 24.dp),
         ) {
-            XIcon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
             XText(
                 text = "Send Bitcoin",
                 style =
@@ -331,44 +374,11 @@ private fun SendBottomBar(onSendClick: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                     ),
             )
-        }
-    }
-}
-
-@Composable
-private fun RetryBottomBar(onRetryClick: () -> Unit) {
-    val background = MaterialTheme.colorScheme.background
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    brush =
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, background.copy(alpha = 0.8f)),
-                        ),
-                ).padding(24.dp),
-    ) {
-        XButton(
-            onClick = onRetryClick,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-        ) {
-            XText(
-                text = "Retry",
-                style =
-                    TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+            Spacer(modifier = Modifier.width(8.dp))
+            XIcon(
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
             )
         }
     }

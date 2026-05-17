@@ -58,7 +58,7 @@ fun AssetNetworkGrid(
                         imageVector = Icons.Default.CurrencyBitcoin,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(14.dp),
                     )
                 }
             },
@@ -82,7 +82,7 @@ fun AssetNetworkGrid(
                         imageVector = Icons.Default.Public,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(14.dp),
                     )
                 }
             },
@@ -152,7 +152,7 @@ private fun AssetSelectorCard(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(14.dp),
             )
         }
     }
