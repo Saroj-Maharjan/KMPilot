@@ -30,7 +30,15 @@ Validate: `ls feature/{featurename}/src/commonMain/kotlin/`
 
 ### Step 2: Spec Check
 Load `.claude/docs/{featurename}/spec.md`
-If missing: Run `/audit-spec {featurename}` first
+
+If missing, **stop and instruct the user**:
+
+```
+No spec found for '{featurename}'. Please run /audit-spec {featurename} first
+to generate one, then re-invoke /modifying-kmp-feature.
+```
+
+Do NOT auto-invoke `/audit-spec` — skills do not call each other; the user controls the pipeline.
 
 ### Step 2.5: Design Artifact Detection
 
