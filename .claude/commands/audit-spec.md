@@ -8,7 +8,7 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew:*)"]
 Audit, generate, or compare specifications for existing features.
 
 **Architecture Reference:** @../skills/_shared/patterns.md
-**Spec Template:** @templates/spec-template.md
+**Spec Template:** @../skills/_shared/spec-template.md
 
 ## Usage
 
@@ -47,7 +47,7 @@ Audit, generate, or compare specifications for existing features.
    ```
    Copy: Goals, Non-Goals, Background & Rationale, Design Decisions
 
-5. **Generate**: Create `.claude/docs/{featurename}/spec.md` using @templates/spec-template.md
+5. **Generate**: Create `.claude/docs/{featurename}/spec.md` using @../skills/_shared/spec-template.md
 
 6. **Report**:
    ```

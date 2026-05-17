@@ -38,7 +38,7 @@ Integrates completed features through 4 required integration points.
 **CRITICAL**: Copy from PRD before it's deleted:
 - Goals, Non-Goals, Background & Rationale, Design Decisions
 
-Template: @../../commands/templates/spec-template.md
+**Spec Template:** @../../skills/_shared/spec-template.md
 
 ## Output Report
 
