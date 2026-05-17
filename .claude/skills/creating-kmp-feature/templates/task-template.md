@@ -10,7 +10,7 @@ Template for individual task files in `.claude/docs/{featurename}/task-{N}-{titl
 **Status:** ⏳ Pending | 🔄 In Progress | ✅ Done
 **Group:** Data | UI | Integration
 **Priority:** High | Medium | Low
-**Agent:** kmp-data-layer-agent | kmp-ui-layer-agent | kmp-integration-agent
+**Agent:** data-layer-agent | ui-layer-agent | integration-agent
 
 ## Objective
 {One sentence describing what this task accomplishes}
@@ -72,9 +72,9 @@ Template for individual task files in `.claude/docs/{featurename}/task-{N}-{titl
 
 | Group | Agent | Example Tasks |
 |-------|-------|---------------|
-| Data | kmp-data-layer-agent | Models, Resources, DataSource, Repository |
-| UI | kmp-ui-layer-agent | UiState, ViewModel, Screens, Navigation |
-| Integration | kmp-integration-agent | DI module, 4 integration points |
+| Data | data-layer-agent | Models, Resources, DataSource, Repository |
+| UI | ui-layer-agent | UiState, ViewModel, Screens, Navigation |
+| Integration | integration-agent | DI module, 4 integration points |
 
 ### Status Flow
 

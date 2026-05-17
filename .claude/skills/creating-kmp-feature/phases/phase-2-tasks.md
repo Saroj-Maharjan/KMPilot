@@ -58,9 +58,9 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 
 | Group | Agent | Tasks |
 |-------|-------|-------|
-| Data | `kmp-data-layer-agent` | Module structure, models, DataSource, Repository, Ktor Resources |
-| UI | `kmp-ui-layer-agent` | UiModel, ViewModel, Screen composables, Navigation |
-| Integration | `kmp-integration-agent` | DI module, 4 integration points |
+| Data | `data-layer-agent` | Module structure, models, DataSource, Repository, Ktor Resources |
+| UI | `ui-layer-agent` | UiModel, ViewModel, Screen composables, Navigation |
+| Integration | `integration-agent` | DI module, 4 integration points |
 
 ### Scenario Guidance
 
@@ -74,7 +74,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 ## Step 2.3: Define Task Groups for Validation
 
 ### Group 1: Data Layer
-- **Agent**: `kmp-data-layer-agent`
+- **Agent**: `data-layer-agent`
 - **Tasks**: Module structure, models, DataSource, Repository, Ktor Resources
 - **Validate after**:
   ```bash
@@ -82,7 +82,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
   ```
 
 ### Group 2: UI Layer
-- **Agent**: `kmp-ui-layer-agent`
+- **Agent**: `ui-layer-agent`
 - **Tasks**: UiModel, ViewModel, Screen composables, Navigation
 - **Validate after**:
   ```bash
@@ -90,7 +90,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
   ```
 
 ### Group 3: Integration
-- **Agent**: `kmp-integration-agent`
+- **Agent**: `integration-agent`
 - **Tasks**: DI module, 4 integration points
 - **Validate after**:
   ```bash
@@ -114,15 +114,15 @@ Create `tasks.md` as overview:
 
 ## Task List
 
-### Group 1: Data Layer (kmp-data-layer-agent)
+### Group 1: Data Layer (data-layer-agent)
 - [ ] Task 1: {title}
 - [ ] Task 2: {title}
 
-### Group 2: UI Layer (kmp-ui-layer-agent)
+### Group 2: UI Layer (ui-layer-agent)
 - [ ] Task 3: {title}
 - [ ] Task 4: {title}
 
-### Group 3: Integration (kmp-integration-agent)
+### Group 3: Integration (integration-agent)
 - [ ] Task 5: {title}
 ```
 

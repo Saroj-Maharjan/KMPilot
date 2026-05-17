@@ -126,21 +126,21 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 
 ### Task Groups
 
-**Group 1: Data Layer** (kmp-data-layer-agent)
+**Group 1: Data Layer** (data-layer-agent)
 - Module structure + build.gradle.kts
 - Data models (@Serializable)
 - Ktor Resources (type-safe endpoints)
 - RemoteDataSource (interface + impl)
 - Repository (interface + impl)
 
-**Group 2: UI Layer** (kmp-ui-layer-agent)
+**Group 2: UI Layer** (ui-layer-agent)
 - UiState and UiModel
 - ViewModel with state management
 - Screen composables (with ScreenRoot pattern)
 - Component composables
 - Navigation (routes + extension)
 
-**Group 3: Integration** (kmp-integration-agent)
+**Group 3: Integration** (integration-agent)
 - DI module ({Feature}Modules)
 - 4 integration points
 - Final build validation

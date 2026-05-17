@@ -56,7 +56,7 @@ If in **design-aware mode** (Phase 0.5 detected an unconsumed blueprint):
 
 #### Step 1: Data Layer
 ```
-Invoke kmp-data-layer-agent with:
+Invoke data-layer-agent with:
 - Feature name: {featurename}
 - Task files: .claude/docs/{featurename}/task-*-data-*.md
 - Project context:
@@ -70,7 +70,7 @@ Invoke kmp-data-layer-agent with:
 
 #### Step 2: UI Layer
 ```
-Invoke kmp-ui-layer-agent with:
+Invoke ui-layer-agent with:
 - Feature name: {featurename}
 - Task files: .claude/docs/{featurename}/task-*-ui-*.md
 - Project context:
@@ -87,7 +87,7 @@ Invoke kmp-ui-layer-agent with:
 
 #### Step 3: Integration
 ```
-Invoke kmp-integration-agent with:
+Invoke integration-agent with:
 - Feature name: {featurename}
 - Task files: .claude/docs/{featurename}/task-*-integration-*.md
 - Project context:
@@ -108,12 +108,12 @@ Invoke kmp-integration-agent with:
 **In ONE message**, invoke BOTH agents simultaneously:
 
 ```
-1. kmp-data-layer-agent with:
+1. data-layer-agent with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
      CORE_DATA_PKG, CORE_MODULES, DESIGN_SYSTEM_PKG
 
-2. kmp-ui-layer-agent with:
+2. ui-layer-agent with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
      CORE_DESIGNSYSTEM_PKG, DESIGN_SYSTEM_PKG
@@ -128,7 +128,7 @@ Each agent works in isolated context window.
 
 #### Step 2: Launch Integration Agent
 ```
-Invoke kmp-integration-agent with:
+Invoke integration-agent with:
 - Feature name: {featurename}
 - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
