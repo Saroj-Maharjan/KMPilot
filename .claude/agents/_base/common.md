@@ -8,13 +8,29 @@ Load on demand: @../../skills/_shared/patterns.md
 
 ## Context Variables
 
-Orchestrator provides:
+The orchestrator provides a subset of the variables below depending on the
+agent role. **Trust only what your specific invocation passes** — do not
+assume a variable is present.
+
+Always provided to every agent:
+
 - `{featurename}` - Feature name (lowercase)
 - `{PKG_PREFIX}` - Package prefix (e.g., `com.example`)
 - `{PKG_PATH}` - Package as path (e.g., `com/example`)
 - `{CORE_COMMON_PKG}` - Core common package
-- `{CORE_DATA_PKG}` - Core data package
-- `{CORE_DESIGNSYSTEM_PKG}` - Design system package
+
+Provided when relevant to the agent's layer (see table):
+
+| Variable | Data agent | UI agent | Integration agent |
+|----------|------------|----------|-------------------|
+| `{CORE_DATA_PKG}` | ✅ | — | ✅ |
+| `{CORE_DESIGNSYSTEM_PKG}` | ✅ | ✅ | ✅ |
+| `{CORE_MODULES}` | ✅ | — | ✅ |
+| `{INIT_KOIN_PATH}` | — | — | ✅ |
+| `{NAV_HOST_PATH}` | — | — | ✅ |
+
+Source of truth for what the orchestrator passes:
+`@../../skills/creating-kmp-feature/phases/phase-3-implementation.md`.
 
 ## Build Validation
 
