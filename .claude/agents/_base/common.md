@@ -14,7 +14,7 @@ Orchestrator provides:
 - `{PKG_PATH}` - Package as path (e.g., `com/example`)
 - `{CORE_COMMON_PKG}` - Core common package
 - `{CORE_DATA_PKG}` - Core data package
-- `{DESIGN_SYSTEM_PKG}` - Design system package
+- `{CORE_DESIGNSYSTEM_PKG}` - Design system package
 
 ## Build Validation
 

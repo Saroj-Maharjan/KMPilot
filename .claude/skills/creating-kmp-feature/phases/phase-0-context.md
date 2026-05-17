@@ -13,9 +13,8 @@ Context Discovery Progress:
 - [ ] Step 0.1: Detect package prefix (PKG_PREFIX)
 - [ ] Step 0.2: Detect integration paths (INIT_KOIN_PATH, NAV_HOST_PATH)
 - [ ] Step 0.3: Detect core modules (CORE_MODULES)
-- [ ] Step 0.4: Detect design system package (DESIGN_SYSTEM_PKG)
-- [ ] Step 0.5: Detect core module namespaces
-- [ ] Step 0.6: Store context for agent invocation
+- [ ] Step 0.4: Detect core module namespaces (CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG)
+- [ ] Step 0.5: Store context for agent invocation
 ```
 
 ---
@@ -71,17 +70,7 @@ Store as: {CORE_MODULES} (e.g., common, data, designsystem)
 
 ---
 
-## Step 0.4: Detect Design System Package
-
-```
-Grep "import.*designsystem\.X" in feature/**/*.kt
-Extract package pattern
-Store as: {DESIGN_SYSTEM_PKG} (e.g., com.example.designsystem)
-```
-
----
-
-## Step 0.5: Detect Core Module Namespaces
+## Step 0.4: Detect Core Module Namespaces
 
 For portability across projects, detect each core module's namespace:
 
@@ -104,7 +93,7 @@ For portability across projects, detect each core module's namespace:
 
 ---
 
-## Step 0.6: Store Context for Agent Invocation
+## Step 0.5: Store Context for Agent Invocation
 
 Store all detected values to pass to specialized agents:
 
@@ -118,7 +107,6 @@ PROJECT_CONTEXT:
   INIT_KOIN_PATH: {detected path}
   NAV_HOST_PATH: {detected path}
   CORE_MODULES: {list of modules}
-  DESIGN_SYSTEM_PKG: {detected package}
 ```
 
 **Important**: Pass this context when invoking any specialized agent in Phase 3.

@@ -27,14 +27,14 @@ If a Stitch design blueprint exists (`.claude/docs/{featurename}/designs/{featur
 | `Text` | `XText` |
 | `Scaffold` | `XScaffold` |
 | `CircularProgressIndicator` | `XCircularProgressIndicator` |
-| `coil3.compose.AsyncImage` | `{DESIGN_SYSTEM_PKG}.AsyncImage` |
+| `coil3.compose.AsyncImage` | `{CORE_DESIGNSYSTEM_PKG}.AsyncImage` |
 
 Full mappings: @references/component-mappings.md
 Usage examples: @references/usage-examples.md
 
 ## Key Rules
 
-1. **Imports**: `import {DESIGN_SYSTEM_PKG}.*` (avoid Material3 in features)
+1. **Imports**: `import {CORE_DESIGNSYSTEM_PKG}.*` (avoid Material3 in features)
 2. **4-State UI**: Uninitialized → Loading → Success → Failed (mandatory)
 3. **Theme**: Never wrap screens in `XTheme` (app-level only), use `XScaffold`
 4. **Navigation**: Use `XNavHost` (pre-configured animations)
@@ -53,7 +53,7 @@ Material3 allowed only in:
 - [ ] All buttons use XButton variants
 - [ ] All text uses XText
 - [ ] Screen wrapped in XScaffold (NOT XTheme)
-- [ ] XTopAppBar from `{DESIGN_SYSTEM_PKG}.toolbar`
+- [ ] XTopAppBar from `{CORE_DESIGNSYSTEM_PKG}.toolbar`
 - [ ] AsyncImage uses `url` parameter (not `model`)
 - [ ] 4-state pattern implemented
 - [ ] ScreenRoot pattern: Screen + ScreenRoot pair exists

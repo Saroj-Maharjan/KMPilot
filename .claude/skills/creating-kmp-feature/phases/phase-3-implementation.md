@@ -62,7 +62,7 @@ Invoke data-layer-agent with:
 - Project context:
   - PKG_PREFIX, PKG_PATH
   - CORE_COMMON_PKG, CORE_DATA_PKG
-  - CORE_MODULES, DESIGN_SYSTEM_PKG
+  - CORE_MODULES, CORE_DESIGNSYSTEM_PKG
 - Expected: Data layer complete + build validation
 ```
 
@@ -76,7 +76,6 @@ Invoke ui-layer-agent with:
 - Project context:
   - PKG_PREFIX, PKG_PATH
   - CORE_COMMON_PKG, CORE_DESIGNSYSTEM_PKG
-  - DESIGN_SYSTEM_PKG
 - Design-aware context (if applicable):
   - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
   - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
@@ -111,12 +110,12 @@ Invoke integration-agent with:
 1. data-layer-agent with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
-     CORE_DATA_PKG, CORE_MODULES, DESIGN_SYSTEM_PKG
+     CORE_DATA_PKG, CORE_MODULES, CORE_DESIGNSYSTEM_PKG
 
 2. ui-layer-agent with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
-     CORE_DESIGNSYSTEM_PKG, DESIGN_SYSTEM_PKG
+     CORE_DESIGNSYSTEM_PKG
    - Design-aware context (if applicable):
      - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
      - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
@@ -182,7 +181,6 @@ When invoking each agent, include the full project context from Phase 0:
 - CORE_DESIGNSYSTEM_PKG: {value}
 - INIT_KOIN_PATH: {value}
 - NAV_HOST_PATH: {value}
-- DESIGN_SYSTEM_PKG: {value}
 
 ## Feature
 
