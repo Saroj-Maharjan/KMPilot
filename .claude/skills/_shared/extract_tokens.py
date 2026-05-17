@@ -100,7 +100,7 @@ def _parse_kv_block(text, target):
 # ---------------------------------------------------------------------------
 
 TEXT_SIZES = {
-    "xs": 12, "sm": 14, "base": 16, "lg": 18, "xl": 20,
+    "xs": 12, "sm": 14, "base": 16, "md": 16, "lg": 18, "xl": 20,
     "2xl": 24, "3xl": 30, "4xl": 36, "5xl": 48, "6xl": 60, "7xl": 72,
     "8xl": 96, "9xl": 128,
 }
@@ -661,6 +661,10 @@ def format_output(elements, tw_config, style_blocks, filename):
                "compact line — they still appear in order so structural "
                "mismatches (Row vs Column, arrangement, alignment) remain "
                "visible.")
+    out.append("- **Classless text children** (e.g. `<span>Label</span>` "
+               "inside a button) also appear as a one-liner with their text, "
+               "so sibling DOM order inside a flex container is preserved — "
+               "compare it against the Compose content lambda order.")
     out.append("")
 
     current_section = None
@@ -677,7 +681,8 @@ def format_output(elements, tw_config, style_blocks, filename):
 
         class_list = el["class_list"]
         inline = el["inline_style"]
-        if not class_list and not inline:
+        text = el["text"]
+        if not class_list and not inline and not text:
             continue
 
         elements_with_classes += 1
@@ -690,18 +695,22 @@ def format_output(elements, tw_config, style_blocks, filename):
         ]
         has_visual = any(conv for _, conv, _ in conversions) or bool(inline)
 
-        text_preview = el["text"][:60]
-        if len(el["text"]) > 60:
+        text_preview = text[:60]
+        if len(text) > 60:
             text_preview += "..."
         text_hint = f' — "{text_preview}"' if text_preview else ""
 
         if not has_visual:
-            # Layout-only: compact one-liner. Preserves structural info
-            # (flex direction, alignment, arrangement) without per-class
-            # enumeration.
+            # Non-visual element: compact one-liner. Covers two cases —
+            # (a) layout-only elements (flex/items-center/justify-between) so
+            # structural mismatches like Row vs Column or arrangement stay
+            # visible, and (b) classless text-bearing children (e.g. a bare
+            # <span>Label</span> inside a button) so sibling DOM order in
+            # flex containers is preserved.
             classes_str = " ".join(class_list)
+            classes_segment = f" `{classes_str}`" if classes_str else ""
             out.append(
-                f"- [{el['index']}] `<{el['tag']}>` `{classes_str}`{text_hint}"
+                f"- [{el['index']}] `<{el['tag']}>`{classes_segment}{text_hint}"
             )
             layout_only_elements += 1
             continue
