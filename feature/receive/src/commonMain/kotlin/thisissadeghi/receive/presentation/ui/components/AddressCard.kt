@@ -45,10 +45,7 @@ fun AddressCard(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             XText(
                 text = "Your Bitcoin address",
-                modifier =
-                    Modifier
-                        .align(Alignment.Start)
-                        .padding(bottom = 24.dp),
+                modifier = Modifier.padding(bottom = 24.dp),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

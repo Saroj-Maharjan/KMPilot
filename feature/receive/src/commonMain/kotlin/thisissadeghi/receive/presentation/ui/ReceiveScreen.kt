@@ -132,7 +132,7 @@ fun ReceiveScreenRoot(
                     onCopyClick = onCopyClick,
                 )
 
-            is UiState.Failed -> ReceiveFailedContent(paddingValues = paddingValues)
+            is UiState.Failed -> ReceiveFailedContent(paddingValues = paddingValues, onRetry = onRetry)
         }
     }
 }
@@ -147,7 +147,7 @@ private fun ReceiveLoadingContent(paddingValues: PaddingValues) {
         contentAlignment = Alignment.Center,
     ) {
         XCircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(64.dp),
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = 4.dp,
         )
@@ -167,7 +167,7 @@ private fun ReceiveSuccessContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
-                .padding(top = 16.dp),
+                .padding(top = 24.dp),
     ) {
         AssetSelectorCard(
             coinName = uiModel.coinName,
@@ -196,7 +196,8 @@ private fun ReceiveBottomBar(
                 .shadow(8.dp, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
                 .padding(bottom = 32.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -245,7 +246,10 @@ private fun ReceiveBottomBar(
 }
 
 @Composable
-private fun ReceiveFailedContent(paddingValues: PaddingValues) {
+private fun ReceiveFailedContent(
+    paddingValues: PaddingValues,
+    onRetry: () -> Unit,
+) {
     Box(
         modifier =
             Modifier
@@ -276,9 +280,9 @@ private fun ReceiveFailedContent(paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(24.dp))
             XText(
                 text = "Failed to Load Address",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier =
                     Modifier
@@ -287,13 +291,30 @@ private fun ReceiveFailedContent(paddingValues: PaddingValues) {
             )
             XText(
                 text = "Unable to retrieve your wallet address. Please try again.",
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = (16 * 1.625).sp,
+                color = MaterialTheme.colorScheme.outline,
+                lineHeight = (14 * 1.625).sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(modifier = Modifier.height(24.dp))
+            XButton(
+                onClick = onRetry,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .widthIn(max = 200.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+            ) {
+                XText(text = "Retry", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

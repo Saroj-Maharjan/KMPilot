@@ -4,7 +4,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | 1.1.0 |
+| Version | 1.1.1 |
 | Status | Active |
 | Created | 2026-05-03 |
 | Updated | 2026-05-11 |
@@ -55,6 +55,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 
 ## Last Updated
 
+- 2026-05-17 — UI audit fixes: corrected failed-state typography (20sp/SemiBold/onSurfaceVariant title; 14sp/outline body), added Retry button to failed state, fixed loading spinner (64dp), fixed success content top padding (24dp), fixed bottom bar padding, fixed address label center alignment
 - 2026-05-11 — Design-aware update: aligned to Stitch gold/warm theme; AddressCard replaces AddressPill; custom Row top bar; redesigned bottom bar
 - 2026-05-03 — Initial spec generated from implementation
 
@@ -87,6 +88,11 @@ The system SHALL display the wallet address in Success state as soon as the scre
 - GIVEN the screen is in Success state
 - WHEN the user taps the Share button
 - THEN the `onShareClick` callback MUST be invoked
+
+#### Scenario: Retry on failure
+- GIVEN the screen is in Failed state
+- WHEN the user taps the Retry button
+- THEN the `onRetry` callback MUST be invoked
 
 #### Scenario: Asset selector tap
 - GIVEN the screen is in Success state
@@ -243,8 +249,8 @@ From Stitch design — approved 2026-05-03. Blueprint: `.claude/docs/receive/des
 | Address text | 12 | Normal (Monospace), −0.025em tracking |
 | Warning heading | 14 | Bold |
 | Warning body | 12 | Normal, 1.625× line height |
-| Failed heading | 24 | Bold |
-| Failed subtitle | 16 | Normal, 1.625× line height |
+| Failed heading | 20 | SemiBold |
+| Failed subtitle | 14 | Normal, 1.625× line height |
 
 ### Spacing & Shapes
 
@@ -257,7 +263,7 @@ From Stitch design — approved 2026-05-03. Blueprint: `.claude/docs/receive/des
 - Warning banner corner radius: `RoundedCornerShape(24.dp)`
 - Bottom bar: `surface` bg, `RoundedCornerShape(topStart=20, topEnd=20)`, 16dp horizontal, 16dp top, 32dp bottom
 - Button height: 56dp, `RoundedCornerShape(24.dp)`
-- Loading spinner: 48dp, 4dp stroke
+- Loading spinner: 64dp, 4dp stroke
 - Failed icon container: 96dp, `RoundedCornerShape(24.dp)`
 - Failed icon: 80dp
 - Failed content max width: 280dp
