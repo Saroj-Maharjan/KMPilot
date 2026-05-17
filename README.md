@@ -8,8 +8,9 @@ Design, build, test, and review features — with the architecture enforced.
 
 <br />
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/compose-multiplatform/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.10-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/compose-multiplatform/)
+[![AGP](https://img.shields.io/badge/AGP-9.2-3DDC84?logo=android&logoColor=white)](https://developer.android.com/build)
 [![Android](https://img.shields.io/badge/Android-23+-34A853?logo=android&logoColor=white)](/)
 [![iOS](https://img.shields.io/badge/iOS-15+-000000?logo=apple&logoColor=white)](/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
