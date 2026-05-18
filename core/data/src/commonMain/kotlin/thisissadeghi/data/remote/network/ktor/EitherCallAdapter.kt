@@ -32,7 +32,6 @@ private suspend fun <T> HttpResponse.toEither(converter: suspend (HttpResponse) 
                 val body = converter(this)
                 Either.Success(body)
             } catch (e: Throwable) {
-                println("ERRRR: " + e.message)
                 Either.Failure(ErrorConst.SerializationError)
             }
         }
@@ -45,21 +44,16 @@ private suspend fun <T> HttpResponse.toEither(converter: suspend (HttpResponse) 
             val error =
                 when {
                     errorContent?.errorCode in ErrorConst.ServerHandledError ->
-                        ErrorConst.ServerHandledError[
-                            errorContent
-                                ?.errorCode,
-                        ]
+                        ErrorConst.ServerHandledError[errorContent?.errorCode]
 
                     errorContent?.detailMessage.isNullOrBlank() -> ErrorConst.ServerUnknownError(status.value)
 
-                    errorContent?.errorCode == null ->
-                        ErrorModel.Message(
-                            errorContent?.detailMessage ?: "Unknown Error",
-                        )
+                    errorContent.errorCode == null ->
+                        ErrorModel.Message(errorContent.detailMessage)
 
                     else ->
                         ErrorModel.MessageCode(
-                            errorContent.detailMessage ?: "Unknown Error",
+                            errorContent.detailMessage,
                             errorContent.errorCode,
                         )
                 } ?: ErrorConst.ServerUnknownError(status.value)
