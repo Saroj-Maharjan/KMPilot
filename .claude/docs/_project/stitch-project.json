@@ -103,16 +103,16 @@
         "attempts": 1
       }
     },
-    "sample": {
+    "dashboard": {
       "successScreenId": "4cbe6ee364784883acf200970d94246c",
       "successScreenName": "projects/11569217269690169371/screens/4cbe6ee364784883acf200970d94246c",
       "emptyScreenId": null,
-      "screenshot": ".claude/docs/sample/designs/sample.png",
-      "htmlPath": ".claude/docs/sample/designs/extracted/stitch_success.html",
-      "tokensPath": ".claude/docs/sample/designs/extracted/tokens_success.md",
+      "screenshot": ".claude/docs/dashboard/designs/dashboard.png",
+      "htmlPath": ".claude/docs/dashboard/designs/extracted/stitch_success.html",
+      "tokensPath": ".claude/docs/dashboard/designs/extracted/tokens_success.md",
       "dimensions": { "width": 780, "height": 4256 },
-      "designFile": ".claude/docs/sample/designs/sample.md",
-      "blueprintFile": ".claude/docs/sample/designs/sample_blueprint.md",
+      "designFile": ".claude/docs/dashboard/designs/dashboard.md",
+      "blueprintFile": ".claude/docs/dashboard/designs/dashboard_blueprint.md",
       "blueprintConsumed": true,
       "approved": true,
       "approvedAt": "2026-05-11",
@@ -121,7 +121,7 @@
       "verification": {
         "verified": true,
         "verifiedAt": "2026-05-15",
-        "auditReport": "designs/sample_audit.md",
+        "auditReport": "designs/dashboard_audit.md",
         "extractedSources": "designs/extracted/",
         "xComponentsCompliant": true,
         "criticalIssues": 4,

@@ -182,7 +182,7 @@ data class ReceiveUiState(
 | DI init | `composeApp/.../initKoin.kt` | ✅ |
 | Navigation | `composeApp/.../BaseAppNavHost.kt` | ✅ |
 
-Navigation wiring: `receive(onBackClick = { navController.popBackStack() })` + `navController.navigate(ReceiveRoute)` inside the `sample` screen's `onActionClick("receive")`.
+Navigation wiring: `receive(onBackClick = { navController.popBackStack() })` + `navController.navigate(ReceiveRoute)` inside the `dashboard` screen's `onActionClick("receive")`.
 
 ---
 
@@ -213,7 +213,7 @@ The `Failed` state is defined in `UiState` and handled in the UI (error layout) 
 - **Route:** `ReceiveRoute` (`thisissadeghi.receive.presentation.navigation.ReceiveRoute`)
 - **Entry:** `navController.navigate(ReceiveRoute)`
 - **Exit:** `onBackClick` → `navController.popBackStack()`
-- **Source:** Sample screen `onActionClick("receive")`
+- **Source:** Dashboard screen `onActionClick("receive")`
 
 ---
 

@@ -29,7 +29,7 @@ Display health status for all feature modules.
 
 | Feature | Spec | Tests | Review | Actions |
 |---------|------|-------|--------|---------|
-| sample | ✅ | ✅ 7 files | ✅ | - |
+| dashboard | ✅ | ✅ 7 files | ✅ | - |
 | profile | ✅ | ⚠️ 2 files | ❌ | /feature-review profile |
 | login | ❌ | ❌ 0 files | ❌ | /audit-spec login |
 

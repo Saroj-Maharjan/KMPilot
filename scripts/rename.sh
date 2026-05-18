@@ -143,16 +143,16 @@ Kotlin Multiplatform project scaffolded from [KMPilot](https://github.com/ThisIs
 
 ## Quick start
 
-Build the sample feature:
+Build the dashboard feature:
 
 ```bash
-./gradlew :feature:sample:assembleAndroidMain
+./gradlew :feature:dashboard:assembleAndroidMain
 ```
 
 Run desktop tests:
 
 ```bash
-./gradlew :feature:sample:desktopTest
+./gradlew :feature:dashboard:desktopTest
 ```
 
 ## AI-assisted development

@@ -46,7 +46,7 @@ kotlin {
             implementation(project(":core:data"))
             implementation(project(":core:common"))
             implementation(project(":core:designsystem"))
-            implementation(project(":feature:sample"))
+            implementation(project(":feature:dashboard"))
             implementation(project(":feature:send"))
             implementation(project(":feature:receive"))
         }

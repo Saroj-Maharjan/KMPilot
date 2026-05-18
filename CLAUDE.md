@@ -53,6 +53,6 @@ All rules, patterns, naming conventions, and feature structure: @.claude/skills/
 - Specs live at `.claude/docs/{name}/spec.md`
 
 ## Reference
-- Example: `feature/sample/`
+- Example: `feature/dashboard/`
 - Versions: `gradle/libs.versions.toml`
 - JVM: 21

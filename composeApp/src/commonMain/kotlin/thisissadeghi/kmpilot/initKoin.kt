@@ -12,7 +12,7 @@ import thisissadeghi.common.di.base.FeatureRegistry
 import thisissadeghi.data.config.BuildOptionProvider
 import thisissadeghi.data.di.DataModules
 import thisissadeghi.receive.di.ReceiveModules
-import thisissadeghi.sample.di.SampleModules
+import thisissadeghi.dashboard.di.DashboardModules
 import thisissadeghi.send.di.SendModules
 
 private val appModule =
@@ -24,7 +24,7 @@ private fun initializeFeatures() {
     // Initialize each feature
     CommonModules.initialize()
     DataModules.initialize()
-    SampleModules.initialize()
+    DashboardModules.initialize()
     SendModules.initialize()
     ReceiveModules.initialize()
 }

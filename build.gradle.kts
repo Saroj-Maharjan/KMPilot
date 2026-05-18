@@ -61,11 +61,11 @@ val koverIncludedClasses =
         "*ScreenKt",
     )
 val koverExcludedClasses = listOf("*Test", "*Test\$*", "*Fixtures*")
+dependencies {
+    "kover"(project(":feature:dashboard"))
+}
 
 // Aggregate coverage from all feature modules
-dependencies {
-    kover(project(":feature:sample"))
-}
 
 allprojects {
     plugins.apply("org.jlleitschuh.gradle.ktlint")

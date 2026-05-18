@@ -6,8 +6,8 @@ import androidx.navigation.compose.rememberNavController
 import thisissadeghi.designsystem.XNavHost
 import thisissadeghi.receive.presentation.navigation.ReceiveRoute
 import thisissadeghi.receive.presentation.navigation.receive
-import thisissadeghi.sample.presentation.navigation.SampleRoute
-import thisissadeghi.sample.presentation.navigation.sample
+import thisissadeghi.dashboard.presentation.navigation.DashboardRoute
+import thisissadeghi.dashboard.presentation.navigation.dashboard
 import thisissadeghi.send.presentation.navigation.SendRoute
 import thisissadeghi.send.presentation.navigation.send
 
@@ -21,9 +21,9 @@ fun BaseAppNavHost(modifier: Modifier) {
     XNavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = SampleRoute,
+        startDestination = DashboardRoute,
     ) {
-        sample(
+        dashboard(
             onActionClick = { actionId ->
                 if (actionId == "send") {
                     navController.navigate(SendRoute)
@@ -34,7 +34,7 @@ fun BaseAppNavHost(modifier: Modifier) {
                 // Handle action — navigation or action handling to be wired later
             },
             onBackToDashboard = {
-                navController.popBackStack(SampleRoute, inclusive = false)
+                navController.popBackStack(DashboardRoute, inclusive = false)
             },
         )
         send(onBackClick = { navController.popBackStack() })
