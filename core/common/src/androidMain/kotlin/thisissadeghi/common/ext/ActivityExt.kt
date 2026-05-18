@@ -18,8 +18,9 @@ fun Activity.getScreenWidth(): Int =
                 .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
         windowMetrics.bounds.width() - insets.left - insets.right
     } else {
-        val displayMetrics = DisplayMetrics()
-        this.windowManager.defaultDisplay.getMetrics(displayMetrics)
+        @Suppress("DEPRECATION")
+        val displayMetrics =
+            DisplayMetrics().also { this.windowManager.defaultDisplay.getMetrics(it) }
         displayMetrics.widthPixels
     }
 
@@ -31,7 +32,8 @@ fun Activity.getScreenHeight(): Int =
                 .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
         windowMetrics.bounds.height() - insets.top - insets.bottom
     } else {
-        val displayMetrics = DisplayMetrics()
-        this.windowManager.defaultDisplay.getMetrics(displayMetrics)
+        @Suppress("DEPRECATION")
+        val displayMetrics =
+            DisplayMetrics().also { this.windowManager.defaultDisplay.getMetrics(it) }
         displayMetrics.heightPixels
     }

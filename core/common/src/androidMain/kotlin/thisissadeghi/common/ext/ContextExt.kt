@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import java.util.Locale
@@ -13,16 +14,16 @@ import java.util.Locale
  * on 01,Oct,2021
  */
 
-val TAG = "ContextExt"
-
 fun Context.getScreenResolution(): String {
     val wm = this.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val display = wm.defaultDisplay
-    val metrics = DisplayMetrics()
-    display.getMetrics(metrics)
-    val width = metrics.widthPixels
-    val height = metrics.heightPixels
-    return "${width}x$height"
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val bounds = wm.currentWindowMetrics.bounds
+        "${bounds.width()}x${bounds.height()}"
+    } else {
+        @Suppress("DEPRECATION")
+        val metrics = DisplayMetrics().also { wm.defaultDisplay.getMetrics(it) }
+        "${metrics.widthPixels}x${metrics.heightPixels}"
+    }
 }
 
 fun Context.getScreenDensity(): Float = (this.resources.displayMetrics.density * 160f)
