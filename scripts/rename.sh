@@ -41,8 +41,6 @@ Arguments:
 
 Example:
   scripts/rename.sh --name=MyStore --pkg=com.acme.store
-
-Note: iOS Xcode project (iosApp/) requires manual rename for now.
 USAGE
             exit 0
             ;;
@@ -102,12 +100,15 @@ while IFS= read -r -d '' file; do
     sedi "s|${OLD_NAME}|${NEW_NAME}|g" "$file"
     sedi "s|${OLD_NAME_LOWER}\\.|${NEW_NAME_LOWER}.|g" "$file"
 done < <(find . -type f \
-    \( -name "*.kt" -o -name "*.kts" -o -name "*.xml" -o -name "*.gradle" -o -name "*.pro" \) \
+    \( -name "*.kt" -o -name "*.kts" -o -name "*.xml" -o -name "*.gradle" -o -name "*.pro" \
+       -o -name "*.swift" -o -name "*.plist" -o -name "*.pbxproj" -o -name "*.xcconfig" \
+       -o -name "Podfile" \) \
     -not -path "./.git/*" \
     -not -path "*/build/*" \
     -not -path "./.gradle/*" \
     -not -path "./.idea/*" \
     -not -path "./.kotlin/*" \
+    -not -path "*/Pods/*" \
     -print0)
 
 echo "→ Moving package directories..."
@@ -185,5 +186,3 @@ echo "Next:"
 echo "  1. Review:  git diff"
 echo "  2. Build:   ./gradlew assembleDebug"
 echo "  3. Start:   claude"
-echo ""
-echo "Note: iOS project (iosApp/) requires manual rename in Xcode."
