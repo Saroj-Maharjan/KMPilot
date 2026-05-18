@@ -18,7 +18,7 @@ fun XCircularProgressIndicator(
     modifier: Modifier = Modifier,
     color: Color = XProgressIndicatorDefaults.color,
     strokeWidth: Dp = ProgressIndicatorDefaults.CircularStrokeWidth,
-    trackColor: Color = ProgressIndicatorDefaults.circularTrackColor,
+    trackColor: Color = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
     strokeCap: StrokeCap = ProgressIndicatorDefaults.CircularIndeterminateStrokeCap,
 ) {
     CircularProgressIndicator(
@@ -39,7 +39,7 @@ fun XCircularProgressIndicator(
     modifier: Modifier = Modifier,
     color: Color = XProgressIndicatorDefaults.color,
     strokeWidth: Dp = ProgressIndicatorDefaults.CircularStrokeWidth,
-    trackColor: Color = ProgressIndicatorDefaults.circularTrackColor,
+    trackColor: Color = ProgressIndicatorDefaults.circularDeterminateTrackColor,
     strokeCap: StrokeCap = ProgressIndicatorDefaults.CircularDeterminateStrokeCap,
 ) {
     CircularProgressIndicator(
