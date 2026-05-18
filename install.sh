@@ -111,16 +111,11 @@ fun BaseAppNavHost(modifier: Modifier) {
 }
 NAVHOST_EOF
 
-    # 5. Strip KMPilot-specific .claude artifacts so the new project
-    #    starts with clean docs (dashboard/spec.md is kept as an example).
-    rm -rf .claude/docs/send .claude/docs/receive
-    rm -rf .claude/docs/_shared/designs
-    rm -rf .claude/docs/dashboard/designs
-    rm -f  .claude/docs/dashboard/dashboard_audit.md \
-           .claude/docs/dashboard/dashboard_blueprint.md \
-           .claude/docs/dashboard/dashboard.md \
-           .claude/docs/dashboard/dashboard.png
-    rm -f  .claude/docs/_project/stitch-project.json
+    # 5. Strip all .claude/docs content. The dashboard module ships as
+    #    the working example; its spec and design artifacts are KMPilot's
+    #    own development history and aren't useful in a new project.
+    #    Skills recreate any subdirs they need (e.g. .claude/docs/{feature}/spec.md).
+    rm -rf .claude/docs
     rm -f  .claude/settings.local.json
 
     # 6. Stray macOS metadata
