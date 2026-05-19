@@ -29,30 +29,60 @@ Glob: feature/{featurename}/src/commonMain/kotlin/**/*.kt
 entities: [{name, fields}]
 dataSource: {interface, implementation, methods}
 repository: {interface, implementation, dependencies}
-viewModel: {class, dependencies, actions}
+viewModel: {class, dependencies, actions, flow_name}  # flow_name = the public StateFlow property (e.g. uiState, uiModelState)
 screen: {composable, rootComposable, callbacks}
+
+# Capability flags (drive conditional template sections):
+hasDto: true|false              # true if data/model/*Dto.kt exists OR DTO class found alongside entities
+hasPagination: true|false       # true if {Feature}Response with results/count/next/previous fields exists
+successValueShape: list|single  # list = repository returns Either<List<T>>; single = Either<T> (non-list)
 ```
 
-### 1.3 Add Test Dependencies
+**Detection rules:**
+- `flow_name`: read the ViewModel's public flow property — match `val (\w+)\s*=\s*_\w+\.asStateFlow\(\)`. Pass the matched name (e.g. `uiState`, `uiModelState`) to all presentation agents.
+- `hasDto`: glob `feature/{featurename}/src/commonMain/kotlin/**/model/*Dto.kt` → if any match, true.
+- `hasPagination`: grep `data class .*Response.*results.*count` in `data/model/*.kt`.
+- `successValueShape`: read the repository interface return type. `Either<List<...>>` → `list`; `Either<...>` (anything else) → `single`.
 
-**Check if test dependencies exist in `feature/{featurename}/build.gradle.kts`:**
+### 1.3 Add Test Dependencies (Conditional)
+
+A feature's `build.gradle.kts` may already include some or all test dependencies. Only add what is **actually missing** — do not blindly emit the full template.
+
+**Step 1 — read the file:**
 
 ```bash
-grep "commonTest" feature/{featurename}/build.gradle.kts
+cat feature/{featurename}/build.gradle.kts
 ```
 
-**If missing, add the following to the gradle file:**
+**Step 2 — check each dep individually before adding:**
+
+| Dep | Required when | Skip if grep matches |
+|-----|---------------|----------------------|
+| `alias(libs.plugins.kover)` | Always (coverage) | `kover` in `plugins {}` |
+| `alias(libs.plugins.mokkery)` | Always (mocking) | `mokkery` in `plugins {}` |
+| `implementation(libs.bundles.testing.common)` | Always | `bundles.testing.common` |
+| `implementation(libs.compose.ui.test)` | Always (UI tests) | `compose.ui.test` |
+| `implementation(libs.ktor.client.mock)` | Only when feature has a **Remote DataSource** (e.g. `*RemoteDataSourceImpl.kt` using `ApiClient`) | `ktor.client.mock` |
+| `implementation(libs.ktor.client.content.negotiation)` | Remote only | `ktor.client.content.negotiation` |
+| `implementation(libs.ktor.serialization.kotlinx.json)` | Remote only | `ktor.serialization.kotlinx.json` |
+| `implementation(libs.ktor.client.resources)` | Remote only (already in commonMain if used) | `ktor.client.resources` |
+| `implementation(compose.desktop.currentOs)` in `desktopTest` | Always (UI tests on desktop) | `compose.desktop.currentOs` |
+
+**Step 3 — only edit gradle if at least one dep is missing.** If everything is present, skip Phase 2 (sync) entirely and go straight to Phase 3.
+
+**Reference snippet (only emit the lines you actually need to add):**
 
 ```kotlin
-// In plugins block (if not present):
+// In plugins block — only add what's missing:
 alias(libs.plugins.kover)
 alias(libs.plugins.mokkery)
 
-// Add after commonMain.dependencies:
+// In sourceSets — only add what's missing:
 commonTest {
     dependencies {
         implementation(libs.bundles.testing.common) // kotlin-test, kotlinx-coroutines-test, turbine
         implementation(libs.compose.ui.test)
+        // Ktor block — ONLY for features with a Remote DataSource:
         implementation(libs.ktor.client.mock)
         implementation(libs.ktor.client.content.negotiation)
         implementation(libs.ktor.serialization.kotlinx.json)
@@ -67,17 +97,17 @@ val desktopTest by getting {
 }
 ```
 
-## Phase 2: Project Sync
+## Phase 2: Project Sync (Conditional)
 
-**After gathering all dependencies and context, request manual sync:**
+**Only run this phase if Phase 1.3 actually modified `feature/{featurename}/build.gradle.kts`.** If all deps were already present and gradle was untouched, **skip to Phase 3 immediately** — no sync needed.
 
-Use `AskUserQuestion` with:
+When gradle did change, request manual sync via `AskUserQuestion`:
 ```
-question: "Please sync the project to ensure all dependencies are resolved. After syncing, confirm to continue with test generation."
+question: "Test dependencies were added to {featurename}'s build.gradle.kts. Please sync the project, then confirm."
 header: "Sync Required"
 options:
   - label: "Sync Complete"
-    description: "I have synced the project and all dependencies are resolved"
+    description: "Project synced; new dependencies resolved"
 ```
 
 **Wait for user confirmation before proceeding to Phase 3.**
@@ -96,7 +126,10 @@ CORE_COMMON_PKG: {CORE_COMMON_PKG}
 CORE_DATA_PKG: {CORE_DATA_PKG}
 
 Entities: {yaml}
-UiState: {yaml}"
+UiState: {yaml}
+
+hasDto: {true|false}
+hasPagination: {true|false}"
 ```
 
 ### 3.2 Data Layer (Parallel - 2 agents)
@@ -126,7 +159,8 @@ Task: test-viewmodel
 Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
 Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
-ViewModel: {yaml}"
+ViewModel: {yaml}
+flow_name: {detected flow_name, e.g. uiState or uiModelState}"
 
 Task: test-ui
 Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
@@ -140,7 +174,9 @@ Task: test-integration
 Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
 Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}, CORE_DATA_PKG: {CORE_DATA_PKG}
-Stack: {yaml}"
+Stack: {yaml}
+flow_name: {detected flow_name}
+successValueShape: {list|single}"
 ```
 
 ## Phase 4: Run Tests
