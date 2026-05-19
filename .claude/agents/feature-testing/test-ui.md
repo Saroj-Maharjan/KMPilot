@@ -27,8 +27,8 @@ feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentatio
 ```kotlin
 package {PKG_PREFIX}.{featurename}.presentation.ui
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.*
+import {CORE_DESIGNSYSTEM_PKG}.XTheme
 import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 import {PKG_PREFIX}.{featurename}.fixtures.{Feature}UiFixtures
 import kotlin.test.Test
@@ -43,7 +43,7 @@ class {Feature}ScreenTest {
     @Test
     fun `shows loading indicator when state is Loading`() = runComposeUiTest {
         setContent {
-            MaterialTheme {
+            XTheme {
                 {Feature}ScreenRoot(
                     uiState = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = {},
@@ -62,7 +62,7 @@ class {Feature}ScreenTest {
         val entities = {Feature}Fixtures.create{Entity}List(3)
 
         setContent {
-            MaterialTheme {
+            XTheme {
                 {Feature}ScreenRoot(
                     uiState = {Feature}UiFixtures.createSuccessState(entities),
                     onBackClick = {},
@@ -79,7 +79,7 @@ class {Feature}ScreenTest {
     @Test
     fun `shows empty message when list is empty`() = runComposeUiTest {
         setContent {
-            MaterialTheme {
+            XTheme {
                 {Feature}ScreenRoot(
                     uiState = {Feature}UiFixtures.createEmptyState(),
                     onBackClick = {},
@@ -96,11 +96,13 @@ class {Feature}ScreenTest {
     @Test
     fun `shows network error message and retry button`() = runComposeUiTest {
         setContent {
-            {Feature}ScreenRoot(
-                uiState = {Feature}UiFixtures.createNetworkErrorState(),
-                onBackClick = {},
-                onRetry = {},
-            )
+            XTheme {
+                {Feature}ScreenRoot(
+                    uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                    onBackClick = {},
+                    onRetry = {},
+                )
+            }
         }
 
         onNodeWithText("Error: Error, Check your connection and try again.", substring = true).assertIsDisplayed()
@@ -110,11 +112,13 @@ class {Feature}ScreenTest {
     @Test
     fun `shows unauthorized error message`() = runComposeUiTest {
         setContent {
-            {Feature}ScreenRoot(
-                uiState = {Feature}UiFixtures.createUnauthorizedErrorState(),
-                onBackClick = {},
-                onRetry = {},
-            )
+            XTheme {
+                {Feature}ScreenRoot(
+                    uiState = {Feature}UiFixtures.createUnauthorizedErrorState(),
+                    onBackClick = {},
+                    onRetry = {},
+                )
+            }
         }
 
         onNodeWithText("Error: You must login (#1001)", substring = true).assertIsDisplayed()
@@ -124,11 +128,13 @@ class {Feature}ScreenTest {
     @Test
     fun `shows not found error message`() = runComposeUiTest {
         setContent {
-            {Feature}ScreenRoot(
-                uiState = {Feature}UiFixtures.createNotFoundErrorState(),
-                onBackClick = {},
-                onRetry = {},
-            )
+            XTheme {
+                {Feature}ScreenRoot(
+                    uiState = {Feature}UiFixtures.createNotFoundErrorState(),
+                    onBackClick = {},
+                    onRetry = {},
+                )
+            }
         }
 
         onNodeWithText("Error: {Resource} not found (#404)", substring = true).assertIsDisplayed()
@@ -138,11 +144,13 @@ class {Feature}ScreenTest {
     @Test
     fun `shows server error message`() = runComposeUiTest {
         setContent {
-            {Feature}ScreenRoot(
-                uiState = {Feature}UiFixtures.createServerErrorState(),
-                onBackClick = {},
-                onRetry = {},
-            )
+            XTheme {
+                {Feature}ScreenRoot(
+                    uiState = {Feature}UiFixtures.createServerErrorState(),
+                    onBackClick = {},
+                    onRetry = {},
+                )
+            }
         }
 
         onNodeWithText("Error: An unknown network error has occurred! (#500)", substring = true).assertIsDisplayed()
@@ -156,11 +164,13 @@ class {Feature}ScreenTest {
         var retryCalled = false
 
         setContent {
-            {Feature}ScreenRoot(
-                uiState = {Feature}UiFixtures.createNetworkErrorState(),
-                onBackClick = {},
-                onRetry = { retryCalled = true },
-            )
+            XTheme {
+                {Feature}ScreenRoot(
+                    uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                    onBackClick = {},
+                    onRetry = { retryCalled = true },
+                )
+            }
         }
 
         onNodeWithText("Retry").performClick()
@@ -172,7 +182,7 @@ class {Feature}ScreenTest {
         var backCalled = false
 
         setContent {
-            MaterialTheme {
+            XTheme {
                 {Feature}ScreenRoot(
                     uiState = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = { backCalled = true },
@@ -191,7 +201,7 @@ class {Feature}ScreenTest {
         var clickedId: String? = null
 
         setContent {
-            MaterialTheme {
+            XTheme {
                 {Feature}ScreenRoot(
                     uiState = {Feature}UiFixtures.createSuccessState(entities),
                     onBackClick = {},

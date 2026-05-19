@@ -10,6 +10,34 @@ color: red
 
 Test full feature flow. **Do NOT re-read source files** - use provided context.
 
+## Template Variables
+
+The orchestrator passes two shape-driving variables. Substitute them throughout the template:
+
+| Variable | Purpose | Example values |
+|----------|---------|----------------|
+| `{flow_name}` | Public StateFlow property on the ViewModel | `uiState`, `uiModelState`, or similar |
+| `successValueShape` | Whether `UiState.Success.value` is a list or a single object | `list`, `single` |
+
+### Assertion shape per `successValueShape`
+
+**`list`** (repository returns `Either<List<T>>` → `UiState.Success<List<T>>`):
+```kotlin
+assertTrue(current.{state}State is UiState.Success)
+val items = (current.{state}State as UiState.Success).value
+assertTrue(items.isNotEmpty())
+```
+
+**`single`** (repository returns `Either<T>` for some single object T → `UiState.Success<T>`):
+```kotlin
+assertTrue(current.{state}State is UiState.Success)
+val value = (current.{state}State as UiState.Success).value
+assertNotNull(value)
+// Optionally assert a field: assertEquals(expected, value.someField)
+```
+
+**Never emit `.isNotEmpty()` against a non-list success value.**
+
 ## Key Principle
 
 **For Remote DataSource (API-based):**
@@ -128,7 +156,7 @@ class {Feature}IntegrationTest {
             )
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             var current = awaitItem()
 
             if (current.{state}State is UiState.Uninitialized) {
@@ -141,8 +169,13 @@ class {Feature}IntegrationTest {
             }
 
             assertTrue(current.{state}State is UiState.Success)
+            // Pick ONE assertion block based on successValueShape:
+            // --- list ---
             val items = (current.{state}State as UiState.Success).value
             assertTrue(items.isNotEmpty())
+            // --- single ---
+            // val value = (current.{state}State as UiState.Success).value
+            // assertNotNull(value)
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -170,7 +203,7 @@ class {Feature}IntegrationTest {
             }
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             var current = awaitItem()
 
             while (current.{state}State !is UiState.Failed) {
@@ -203,7 +236,7 @@ class {Feature}IntegrationTest {
             )
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             skipItems(1)
             advanceUntilIdle()
 
@@ -228,7 +261,7 @@ class {Feature}IntegrationTest {
             )
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             skipItems(1)
             advanceUntilIdle()
 
@@ -253,7 +286,7 @@ class {Feature}IntegrationTest {
             )
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             skipItems(1)
             advanceUntilIdle()
 
@@ -282,7 +315,7 @@ class {Feature}IntegrationTest {
             )
         }
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             advanceUntilIdle()
 
             while (awaitItem().{state}State is UiState.Loading) {
@@ -317,7 +350,7 @@ fun `full flow - load items succeeds`() = runTest(testDispatcher) {
 
     setupWithMockDataSource(mockDataSource)
 
-    viewModel.uiModelState.test {
+    viewModel.{flow_name}.test {
         skipItems(1)
         advanceUntilIdle()
 
@@ -340,7 +373,7 @@ fun `full flow - handles runtime exception`() = runTest(testDispatcher) {
 
     setupWithMockDataSource(mockDataSource)
 
-    viewModel.uiModelState.test {
+    viewModel.{flow_name}.test {
         skipItems(1)
         advanceUntilIdle()
 

@@ -10,6 +10,17 @@ color: purple
 
 Generate comprehensive domain + UI fixtures. **Do NOT re-read source files** - use provided context.
 
+## Conditional Sections
+
+The orchestrator passes capability flags. Render sections only when their flag is true:
+
+| Flag | Section gated |
+|------|---------------|
+| `hasDto: true` | DTO factories (`create{Entity}Dto`, `create{Entity}DtoList`) |
+| `hasPagination: true` | Response wrappers (`create{Feature}Response`, `createEmpty{Feature}Response`) and paginated JSON (`valid{Feature}ResponseJson`, `empty{Feature}ResponseJson`) |
+
+When a flag is false, **omit the entire section** — do not emit stub code, do not import types that don't exist.
+
 ## Output Paths
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/fixtures/{Feature}Fixtures.kt
@@ -67,14 +78,14 @@ object {Feature}Fixtures {
     fun create{Entity}WithMaxValues() = create{Entity}(/* numeric fields = MAX_VALUE */)
     fun create{Entity}WithMinValues() = create{Entity}(/* numeric fields = MIN_VALUE or 0 */)
 
-    // === DTO FACTORIES ===
+    // === DTO FACTORIES ===  (ONLY if hasDto == true)
 
     fun create{Entity}Dto(/* ALL DTO fields */) = {Entity}Dto(/* ... */)
     fun create{Entity}DtoList(count: Int = 3) = (1..count).map { i ->
         create{Entity}Dto(id = "id-$i")
     }
 
-    // === RESPONSE WRAPPERS (if paginated) ===
+    // === RESPONSE WRAPPERS ===  (ONLY if hasPagination == true)
 
     fun create{Feature}Response(
         results: List<{Entity}Dto> = create{Entity}DtoList(),
@@ -107,8 +118,9 @@ object {Feature}Fixtures {
 
     val valid{Entity}Json = """{"id": "test-id", "name": "Test Name"}"""
     val valid{Entity}ListJson = """[{"id": "id-1", "name": "Entity 1"}, {"id": "id-2", "name": "Entity 2"}, {"id": "id-3", "name": "Entity 3"}]"""
-    val valid{Feature}ResponseJson = """{"count": 3, "next": null, "previous": null, "results": $valid{Entity}ListJson}"""
     val empty{Entity}ListJson = "[]"
+    // Paginated JSON (ONLY if hasPagination == true):
+    val valid{Feature}ResponseJson = """{"count": 3, "next": null, "previous": null, "results": $valid{Entity}ListJson}"""
     val empty{Feature}ResponseJson = """{"count": 0, "next": null, "previous": null, "results": []}"""
 
     // Error JSONs (NetworkErrorModel format)
@@ -216,7 +228,8 @@ object {Feature}UiFixtures {
 **{Feature}Fixtures.kt:**
 - `create{Entity}()` with ALL fields | `create{Entity}List/Empty/Single/Large`
 - Edge cases: `WithNullOptionals`, `WithEmptyStrings`, `WithBlankStrings`, `WithSpecialCharacters`, `WithUnicode`, `WithLongStrings`, `WithMaxValues`, `WithMinValues`
-- DTO factories | Response wrappers (if paginated)
+- DTO factories — **only if `hasDto == true`**
+- Response wrappers & paginated JSON — **only if `hasPagination == true`**
 - Error helpers using ErrorConst (8 types)
 - Either helpers: `createSuccess{Entity}()`, `createFailure{Entity}()`
 - JSON: valid, empty, error (400-503), malformed, incomplete, nullFields, extraFields, specialChars, unicode

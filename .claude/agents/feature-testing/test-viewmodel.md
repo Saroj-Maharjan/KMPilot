@@ -10,6 +10,12 @@ color: orange
 
 Test ViewModels using Turbine for StateFlow assertions. **Do NOT re-read source files** - use provided context.
 
+## Template Variables
+
+The orchestrator passes `flow_name` — the public `StateFlow` property exposed by the ViewModel (commonly `uiState`, `uiModelState`, or similar). Substitute it everywhere `{flow_name}` appears below.
+
+**Never hardcode** a specific name — always use `{flow_name}`. If `flow_name` is missing from the prompt, default to `uiState`.
+
 ## Output Path
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentation/{Feature}ViewModelTest.kt
@@ -25,7 +31,7 @@ createViewModel()
 advanceUntilIdle() // Don't do this!
 
 // ✅ CORRECT - Inside test block after init
-viewModel.uiModel.test {
+viewModel.{flow_name}.test {
     val initial = awaitItem() // Init runs automatically
     advanceUntilIdle() // Let init coroutine complete
     val result = awaitItem()
@@ -91,7 +97,7 @@ class {Feature}ViewModelTest {
 
         createViewModel()
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             var current = awaitItem()
             if (current.{state}State is UiState.Uninitialized) {
                 current = awaitItem()
@@ -117,7 +123,7 @@ class {Feature}ViewModelTest {
 
         createViewModel()
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             var current = awaitItem()
             while (current.{state}State !is UiState.Failed) {
                 advanceUntilIdle()
@@ -141,7 +147,7 @@ class {Feature}ViewModelTest {
 
         createViewModel()
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             var current = awaitItem()
             while (current.{state}State !is UiState.Failed) {
                 advanceUntilIdle()
@@ -166,7 +172,7 @@ class {Feature}ViewModelTest {
 
         createViewModel()
 
-        viewModel.uiModelState.test {
+        viewModel.{flow_name}.test {
             skipItems(1)
 
             viewModel.on{Action}("test-param")
