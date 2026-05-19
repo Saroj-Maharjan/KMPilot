@@ -28,7 +28,7 @@ Review a KMP feature against Clean Architecture, 10 critical rules, and 4 integr
 2. Either<T> returns
 3. setState usage
 4. 4 UI states
-5. X-components
+5. X-components (Material3 *components* forbidden — `MaterialTheme.colorScheme/typography` access is allowed because `XTheme` wraps MaterialTheme)
 6. ImmutableList
 7. Lowercase packages
 8. DI binding pattern
@@ -43,6 +43,16 @@ Review a KMP feature against Clean Architecture, 10 critical rules, and 4 integr
 
 ### Spec Compliance (if spec exists)
 - Data Models, Interfaces, State, Navigation
+
+### Design-Aware Compliance (if blueprint exists)
+- Blueprint present at `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
+- `blueprintConsumed: true` in `.claude/docs/_project/stitch-project.json` under `features.{featurename}`
+- A `false` flag with a blueprint present means implementation skipped the design pipeline
+
+### UI File Organization
+- `{Feature}Screen.kt` stays lean: `Screen` + `ScreenRoot` + state routing + `LoadingContent`/`ErrorContent` only
+- Self-contained UI units live under `presentation/ui/components/{Name}.kt`
+- Reference: `patterns.md` "UI File Organization" section
 
 ## Output
 
