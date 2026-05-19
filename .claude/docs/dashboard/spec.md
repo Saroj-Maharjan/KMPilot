@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value                                                   |
 |-------|---------------------------------------------------------|
-| Version | 3.2.1                                                   |
+| Version | 3.3.0                                                   |
 | Status | Approved                                                |
 | Author | System                                                  |
 | Created | 2026-01-05                                              |
-| Updated | 2026-05-15                                              |
+| Updated | 2026-05-19                                              |
 | Design | `.claude/docs/dashboard/designs/dashboard_blueprint.md` |
 | Reviewers | N/A                                                     |
 
@@ -16,7 +16,7 @@
 ## 1. Overview
 
 ### 1.1 Summary
-A finance dashboard mockup that shows all key personal finance sections using hard-coded local data. Demonstrates the standard KMP Clean Architecture patterns while providing a realistic finance UI: total balance, income/expenses summary, recent transactions, budget progress, savings goals, quick actions, upcoming bills, spending insights, and portfolio snapshot.
+A finance dashboard that shows all key personal finance sections, fetching data from a GitHub Pages-hosted JSON mock via the remote data source. Demonstrates the standard KMP Clean Architecture patterns while providing a realistic finance UI: total balance, income/expenses summary, recent transactions, budget progress, savings goals, quick actions, upcoming bills, spending insights, and portfolio snapshot.
 
 ### 1.2 Goals
 - Demonstrate the 4-state UI pattern (Uninitialized, Loading, Success, Failed)
@@ -25,7 +25,7 @@ A finance dashboard mockup that shows all key personal finance sections using ha
 - Serve as a realistic finance dashboard mockup for future feature development
 
 ### 1.3 Non-Goals
-- Active API usage in repository (infrastructure ready, mock data used)
+- Live/production backend (GitHub Pages JSON mock is the data source)
 - Functional quick actions (stubs only — handlers to be added later)
 - Production-ready feature (mockup only)
 
@@ -45,7 +45,7 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 - Compose Material Icons Extended - Dashboard icons
 
 ### 2.3 Constraints
-- Must use mock data only (no real API)
+- Data is served from GitHub Pages mock; local data source is retained but unused in production DI
 - Must demonstrate all critical patterns
 - Must build successfully on both Android and iOS
 - Must use X-components exclusively (no Material3 components directly)
@@ -126,9 +126,9 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 | DashboardLocalDataSourceImpl | Hard-coded finance dashboard data |
 | DashboardRemoteDataSource | Interface for remote API operations |
 | DashboardRemoteDataSourceImpl | API implementation using ApiClient |
-| DashboardResources | Ktor Resource definitions for /api/finance/dashboard endpoint |
+| DashboardResources | Ktor Resource definitions for /api/finance/dashboard.json endpoint |
 | DashboardRepository | Interface for business logic |
-| DashboardRepositoryImpl | Business logic implementation (uses local data) |
+| DashboardRepositoryImpl | Business logic implementation (delegates to remote data source; returns Either<DashboardData>) |
 | DashboardViewModel | State management using MutableStateFlow + setState |
 | DashboardUiModel | UI state container with 4-state pattern |
 | DashboardScreen | Main composable connecting ViewModel to UI |
@@ -197,7 +197,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 │   │   ├── DashboardData.kt         # All finance data models (@Serializable)
 │   │   └── DashboardItem.kt            # Empty — replaced by DashboardData.kt
 │   ├── remote/
-│   │   └── DashboardResources.kt       # Ktor Resource for /api/finance/dashboard
+│   │   └── DashboardResources.kt       # Ktor Resource for /api/finance/dashboard.json
 │   ├── datasource/
 │   │   ├── DashboardLocalDataSource.kt        # Interface
 │   │   ├── DashboardLocalDataSourceImpl.kt    # Hard-coded finance data
@@ -264,17 +264,17 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 
 ### 5.1 API Contracts
 
-**Endpoint:** `GET /api/finance/dashboard`
+**Endpoint:** `GET /api/finance/dashboard.json`
 
 **Description:** Fetches the full finance dashboard data.
 
-**Authentication:** Not required (demonstration endpoint)
+**Authentication:** Not required
 
 **Response:** `200 OK` → `DashboardData`
 
 **Notes:**
-- API infrastructure is implemented but not currently used by repository
-- Repository uses hard-coded local data for the mockup
+- Served from `https://thisissadeghi.github.io/KMPilot/mock-api/`
+- File lives at `mock-api/api/finance/dashboard.json` in this repo
 
 ### 5.2 Internal Contracts
 
@@ -288,7 +288,7 @@ interface DashboardRemoteDataSource {
 }
 
 interface DashboardRepository {
-    suspend fun getDashboard(): DashboardData
+    suspend fun getDashboard(): Either<DashboardData>
 }
 ```
 
@@ -309,7 +309,7 @@ Navigation callbacks:
 2. Screen enters Uninitialized → immediately triggers Loading
 3. ViewModel calls `loadDashboard()` on init
 4. State transitions to Loading (shows spinner)
-5. Repository fetches mock data from local DataSource
+5. Repository calls RemoteDataSource → ApiClient fetches from GitHub Pages JSON
 6. State transitions to Success — full dashboard renders
 7. On error: State transitions to Failed with retry button
 
@@ -418,6 +418,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 |---------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3.3.0 | 2026-05-19 | Switched to remote data source: `DashboardRepositoryImpl` now delegates to `DashboardRemoteDataSource` (returns `Either<DashboardData>`); `DashboardRepository` interface return type updated to `Either<DashboardData>`; `DashboardViewModel` replaced try/catch with `Either` pattern; `LocalDataSource` removed from DI (files retained); `DashboardResources` path updated to `/api/finance/dashboard.json`; `BASE_URL` pointed at GitHub Pages mock (`https://thisissadeghi.github.io/KMPilot/mock-api/`). |
 | 3.2.1 | 2026-05-15 | UI fidelity fixes from `dashboard_audit.md`: removed extra "Monthly Summary" heading + outer Column wrapper in `MonthlySummaryCard`; fixed Portfolio icon→symbol spacing (0dp → 4dp); dropped "• {date}" suffix from `RecentTransactionsSection` category line; rebuilt layered Loading state (96dp outline ring + 64dp surface-variant track + 4dp primary arc + 8dp central dot); added "Return to Dashboard" secondary `XTextButton` + new `onBackToDashboard: () -> Unit` callback threaded through `DashboardScreen`, `DashboardScreenRoot`, the `dashboard()` nav extension, and `BaseAppNavHost` (pops to dashboard); added `letterSpacing = (-0.5).sp` + `lineHeight = 32.5.sp` to "Something went wrong" title; removed 32dp spacer between subtitle and Retry button; added 80dp `error.copy(alpha = 0.1f)` decorative glow behind the warning icon. |
 | 3.2.0 | 2026-05-11 | Blueprint implementation (ui-designer skill): gold/champagne theme (#F5D76E primary), component renames (BalanceCard, QuickActionsSection, InsightBanner, MonthlySummaryCard, UpcomingBillsCard), XScaffold replacing manual Column, 2-col budget grid, 3-col portfolio grid, single split-bar monthly summary (12dp), individual transaction cards, single bills card with dividers, XTheme.Colors.Success/Danger replacing obsolete ExpenseRed/tertiary usage, DashboardHeader sticky Box with background.                                                                                                                                                                                                                                                                                                                                                   |
 | 3.1.0 | 2026-02-19 | UI redesign via Stitch (ui-designer skill): purple brand palette (#9D70FF primary), M3 tertiary for income (#4ADE80), XTheme.Colors.ExpenseRed for expenses, 24dp card corners, custom header Column, reordered sections (Insight Banner after Quick Actions), Budget/Bills redesigned as cards with 4dp left-accent borders, Portfolio/Transactions wrapped in single cards with dividers, removed private color vals in favour of MaterialTheme.colorScheme roles.                                                                                                                                                                                                                                                                                                                                                                                           |

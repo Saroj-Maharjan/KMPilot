@@ -6,8 +6,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import thisissadeghi.common.di.base.BaseFeature
-import thisissadeghi.dashboard.data.datasource.DashboardLocalDataSource
-import thisissadeghi.dashboard.data.datasource.DashboardLocalDataSourceImpl
 import thisissadeghi.dashboard.data.datasource.DashboardRemoteDataSource
 import thisissadeghi.dashboard.data.datasource.DashboardRemoteDataSourceImpl
 import thisissadeghi.dashboard.data.repository.DashboardRepository
@@ -23,7 +21,6 @@ object DashboardModules : BaseFeature(DashboardModules::class.simpleName.toStrin
         listOf(
             module {
                 // Data layer
-                singleOf(::DashboardLocalDataSourceImpl).bind<DashboardLocalDataSource>()
                 singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()
                 singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()
 

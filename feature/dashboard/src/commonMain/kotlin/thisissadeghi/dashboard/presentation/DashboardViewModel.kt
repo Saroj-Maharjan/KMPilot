@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import thisissadeghi.common.ErrorModel
+import thisissadeghi.common.Either
 import thisissadeghi.common.UiState
 import thisissadeghi.common.setState
 import thisissadeghi.dashboard.data.repository.DashboardRepository
@@ -23,15 +23,15 @@ class DashboardViewModel(
     fun loadDashboard() {
         _uiModelState.setState { copy(dashboardState = UiState.Loading) }
         viewModelScope.launch {
-            try {
-                val data = repository.getDashboard()
-                _uiModelState.setState {
-                    copy(dashboardState = UiState.Success(data))
-                }
-            } catch (e: Exception) {
-                _uiModelState.setState {
-                    copy(dashboardState = UiState.Failed(ErrorModel.Exception(e)))
-                }
+            when (val result = repository.getDashboard()) {
+                is Either.Success ->
+                    _uiModelState.setState {
+                        copy(dashboardState = UiState.Success(result.data))
+                    }
+                is Either.Failure ->
+                    _uiModelState.setState {
+                        copy(dashboardState = UiState.Failed(result.error))
+                    }
             }
         }
     }

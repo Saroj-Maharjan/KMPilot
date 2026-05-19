@@ -1,10 +1,11 @@
 package thisissadeghi.dashboard.data.repository
 
-import thisissadeghi.dashboard.data.datasource.DashboardLocalDataSource
+import thisissadeghi.common.Either
+import thisissadeghi.dashboard.data.datasource.DashboardRemoteDataSource
 import thisissadeghi.dashboard.data.model.DashboardData
 
 class DashboardRepositoryImpl(
-    private val localDataSource: DashboardLocalDataSource,
+    private val remoteDataSource: DashboardRemoteDataSource,
 ) : DashboardRepository {
-    override suspend fun getDashboard(): DashboardData = localDataSource.getDashboard()
+    override suspend fun getDashboard(): Either<DashboardData> = remoteDataSource.getDashboard()
 }
