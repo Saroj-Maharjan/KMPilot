@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.SpendingInsight
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
-import thisissadeghi.dashboard.data.model.SpendingInsight
 
 @Composable
 internal fun InsightBanner(insight: SpendingInsight) {

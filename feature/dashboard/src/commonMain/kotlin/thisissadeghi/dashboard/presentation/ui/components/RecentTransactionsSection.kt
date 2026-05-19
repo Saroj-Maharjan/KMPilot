@@ -27,11 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.Transaction
+import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
-import thisissadeghi.dashboard.data.model.Transaction
-import thisissadeghi.dashboard.presentation.ui.formatMoney
 
 @Composable
 internal fun RecentTransactionsSection(transactions: List<Transaction>) {

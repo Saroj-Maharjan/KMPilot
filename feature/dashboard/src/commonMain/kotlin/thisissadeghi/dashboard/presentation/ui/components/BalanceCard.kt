@@ -24,11 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.AccountBalance
+import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
-import thisissadeghi.dashboard.data.model.AccountBalance
-import thisissadeghi.dashboard.presentation.ui.formatMoney
 
 @Composable
 internal fun BalanceCard(balance: AccountBalance) {

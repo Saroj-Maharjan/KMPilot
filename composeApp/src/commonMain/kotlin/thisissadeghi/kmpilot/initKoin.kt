@@ -9,10 +9,10 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import thisissadeghi.common.di.CommonModules
 import thisissadeghi.common.di.base.FeatureRegistry
+import thisissadeghi.dashboard.di.DashboardModules
 import thisissadeghi.data.config.BuildOptionProvider
 import thisissadeghi.data.di.DataModules
 import thisissadeghi.receive.di.ReceiveModules
-import thisissadeghi.dashboard.di.DashboardModules
 import thisissadeghi.send.di.SendModules
 
 private val appModule =

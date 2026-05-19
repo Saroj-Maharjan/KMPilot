@@ -21,10 +21,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import thisissadeghi.designsystem.XText
-import thisissadeghi.designsystem.XTheme
 import thisissadeghi.dashboard.data.model.MonthlySummary
 import thisissadeghi.dashboard.presentation.ui.formatMoney
+import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTheme
 
 @Composable
 internal fun MonthlySummaryCard(summary: MonthlySummary) {

@@ -24,12 +24,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.UpcomingBill
+import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XHorizontalDivider
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
-import thisissadeghi.dashboard.data.model.UpcomingBill
-import thisissadeghi.dashboard.presentation.ui.formatMoney
 
 @Composable
 internal fun UpcomingBillsCard(bills: List<UpcomingBill>) {

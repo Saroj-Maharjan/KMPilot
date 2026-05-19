@@ -30,12 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import thisissadeghi.common.UiState
-import thisissadeghi.designsystem.XButton
-import thisissadeghi.designsystem.XCircularProgressIndicator
-import thisissadeghi.designsystem.XIcon
-import thisissadeghi.designsystem.XScaffold
-import thisissadeghi.designsystem.XText
-import thisissadeghi.designsystem.XTextButton
 import thisissadeghi.dashboard.data.model.DashboardData
 import thisissadeghi.dashboard.presentation.DashboardUiModel
 import thisissadeghi.dashboard.presentation.DashboardViewModel
@@ -49,6 +43,12 @@ import thisissadeghi.dashboard.presentation.ui.components.QuickActionsSection
 import thisissadeghi.dashboard.presentation.ui.components.RecentTransactionsSection
 import thisissadeghi.dashboard.presentation.ui.components.SavingsGoalsSection
 import thisissadeghi.dashboard.presentation.ui.components.UpcomingBillsCard
+import thisissadeghi.designsystem.XButton
+import thisissadeghi.designsystem.XCircularProgressIndicator
+import thisissadeghi.designsystem.XIcon
+import thisissadeghi.designsystem.XScaffold
+import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTextButton
 
 @Composable
 fun DashboardScreen(

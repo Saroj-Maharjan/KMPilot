@@ -24,9 +24,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.QuickAction
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
-import thisissadeghi.dashboard.data.model.QuickAction
 
 @Composable
 internal fun QuickActionsSection(

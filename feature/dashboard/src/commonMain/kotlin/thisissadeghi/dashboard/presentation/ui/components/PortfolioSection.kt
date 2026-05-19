@@ -25,10 +25,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import thisissadeghi.dashboard.data.model.PortfolioAsset
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
-import thisissadeghi.dashboard.data.model.PortfolioAsset
 
 @Composable
 internal fun PortfolioSection(assets: List<PortfolioAsset>) {

@@ -1,10 +1,10 @@
 package thisissadeghi.dashboard.data.datasource
 
 import thisissadeghi.common.Either
-import thisissadeghi.data.remote.network.ktor.ApiClient
-import thisissadeghi.data.remote.network.ktor.RequestConfig
 import thisissadeghi.dashboard.data.model.DashboardData
 import thisissadeghi.dashboard.data.remote.DashboardResources
+import thisissadeghi.data.remote.network.ktor.ApiClient
+import thisissadeghi.data.remote.network.ktor.RequestConfig
 
 class DashboardRemoteDataSourceImpl(
     private val apiClient: ApiClient,

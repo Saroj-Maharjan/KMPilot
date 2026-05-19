@@ -3,11 +3,11 @@ package thisissadeghi.kmpilot
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import thisissadeghi.dashboard.presentation.navigation.DashboardRoute
+import thisissadeghi.dashboard.presentation.navigation.dashboard
 import thisissadeghi.designsystem.XNavHost
 import thisissadeghi.receive.presentation.navigation.ReceiveRoute
 import thisissadeghi.receive.presentation.navigation.receive
-import thisissadeghi.dashboard.presentation.navigation.DashboardRoute
-import thisissadeghi.dashboard.presentation.navigation.dashboard
 import thisissadeghi.send.presentation.navigation.SendRoute
 import thisissadeghi.send.presentation.navigation.send
 
