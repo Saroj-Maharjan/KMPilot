@@ -57,6 +57,9 @@ kotlin {
             dependencies {
                 implementation(libs.bundles.testing.common)
                 implementation(libs.compose.ui.test)
+                implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
 
