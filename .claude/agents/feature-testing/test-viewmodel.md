@@ -56,6 +56,7 @@ import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import dev.mokkery.resetAnswers
 import dev.mokkery.verifySuspend
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.matcher.any
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -179,6 +180,34 @@ class {Feature}ViewModelTest {
             advanceUntilIdle()
 
             verifySuspend { repository.perform{Action}("test-param") }
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // === PATTERN 5: Call-Count Verification (use after retry / multi-call flows) ===
+
+    @Test
+    fun `retry delegates to repository again`() = runTest {
+        everySuspend { repository.get{Entity}() } sequentiallyReturns listOf(
+            {Feature}Fixtures.createFailure{Entity}(),
+            {Feature}Fixtures.createSuccess{Entity}()
+        )
+
+        createViewModel()
+
+        viewModel.{flow_name}.test {
+            var current = awaitItem()
+            while (current.{state}State !is UiState.Failed) {
+                advanceUntilIdle()
+                current = awaitItem()
+            }
+
+            viewModel.retry()
+            advanceUntilIdle()
+
+            // Exactly two calls: initial load + retry. Use VerifyMode.exactly(N) for strict counts.
+            verifySuspend(mode = VerifyMode.exactly(2)) { repository.get{Entity}() }
 
             cancelAndIgnoreRemainingEvents()
         }

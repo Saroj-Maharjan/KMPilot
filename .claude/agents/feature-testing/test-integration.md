@@ -24,19 +24,36 @@ The orchestrator passes two shape-driving variables. Substitute them throughout 
 **`list`** (repository returns `Either<List<T>>` → `UiState.Success<List<T>>`):
 ```kotlin
 assertTrue(current.{state}State is UiState.Success)
-val items = (current.{state}State as UiState.Success).value
+val items = current.{state}State.value   // smart cast — no explicit `as UiState.Success`
 assertTrue(items.isNotEmpty())
 ```
 
 **`single`** (repository returns `Either<T>` for some single object T → `UiState.Success<T>`):
 ```kotlin
 assertTrue(current.{state}State is UiState.Success)
-val value = (current.{state}State as UiState.Success).value
+val value = current.{state}State.value   // smart cast
 assertNotNull(value)
 // Optionally assert a field: assertEquals(expected, value.someField)
 ```
 
 **Never emit `.isNotEmpty()` against a non-list success value.**
+
+## Lambda Parameter & Smart Casts
+
+- **Drop the unused `request ->` parameter** when the handler doesn't inspect the request. Only declare it when the test reads `request.url`, `request.method`, etc.
+  ```kotlin
+  // ✓ Capture nothing
+  setupWithMockEngine { respond(content = ..., status = ..., headers = ...) }
+  // ✓ Inspect the request
+  setupWithMockEngine { request -> capturedUrl = request.url.toString(); respond(...) }
+  ```
+- **Use smart casts on stable val state properties** instead of redundant explicit casts. `kotlin.test.assertTrue` propagates the type predicate, so after asserting the UI state is `Failed`, the `error` property is accessible directly:
+  ```kotlin
+  val failed = awaitItem()
+  assertTrue(failed.{state}State is UiState.Failed)
+  val error = failed.{state}State.error as ErrorModel.MessageCode   // ✓ smart cast
+  // val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode  // ✗ verbose
+  ```
 
 ## Key Principle
 
@@ -148,7 +165,7 @@ class {Feature}IntegrationTest {
 
     @Test
     fun `full flow - load {entity}s succeeds`() = runTest(testDispatcher) {
-        setupWithMockEngine { request ->
+        setupWithMockEngine {
             respond(
                 content = {Feature}Fixtures.valid{Feature}ResponseJson,
                 status = HttpStatusCode.OK,
@@ -169,12 +186,12 @@ class {Feature}IntegrationTest {
             }
 
             assertTrue(current.{state}State is UiState.Success)
-            // Pick ONE assertion block based on successValueShape:
+            // Pick ONE assertion block based on successValueShape (smart cast — no explicit `as`):
             // --- list ---
-            val items = (current.{state}State as UiState.Success).value
+            val items = current.{state}State.value
             assertTrue(items.isNotEmpty())
             // --- single ---
-            // val value = (current.{state}State as UiState.Success).value
+            // val value = current.{state}State.value
             // assertNotNull(value)
 
             cancelAndIgnoreRemainingEvents()
@@ -186,7 +203,7 @@ class {Feature}IntegrationTest {
     @Test
     fun `full flow - retry after failure succeeds`() = runTest(testDispatcher) {
         var requestCount = 0
-        setupWithMockEngine { request ->
+        setupWithMockEngine {
             requestCount++
             if (requestCount == 1) {
                 respond(
@@ -228,7 +245,7 @@ class {Feature}IntegrationTest {
 
     @Test
     fun `full flow - handles unauthorized error`() = runTest(testDispatcher) {
-        setupWithMockEngine { request ->
+        setupWithMockEngine {
             respond(
                 content = {Feature}Fixtures.error401Json,
                 status = HttpStatusCode.Unauthorized,
@@ -243,7 +260,7 @@ class {Feature}IntegrationTest {
             val failed = awaitItem()
             assertTrue(failed.{state}State is UiState.Failed)
 
-            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            val error = failed.{state}State.error as ErrorModel.MessageCode
             assertEquals("You must login", error.message)
             assertEquals(1001, error.code)
 
@@ -253,7 +270,7 @@ class {Feature}IntegrationTest {
 
     @Test
     fun `full flow - handles not found error`() = runTest(testDispatcher) {
-        setupWithMockEngine { request ->
+        setupWithMockEngine {
             respond(
                 content = {Feature}Fixtures.error404Json,
                 status = HttpStatusCode.NotFound,
@@ -268,7 +285,7 @@ class {Feature}IntegrationTest {
             val failed = awaitItem()
             assertTrue(failed.{state}State is UiState.Failed)
 
-            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            val error = failed.{state}State.error as ErrorModel.MessageCode
             assertEquals("{Resource} not found", error.message)
             assertEquals(404, error.code)
 
@@ -278,7 +295,7 @@ class {Feature}IntegrationTest {
 
     @Test
     fun `full flow - handles server error`() = runTest(testDispatcher) {
-        setupWithMockEngine { request ->
+        setupWithMockEngine {
             respond(
                 content = {Feature}Fixtures.error500Json,
                 status = HttpStatusCode.InternalServerError,
@@ -293,7 +310,7 @@ class {Feature}IntegrationTest {
             val failed = awaitItem()
             assertTrue(failed.{state}State is UiState.Failed)
 
-            val error = (failed.{state}State as UiState.Failed).error as ErrorModel.MessageCode
+            val error = failed.{state}State.error as ErrorModel.MessageCode
             assertEquals("Internal Server Error", error.message)
             assertEquals(5001, error.code)
 
@@ -356,7 +373,7 @@ fun `full flow - load items succeeds`() = runTest(testDispatcher) {
 
         val current = awaitItem()
         assertTrue(current.{state}State is UiState.Success)
-        val items = (current.{state}State as UiState.Success).value
+        val items = current.{state}State.value   // smart cast
         assertEquals(3, items.size)
 
         cancelAndIgnoreRemainingEvents()
@@ -380,7 +397,7 @@ fun `full flow - handles runtime exception`() = runTest(testDispatcher) {
         val failed = awaitItem()
         assertTrue(failed.{state}State is UiState.Failed)
 
-        val error = (failed.{state}State as UiState.Failed).error as ErrorModel.Exception
+        val error = failed.{state}State.error as ErrorModel.Exception
         assertEquals("Test error", error.exception.message)
 
         cancelAndIgnoreRemainingEvents()

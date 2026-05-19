@@ -27,13 +27,23 @@ feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentatio
 ```kotlin
 package {PKG_PREFIX}.{featurename}.presentation.ui
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.v2.runComposeUiTest
 import {CORE_DESIGNSYSTEM_PKG}.XTheme
 import {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 import {PKG_PREFIX}.{featurename}.fixtures.{Feature}UiFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
+// IMPORTANT: Use `androidx.compose.ui.test.v2.runComposeUiTest` (the v2 variant).
+// Do NOT use the wildcard `androidx.compose.ui.test.*` — import each function explicitly.
 
 @OptIn(ExperimentalTestApi::class)
 class {Feature}ScreenTest {
@@ -216,6 +226,18 @@ class {Feature}ScreenTest {
     }
 }
 ```
+
+## Scrolling to Off-Screen Content
+
+If the screen renders content inside a `LazyColumn`/`LazyRow` and the assertion targets a node below the fold, scroll to it before asserting. Use `hasScrollToIndexAction()` to find the lazy container and `performScrollToIndex(N)` to bring item `N` into the viewport:
+
+```kotlin
+// Asserts on an item that is NOT visible in the initial viewport
+onNode(hasScrollToIndexAction()).performScrollToIndex(8)
+onNodeWithText("Section Header").assertIsDisplayed()
+```
+
+Add the corresponding import: `import androidx.compose.ui.test.performScrollToIndex` and `import androidx.compose.ui.test.hasScrollToIndexAction`.
 
 ## Callback Naming Conventions
 

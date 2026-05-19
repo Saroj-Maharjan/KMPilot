@@ -10,6 +10,28 @@ color: cyan
 
 Test Repository implementations using Mokkery. **Do NOT re-read source files** - use provided context.
 
+## Either Unwrapping
+
+`Either.Success` exposes its payload as `.data` (not `.value`). After `assertTrue(result is Either.Success)`, access the payload as `result.data`. `UiState.Success` is the one that uses `.value` — do not confuse the two.
+
+```kotlin
+assertTrue(result is Either.Success)
+assertEquals(expected, result.data)            // ✓ correct
+// assertEquals(expected, result.value)        // ✗ won't compile
+```
+
+## Method-Signature Variants
+
+The repository under test may take parameters (`get{Entity}s(offset, limit, ordering)`) or no parameters (`get{Entity}()`). Match the actual signature — do not blindly emit `any(), any(), any()` matchers when the method takes none.
+
+| Repository shape | Mokkery stub | Call |
+|------------------|--------------|------|
+| `getX()` (no params) | `everySuspend { dataSource.getX() } returns ...` | `repository.getX()` |
+| `getX(a, b, c)` (paginated) | `everySuspend { dataSource.getX(any(), any(), any()) } returns ...` | `repository.getX(offset = 10, limit = 20, ordering = "...")` |
+| `getX(id)` (single by id) | `everySuspend { dataSource.getX(any()) } returns ...` | `repository.getX("test-id")` |
+
+Use the no-args form when the orchestrator's `hasPagination` is `false` **and** the repository interface declares no parameters. Substitute the real parameter names from the YAML context.
+
 ## Output Path
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/data/{Feature}RepositoryImplTest.kt
@@ -49,86 +71,104 @@ class {Feature}RepositoryImplTest {
     }
 
     // === SUCCESS CASES ===
+    // NOTE: `.data` is the correct accessor on Either.Success (NOT `.value`).
+    // Substitute method signature based on the actual repository — drop `any()` matchers
+    // entirely when the method takes no parameters.
 
     @Test
-    fun `get{Entity}s returns mapped entity list on success`() = runTest {
-        val response = {Feature}Fixtures.create{Feature}Response()
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Success(response)
+    fun `get{Entity} returns mapped entity on success`() = runTest {
+        val entity = {Feature}Fixtures.create{Entity}()
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
+            Either.Success(entity)
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}(/* args if any */)
 
         assertTrue(result is Either.Success)
-        assertEquals(3, result.value.size)
+        assertEquals(entity, result.data)
     }
 
     @Test
-    fun `get{Entity}s returns empty list when response is empty`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Success({Feature}Fixtures.createEmpty{Feature}Response())
+    fun `get{Entity} returns empty list when response is empty`() = runTest {
+        // Only applies when repository returns Either<List<T>> — skip otherwise.
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
+            Either.Success({Feature}Fixtures.createEmpty{Entity}List())
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}()
 
         assertTrue(result is Either.Success)
-        assertTrue(result.value.isEmpty())
+        assertTrue(result.data.isEmpty())
     }
 
     // === ERROR PROPAGATION ===
 
     @Test
-    fun `get{Entity}s propagates network failure`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+    fun `get{Entity} propagates network failure`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
             Either.Failure({Feature}Fixtures.networkError)
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}()
 
         assertTrue(result is Either.Failure)
-        assertEquals({Feature}Fixtures.networkError, (result as Either.Failure).error)
+        assertEquals({Feature}Fixtures.networkError, result.error)
     }
 
     @Test
-    fun `get{Entity}s propagates unauthorized error`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+    fun `get{Entity} propagates unauthorized error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
             Either.Failure({Feature}Fixtures.unauthorizedError)
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}()
 
         assertTrue(result is Either.Failure)
-        assertEquals({Feature}Fixtures.unauthorizedError, (result as Either.Failure).error)
+        assertEquals({Feature}Fixtures.unauthorizedError, result.error)
     }
 
     @Test
-    fun `get{Entity}s propagates server error`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+    fun `get{Entity} propagates server error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
             Either.Failure({Feature}Fixtures.serverError)
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}()
 
         assertTrue(result is Either.Failure)
-        assertEquals({Feature}Fixtures.serverError, (result as Either.Failure).error)
+        assertEquals({Feature}Fixtures.serverError, result.error)
     }
 
     @Test
-    fun `get{Entity}s propagates not found error`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
+    fun `get{Entity} propagates not found error`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
             Either.Failure({Feature}Fixtures.notFoundError)
 
-        val result = repository.get{Entity}s()
+        val result = repository.get{Entity}()
 
         assertTrue(result is Either.Failure)
-        assertEquals({Feature}Fixtures.notFoundError, (result as Either.Failure).error)
+        assertEquals({Feature}Fixtures.notFoundError, result.error)
     }
 
     // === PARAMETER VERIFICATION ===
+    // Emit only when the repository method takes parameters worth verifying.
 
     @Test
-    fun `get{Entity}s passes correct parameters to dataSource`() = runTest {
-        everySuspend { remoteDataSource.get{Entity}s(any(), any(), any()) } returns
-            Either.Success({Feature}Fixtures.create{Feature}Response())
+    fun `get{Entity} passes correct parameters to dataSource`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}(any(), any(), any()) } returns
+            Either.Success({Feature}Fixtures.create{Entity}())
 
-        repository.get{Entity}s(offset = 10, limit = 20, ordering = "-created_time")
+        repository.get{Entity}(offset = 10, limit = 20, ordering = "-created_time")
 
-        verifySuspend { remoteDataSource.get{Entity}s(10, 20, "-created_time") }
+        verifySuspend { remoteDataSource.get{Entity}(10, 20, "-created_time") }
+    }
+
+    // === DELEGATION VERIFICATION ===
+    // Recommended when the method takes no params — replaces parameter verification.
+
+    @Test
+    fun `get{Entity} calls remote data source exactly once`() = runTest {
+        everySuspend { remoteDataSource.get{Entity}() } returns
+            Either.Success({Feature}Fixtures.create{Entity}())
+
+        repository.get{Entity}()
+
+        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(1)) { remoteDataSource.get{Entity}() }
     }
 }
 ```
