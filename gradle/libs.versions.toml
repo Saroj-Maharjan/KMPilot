@@ -14,7 +14,7 @@ androidx-lifecycle = "2.10.0"
 
 ktor = "3.5.0"
 koin = "4.2.1"
-compose-plugin = "1.10.3"
+compose-plugin = "1.11.0"
 compose-material3 = "1.9.0"
 #minSDK alert check before update.
 datastore = "1.2.1"
