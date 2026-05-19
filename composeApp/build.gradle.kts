@@ -74,13 +74,13 @@ buildkonfig {
 
     // Develop flavor
     defaultConfigs("develop") {
-        buildConfigField(STRING, "BASE_URL", "https://api.example.com/")
+        buildConfigField(STRING, "BASE_URL", "https://thisissadeghi.github.io/KMPilot/mock-api/")
         buildConfigField(STRING, "FLAVOR_NAME", "develop")
     }
 
     // Production flavor
     defaultConfigs("production") {
-        buildConfigField(STRING, "BASE_URL", "https://api.example.com/")
+        buildConfigField(STRING, "BASE_URL", "https://thisissadeghi.github.io/KMPilot/mock-api/")
         buildConfigField(STRING, "FLAVOR_NAME", "production")
     }
 }
