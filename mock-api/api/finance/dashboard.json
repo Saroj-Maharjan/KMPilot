@@ -1,0 +1,53 @@
+{
+  "accountBalance": {
+    "totalBalance": 24850.75,
+    "currency": "USD",
+    "changePercent": 2.4,
+    "changeAmount": 582.30
+  },
+  "monthlySummary": {
+    "monthName": "May",
+    "income": 5200.00,
+    "expenses": 3140.50,
+    "currency": "USD"
+  },
+  "recentTransactions": [
+    { "id": "txn_001", "title": "Salary",           "category": "Income",        "amount": 5200.00, "isIncome": true,  "date": "2026-05-01", "currency": "USD" },
+    { "id": "txn_002", "title": "Rent",              "category": "Housing",       "amount": 1500.00, "isIncome": false, "date": "2026-05-02", "currency": "USD" },
+    { "id": "txn_003", "title": "Grocery Store",     "category": "Food",          "amount": 127.40,  "isIncome": false, "date": "2026-05-05", "currency": "USD" },
+    { "id": "txn_004", "title": "Netflix",           "category": "Entertainment", "amount": 15.99,   "isIncome": false, "date": "2026-05-07", "currency": "USD" },
+    { "id": "txn_005", "title": "Freelance Payment", "category": "Income",        "amount": 800.00,  "isIncome": true,  "date": "2026-05-10", "currency": "USD" }
+  ],
+  "budgetCategories": [
+    { "name": "Food",          "spent": 380.00, "total": 500.00, "currency": "USD" },
+    { "name": "Transport",     "spent": 210.00, "total": 200.00, "currency": "USD" },
+    { "name": "Entertainment", "spent": 95.00,  "total": 150.00, "currency": "USD" },
+    { "name": "Health",        "spent": 45.00,  "total": 100.00, "currency": "USD" }
+  ],
+  "savingsGoals": [
+    { "name": "Emergency Fund", "current": 8500.00, "target": 10000.00, "currency": "USD", "dueDate": "2026-12-31" },
+    { "name": "Vacation",       "current": 1200.00, "target": 3000.00,  "currency": "USD", "dueDate": "2026-08-01" },
+    { "name": "New Laptop",     "current": 600.00,  "target": 2000.00,  "currency": "USD", "dueDate": "2026-09-30" }
+  ],
+  "quickActions": [
+    { "id": "qa_send",     "label": "Send",      "iconName": "send"     },
+    { "id": "qa_receive",  "label": "Receive",   "iconName": "receive"  },
+    { "id": "qa_pay",      "label": "Pay Bills", "iconName": "bill"     },
+    { "id": "qa_transfer", "label": "Transfer",  "iconName": "transfer" }
+  ],
+  "upcomingBills": [
+    { "id": "bill_001", "name": "Electricity", "amount": 85.00, "dueDate": "2026-05-20", "currency": "USD", "isOverdue": false },
+    { "id": "bill_002", "name": "Internet",    "amount": 59.99, "dueDate": "2026-05-22", "currency": "USD", "isOverdue": false },
+    { "id": "bill_003", "name": "Gym",         "amount": 40.00, "dueDate": "2026-05-15", "currency": "USD", "isOverdue": true  }
+  ],
+  "spendingInsight": {
+    "message": "You spent 12% less on dining this month compared to last month.",
+    "percentageChange": 12.0,
+    "isPositive": true
+  },
+  "portfolioAssets": [
+    { "id": "asset_001", "name": "Bitcoin",    "symbol": "BTC",  "balance": 0.25, "value": 17250.00, "changePercent":  3.8, "currency": "USD" },
+    { "id": "asset_002", "name": "Apple Inc.", "symbol": "AAPL", "balance": 10.0, "value":  2340.00, "changePercent":  1.2, "currency": "USD" },
+    { "id": "asset_003", "name": "Ethereum",   "symbol": "ETH",  "balance": 2.5,  "value":  8500.00, "changePercent": -0.7, "currency": "USD" }
+  ]
+}
