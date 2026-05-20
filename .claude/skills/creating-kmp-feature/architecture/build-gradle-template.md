@@ -1,6 +1,6 @@
 # Feature `build.gradle.kts` Template
 
-Canonical Gradle setup for `feature/{featurename}/build.gradle.kts`, matching the project's current AGP 9 + Kotlin Multiplatform DSL. Modeled on `feature/dashboard/build.gradle.kts`.
+Canonical Gradle setup for `feature/{featurename}/build.gradle.kts`, matching the project's current AGP 9 + Kotlin Multiplatform DSL.
 
 **Placeholders:**
 - `{featurename}` — lowercase feature name (matches directory and `xcfName`)
@@ -126,7 +126,5 @@ val desktopTest by getting {
 
 ## Reference
 
-- Working example: `feature/dashboard/build.gradle.kts`
-- API-free example: `feature/send/build.gradle.kts`
 - Root configuration (SDK, JVM 21, ktlint, kover aggregation): `build.gradle.kts`
 - Module include: `settings.gradle.kts` → `include(":feature:{featurename}")`

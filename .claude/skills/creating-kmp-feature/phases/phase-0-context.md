@@ -38,7 +38,14 @@ Context Discovery Progress:
    Store as: {PKG_PREFIX}
    ```
 
-**Fallback**: If no features exist yet, grep for package declarations in `core/common/src/**/*.kt` to find the base package.
+**Fallback**: If no features exist yet (fresh install via `install.sh`), grep for `package ` declarations in `core/common/src/**/*.kt`. Take the first match (e.g., `package thisissadeghi.common`) and apply the **same strip-last-segment rule** to derive `{PKG_PREFIX}`:
+
+```
+"thisissadeghi.common" → strip "common" → "thisissadeghi"
+"com.example.common"   → strip "common" → "com.example"
+```
+
+Single-segment results (e.g. `thisissadeghi`) are valid — store as-is.
 
 ---
 
