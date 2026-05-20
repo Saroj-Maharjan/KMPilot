@@ -25,10 +25,10 @@ fun BaseAppNavHost(modifier: Modifier) {
     ) {
         dashboard(
             onActionClick = { actionId ->
-                if (actionId == "send") {
+                if (actionId == "qa_send") {
                     navController.navigate(SendRoute)
                 }
-                if (actionId == "receive") {
+                if (actionId == "qa_receive") {
                     navController.navigate(ReceiveRoute)
                 }
                 // Handle action — navigation or action handling to be wired later
