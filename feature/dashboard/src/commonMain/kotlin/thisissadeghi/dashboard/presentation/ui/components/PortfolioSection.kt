@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.PortfolioAsset
@@ -121,3 +122,42 @@ private fun portfolioIcon(symbol: String): ImageVector =
         "ETH" -> Icons.Filled.CurrencyExchange
         else -> Icons.Filled.MonetizationOn
     }
+
+@Preview
+@Composable
+private fun PortfolioSectionPreview() {
+    XTheme {
+        PortfolioSection(
+            assets =
+                listOf(
+                    PortfolioAsset(
+                        id = "btc",
+                        name = "Bitcoin",
+                        symbol = "BTC",
+                        balance = 0.42,
+                        value = 28_400.0,
+                        changePercent = 3.4,
+                        currency = "$",
+                    ),
+                    PortfolioAsset(
+                        id = "eth",
+                        name = "Ethereum",
+                        symbol = "ETH",
+                        balance = 1.85,
+                        value = 5_920.0,
+                        changePercent = -1.2,
+                        currency = "$",
+                    ),
+                    PortfolioAsset(
+                        id = "sol",
+                        name = "Solana",
+                        symbol = "SOL",
+                        balance = 24.0,
+                        value = 1_440.0,
+                        changePercent = 7.8,
+                        currency = "$",
+                    ),
+                ),
+        )
+    }
+}

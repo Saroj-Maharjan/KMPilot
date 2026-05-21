@@ -17,11 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.SpendingInsight
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTheme
 
 @Composable
 internal fun InsightBanner(insight: SpendingInsight) {
@@ -64,5 +66,20 @@ internal fun InsightBanner(insight: SpendingInsight) {
                 lineHeight = 22.75.sp,
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun InsightBannerPreview() {
+    XTheme {
+        InsightBanner(
+            insight =
+                SpendingInsight(
+                    message = "You're spending 12% less on food this month. Keep it up!",
+                    percentageChange = -12.0,
+                    isPositive = true,
+                ),
+        )
     }
 }

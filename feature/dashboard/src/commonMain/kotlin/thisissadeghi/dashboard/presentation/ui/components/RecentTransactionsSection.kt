@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.Transaction
@@ -121,3 +122,51 @@ private fun transactionIcon(category: String): ImageVector =
         "transport" -> Icons.Filled.DirectionsCar
         else -> Icons.Filled.Receipt
     }
+
+@Preview
+@Composable
+private fun RecentTransactionsSectionPreview() {
+    XTheme {
+        RecentTransactionsSection(
+            transactions =
+                listOf(
+                    Transaction(
+                        id = "1",
+                        title = "Salary",
+                        category = "Income",
+                        amount = 4_200.0,
+                        isIncome = true,
+                        date = "May 21",
+                        currency = "$",
+                    ),
+                    Transaction(
+                        id = "2",
+                        title = "Whole Foods Market",
+                        category = "Food",
+                        amount = 87.42,
+                        isIncome = false,
+                        date = "May 20",
+                        currency = "$",
+                    ),
+                    Transaction(
+                        id = "3",
+                        title = "Uber",
+                        category = "Transport",
+                        amount = 18.5,
+                        isIncome = false,
+                        date = "May 20",
+                        currency = "$",
+                    ),
+                    Transaction(
+                        id = "4",
+                        title = "Freelance Project",
+                        category = "Freelance",
+                        amount = 1_250.0,
+                        isIncome = true,
+                        date = "May 18",
+                        currency = "$",
+                    ),
+                ),
+        )
+    }
+}

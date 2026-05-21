@@ -9,9 +9,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTheme
 
 @Composable
 internal fun DashboardHeader() {
@@ -38,4 +40,10 @@ internal fun DashboardHeader() {
             )
         }
     }
+}
+
+@Preview
+@Composable
+private fun DashboardHeaderPreview() {
+    XTheme { DashboardHeader() }
 }

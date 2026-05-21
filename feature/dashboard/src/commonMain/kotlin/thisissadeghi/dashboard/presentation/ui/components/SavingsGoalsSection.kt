@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.SavingsGoal
@@ -107,3 +108,29 @@ private fun savingsGoalIcon(name: String): ImageVector =
             name.contains("travel", ignoreCase = true) -> Icons.Filled.Flight
         else -> Icons.Filled.Savings
     }
+
+@Preview
+@Composable
+private fun SavingsGoalsSectionPreview() {
+    XTheme {
+        SavingsGoalsSection(
+            goals =
+                listOf(
+                    SavingsGoal(
+                        name = "Vacation Fund",
+                        current = 1_400.0,
+                        target = 2_500.0,
+                        currency = "$",
+                        dueDate = "Aug 2026",
+                    ),
+                    SavingsGoal(
+                        name = "Emergency Fund",
+                        current = 3_800.0,
+                        target = 5_000.0,
+                        currency = "$",
+                        dueDate = "Dec 2026",
+                    ),
+                ),
+        )
+    }
+}

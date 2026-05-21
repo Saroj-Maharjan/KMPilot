@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.AccountBalance
@@ -98,5 +99,21 @@ internal fun BalanceCard(balance: AccountBalance) {
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun BalanceCardPreview() {
+    XTheme {
+        BalanceCard(
+            balance =
+                AccountBalance(
+                    totalBalance = 12_847.32,
+                    currency = "$",
+                    changePercent = 4.2,
+                    changeAmount = 516.18,
+                ),
+        )
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.MonthlySummary
@@ -99,5 +100,21 @@ internal fun MonthlySummaryCard(summary: MonthlySummary) {
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun MonthlySummaryCardPreview() {
+    XTheme {
+        MonthlySummaryCard(
+            summary =
+                MonthlySummary(
+                    monthName = "May",
+                    income = 6_200.0,
+                    expenses = 3_840.0,
+                    currency = "$",
+                ),
+        )
     }
 }

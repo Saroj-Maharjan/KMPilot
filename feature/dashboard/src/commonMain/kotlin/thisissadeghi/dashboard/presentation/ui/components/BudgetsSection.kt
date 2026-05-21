@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.BudgetCategory
@@ -107,5 +108,21 @@ private fun BudgetCard(
                         .background(accentColor, CircleShape),
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun BudgetsSectionPreview() {
+    XTheme {
+        BudgetsSection(
+            categories =
+                listOf(
+                    BudgetCategory(name = "Food", spent = 320.0, total = 500.0, currency = "$"),
+                    BudgetCategory(name = "Transport", spent = 145.0, total = 200.0, currency = "$"),
+                    BudgetCategory(name = "Entertainment", spent = 220.0, total = 150.0, currency = "$"),
+                    BudgetCategory(name = "Shopping", spent = 80.0, total = 300.0, currency = "$"),
+                ),
+        )
     }
 }

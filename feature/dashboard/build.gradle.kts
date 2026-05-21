@@ -38,6 +38,7 @@ kotlin {
                 implementation(libs.compose.material.icons.extended)
                 implementation(libs.compose.material3)
                 implementation(libs.compose.components.resources)
+                implementation(libs.compose.ui.tooling.preview)
 
                 implementation(libs.kotlinCollection)
                 implementation(libs.kotlinxSerialization)
@@ -69,4 +70,8 @@ kotlin {
             }
         }
     }
+}
+
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)
 }

@@ -22,11 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.QuickAction
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTheme
 
 @Composable
 internal fun QuickActionsSection(
@@ -80,3 +82,20 @@ private fun quickActionIcon(iconName: String): ImageVector =
         "topup" -> Icons.Filled.AddCircle
         else -> Icons.Filled.Receipt
     }
+
+@Preview
+@Composable
+private fun QuickActionsSectionPreview() {
+    XTheme {
+        QuickActionsSection(
+            actions =
+                listOf(
+                    QuickAction(id = "send", label = "Send", iconName = "send"),
+                    QuickAction(id = "receive", label = "Receive", iconName = "receive"),
+                    QuickAction(id = "pay", label = "Pay", iconName = "pay"),
+                    QuickAction(id = "topup", label = "Top up", iconName = "topup"),
+                ),
+            onActionClick = {},
+        )
+    }
+}

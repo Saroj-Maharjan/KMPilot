@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import thisissadeghi.dashboard.data.model.UpcomingBill
@@ -144,3 +145,39 @@ private fun billIcon(name: String): ImageVector =
         name.contains("electric", ignoreCase = true) -> Icons.Filled.ElectricBolt
         else -> Icons.Filled.Receipt
     }
+
+@Preview
+@Composable
+private fun UpcomingBillsCardPreview() {
+    XTheme {
+        UpcomingBillsCard(
+            bills =
+                listOf(
+                    UpcomingBill(
+                        id = "1",
+                        name = "Netflix",
+                        amount = 15.49,
+                        dueDate = "May 24",
+                        currency = "$",
+                        isOverdue = false,
+                    ),
+                    UpcomingBill(
+                        id = "2",
+                        name = "Internet",
+                        amount = 59.99,
+                        dueDate = "May 26",
+                        currency = "$",
+                        isOverdue = false,
+                    ),
+                    UpcomingBill(
+                        id = "3",
+                        name = "Electric Bill",
+                        amount = 124.30,
+                        dueDate = "May 19",
+                        currency = "$",
+                        isOverdue = true,
+                    ),
+                ),
+        )
+    }
+}
