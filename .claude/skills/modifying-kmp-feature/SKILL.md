@@ -100,6 +100,24 @@ Follow patterns from @../_shared/patterns.md
 
 For UI changes: Load @../using-design-system/references/component-mappings.md
 
+**UI file layout (strict allowlist)**: when adding or moving composables, respect the rules in `@../_shared/patterns.md` ("UI File Organization"):
+- `{Feature}Screen.kt` accepts only the 5 allowlist names (`Screen`, `ScreenRoot`, and optionally `LoadingContent`/`FailedContent`/`EmptyContent`)
+- Every other composable, including `{Feature}Content`, lives one-per-file under `presentation/ui/components/`
+- Non-composable helpers live in `presentation/ui/{Feature}Utils.kt`, never under `components/`
+
+**Previews (mandatory for new components)**: when this modification **adds a new component**, you must also:
+
+1. **Check feature build.gradle.kts** for preview deps:
+   ```kotlin
+   sourceSets.commonMain.dependencies { implementation(libs.compose.ui.tooling.preview) }
+   dependencies { androidRuntimeClasspath(libs.compose.ui.tooling) }
+   ```
+   If either is missing, add it as part of this modification.
+
+2. **Generate a `@Preview` composable** in the same file as the new component, marked `private`, wrapped in `XTheme`, with realistic sample data. Use the canonical import `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+ — common). Never use the deprecated `org.jetbrains.compose.ui.tooling.preview.Preview`.
+
+   See `@../creating-kmp-feature/architecture/ui.md` → "Previews" for the full pattern, including `@PreviewParameter` for multi-variant previews.
+
 **Design-aware branch**: If in design-aware mode, implement in this order:
 1. **XTheme update** — Add all missing M3 roles from the blueprint's Pre-Implementation Contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
 2. **X-Component Constraint Check** — Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:

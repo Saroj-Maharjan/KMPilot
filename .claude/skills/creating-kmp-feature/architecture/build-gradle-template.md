@@ -74,6 +74,7 @@ implementation(libs.compose.ui.util)
 implementation(libs.compose.material.icons.extended)
 implementation(libs.compose.material3)
 implementation(libs.compose.components.resources)
+implementation(libs.compose.ui.tooling.preview)   // enables @Preview in commonMain (CMP 1.11.0+)
 
 implementation(libs.kotlinCollection)
 implementation(libs.kotlinxSerialization)
@@ -91,6 +92,18 @@ implementation(project(":core:common"))
 implementation(libs.ktor.client.resources)
 implementation(project(":core:data"))
 ```
+
+## Module-level `dependencies` block (Android preview renderer)
+
+After the `kotlin { ... }` block, add a top-level `dependencies` block so Android Studio can render `@Preview` composables:
+
+```kotlin
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)
+}
+```
+
+Both `compose-ui-tooling-preview` and `compose-ui-tooling` aliases already exist in `gradle/libs.versions.toml`. With these wired, components in `presentation/ui/components/` can declare `@Preview` composables in commonMain using `import androidx.compose.ui.tooling.preview.Preview`. See [ui.md → "Previews"](./ui.md) for the full preview pattern.
 
 > **Do NOT add** `androidx.lifecycle.viewmodel` or `androidx.lifecycle.runtime.compose` — `:core:common` already `api`-exposes both. `collectAsStateWithLifecycle` and `ViewModel` are available transitively.
 

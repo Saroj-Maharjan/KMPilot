@@ -51,8 +51,11 @@ Review a KMP feature against Clean Architecture, 11 critical rules, and 4 integr
 - A `false` flag with a blueprint present means implementation skipped the design pipeline
 
 ### UI File Organization
-- `{Feature}Screen.kt` stays lean: `Screen` + `ScreenRoot` + state routing + `LoadingContent`/`ErrorContent` only
-- Self-contained UI units live under `presentation/ui/components/{Name}.kt`
+- `{Feature}Screen.kt` allowlist (5 slots, nothing else): `{Feature}Screen`, `{Feature}ScreenRoot`, and optionally `LoadingContent` / `FailedContent` / `EmptyContent` — the three state shells appear only when the design specifies a dedicated screen for that state
+- Every other composable, **including `{Feature}Content`** and its sub-components, lives in `presentation/ui/components/{Name}.kt` — one file per component
+- **Utilities** (non-`@Composable` helpers: formatters, validators) live in `presentation/ui/{Feature}Utils.kt`, never under `components/`
+- **`@Preview` composables** live in the **same file** as the composable they preview (marked `private`), and are exempt from the allowlist
+- Preview import must be `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+); the older `org.jetbrains.compose...` is deprecated
 - Reference: `patterns.md` "UI File Organization" section
 
 ## Output

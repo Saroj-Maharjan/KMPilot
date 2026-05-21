@@ -40,10 +40,74 @@ fun FeatureScreen(viewModel: FeatureViewModel, onBackClick: () -> Unit) {
 // ScreenRoot: ViewModel-independent (TESTABLE)
 @Composable
 fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry: () -> Unit) {
-    // All UI here - X-components only.
-    // Route on uiModel.{slot}State, where state.value is the DTO.
+    // X-components only.
+    // Shape A: route on uiModel.{slot}State and call the optional state shells (Loading/Failed/Empty)
+    // + FeatureContent() from components/.
+    // Shape B: derive isLoading/errorMessage from submitState; always call FeatureContent() from components/.
 }
 ```
+
+## Critical: `{Feature}Screen.kt` File Layout (Strict Allowlist)
+
+The **only** top-level `@Composable fun` declarations allowed in `{Feature}Screen.kt` are:
+
+| # | Name | Visibility | When |
+|---|------|------------|------|
+| 1 | `{Feature}Screen` | public | Always |
+| 2 | `{Feature}ScreenRoot` | public | Always |
+| 3 | `LoadingContent` | private | Only if design specifies a dedicated loading screen |
+| 4 | `FailedContent` | private | Only if design specifies a dedicated failure screen |
+| 5 | `EmptyContent` | private | Only if design specifies a dedicated empty/uninitialized screen |
+
+Everything else — including `{Feature}Content` and **every** sub-component reachable from it — lives under `presentation/ui/components/`, one file per component. A component's private helpers stay in the same file as that component.
+
+`{Feature}Content` is **never** inlined into `Screen.kt`. Create `presentation/ui/components/{Feature}Content.kt` as part of the standard file set.
+
+### Files Created (standard data-fetching feature)
+
+- `presentation/{Feature}UiModel.kt`
+- `presentation/{Feature}ViewModel.kt`
+- `presentation/ui/{Feature}Screen.kt` (allowlist only)
+- `presentation/ui/{Feature}Utils.kt` (optional — only if non-composable helpers exist)
+- `presentation/ui/components/{Feature}Content.kt`
+- `presentation/ui/components/{SubComponent}.kt` × N (one per sub-component)
+- `presentation/navigation/{Feature}Navigation.kt`
+
+## Utility Functions (non-`@Composable`)
+
+Formatters, validators, mappers — anything that's a plain `fun`, not `@Composable` — go in `presentation/ui/{Feature}Utils.kt`. **Never** put them under `components/`; that directory contains only composables.
+
+## Previews (`@Preview`)
+
+Generate a `@Preview` for every component you create under `components/`. Rules:
+
+- **Import**: `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+ — available from `commonMain`). Do **not** use the deprecated `org.jetbrains.compose.ui.tooling.preview.Preview`.
+- **Co-located**: each `@Preview` lives in the same file as the composable it previews, marked `private`. Naming: `{ComponentName}Preview` (or `{ComponentName}PreviewDark`, `…PreviewLoading`, etc. for variants).
+- **Wrap in `XTheme`**: previews don't inherit the app theme. Always: `XTheme { Component(...) }`.
+- **Exempt from allowlist**: `@Preview`-annotated composables are exempt from the `Screen.kt` 5-slot rule.
+
+Template:
+```kotlin
+import androidx.compose.ui.tooling.preview.Preview
+
+@Composable
+fun BalanceCard(balance: String) { /* ... */ }
+
+@Preview
+@Composable
+private fun BalanceCardPreview() {
+    XTheme { BalanceCard(balance = "1,250.00") }
+}
+```
+
+For multi-variant previews use `@PreviewParameter` + `PreviewParameterProvider` (also CMP 1.11.0+, common-set support).
+
+**Dependencies** — feature module `build.gradle.kts` must include:
+```kotlin
+sourceSets.commonMain.dependencies { implementation(libs.compose.ui.tooling.preview) }
+dependencies { androidRuntimeClasspath(libs.compose.ui.tooling) }
+```
+Both aliases exist in `libs.versions.toml`.
 
 ## UiModel Shape (Rule 11)
 

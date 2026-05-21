@@ -134,8 +134,9 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 │   ├── {Feature}ViewModel.kt
 │   ├── {Feature}UiModel.kt      # Single state container: plain fields + UiState<DTO> slots
 │   ├── ui/
-│   │   ├── {Feature}Screen.kt   # Screen + ScreenRoot + state routing only
-│   │   └── components/          # Self-contained UI units
+│   │   ├── {Feature}Screen.kt   # 5-slot allowlist only — see "UI File Organization"
+│   │   ├── {Feature}Utils.kt    # Optional — formatters, validators (non-@Composable)
+│   │   └── components/          # One file per @Composable component (incl. {Feature}Content.kt)
 │   └── navigation/      # Routes + NavGraphBuilder
 └── di/
     └── {Feature}Modules.kt
@@ -143,23 +144,83 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 
 ### UI File Organization
 
-`{Feature}Screen.kt` is the orchestrator — it must stay lean. Use this rule to decide where each composable lives:
+`{Feature}Screen.kt` has a **fixed allowlist of composables**. Nothing else is allowed at file scope. This is a structural rule, not a judgment call.
 
-**Keep in `{Feature}Screen.kt`** — composables that are structural glue:
-- `{Feature}Screen` and `{Feature}ScreenRoot`
-- State routing (`when (uiModel.dataState) { Loading -> ... Success -> ... }`) for data-fetching screens
-- Top-level layout scaffold (e.g. the `LazyColumn` or `Column` that sequences sections)
-- **For data-fetching screens (default shape)**: state screens (`LoadingContent`, `FailedContent`) — they exist only to respond to a UI state, not as standalone units
-- **For form screens (documented deviation)**: a single `<Feature>Content` that takes derived `isLoading`/`errorMessage` params and stays mounted across all states — preserves user input/focus
+**`{Feature}Screen.kt` allowlist (top-level `@Composable fun`):**
 
-**Move to `components/{Name}.kt`** — composables that are self-contained UI units:
-- A composable can be named and described as a "thing" independently of the screen
-- It owns its own internal structure, visual identity, or domain logic
-- It has its own private sub-composables or private helper functions
+| # | Name | Visibility | Required? |
+|---|------|------------|-----------|
+| 1 | `{Feature}Screen` | public | **Always** — ViewModel wrapper |
+| 2 | `{Feature}ScreenRoot` | public | **Always** — owns state routing |
+| 3 | `LoadingContent` | private | **Optional** — only if the design specifies a dedicated loading screen |
+| 4 | `FailedContent` | private | **Optional** — only if the design specifies a dedicated failure screen |
+| 5 | `EmptyContent` | private | **Optional** — only if the design specifies a dedicated empty/uninitialized screen |
 
-> The guiding question: *"Does this composable have meaning on its own, or does it only make sense as part of the screen?"* If it has meaning on its own → `components/`. If it only exists to wire things together → `{Feature}Screen.kt`.
+The three state-shell composables (3–5) are present only when the design calls for them. A screen that renders loading as a skeleton inside `{Feature}Content`, or shows errors inline, does not introduce these composables. Never add a state shell that the design does not require.
 
-**Picking the screen shape**: see [architecture/ui.md → "Screen Shapes: Data-Fetching vs Form"](../creating-kmp-feature/architecture/ui.md) for the deciding question and both example shapes. Deviation from the default (Shape A — separated composables) must be recorded in the feature's spec under Design Decisions.
+**Everything else lives under `presentation/ui/components/`, one file per component:**
+
+- `{Feature}Content.kt` — the success-state composable (Shape A) or the always-mounted form composable (Shape B). **Always its own file; never inlined into `Screen.kt`.**
+- One file per sub-component reachable from `{Feature}Content`, no matter how small.
+- One file per component reachable from `LoadingContent` / `FailedContent` / `EmptyContent` (rare — these usually contain only X-components).
+- A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
+
+**Enforcement**: any top-level `@Composable fun` defined in `{Feature}Screen.kt` outside the 5-name allowlist is a violation — **except** for `@Preview`-annotated composables (see "Previews" below). The reviewer / lint check is a simple grep for `@Composable fun` at file scope in `Screen.kt` against the allowlist; `@Preview`-annotated entries are exempt.
+
+**Picking the screen shape**: see [architecture/ui.md → "Screen Shapes: Data-Fetching vs Form"](../creating-kmp-feature/architecture/ui.md). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
+
+### Utility Functions (non-`@Composable`)
+
+Pure helpers like formatters, validators, and mappers are **not composables** and do not go under `components/`. They live at the same level as `Screen.kt`:
+
+```
+presentation/ui/
+├── {Feature}Screen.kt
+├── {Feature}Utils.kt          ← formatters, validators, computed-display helpers
+└── components/                ← composables only
+```
+
+`components/` contains only `@Composable` declarations. A `fun formatBalance(amount: Long): String` does not belong there.
+
+### Previews (`@Preview` composables)
+
+**Import**: `androidx.compose.ui.tooling.preview.Preview` — available from `commonMain` as of Compose Multiplatform 1.11.0. Do **not** use the deprecated `org.jetbrains.compose.ui.tooling.preview.Preview`.
+
+**Placement**: `@Preview`-annotated composables live in the **same file** as the composable they preview, marked `private`. They are exempt from the `Screen.kt` allowlist and from the "one file per `@Composable`" rule.
+
+```kotlin
+// In components/BalanceCard.kt
+@Composable
+fun BalanceCard(balance: String, currency: String) { /* ... */ }
+
+@Preview
+@Composable
+private fun BalanceCardPreview() {
+    XTheme { BalanceCard(balance = "1,250.00", currency = "USD") }
+}
+```
+
+**`@PreviewParameter`**: supported in `commonMain` as of CMP 1.11.0. Use a `PreviewParameterProvider` for multi-variant previews (light/dark, edge cases, long strings).
+
+**Dependencies** (per feature module): add to `commonMain` and Android runtime classpath:
+
+```kotlin
+// feature/{featurename}/build.gradle.kts
+sourceSets {
+    commonMain {
+        dependencies {
+            implementation(libs.compose.ui.tooling.preview)
+            // ...
+        }
+    }
+}
+
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)  // for AS preview renderer
+}
+```
+
+Both aliases already exist in `libs.versions.toml` (`compose-ui-tooling-preview`, `compose-ui-tooling`).
 
 ## Build Commands
 

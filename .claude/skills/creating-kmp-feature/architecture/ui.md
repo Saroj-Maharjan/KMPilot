@@ -112,6 +112,18 @@ data class FeatureUiModel(
 
 **Purpose**: Main entry point for feature UI
 
+**`{Feature}Screen.kt` allowlist** — these are the **only** top-level `@Composable fun` declarations permitted in `Screen.kt`:
+
+| # | Name | Visibility | Required? |
+|---|------|------------|-----------|
+| 1 | `{Feature}Screen` | public | Always |
+| 2 | `{Feature}ScreenRoot` | public | Always |
+| 3 | `LoadingContent` | private | Optional — only if the design specifies a dedicated loading screen |
+| 4 | `FailedContent` | private | Optional — only if the design specifies a dedicated failure screen |
+| 5 | `EmptyContent` | private | Optional — only if the design specifies a dedicated empty/uninitialized screen |
+
+Anything else — including `{Feature}Content` and every sub-component — lives under `presentation/ui/components/`, one file per component. See Section 5.
+
 **CRITICAL: Always implement TWO composables:**
 
 1. **`{Feature}Screen`** - ViewModel wrapper
@@ -172,10 +184,10 @@ fun FeatureScreenRoot(
             // Route on the relevant async slot inside the UiModel.
             // state.value is the DTO from data/model/ (Rule 11).
             when (val state = uiModel.dataState) {
-                UiState.Uninitialized -> { /* Empty */ }
-                UiState.Loading -> { XCircularProgressIndicator() }
-                is UiState.Success -> { FeatureContent(state.value) }
-                is UiState.Failed -> { ErrorView(state.error, onRetry) }
+                UiState.Uninitialized -> EmptyContent()                  // optional shell, design-driven
+                UiState.Loading      -> LoadingContent()                 // optional shell, design-driven
+                is UiState.Success   -> FeatureContent(data = state.value) // always from components/
+                is UiState.Failed    -> FailedContent(state.error, onRetry) // optional shell, design-driven
             }
         }
     }
@@ -184,7 +196,14 @@ fun FeatureScreenRoot(
 
 ### 5. Component Composables (presentation/ui/components/)
 
-**Purpose**: Reusable UI components specific to the feature
+**Purpose**: Every UI piece that isn't a state-shell composable lives here. **One file per component, always.**
+
+**Rule (no judgment calls)**:
+
+- `{Feature}Content.kt` — the success-state composable (Shape A) or the always-mounted form composable (Shape B). It is **always** its own file.
+- Every sub-component reachable from `{Feature}Content` lives in its own file under `components/`, no matter how small.
+- A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
+- The only composables that may live in `{Feature}Screen.kt` are the 5 allowlist entries (see "Screen Composables" above): `{Feature}Screen`, `{Feature}ScreenRoot`, and the three optional state shells `LoadingContent` / `FailedContent` / `EmptyContent` (present only if the design requires them).
 
 **Pattern**:
 - Simple composable functions
@@ -194,9 +213,79 @@ fun FeatureScreenRoot(
 
 **Key Points**:
 - Keep components small and focused (single responsibility)
-- Use preview annotations for development (`@Preview`)
+- Use preview annotations for development (see "Previews" below)
 - No ViewModels in components (data/callbacks passed down)
 - Prefer stateless composables (state hoisted to parent)
+
+### 5a. Utility Functions (non-`@Composable`)
+
+Pure helpers (formatters, validators, mappers) are **not composables** and **do not go under `components/`**. Place them in `presentation/ui/{Feature}Utils.kt` at the same level as `Screen.kt`. `components/` contains only `@Composable` declarations.
+
+```
+presentation/ui/
+├── {Feature}Screen.kt
+├── {Feature}Utils.kt   ← fun formatBalance(...), fun validateEmail(...), etc.
+└── components/         ← @Composable units only
+```
+
+### 5b. Previews (`@Preview` composables)
+
+**Import (CMP 1.11.0+)**: `androidx.compose.ui.tooling.preview.Preview`. The older `org.jetbrains.compose.ui.tooling.preview.Preview` is deprecated.
+
+**Placement**: a `@Preview` composable lives in the **same file** as the composable it previews, marked `private`. It is exempt from the `Screen.kt` allowlist and the "one file per `@Composable`" rule — its purpose is to render the sibling composable, so co-location is required.
+
+```kotlin
+// components/BalanceCard.kt
+import androidx.compose.ui.tooling.preview.Preview
+
+@Composable
+fun BalanceCard(balance: String, currency: String) { /* ... */ }
+
+@Preview
+@Composable
+private fun BalanceCardPreview() {
+    XTheme { BalanceCard(balance = "1,250.00", currency = "USD") }
+}
+```
+
+**Naming**: `{ComponentName}Preview`. For multi-variant previews use suffixes: `{ComponentName}PreviewDark`, `{ComponentName}PreviewLoading`, `{ComponentName}PreviewLongString`.
+
+**Wrap in `XTheme`**: previews don't get the app-level theme automatically. Wrap the previewed composable in `XTheme { ... }` so colors, typography, and shapes resolve correctly.
+
+**`@PreviewParameter`** (CMP 1.11.0+): use a `PreviewParameterProvider<T>` to render multiple variants from one declaration.
+
+```kotlin
+private class BalancePreviewParams : PreviewParameterProvider<String> {
+    override val values = sequenceOf("0.00", "1,250.00", "1,234,567.89")
+}
+
+@Preview
+@Composable
+private fun BalanceCardPreviews(
+    @PreviewParameter(BalancePreviewParams::class) balance: String,
+) {
+    XTheme { BalanceCard(balance = balance, currency = "USD") }
+}
+```
+
+**Dependencies** — each feature module needs both:
+
+```kotlin
+// feature/{featurename}/build.gradle.kts
+sourceSets {
+    commonMain {
+        dependencies {
+            implementation(libs.compose.ui.tooling.preview)
+        }
+    }
+}
+
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)  // AS preview renderer
+}
+```
+
+Both aliases exist in `libs.versions.toml` (`compose-ui-tooling-preview`, `compose-ui-tooling`).
 
 ### 6. Navigation (presentation/navigation/)
 
@@ -292,6 +381,7 @@ Rule 4 mandates handling all four UI states. **How** to render them varies by wh
 Use for: product detail, order list, profile, dashboard, anything where the screen has nothing to show until data arrives.
 
 ```kotlin
+// In ProductDetailScreen.kt
 @Composable
 fun ProductDetailScreenRoot(
     uiModel: ProductDetailUiModel,
@@ -301,21 +391,24 @@ fun ProductDetailScreenRoot(
     XScaffold(topBar = { /* ... */ }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (val state = uiModel.productState) {
-                UiState.Uninitialized -> { /* empty */ }
-                UiState.Loading      -> LoadingContent()
-                is UiState.Success   -> ProductContent(product = state.value)
-                is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry)
+                UiState.Uninitialized -> EmptyContent()                              // optional shell
+                UiState.Loading      -> LoadingContent()                             // optional shell
+                is UiState.Success   -> ProductDetailContent(product = state.value)  // from components/
+                is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry) // optional shell
             }
         }
     }
 }
 
-@Composable private fun LoadingContent() { /* XCircularProgressIndicator */ }
-@Composable private fun FailedContent(error: ErrorModel, onRetry: () -> Unit) { /* error text + Retry XButton */ }
-// ProductContent lives in components/ — it's a "thing" with meaning of its own.
+@Composable private fun LoadingContent() { /* XCircularProgressIndicator — only if design specifies a loading screen */ }
+@Composable private fun FailedContent(error: ErrorModel, onRetry: () -> Unit) { /* only if design specifies a failure screen */ }
+@Composable private fun EmptyContent() { /* only if design specifies an empty/uninitialized screen */ }
+// ProductDetailContent lives in components/ProductDetailContent.kt — always its own file.
 ```
 
-`LoadingContent` / `FailedContent` stay in `Screen.kt` as private composables (they only make sense responding to a UI state). The success composable usually moves to `components/`.
+**State-shell composables (`LoadingContent`/`FailedContent`/`EmptyContent`) are optional** and present only when the design specifies a dedicated screen for that state. A screen that shows a skeleton inside the content composable, or that renders errors inline, does not introduce these shells.
+
+`{Feature}Content` **always** lives in `components/{Feature}Content.kt` — it is never inlined into `Screen.kt`. The same rule applies to every sub-component of `{Feature}Content`.
 
 ### Shape B — Form screen (documented exception)
 
@@ -349,9 +442,12 @@ fun LoginScreenRoot(
         )
     }
 }
+// LoginContent lives in components/LoginContent.kt — always its own file.
 ```
 
 Loading is shown as a button-progress indicator inside `LoginContent`; error is shown as inline text below the form. The form stays mounted across all four states, so input/focus is preserved.
+
+Under the file-organization rule, Shape B's `Screen.kt` contains **only** `LoginScreen` + `LoginScreenRoot` — no state-shell composables, because the form itself absorbs all four states. `LoginContent` is in `components/`, not in `Screen.kt`.
 
 ### Why form screens deviate
 
@@ -379,11 +475,13 @@ The reviewer uses the spec's Design Decisions to know which shape is expected. W
 
 ### Decision matrix
 
-| Screen kind | Shape | Composables in `Screen.kt` |
-|-------------|-------|----------------------------|
-| Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, `LoadingContent`, `FailedContent` (+ success composable in `components/`) |
-| Form (persistent input) | B — single Content | `Screen`, `ScreenRoot`, `<Feature>Content` (form persistent, loading/error inline) |
-| Mixed | A + B combined | Per-section, driven by each `UiState<DTO>` slot |
+`Screen.kt` allowlist is fixed: `Screen` + `ScreenRoot` always; `LoadingContent` / `FailedContent` / `EmptyContent` only when the **design** specifies a dedicated screen for that state. `{Feature}Content` and every other composable always live in `components/`.
+
+| Screen kind | Shape | Composables in `Screen.kt` | Where the content lives |
+|-------------|-------|----------------------------|--------------------------|
+| Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, and any of `LoadingContent`/`FailedContent`/`EmptyContent` that the design requires | `components/{Feature}Content.kt` |
+| Form (persistent input) | B — single Content | `Screen`, `ScreenRoot` only (loading/error render inline inside `Content`) | `components/{Feature}Content.kt` |
+| Mixed | A + B combined | `Screen`, `ScreenRoot`, plus the optional state shells that apply to the data section | `components/{Feature}Content.kt` (+ section components) |
 
 ## X-Components (Design System)
 
