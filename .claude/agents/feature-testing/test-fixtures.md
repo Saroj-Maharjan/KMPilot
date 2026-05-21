@@ -21,6 +21,14 @@ The orchestrator passes capability flags. Render sections only when their flag i
 
 When a flag is false, **omit the entire section** — do not emit stub code, do not import types that don't exist.
 
+## Template Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `{state}` | Name of the relevant `UiState<DTO>` slot inside `*UiModel` (e.g. `data`, `submit`, `fetch`) — used as `{state}State` in the fixture factories | `data` |
+
+Under Rule 11, `*UiModel` contains plain UI fields + one or more `UiState<DTO>` slots. Fixtures populate a single async slot via the `{state}State =` pattern (e.g. `dataState = UiState.Loading`). If multiple slots exist, the orchestrator picks the primary one for the base-state fixtures.
+
 ## Output Paths
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/fixtures/{Feature}Fixtures.kt

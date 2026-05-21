@@ -11,8 +11,9 @@
 ```
 Cleanup Progress:
 - [ ] Step 4.1: Verify spec.md exists
-- [ ] Step 4.2: Remove ephemeral artifacts
-- [ ] Step 4.3: Generate final report
+- [ ] Step 4.2: Rule 11 guardrail (grep gate)
+- [ ] Step 4.3: Remove ephemeral artifacts
+- [ ] Step 4.4: Generate final report
 ```
 
 ---
@@ -29,7 +30,28 @@ ls -la .claude/docs/{featurename}/spec.md
 
 ---
 
-## Step 4.2: Remove Ephemeral Artifacts
+## Step 4.2: Rule 11 Guardrail (Grep Gate)
+
+Mechanical check that the feature follows the single-UiModel / DTO-wrapped-UiState convention. Two greps; both must return empty.
+
+```bash
+# (a) No data→presentation imports
+grep -rEn 'import\s+\S+\.presentation\.' \
+  feature/{featurename}/src/commonMain/kotlin/**/data/ \
+  && echo "❌ Rule 11 violation: data layer imports from presentation" && exit 1
+
+# (b) No *UiState.kt file (collapsed into *UiModel.kt under Rule 11)
+find feature/{featurename}/src/commonMain/kotlin -name '*UiState.kt' \
+  | grep . && echo "❌ Rule 11 violation: *UiState.kt found; collapse into *UiModel.kt" && exit 1
+```
+
+**If either check fails**: Stop. Surface the violation to the user with the file path. Do NOT proceed to artifact cleanup — the feature is broken architecturally and the ephemeral artifacts (prd.md, tasks.md) are still needed for the fix.
+
+**If both pass**: Proceed to Step 4.3.
+
+---
+
+## Step 4.3: Remove Ephemeral Artifacts
 
 Remove temporary planning files:
 
@@ -57,7 +79,7 @@ rm -f .claude/docs/{featurename}/task-*.md
 
 ---
 
-## Step 4.3: Generate Final Report
+## Step 4.4: Generate Final Report
 
 ```markdown
 ## Feature Complete: {FeatureName}

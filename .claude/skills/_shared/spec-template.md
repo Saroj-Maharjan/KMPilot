@@ -72,16 +72,17 @@ feature/{featurename}/src/commonMain/kotlin/{pkg_prefix}/{featurename}/
 ### Data Flow
 ```
 [API] → RemoteDataSource → Repository → ViewModel → [UI]
-         Either<Error,T>    Either<T>    UiState<T>
+         Either<Error,DTO>  Either<DTO>  UiState<DTO> (inside *UiModel)
 ```
+(Repository returns DTOs unchanged; ViewModel stores them in `UiState<DTO>` slots of `*UiModel`. No mapping to a presentation-layer mirror type — Rule 11.)
 
 ### Key Classes
 | Class | Purpose | Location |
 |-------|---------|----------|
 | {Feature}RemoteDataSource | API operations interface | data/datasource/ |
 | {Feature}RemoteDataSourceImpl | API implementation | data/datasource/ |
-| {Feature}Repository | Business logic interface | data/repository/ |
-| {Feature}RepositoryImpl | Business logic impl | data/repository/ |
+| {Feature}Repository | Data coordination interface | data/repository/ |
+| {Feature}RepositoryImpl | Thin delegation; returns `Either<DTO>` (Rule 11) | data/repository/ |
 | {Feature}ViewModel | State management | presentation/ |
 | {Feature}Screen | UI composition | presentation/ui/ |
 
@@ -101,9 +102,9 @@ feature/{featurename}/src/commonMain/kotlin/{pkg_prefix}/{featurename}/
 
 ## State Management
 
-### UiState Structure
+### UiModel Structure
 ```kotlin
-{Actual UiModel definition from code}
+{Actual *UiModel definition from code — single container with plain fields + UiState<DTO> slots}
 ```
 
 ### State Transitions

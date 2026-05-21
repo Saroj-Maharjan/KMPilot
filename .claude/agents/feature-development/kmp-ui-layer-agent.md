@@ -19,12 +19,12 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 
 1. **Follow UI Implementation Workflow** from @../../skills/_shared/patterns.md
 2. Load architecture references only when needed
-3. Implement UiState (`presentation/{Feature}UiState.kt`)
-4. Implement UiModel(s) (`presentation/{Feature}UiModel.kt`)
-5. Implement ViewModel with `setState { copy() }`
-6. Implement Screen + ScreenRoot (BOTH required)
-7. Handle all 4 UI states (Uninitialized/Loading/Success/Failed)
-8. Implement Navigation with callbacks
+3. Implement single `{Feature}UiModel` (`presentation/{Feature}UiModel.kt`) — plain UI fields + `UiState<DTO>` slots, where DTO is from `data/model/` (Rule 11). Do NOT create `{Feature}UiState.kt` and do NOT create presentation-layer mirrors of DTOs.
+4. Implement ViewModel with `_uiModel.setState { copy() }`; expose `val uiModel: StateFlow<{Feature}UiModel>`
+5. Implement Screen + ScreenRoot (BOTH required) — `ScreenRoot` takes `uiModel: {Feature}UiModel` only
+6. Handle all 4 UI states (Uninitialized/Loading/Success/Failed) per async slot
+7. Implement Navigation with callbacks
+8. Self-check (Rule 11): grep `import .*\.presentation\.` is zero in any file you generated under `data/`; no `{Feature}UiState.kt` file exists
 9. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
 
 ## Critical: ScreenRoot Pattern
@@ -32,17 +32,30 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 ```kotlin
 // Screen: ViewModel wrapper (NOT tested)
 @Composable
-fun FeatureScreen(viewModel: ViewModel, onBackClick: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FeatureScreenRoot(uiState, onBackClick, viewModel::retry)
+fun FeatureScreen(viewModel: FeatureViewModel, onBackClick: () -> Unit) {
+    val uiModel by viewModel.uiModel.collectAsStateWithLifecycle()
+    FeatureScreenRoot(uiModel = uiModel, onBackClick = onBackClick, onRetry = viewModel::retry)
 }
 
 // ScreenRoot: ViewModel-independent (TESTABLE)
 @Composable
-fun FeatureScreenRoot(uiState: UiState, onBackClick: () -> Unit, onRetry: () -> Unit) {
-    // All UI here - X-components only
+fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry: () -> Unit) {
+    // All UI here - X-components only.
+    // Route on uiModel.{slot}State, where state.value is the DTO.
 }
 ```
+
+## UiModel Shape (Rule 11)
+
+```kotlin
+data class FeatureUiModel(
+    val searchQuery: String = "",                                   // plain UI field
+    val dataState: UiState<FeatureResponse> = UiState.Uninitialized, // UiState<DTO> — DTO from data/model/
+    val submitState: UiState<Unit> = UiState.Uninitialized,          // UiState<Unit> for void ops
+)
+```
+- **Never** create a presentation-layer mirror of a DTO (no `LoginResult` shadowing `LoginResponse`).
+- For computed display values (e.g. `"3 days ago"`), add a sibling `String` field on `*UiModel` and populate it in the ViewModel when the source `UiState<DTO>` becomes Success.
 
 ## Output Report
 
@@ -50,21 +63,22 @@ fun FeatureScreenRoot(uiState: UiState, onBackClick: () -> Unit, onRetry: () -> 
 ## UI Layer Complete: {featurename}
 
 ### Files Created
-- presentation/{Feature}UiState.kt
 - presentation/{Feature}UiModel.kt
 - presentation/{Feature}ViewModel.kt
 - presentation/ui/{Feature}Screen.kt
 - presentation/navigation/{Feature}Navigation.kt
 
 ### ScreenRoot Pattern
-✅ {Feature}Screen - ViewModel wrapper
-✅ {Feature}ScreenRoot - ViewModel-independent
+✅ {Feature}Screen - ViewModel wrapper (collects viewModel.uiModel)
+✅ {Feature}ScreenRoot - ViewModel-independent (takes uiModel: {Feature}UiModel)
 
 ### Rules Followed
-✅ setState {} used
-✅ All 4 UI states handled
+✅ _uiModel.setState {} used
+✅ All 4 UI states handled per async slot
 ✅ X-components only
 ✅ ImmutableList for collections
 ✅ Callback parameters
+✅ Single {Feature}UiModel.kt — no {Feature}UiState.kt (Rule 11)
+✅ UiState<> slots wrap DTOs from data/model/ — no presentation-layer mirrors (Rule 11)
 ✅ Build successful
 ```

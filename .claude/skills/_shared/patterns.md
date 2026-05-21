@@ -2,11 +2,11 @@
 
 All skills and agents import this file. Do not duplicate these rules elsewhere.
 
-## 10 Critical Rules
+## 11 Critical Rules
 
 1. **Interface + Impl** - DataSource and Repository always have interface + implementation pair
 2. **Either<T>** - Return `Either<T>` for fallible operations, never throw exceptions
-3. **setState** - Use `_uiState.setState { copy() }`, NEVER `_state.value =`
+3. **setState** - Use `_uiModel.setState { copy() }`, NEVER `_uiModel.value =`
 4. **4 UI States** - Handle all: Uninitialized / Loading / Success / Failed
 5. **X-components** - Use `:core:designsystem` components, NO Material3
 6. **ImmutableList** - Use `.toImmutableList()` for state collections
@@ -14,6 +14,7 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 8. **DI Pattern** - `singleOf(::Impl).bind<Interface>()` + extend `BaseFeature`
 9. **No UseCases** - ViewModels invoke repositories directly
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
+11. **Single UiModel + DTO-wrapped UiState** - `*UiModel` is the only presentation state container (no `*UiState.kt`). It holds plain UI fields + one `UiState<DTO>` slot per async operation, where DTO is the data-layer model (use `UiState<Unit>` for void ops). Repository returns `Either<DTO>`; data layer never imports from `presentation`. UI-derived display values live as sibling fields on `*UiModel`, never as mirror DTO types.
 
 ## Design-Aware Implementation
 
@@ -55,33 +56,44 @@ Every feature requires exactly these 4 integrations:
 ### setState (Rule 3)
 ```kotlin
 // CORRECT
-_uiState.setState { copy(isLoading = true) }
+_uiModel.setState { copy(isLoading = true) }
 
 // WRONG - never do this
-_uiState.value = _uiState.value.copy(isLoading = true)
+_uiModel.value = _uiModel.value.copy(isLoading = true)
 ```
 
-### Either (Rule 2)
+### Either (Rule 2) — repository returns Either<DTO> directly (Rule 11)
 ```kotlin
 when (val result = repository.getData()) {
-    is Either.Success -> _uiState.setState { copy(state = UiState.Success(result.data)) }
-    is Either.Failure -> _uiState.setState { copy(state = UiState.Failed(result.error)) }
+    is Either.Success -> _uiModel.setState { copy(dataState = UiState.Success(result.data)) }
+    is Either.Failure -> _uiModel.setState { copy(dataState = UiState.Failed(result.error)) }
 }
+// result.data is the data-layer DTO. Do NOT map to a presentation-layer mirror type.
 ```
 
-### ScreenRoot (Rule 10)
+### UiModel (Rule 11) — single state container, DTOs inside UiState
+```kotlin
+data class FeatureUiModel(
+    val searchQuery: String = "",                                    // plain UI field
+    val selectedTab: Int = 0,                                         // plain UI field
+    val dataState: UiState<FeatureResponse> = UiState.Uninitialized,  // UiState<DTO>
+    val submitState: UiState<Unit> = UiState.Uninitialized,           // UiState<Unit> for void ops
+)
+```
+
+### ScreenRoot (Rule 10 + Rule 11) — takes the UiModel + callbacks only
 ```kotlin
 // Screen: ViewModel wrapper (NOT tested directly)
 @Composable
-fun FeatureScreen(viewModel: ViewModel, onBackClick: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FeatureScreenRoot(uiState = uiState, onBackClick = onBackClick, onRetry = viewModel::retry)
+fun FeatureScreen(viewModel: FeatureViewModel, onBackClick: () -> Unit) {
+    val uiModel by viewModel.uiModel.collectAsStateWithLifecycle()
+    FeatureScreenRoot(uiModel = uiModel, onBackClick = onBackClick, onRetry = viewModel::retry)
 }
 
 // ScreenRoot: ViewModel-independent (TESTABLE)
 @Composable
-fun FeatureScreenRoot(uiState: UiState, onBackClick: () -> Unit, onRetry: () -> Unit) {
-    // All UI implementation here
+fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry: () -> Unit) {
+    // All UI implementation here; route on uiModel.dataState for the async slot
 }
 ```
 
@@ -120,8 +132,7 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 │   └── repository/      # Interface + Impl
 ├── presentation/
 │   ├── {Feature}ViewModel.kt
-│   ├── {Feature}UiState.kt
-│   ├── {Feature}UiModel.kt
+│   ├── {Feature}UiModel.kt      # Single state container: plain fields + UiState<DTO> slots
 │   ├── ui/
 │   │   ├── {Feature}Screen.kt   # Screen + ScreenRoot + state routing only
 │   │   └── components/          # Self-contained UI units
@@ -136,9 +147,10 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 
 **Keep in `{Feature}Screen.kt`** — composables that are structural glue:
 - `{Feature}Screen` and `{Feature}ScreenRoot`
-- State routing (`when (uiState) { Loading -> ... Success -> ... }`)
+- State routing (`when (uiModel.dataState) { Loading -> ... Success -> ... }`) for data-fetching screens
 - Top-level layout scaffold (e.g. the `LazyColumn` or `Column` that sequences sections)
-- State screens (`LoadingContent`, `ErrorContent`) — they exist only to respond to a UI state, not as standalone units
+- **For data-fetching screens (default shape)**: state screens (`LoadingContent`, `FailedContent`) — they exist only to respond to a UI state, not as standalone units
+- **For form screens (documented deviation)**: a single `<Feature>Content` that takes derived `isLoading`/`errorMessage` params and stays mounted across all states — preserves user input/focus
 
 **Move to `components/{Name}.kt`** — composables that are self-contained UI units:
 - A composable can be named and described as a "thing" independently of the screen
@@ -146,6 +158,8 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 - It has its own private sub-composables or private helper functions
 
 > The guiding question: *"Does this composable have meaning on its own, or does it only make sense as part of the screen?"* If it has meaning on its own → `components/`. If it only exists to wire things together → `{Feature}Screen.kt`.
+
+**Picking the screen shape**: see [architecture/ui.md → "Screen Shapes: Data-Fetching vs Form"](../creating-kmp-feature/architecture/ui.md) for the deciding question and both example shapes. Deviation from the default (Shape A — separated composables) must be recorded in the feature's spec under Design Decisions.
 
 ## Build Commands
 

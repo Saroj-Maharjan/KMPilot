@@ -19,6 +19,7 @@ Principles for implementing the data layer in KMP features following Clean Archi
 1. **Interface + Impl Pairs**: Every DataSource and Repository MUST have both interface and implementation
 2. **Either<T> Returns**: All operations that can fail return `Either<T>`, never throw exceptions
 3. **Lowercase Packages**: `{PKG_PREFIX}.featurename.data.model` (never camelCase or hyphens)
+4. **No Presentation Imports (Rule 11)**: Files under `data/` MUST NOT import from `{PKG_PREFIX}.{featurename}.presentation.*`. Repository returns `Either<DTO>` — the raw DTO from `data/model/`. The data layer does not know UI types exist.
 
 ## Layer Responsibilities
 
@@ -108,12 +109,31 @@ class {Feature}Resources {
 **Key Rules**:
 - Constructor injects DataSource interface(s) (not implementations)
 - Simple delegation pattern: just call datasource methods and return
+- Returns `Either<DTO>` — the raw data-layer model (Rule 11)
 - No business logic (that belongs in ViewModel)
+- No DTO → UI model mapping (that's a Rule 11 violation)
 - Repository should be a thin layer
+
+**Forbidden** (Rule 11):
+```kotlin
+// ❌ NEVER do this — data layer must not import from presentation
+import {PKG_PREFIX}.{featurename}.presentation.{Feature}UiModel
+
+class FeatureRepositoryImpl(...) : FeatureRepository {
+    override suspend fun getData(): Either<FeatureUiModel> =
+        dataSource.getData().mapSuccess { it.toUiModel() }  // ❌ violates dependency rule
+}
+
+// ✅ Correct — returns the raw DTO
+class FeatureRepositoryImpl(...) : FeatureRepository {
+    override suspend fun getData(): Either<FeatureResponse> = dataSource.getData()
+}
+```
 
 **Key Points**:
 - Repository is the public API for the data layer
 - ViewModels depend on Repository interface (never DataSource directly)
+- ViewModel stores `result.data` (the DTO) directly inside `UiState<DTO>` on `*UiModel`
 - If you need caching or multiple data sources, coordination logic goes here
 - For simple features, Repository just delegates to DataSource
 

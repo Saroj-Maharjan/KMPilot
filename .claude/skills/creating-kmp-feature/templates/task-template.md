@@ -72,8 +72,8 @@ Template for individual task files in `.claude/docs/{featurename}/task-{N}-{titl
 
 | Group | Agent | Example Tasks |
 |-------|-------|---------------|
-| Data | data-layer-agent | Models, Resources, DataSource, Repository |
-| UI | ui-layer-agent | UiState, ViewModel, Screens, Navigation |
+| Data | data-layer-agent | Models (DTOs), Resources, DataSource, Repository (`Either<DTO>`) |
+| UI | ui-layer-agent | Single `{Feature}UiModel`, ViewModel, Screens (ScreenRoot takes `uiModel`), Navigation |
 | Integration | integration-agent | DI module, 4 integration points |
 
 ### Status Flow

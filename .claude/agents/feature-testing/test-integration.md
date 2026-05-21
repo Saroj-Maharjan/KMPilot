@@ -12,12 +12,13 @@ Test full feature flow. **Do NOT re-read source files** - use provided context.
 
 ## Template Variables
 
-The orchestrator passes two shape-driving variables. Substitute them throughout the template:
+The orchestrator passes three shape-driving variables. Substitute them throughout the template:
 
-| Variable | Purpose | Example values |
-|----------|---------|----------------|
-| `{flow_name}` | Public StateFlow property on the ViewModel | `uiState`, `uiModelState`, or similar |
-| `successValueShape` | Whether `UiState.Success.value` is a list or a single object | `list`, `single` |
+| Variable | Purpose | Default | Example values |
+|----------|---------|---------|----------------|
+| `{flow_name}` | Public StateFlow property on the ViewModel | `uiModel` (Rule 11 convention) | `uiModel`, `uiState` (legacy) |
+| `{state}` | Name of the relevant `UiState<DTO>` slot inside `*UiModel` | `data` | `data`, `submit`, `fetch` |
+| `successValueShape` | Whether `UiState.Success.value` is a list or a single object | — | `list`, `single` |
 
 ### Assertion shape per `successValueShape`
 

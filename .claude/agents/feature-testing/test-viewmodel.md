@@ -12,9 +12,16 @@ Test ViewModels using Turbine for StateFlow assertions. **Do NOT re-read source 
 
 ## Template Variables
 
-The orchestrator passes `flow_name` — the public `StateFlow` property exposed by the ViewModel (commonly `uiState`, `uiModelState`, or similar). Substitute it everywhere `{flow_name}` appears below.
+The orchestrator passes two shape-driving variables. Substitute them throughout the template:
 
-**Never hardcode** a specific name — always use `{flow_name}`. If `flow_name` is missing from the prompt, default to `uiState`.
+| Variable | Purpose | Default | Example |
+|----------|---------|---------|---------|
+| `{flow_name}` | The public `StateFlow` property on the ViewModel | `uiModel` (Rule 11 convention) | `uiModel`, `uiState` (legacy) |
+| `{state}` | Name of the relevant `UiState<DTO>` slot inside `*UiModel` | `data` | `data`, `submit`, `fetch` |
+
+**Never hardcode** a specific name — always use `{flow_name}` and `{state}`. If a variable is missing from the prompt, use its default.
+
+Under Rule 11, the ViewModel exposes a single `StateFlow<{Feature}UiModel>` named `uiModel`, and the `*UiModel` contains one or more `UiState<DTO>` slots. Tests assert against `current.{state}State` which resolves to e.g. `current.dataState` or `current.submitState`.
 
 ## Output Path
 ```

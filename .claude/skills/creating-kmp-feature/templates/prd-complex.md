@@ -106,8 +106,8 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 ### Layers
 | Layer | Components |
 |-------|------------|
-| Data | Models, Ktor Resources, DataSource, Repository |
-| Presentation | ViewModel, UiState, UiModel, Screens |
+| Data | Models (DTOs), Ktor Resources, DataSource, Repository (returns `Either<DTO>`) |
+| Presentation | ViewModel, single `*UiModel` (plain fields + `UiState<DTO>` slots), Screens |
 | DI | {Feature}Modules (BaseFeature) |
 | Navigation | {Feature}Route, NavGraphBuilder extension |
 
@@ -134,9 +134,9 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 - Repository (interface + impl)
 
 **Group 2: UI Layer** (ui-layer-agent)
-- UiState and UiModel
-- ViewModel with state management
-- Screen composables (with ScreenRoot pattern)
+- Single `{Feature}UiModel` (plain UI fields + `UiState<DTO>` slots) — Rule 11
+- ViewModel with state management (public flow: `uiModel`)
+- Screen composables (with ScreenRoot pattern — `uiModel` param only)
 - Component composables
 - Navigation (routes + extension)
 
@@ -183,8 +183,9 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 - [ ] All 4 UI states handled (Uninitialized, Loading, Success, Failed)
 - [ ] Navigation works correctly
 - [ ] X-components used (no Material3)
-- [ ] setState {} used (not direct assignment)
-- [ ] Either<T> for all fallible operations
+- [ ] `_uiModel.setState {}` used (not direct assignment)
+- [ ] `Either<DTO>` returned from Repository — no UI mapping in data layer (Rule 11)
+- [ ] Single `{Feature}UiModel.kt` (no `{Feature}UiState.kt`); `UiState<>` slots wrap DTOs
 - [ ] Interface + Impl pairs created
 - [ ] Code formatted: `./gradlew ktlintFormat`
 

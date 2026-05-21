@@ -9,9 +9,7 @@ Principles for implementing the UI/presentation layer in KMP features using Comp
 ```
 {PKG_PREFIX}.{featurename}/presentation/
 ├── {Feature}ViewModel.kt      # State management and business logic
-├── {Feature}UiState.kt        # @Stable data class wrapping UiState fields
-├── {Feature}UiModel.kt        # @Stable UI data models
-├── {Entity}UiModel.kt         # Additional UI models if needed
+├── {Feature}UiModel.kt        # Single state container: plain UI fields + UiState<DTO> slots
 ├── ui/
 │   ├── {Feature}Screen.kt     # Main screen composable
 │   ├── {Secondary}Screen.kt   # Additional screens
@@ -22,12 +20,13 @@ Principles for implementing the UI/presentation layer in KMP features using Comp
 
 ## Critical Rules (UI Layer)
 
-1. **setState Extension**: Always use `setState { copy(...) }`, NEVER `_state.value =` or direct assignment
+1. **setState Extension**: Always use `_uiModel.setState { copy(...) }`, NEVER `_uiModel.value =` or direct assignment
 2. **4 UI States**: Handle all 4 states (Uninitialized/Loading/Success/Failed) for every async data field
 3. **X-components Only**: Use X-components from `:core:designsystem` (XScaffold, XButton, XText), NO Material3
 4. **ImmutableList**: Use `.toImmutableList()` for collections in state
 5. **Callback Parameters**: Screens take callbacks (e.g., `onBackClick: () -> Unit`), not `navController`
 6. **ScreenRoot Pattern**: ALWAYS create `{Feature}ScreenRoot` for ViewModel-independent, testable UI
+7. **Single UiModel (Rule 11)**: One `*UiModel.kt` per feature — plain fields + `UiState<DTO>` slots (DTOs from `data/model/`, NOT presentation-layer mirror types). No separate `*UiState.kt`.
 
 ## Layer Responsibilities
 
@@ -37,72 +36,77 @@ Principles for implementing the UI/presentation layer in KMP features using Comp
 
 **Pattern**:
 - Extend `ViewModel` from AndroidX Lifecycle
-- Use `MutableStateFlow<{Feature}UiState>` for state, expose as `StateFlow` via `.asStateFlow()`
+- Use `MutableStateFlow<{Feature}UiModel>` for state, expose as `StateFlow` via `.asStateFlow()`
+- Public flow name: `uiModel` (e.g., `val uiModel: StateFlow<{Feature}UiModel>`)
 - Inject Repository interface(s) via constructor
 - Use `viewModelScope.launch` for coroutines
 - Load initial data in `init` block (if needed)
 - Provide functions for user actions (e.g., `submitForm()`, `retryLoad()`)
 
 **Key Rules**:
-- **Always** use `_uiState.setState { copy(field = newValue) }` for state updates
-- Handle `Either<T>` results from repository with pattern matching
-- Convert domain models to UI models (e.g., `toUiModel()` extension functions)
+- **Always** use `_uiModel.setState { copy(field = newValue) }` for state updates
+- Handle `Either<DTO>` results from repository with pattern matching — store `result.data` directly in `UiState.Success`, no mapping
 - Validation logic goes here (e.g., email validation, form validation)
 - No direct UI references (no Context, no Composables)
+- For UI-derived display values (formatted price, "3 days ago"), add a **sibling field** on `*UiModel` and populate it when the relevant `UiState<DTO>` becomes Success. Do NOT define a mirror UI-layer copy of the DTO.
 
 **State Update Pattern**:
 ```kotlin
 // CORRECT
-_uiState.setState { copy(isLoading = true) }
+_uiModel.setState { copy(isLoading = true) }
 
 // WRONG - NEVER DO THIS
-_uiState.value = _uiState.value.copy(isLoading = true)
+_uiModel.value = _uiModel.value.copy(isLoading = true)
 ```
 
-**Error Handling Pattern**:
+**Error Handling Pattern** (Rule 11 — store DTO directly):
 ```kotlin
 when (val result = repository.getData()) {
     is Either.Success -> {
-        val uiModel = result.data.toUiModel()
-        _uiState.setState { copy(dataState = UiState.Success(uiModel)) }
+        _uiModel.setState { copy(dataState = UiState.Success(result.data)) }
     }
     is Either.Failure -> {
-        _uiState.setState { copy(dataState = UiState.Failed(result.error)) }
+        _uiModel.setState { copy(dataState = UiState.Failed(result.error)) }
     }
 }
+// result.data is the DTO from data/model/. No .toUiModel() — that's a Rule 11 violation.
 ```
 
-### 2. UiState (presentation/)
+### 2. UiModel (presentation/) — Single State Container
 
-**Purpose**: Container for all UI state for a feature
+**Purpose**: The one and only state container for a feature. Holds plain UI fields + one `UiState<T>` slot per independent async operation, where T is the **data-layer DTO** (from `data/model/`).
 
 **Pattern**:
 - Annotated with `@Stable` (from Compose runtime)
 - Data class with default values for all fields
-- Uses `UiState<T>` for async data fields
-- Naming: `{Feature}UiState` (e.g., `ProductDetailUiState`)
+- Naming: `{Feature}UiModel` (e.g., `ProductDetailUiModel`, `LoginUiModel`)
+- One file per feature: `{Feature}UiModel.kt`. **No `*UiState.kt` file.**
 
-**Key Points**:
-- One UiState per feature (not per screen, even if multiple screens)
-- Async fields use `UiState<T>` (e.g., `val productState: UiState<ProductData> = UiState.Uninitialized`)
-- Sync fields use regular types (e.g., `val selectedTab: Int = 0`, `val searchQuery: String = ""`)
+**Shape**:
+```kotlin
+data class FeatureUiModel(
+    // Plain UI fields — form inputs, selected tab, search query, etc.
+    val searchQuery: String = "",
+    val selectedTab: Int = 0,
+
+    // UiState<DTO> slots — one per independent async operation.
+    // DTOs come from data/model/. Use UiState<Unit> for void ops.
+    val dataState: UiState<FeatureResponse> = UiState.Uninitialized,
+    val submitState: UiState<Unit> = UiState.Uninitialized,
+
+    // Optional UI-derived display values — sibling fields, populated by ViewModel
+    // when the related UiState<DTO> becomes Success. NEVER a mirror DTO type.
+    val priceLabel: String = "",
+)
+```
+
+**Key Points** (Rule 11):
+- One `*UiModel` per feature, even if the feature has multiple screens
+- Async fields use `UiState<DTO>` where DTO is the **data-layer model** — `UiState<LoginResponse>`, `UiState<Product>`, `UiState<Unit>` for void ops
+- **Never** define a presentation-layer mirror of a DTO (no `LoginResult` shadowing `LoginResponse`). The data layer's DTO is what the UI reads.
+- Plain sync fields use regular types: `val searchQuery: String = ""`, `val selectedTab: Int = 0`
 - Collections use `ImmutableList` (e.g., `val items: ImmutableList<Item> = persistentListOf()`)
-- Use nested data classes for complex state groups
-
-### 3. UiModel (presentation/)
-
-**Purpose**: UI-specific data models (transformed from domain/API models)
-
-**Pattern**:
-- Annotated with `@Stable`
-- Simple data classes with UI-friendly fields
-- Naming: `{Entity}UiModel`, `{Feature}Data`, etc.
-
-**Key Points**:
-- Transform domain models to UI models in ViewModel (e.g., format dates, compute display strings)
-- Keep UI concerns here (e.g., "3 days ago" strings, color values, visibility flags)
-- Domain models stay in data layer, don't leak to UI
-- Use extension functions for conversion (e.g., `fun Product.toUiModel(): ProductUiModel`)
+- UI-derived display values (formatted strings, computed flags) are **sibling fields** on `*UiModel`, populated by the ViewModel — not parallel data classes
 
 ### 4. Screen Composables (presentation/ui/)
 
@@ -113,17 +117,17 @@ when (val result = repository.getData()) {
 1. **`{Feature}Screen`** - ViewModel wrapper
    - Takes ViewModel as parameter (with `koinViewModel()` default in Navigation, not in Screen)
    - Collects state with `.collectAsStateWithLifecycle()`
-   - Delegates to ScreenRoot with state and callbacks
+   - Delegates to ScreenRoot with the UiModel snapshot and callbacks
 
 2. **`{Feature}ScreenRoot`** - ViewModel-independent (TESTABLE)
-   - Takes UiState/UiModel as parameter
+   - Takes `uiModel: {Feature}UiModel` as parameter (Rule 11)
    - Takes all callbacks as lambda parameters
    - Contains all actual UI implementation
    - **This is what UI tests target**
 
 **Key Rules**:
 - Only X-components allowed (XScaffold, XTopAppBar, XButton, XText, etc.) - NO Material3 directly
-- Handle all 4 UiState cases for async data in ScreenRoot
+- Handle all 4 UiState cases for each async data slot in `*UiModel`
 - Use `Modifier` parameters for customization
 - ScreenRoot has NO ViewModel dependency
 
@@ -134,10 +138,10 @@ fun FeatureScreen(
     onBackClick: () -> Unit,
     viewModel: FeatureViewModel,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiModel by viewModel.uiModel.collectAsStateWithLifecycle()
 
     FeatureScreenRoot(
-        uiState = uiState,
+        uiModel = uiModel,
         onBackClick = onBackClick,
         onRetry = viewModel::loadData,
         onAction = viewModel::performAction,
@@ -149,7 +153,7 @@ fun FeatureScreen(
 ```kotlin
 @Composable
 fun FeatureScreenRoot(
-    uiState: FeatureUiState,
+    uiModel: FeatureUiModel,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
     onAction: () -> Unit,
@@ -165,7 +169,9 @@ fun FeatureScreenRoot(
         modifier = modifier.fillMaxSize(),
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-            when (val state = uiState.dataState) {
+            // Route on the relevant async slot inside the UiModel.
+            // state.value is the DTO from data/model/ (Rule 11).
+            when (val state = uiModel.dataState) {
                 UiState.Uninitialized -> { /* Empty */ }
                 UiState.Loading -> { XCircularProgressIndicator() }
                 is UiState.Success -> { FeatureContent(state.value) }
@@ -248,7 +254,7 @@ Every async data field (wrapped in `UiState<T>`) MUST handle all 4 states:
 
 **Pattern**:
 ```kotlin
-when (val state = uiState.dataState) {
+when (val state = uiModel.dataState) {
     UiState.Uninitialized -> {
         // Empty or placeholder
     }
@@ -258,16 +264,126 @@ when (val state = uiState.dataState) {
         }
     }
     is UiState.Success -> {
+        // state.value is the DTO from data/model/
         DataContent(data = state.value)
     }
     is UiState.Failed -> {
         ErrorView(
             error = state.error,
-            onRetry = viewModel::retryLoad
+            onRetry = onRetry
         )
     }
 }
 ```
+
+## Screen Shapes: Data-Fetching vs Form
+
+Rule 4 mandates handling all four UI states. **How** to render them varies by what the screen is *for*. Two shapes are sanctioned; pick by the deciding question below.
+
+### Deciding question
+
+> *"Does the screen have content that must persist across state transitions — user input, focus, IME state?"*
+
+- **No** → **Data-fetching screen** (default). Visible content is entirely a function of the async result. Use the separated shape — one composable per UI state.
+- **Yes** → **Form screen** (exception). The form is the persistent UI; loading/error are decorations on it. Collapse states into a single Content composable with derived `isLoading`/`errorMessage` parameters.
+
+### Shape A — Data-fetching screen (default)
+
+Use for: product detail, order list, profile, dashboard, anything where the screen has nothing to show until data arrives.
+
+```kotlin
+@Composable
+fun ProductDetailScreenRoot(
+    uiModel: ProductDetailUiModel,
+    onBackClick: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    XScaffold(topBar = { /* ... */ }) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            when (val state = uiModel.productState) {
+                UiState.Uninitialized -> { /* empty */ }
+                UiState.Loading      -> LoadingContent()
+                is UiState.Success   -> ProductContent(product = state.value)
+                is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry)
+            }
+        }
+    }
+}
+
+@Composable private fun LoadingContent() { /* XCircularProgressIndicator */ }
+@Composable private fun FailedContent(error: ErrorModel, onRetry: () -> Unit) { /* error text + Retry XButton */ }
+// ProductContent lives in components/ — it's a "thing" with meaning of its own.
+```
+
+`LoadingContent` / `FailedContent` stay in `Screen.kt` as private composables (they only make sense responding to a UI state). The success composable usually moves to `components/`.
+
+### Shape B — Form screen (documented exception)
+
+Use for: login, signup, search-as-you-type input, payment form, any screen whose primary content is user input that must survive state transitions.
+
+```kotlin
+@Composable
+fun LoginScreenRoot(
+    uiModel: LoginUiModel,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    onBackClick: () -> Unit,
+) {
+    val isLoading = uiModel.submitState is UiState.Loading
+    val errorMessage = (uiModel.submitState as? UiState.Failed)?.error?.asString()
+
+    if (uiModel.submitState is UiState.Success) {
+        LaunchedEffect(Unit) { onLoginSuccess() }
+    }
+
+    XScaffold { padding ->
+        LoginContent(
+            username = uiModel.username,
+            password = uiModel.password,
+            isLoading = isLoading,
+            errorMessage = errorMessage,
+            // ... callbacks
+            modifier = Modifier.padding(padding),
+        )
+    }
+}
+```
+
+Loading is shown as a button-progress indicator inside `LoginContent`; error is shown as inline text below the form. The form stays mounted across all four states, so input/focus is preserved.
+
+### Why form screens deviate
+
+Replacing the form with a `LoadingContent` on submit would:
+1. Tear `TextField` out of composition → lose user input across recompose
+2. Lose focus and IME state
+3. Hide the action the user just took
+
+That's a UX cost only justified for forms. Data-fetching screens don't pay it because there's no input to preserve.
+
+### Mixed screens
+
+A screen with both a persistent input section and a separate data-fetched section gets **multiple `UiState<DTO>` slots** on its `*UiModel`. Apply Shape A to the data section and Shape B to the form section — they're independent state machines.
+
+### Documenting the choice
+
+The chosen shape — especially deviation to Shape B — must be recorded in the feature's `.claude/docs/{featurename}/spec.md` under **Design Decisions**, with the rationale. Example from `.claude/docs/login/spec.md`:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Error display | Inline text below form | Less disruptive; keeps user in context |
+| Loading state | XButtonProgress in-button indicator | Keeps form visible; shows which action is in progress |
+
+The reviewer uses the spec's Design Decisions to know which shape is expected. Without that record, the reviewer assumes Shape A (the default).
+
+### Decision matrix
+
+| Screen kind | Shape | Composables in `Screen.kt` |
+|-------------|-------|----------------------------|
+| Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, `LoadingContent`, `FailedContent` (+ success composable in `components/`) |
+| Form (persistent input) | B — single Content | `Screen`, `ScreenRoot`, `<Feature>Content` (form persistent, loading/error inline) |
+| Mixed | A + B combined | Per-section, driven by each `UiState<DTO>` slot |
 
 ## X-Components (Design System)
 
@@ -285,21 +401,35 @@ when (val state = uiState.dataState) {
 
 **Note**: XTheme is app-level only (in `composeApp`), features don't wrap in XTheme
 
-## Model Conversion
+## Computed Display Values (Rule 11)
 
-**Pattern**: Convert domain/API models to UI models in ViewModel using extension functions
+**Pattern**: If the UI needs a formatted/derived value from a DTO (e.g. `"3 days ago"` from a `Long` timestamp, `"$12.99"` from a `Double`), add a **sibling field** to `*UiModel` and populate it in the ViewModel when the source `UiState<DTO>` becomes Success.
 
-**Location**: Same file as ViewModel, or separate `{Feature}Mappers.kt` if many conversions
+**Do NOT define a mirror UI-layer copy of the DTO.** That's a Rule 11 violation and inverts the dependency rule (presentation should depend on data, not the reverse).
 
 **Example**:
 ```kotlin
-// In ViewModel file
-private fun ProductResponse.toUiModel() = ProductUiModel(
-    id = id,
-    name = name,
-    price = "$${price}",  // Format for display
-    isAvailable = stock > 0,  // Compute UI flag
+// In *UiModel:
+data class ProductDetailUiModel(
+    val dataState: UiState<Product> = UiState.Uninitialized,  // Product is the DTO from data/model/
+    val priceLabel: String = "",                              // computed display value
+    val joinedAgoLabel: String = "",                          // computed display value
 )
+
+// In ViewModel:
+when (val result = repository.getProduct()) {
+    is Either.Success -> {
+        val product = result.data
+        _uiModel.setState {
+            copy(
+                dataState = UiState.Success(product),
+                priceLabel = "$${product.price}",
+                joinedAgoLabel = formatRelative(product.createdAt),
+            )
+        }
+    }
+    is Either.Failure -> _uiModel.setState { copy(dataState = UiState.Failed(result.error)) }
+}
 ```
 
 ## Common Patterns
@@ -309,24 +439,24 @@ private fun ProductResponse.toUiModel() = ProductUiModel(
 class FeatureViewModel(
     private val repository: FeatureRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(FeatureUiState())
-    val uiState = _uiState.asStateFlow()
+    private val _uiModel = MutableStateFlow(FeatureUiModel())
+    val uiModel = _uiModel.asStateFlow()
 
     init {
         loadData()
     }
 
     fun loadData() {
-        _uiState.setState { copy(dataState = UiState.Loading) }
+        _uiModel.setState { copy(dataState = UiState.Loading) }
 
         viewModelScope.launch {
             when (val result = repository.getData()) {
                 is Either.Success -> {
-                    val uiModel = result.data.toUiModel()
-                    _uiState.setState { copy(dataState = UiState.Success(uiModel)) }
+                    // result.data is the DTO — store directly. No mapping (Rule 11).
+                    _uiModel.setState { copy(dataState = UiState.Success(result.data)) }
                 }
                 is Either.Failure -> {
-                    _uiState.setState { copy(dataState = UiState.Failed(result.error)) }
+                    _uiModel.setState { copy(dataState = UiState.Failed(result.error)) }
                 }
             }
         }
@@ -334,27 +464,29 @@ class FeatureViewModel(
 }
 ```
 
-### Form Validation Pattern
+### Form Validation Pattern (form fields live on *UiModel)
 ```kotlin
+// FeatureUiModel: data class FeatureUiModel(val email: String = "", val emailError: String? = null, val submitState: UiState<Unit> = UiState.Uninitialized)
+
 fun updateEmail(email: String) {
-    _uiState.setState { copy(email = email, emailError = null) }
+    _uiModel.setState { copy(email = email, emailError = null) }
 }
 
 fun validateEmail(): Boolean {
-    val email = _uiState.value.email
+    val email = _uiModel.value.email
     val error = when {
         email.isBlank() -> "Email is required"
         !email.contains("@") -> "Invalid email format"
         else -> null
     }
-    _uiState.setState { copy(emailError = error) }
+    _uiModel.setState { copy(emailError = error) }
     return error == null
 }
 
 fun submit() {
     if (!validateEmail()) return
 
-    _uiState.setState { copy(submitState = UiState.Loading) }
+    _uiModel.setState { copy(submitState = UiState.Loading) }
     // ... submit logic
 }
 ```

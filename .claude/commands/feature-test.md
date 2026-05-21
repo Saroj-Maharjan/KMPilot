@@ -29,7 +29,7 @@ Glob: feature/{featurename}/src/commonMain/kotlin/**/*.kt
 entities: [{name, fields}]
 dataSource: {interface, implementation, methods}
 repository: {interface, implementation, dependencies}
-viewModel: {class, dependencies, actions, flow_name}  # flow_name = the public StateFlow property (e.g. uiState, uiModelState)
+viewModel: {class, dependencies, actions, flow_name, state_slot}  # see detection rules
 screen: {composable, rootComposable, callbacks}
 
 # Capability flags (drive conditional template sections):
@@ -39,10 +39,11 @@ successValueShape: list|single  # list = repository returns Either<List<T>>; sin
 ```
 
 **Detection rules:**
-- `flow_name`: read the ViewModel's public flow property — match `val (\w+)\s*=\s*_\w+\.asStateFlow\(\)`. Pass the matched name (e.g. `uiState`, `uiModelState`) to all presentation agents.
+- `flow_name`: read the ViewModel's public flow property — match `val (\w+)\s*=\s*_\w+\.asStateFlow\(\)`. Under Rule 11 convention, this is `uiModel`. Pass the matched name (e.g. `uiModel`, or `uiState` for legacy features) to all presentation agents.
+- `state_slot`: read `{Feature}UiModel.kt` for `val (\w+)State:\s*UiState<` — the slot prefix (e.g. `data`, `submit`, `fetch`) is what test agents substitute for `{state}`. If multiple slots exist, pass the primary one; default `data`.
 - `hasDto`: glob `feature/{featurename}/src/commonMain/kotlin/**/model/*Dto.kt` → if any match, true.
 - `hasPagination`: grep `data class .*Response.*results.*count` in `data/model/*.kt`.
-- `successValueShape`: read the repository interface return type. `Either<List<...>>` → `list`; `Either<...>` (anything else) → `single`.
+- `successValueShape`: read the repository interface return type. `Either<List<...>>` → `list`; `Either<...>` (anything else) → `single`. (Repository returns `Either<DTO>` directly — Rule 11.)
 
 ### 1.3 Add Test Dependencies (Conditional)
 
@@ -160,7 +161,8 @@ Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
 Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}
 ViewModel: {yaml}
-flow_name: {detected flow_name, e.g. uiState or uiModelState}"
+flow_name: {detected flow_name, default uiModel under Rule 11}
+state: {detected state_slot, default data}"
 
 Task: test-ui
 Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
@@ -175,7 +177,8 @@ Prompt: "Feature: {featurename}, Package: {PKG_PREFIX}.{featurename}
 Fixtures: {PKG_PREFIX}.{featurename}.fixtures.{Feature}Fixtures
 CORE_COMMON_PKG: {CORE_COMMON_PKG}, CORE_DATA_PKG: {CORE_DATA_PKG}
 Stack: {yaml}
-flow_name: {detected flow_name}
+flow_name: {detected flow_name, default uiModel under Rule 11}
+state: {detected state_slot, default data}
 successValueShape: {list|single}"
 ```
 

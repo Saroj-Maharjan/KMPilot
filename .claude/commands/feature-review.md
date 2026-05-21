@@ -5,7 +5,7 @@ allowed-tools: ["Task", "Read", "Glob", "Grep", "Write"]
 
 # Review Feature Implementation
 
-Review a KMP feature against Clean Architecture, 10 critical rules, and 4 integration points.
+Review a KMP feature against Clean Architecture, 11 critical rules, and 4 integration points.
 
 **Architecture Reference:** @../skills/_shared/patterns.md
 
@@ -23,7 +23,7 @@ Review a KMP feature against Clean Architecture, 10 critical rules, and 4 integr
 
 ## What Gets Checked
 
-### Architecture Rules (10)
+### Architecture Rules (11)
 1. Interface + Impl pairs
 2. Either<T> returns
 3. setState usage
@@ -34,6 +34,7 @@ Review a KMP feature against Clean Architecture, 10 critical rules, and 4 integr
 8. DI binding pattern
 9. No UseCases
 10. Callback parameters
+11. Single UiModel + DTO-wrapped UiState (no `*UiState.kt`; `UiState<T>` wraps DTOs from `data/model/`; no `presentation` imports in `data/`)
 
 ### Integration Points (4)
 1. settings.gradle.kts

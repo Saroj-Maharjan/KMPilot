@@ -12,8 +12,8 @@ Test Compose screens using runComposeUiTest. **Do NOT re-read source files** - u
 
 ## Key Concept: ScreenRoot Pattern
 
-- `{Feature}Screen` - ViewModel-based wrapper that collects state
-- `{Feature}ScreenRoot` - ViewModel-independent composable that takes UiState + callbacks
+- `{Feature}Screen` - ViewModel-based wrapper that collects `viewModel.uiModel`
+- `{Feature}ScreenRoot` - ViewModel-independent composable that takes `uiModel: {Feature}UiModel` + callbacks (Rule 11)
 
 **Tests ALWAYS target `{Feature}ScreenRoot`** - allows testing without ViewModel mocking.
 
@@ -55,7 +55,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createLoadingState(),
+                    uiModel = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -74,7 +74,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createSuccessState(entities),
+                    uiModel = {Feature}UiFixtures.createSuccessState(entities),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -91,7 +91,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createEmptyState(),
+                    uiModel = {Feature}UiFixtures.createEmptyState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -108,7 +108,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                    uiModel = {Feature}UiFixtures.createNetworkErrorState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -124,7 +124,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createUnauthorizedErrorState(),
+                    uiModel = {Feature}UiFixtures.createUnauthorizedErrorState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -140,7 +140,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createNotFoundErrorState(),
+                    uiModel = {Feature}UiFixtures.createNotFoundErrorState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -156,7 +156,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createServerErrorState(),
+                    uiModel = {Feature}UiFixtures.createServerErrorState(),
                     onBackClick = {},
                     onRetry = {},
                 )
@@ -176,7 +176,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createNetworkErrorState(),
+                    uiModel = {Feature}UiFixtures.createNetworkErrorState(),
                     onBackClick = {},
                     onRetry = { retryCalled = true },
                 )
@@ -194,7 +194,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createLoadingState(),
+                    uiModel = {Feature}UiFixtures.createLoadingState(),
                     onBackClick = { backCalled = true },
                     onRetry = {},
                 )
@@ -213,7 +213,7 @@ class {Feature}ScreenTest {
         setContent {
             XTheme {
                 {Feature}ScreenRoot(
-                    uiState = {Feature}UiFixtures.createSuccessState(entities),
+                    uiModel = {Feature}UiFixtures.createSuccessState(entities),
                     onBackClick = {},
                     onRetry = {},
                     onItemClick = { id -> clickedId = id },

@@ -74,9 +74,10 @@ class {Feature}RepositoryImplTest {
     // NOTE: `.data` is the correct accessor on Either.Success (NOT `.value`).
     // Substitute method signature based on the actual repository — drop `any()` matchers
     // entirely when the method takes no parameters.
+    // Repository returns Either<DTO> with no mapping (Rule 11) — asserts equal the DTO produced by fixtures.
 
     @Test
-    fun `get{Entity} returns mapped entity on success`() = runTest {
+    fun `get{Entity} returns DTO on success`() = runTest {
         val entity = {Feature}Fixtures.create{Entity}()
         everySuspend { remoteDataSource.get{Entity}(/* any() per actual param */) } returns
             Either.Success(entity)
