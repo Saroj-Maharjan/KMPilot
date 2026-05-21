@@ -85,6 +85,13 @@ trim_template() {
     sedi '/SendModules\.initialize()/d'         "$koin"
     sedi '/ReceiveModules\.initialize()/d'      "$koin"
 
+    # 3a. Replace the mock-API BASE_URL with a neutral placeholder. The template
+    #     ships KMPilot's own mock API URL, which rename.sh would otherwise
+    #     mangle (it rewrites every occurrence of `thisissadeghi` and `KMPilot`
+    #     across the tree, producing a malformed URL in the new project).
+    sedi 's|https://thisissadeghi\.github\.io/KMPilot/mock-api/|https://api.example.com/|g' \
+        composeApp/build.gradle.kts
+
     # 4. Write a Welcome screen so the empty shell compiles and runs.
     #    User deletes this file when adding their first feature.
     cat > composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/WelcomeScreen.kt <<'WELCOME_EOF'
