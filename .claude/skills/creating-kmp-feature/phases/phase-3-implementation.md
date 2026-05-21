@@ -78,7 +78,10 @@ Invoke ui-layer-agent with:
   - CORE_COMMON_PKG, CORE_DESIGNSYSTEM_PKG
 - Design-aware context (if applicable):
   - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
-  - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
+  - Success screenshot: .claude/docs/{featurename}/designs/{featurename}.png
+  - State coverage: read `features[{featurename}].states` from `.claude/docs/_project/stitch-project.json`.
+    Include shared screenshots only for selected states (`.claude/docs/_shared/designs/loading.png` if `states.loading`, `.claude/docs/_shared/designs/failed.png` if `states.failed`).
+    Include `.claude/docs/{featurename}/designs/{featurename}_empty.png` if `states.empty`. Skipped states have no screenshot; the blueprint marks them "Skipped" so the agent uses generic handling.
 - Expected: UI layer complete + build validation
 ```
 
@@ -118,7 +121,8 @@ Invoke integration-agent with:
      CORE_DESIGNSYSTEM_PKG
    - Design-aware context (if applicable):
      - Blueprint: .claude/docs/{featurename}/designs/{featurename}_blueprint.md
-     - Screenshots: .claude/docs/{featurename}/designs/{featurename}.png (+ _loading, _failed, _empty)
+     - Success screenshot: .claude/docs/{featurename}/designs/{featurename}.png
+     - State coverage: read `features[{featurename}].states` from `.claude/docs/_project/stitch-project.json` and include shared/empty screenshots only for selected states (loading/failed live under `.claude/docs/_shared/designs/`; empty under `.claude/docs/{featurename}/designs/{featurename}_empty.png`). Skipped states have no screenshot.
 ```
 
 Each agent works in isolated context window.

@@ -35,6 +35,8 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 Read `.claude/docs/_project/stitch-project.json` to load:
 - `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`)
 - Per-feature screen IDs (`features[featurename].successScreenId`, `.emptyScreenId`)
+- **Per-feature state selections** (`features[featurename].states = { loading, failed, empty }`). False flags mean the state was skipped at design time and is **not audited** below.
+- **Backward compatibility**: if `states` is absent on a legacy feature entry, derive it from observable state — `{ loading: true, failed: true, empty: (emptyScreenId != null) }`. Pre-optional-states features had loading/failed always present and empty only when an `emptyScreenId` was recorded.
 
 If any prerequisite is missing, stop and inform the user.
 
@@ -47,8 +49,9 @@ If any prerequisite is missing, stop and inform the user.
 `/ui-designer` Step 1.7 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
-2. For each state (success, loading, failed, empty if applicable):
-   - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call.
+2. Build the **audit state list**: always include `success`. Include `loading`/`failed`/`empty` **only when `states.{state} == true`** (per Step 1's derived flags). Skipped states are not acquired and not audited.
+3. For each state in the audit list:
+   - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call. Note: `loading`/`failed` HTML lives in `.claude/docs/_shared/designs/extracted/stitch_{state}.html` (shared) — check there for those states.
    - **Download path** (only when the file is missing or empty):
 
      **For loading and failed states — screenId lookup:**
@@ -66,7 +69,7 @@ If any prerequisite is missing, stop and inform the user.
 
 ## Step 3: Token Extraction
 
-For each state, reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
+For each state **in the audit state list from Step 2** (skipped states are not extracted), reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
 
 1. **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/tokens_{state}.md` exists and is non-empty, use it as-is.
 2. **Re-extract path** (only when the inventory is missing or you re-downloaded the HTML in Step 2):
@@ -187,9 +190,11 @@ The fixed checklist in 5.3 catches the seven traps that have caused real bugs ac
 
 This step is **additive** to 5.3, not a replacement. The seven generic traps still run.
 
-### 5.4 Loading and Failed states — brief checklist
+### 5.4 Loading, Failed, and Empty states — brief checklist
 
-These states are typically trivial (a spinner or an error illustration). Inspect the inventory and code for each state:
+Run this subsection **only for non-success states present in the audit state list** (Step 2). Skipped states are omitted from the audit report entirely.
+
+These states are typically trivial (a spinner, an error illustration, or an empty-state placeholder). Inspect the inventory and code for each present state:
 
 - If everything matches → write `### {State}: no mismatches.` and stop.
 - If there are mismatches → emit them as Step 5.2 blocks under a `### {State}` heading.
