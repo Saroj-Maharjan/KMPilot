@@ -75,12 +75,14 @@ Use this template when presenting proposed spec changes to the user for approval
 
 ## Review Required
 
-**Please review the proposed spec changes above.**
-
 Respond with one of:
 - **Approved** - Proceed with implementation
 - **Approved with changes** - (specify what to modify)
 - **Reject** - Do not proceed (explain concerns)
+
+---
+
+> **Next step —** review the proposed spec changes above and reply with one of the options.
 ```
 
 ---
@@ -220,10 +222,12 @@ Default to "Newest First" since users typically want to see recently added items
 
 ## Review Required
 
-**Please review the proposed spec changes above.**
-
 Respond with one of:
 - **Approved** - Proceed with implementation
 - **Approved with changes** - (specify what to modify)
 - **Reject** - Do not proceed
+
+---
+
+> **Next step —** review the proposed spec changes above and reply with one of the options.
 ```

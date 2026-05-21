@@ -126,9 +126,11 @@ Load the appropriate template and fill in:
    - Complex: "Used detailed template with architecture context"
    ```
 
-5. **Request confirmation**:
+5. **Request confirmation** — emit as the very last line of output, styled to catch the eye:
    ```
-   "Review the PRD. Confirm to proceed with task generation, or request changes."
+   ---
+
+   > **Next step —** review the PRD at `.claude/docs/{featurename}/prd.md` and confirm to proceed with task generation, or request changes.
    ```
 
 6. **Wait for user approval** before proceeding to Phase 2

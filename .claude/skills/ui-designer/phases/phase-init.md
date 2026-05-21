@@ -556,7 +556,9 @@ Loading screen: .claude/docs/_shared/designs/loading.png
 Failed screen: .claude/docs/_shared/designs/failed.png
 Config: .claude/docs/_project/stitch-project.json
 
-You can now run /ui-designer {featurename} for any feature.
+---
+
+> **Next step —** run `/ui-designer {featurename}` to design any feature's screens.
 ```
 
 ---

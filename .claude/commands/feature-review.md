@@ -65,8 +65,26 @@ Review a KMP feature against Clean Architecture, 11 critical rules, and 4 integr
 
 ## After Review
 
-```bash
-cat .claude/docs/{featurename}/review.md  # View review
-cat .claude/docs/{featurename}/fixes.md   # View fixes
-/audit-spec {featurename} --compare       # Check drift
+Reports are saved to:
+- `.claude/docs/{featurename}/review.md` — full review
+- `.claude/docs/{featurename}/fixes.md` — actionable fixes
+
+Optional: run `/audit-spec {featurename} --compare` to check spec drift.
+
+Pick the matching literal footer based on the review status and emit it as the very last line of output.
+
+**If status is PASS:**
+
+```
+---
+
+> **Next step —** run `/feature-test {featurename}` to generate comprehensive tests for the feature.
+```
+
+**If status is PASS WITH WARNINGS or FAIL:**
+
+```
+---
+
+> **Next step —** run `/modifying-kmp-feature {featurename} apply fixes from @.claude/docs/{featurename}/fixes.md` to address the review findings.
 ```

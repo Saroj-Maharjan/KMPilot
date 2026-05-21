@@ -258,12 +258,15 @@ All M3 component violations are Critical.
 ### Critical issues (token mismatches OR Material3 violations)
 
 1. Save audit report with fix instructions: file, line, current value, correct value.
-2. Tell the user:
+2. Tell the user — emit the blockquote as the very last line of output:
 
    ```
-   Critical issues found ({N} token mismatches, {N} M3 violations). To fix:
+   Critical issues found: {N} token mismatches, {N} M3 violations.
+   Audit report: .claude/docs/{featurename}/designs/{featurename}_audit.md
 
-     /modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md
+   ---
+
+   > **Next step —** run `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
    ```
 
 This skill does not invoke `/modifying-kmp-feature` — the user controls the pipeline.
@@ -319,5 +322,9 @@ This skill does not invoke `/modifying-kmp-feature` — the user controls the pi
 
 Audit report: .claude/docs/{featurename}/designs/{featurename}_audit.md
 
-{If critical issues: "To fix: /modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md"}
+{If critical issues, append as the FINAL line of output:}
+
+---
+
+> **Next step —** run `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
 ```

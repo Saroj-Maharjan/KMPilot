@@ -49,12 +49,15 @@ Audit, generate, or compare specifications for existing features.
 
 5. **Generate**: Create `.claude/docs/{featurename}/spec.md` using @../skills/_shared/spec-template.md
 
-6. **Report**:
+6. **Report** — emit the blockquote as the very last line of output:
    ```
    ## Specification Generated
    **Feature:** {featurename}
    **Output:** .claude/docs/{featurename}/spec.md
-   **Action:** Review and fill TODO sections
+
+   ---
+
+   > **Next step —** review `.claude/docs/{featurename}/spec.md` and fill any TODO sections, then run `/feature-review {featurename}` to validate the implementation against it.
    ```
 
 ## Mode 2: Compare/Drift Detection (--compare)

@@ -50,9 +50,36 @@ Display health status for all feature modules.
 
 ## After Health Check
 
-```bash
-/audit-spec {feature}      # Missing spec
-/feature-test {feature}    # Missing tests
-/feature-review {feature}  # Missing review
-/coverage                  # Full coverage report
+Find the biggest gap across all features (the row with the most ❌ entries), then emit the matching literal footer as the very last line of output.
+
+**If most features are missing a spec:**
+
+```
+---
+
+> **Next step —** run `/audit-spec {feature}` to generate the missing spec for one of the flagged features.
+```
+
+**If most features are missing tests:**
+
+```
+---
+
+> **Next step —** run `/feature-test {feature}` to generate tests for one of the flagged features.
+```
+
+**If most features are missing a review:**
+
+```
+---
+
+> **Next step —** run `/feature-review {feature}` to validate one of the flagged features.
+```
+
+**If all rows pass:**
+
+```
+---
+
+> **Next step —** run `/coverage` to see the full coverage report across all features.
 ```

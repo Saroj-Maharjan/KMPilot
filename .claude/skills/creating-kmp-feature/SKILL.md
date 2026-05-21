@@ -100,7 +100,10 @@ On build failure, load troubleshooting:
 - Build passing + ktlint formatted
 - Living spec: .claude/docs/{featurename}/spec.md
 - Ephemeral artifacts cleaned
+- Navigate: navController.navigate({FeatureName}Route)
 {Design-aware: "- blueprintConsumed set to true in stitch-project.json"}
 
-Next: navController.navigate({FeatureName}Route)
+---
+
+> **Next step —** run `/feature-review {featurename}` to validate against Clean Architecture guidelines.
 ```

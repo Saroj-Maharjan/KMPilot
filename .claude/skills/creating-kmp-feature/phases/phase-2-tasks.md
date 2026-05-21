@@ -139,9 +139,11 @@ Create `tasks.md` as overview:
    "{X} tasks in {Y} groups (Data: {N}, UI: {M}, Integration: {K})"
    ```
 
-4. **Ask**:
+4. **Ask** — emit as the very last line of output, styled to catch the eye:
    ```
-   "Review the tasks. Confirm to proceed with implementation, or request changes."
+   ---
+
+   > **Next step —** review the tasks at `.claude/docs/{featurename}/tasks.md` and confirm to proceed with implementation, or request changes.
    ```
 
 5. **Wait for user approval** before proceeding to Phase 3

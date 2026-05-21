@@ -114,24 +114,14 @@ rm -f .claude/docs/{featurename}/task-*.md
 - `{INIT_KOIN_PATH}`
 - `{NAV_HOST_PATH}`
 
-### Next Steps
-1. Test navigation: `navController.navigate({FeatureName}Route)`
-2. Review spec: `.claude/docs/{featurename}/spec.md`
-3. Run `/feature-review {featurename}` if desired
-```
+### What's next
+- Test navigation: `navController.navigate({FeatureName}Route)`
+- Review spec: `.claude/docs/{featurename}/spec.md`
 
 ---
 
-## Suggesting Code Review
-
-After feature completion, suggest running the code review:
-
+> **Next step —** run `/feature-review {featurename}` to validate against Clean Architecture guidelines.
 ```
-"Feature implementation complete! Would you like to run /feature-review
-to validate against Clean Architecture guidelines?"
-```
-
-If user agrees, run: `/feature-review {featurename}`
 
 ---
 

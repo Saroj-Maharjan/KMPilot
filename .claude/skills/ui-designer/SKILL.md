@@ -89,14 +89,12 @@ Blueprint: designs/{featurename}_blueprint.md
 Project config: .claude/docs/_project/stitch-project.json
 blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 
-## Next Steps
+## What's next
 
-To implement this design:
-- Existing feature → invoke `/modifying-kmp-feature {featurename}`
-- New feature → invoke `/creating-kmp-feature {featurename}`
+- Implementation skill will auto-detect the blueprint and enter design-aware mode.
+- After implementation, run `/verify-ui {featurename}` to audit code against the design.
 
-The implementation skill will auto-detect the blueprint and enter design-aware mode.
+---
 
-To verify the implementation against the design:
-- invoke `/verify-ui {featurename}`
+> **Next step —** run `/creating-kmp-feature {featurename}` (new feature) or `/modifying-kmp-feature {featurename}` (existing feature) to implement this design.
 ```
