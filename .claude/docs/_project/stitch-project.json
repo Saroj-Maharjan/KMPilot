@@ -57,6 +57,7 @@
       "successScreenId": "916e3e1a96f14c44a5c9388bc58ed224",
       "successScreenName": "projects/11569217269690169371/screens/916e3e1a96f14c44a5c9388bc58ed224",
       "emptyScreenId": null,
+      "states": { "loading": true, "failed": true, "empty": false },
       "screenshot": ".claude/docs/receive/designs/receive.png",
       "htmlPath": ".claude/docs/receive/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/receive/designs/extracted/tokens_success.md",
@@ -82,6 +83,7 @@
       "successScreenId": "e901ab89e18446bba468049a19d036e1",
       "successScreenName": "projects/11569217269690169371/screens/e901ab89e18446bba468049a19d036e1",
       "emptyScreenId": null,
+      "states": { "loading": true, "failed": true, "empty": false },
       "screenshot": ".claude/docs/send/designs/send.png",
       "htmlPath": ".claude/docs/send/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/send/designs/extracted/tokens_success.md",
@@ -107,6 +109,7 @@
       "successScreenId": "4cbe6ee364784883acf200970d94246c",
       "successScreenName": "projects/11569217269690169371/screens/4cbe6ee364784883acf200970d94246c",
       "emptyScreenId": null,
+      "states": { "loading": true, "failed": true, "empty": false },
       "screenshot": ".claude/docs/dashboard/designs/dashboard.png",
       "htmlPath": ".claude/docs/dashboard/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/dashboard/designs/extracted/tokens_success.md",
@@ -132,9 +135,8 @@
   "initState": {
     "projectCreated": true,
     "designSystemCreated": true,
-    "sharedScreensGenerated": true,
     "completedAt": "2026-05-04T00:06:00Z"
   },
   "createdAt": "2026-05-04T00:00:00Z",
-  "updatedAt": "2026-05-17T00:00:00Z"
+  "updatedAt": "2026-05-21T00:00:00Z"
 }
