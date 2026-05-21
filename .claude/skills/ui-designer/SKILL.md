@@ -60,7 +60,7 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 
 | Error | Action |
 |-------|--------|
-| Stitch MCP not available | Stop. Ask user to configure Stitch MCP server |
+| Stitch MCP not available | Run the Guided Setup in [phase-init.md → Init-1](phases/phase-init.md#guided-setup). Full reference: [stitch-setup.md](references/stitch-setup.md). Stop after instructing the user — they must restart Claude Code before the skill can continue. |
 | Stitch generation times out / connection reset | **Do NOT retry the generation call** (known Google Stitch bug — the generation often succeeded server-side and a retry creates a duplicate). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync. Wait for confirmation, then call `list_screens` to locate the new screen. |
 | Stitch generation fails with a non-timeout error | Retry with refined prompt. Max 3 attempts |
 | Stitch project not found | Create new project automatically |

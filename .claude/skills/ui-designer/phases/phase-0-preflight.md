@@ -92,17 +92,9 @@ Attempt to call `mcp__stitch__list_projects`. This verifies the Stitch MCP serve
 
 **If successful**: Stitch MCP is available. Proceed.
 
-**If fails** (tool not found or connection error):
-```
-Stitch MCP is not configured. To use the UI Designer skill:
+**If fails** (tool not found or connection error): Stitch MCP is not configured. Run the **Guided Setup** procedure from [phase-init.md → Init-1](phase-init.md#guided-setup) — it walks the user through Node check, path selection (API Key vs OAuth), key acquisition, the `claude mcp add stitch …` command, and the required Claude Code restart. Full reference: `.claude/skills/ui-designer/references/stitch-setup.md`.
 
-1. Add the Stitch MCP server to your Claude Code configuration
-2. Restart Claude Code
-3. Re-invoke /ui-designer
-
-The Stitch MCP server is required for all UI Designer modes.
-```
-**STOP** — do not proceed without Stitch MCP.
+**STOP** — Stitch MCP cannot be activated within a running Claude Code session. The user must restart Claude Code and re-invoke `/ui-designer` before this skill can continue.
 
 ---
 

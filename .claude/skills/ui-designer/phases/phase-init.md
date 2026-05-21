@@ -43,18 +43,36 @@ Call `mcp__stitch__list_projects`.
 
 **If successful**: Stitch MCP is available. Mark Init-1 complete. Proceed to Init-2.
 
-**If fails** (tool not found or connection error):
-```
-Stitch MCP is not available. Check your Claude Code MCP configuration.
+**If fails** (tool not found or connection error): Stitch MCP is not configured. Walk the user through setup using the procedure below — the full reference lives at `.claude/skills/ui-designer/references/stitch-setup.md`.
 
-To use the UI Designer skill:
-1. Add the Stitch MCP server to your Claude Code configuration
-2. Restart Claude Code
-3. Re-invoke /ui-designer
+### Guided Setup
 
-The Stitch MCP server is required for all UI Designer modes.
-```
-**STOP** — do not proceed.
+1. **Check Node version** by running `node -v`. If Node is missing or below 18, tell the user to install Node 18+ (e.g. via `nvm install 20`) and stop until they confirm.
+
+2. **Pick a path** using `AskUserQuestion`:
+
+   - **API Key (Recommended)** — fastest, works in any environment including WSL/SSH/Docker
+   - **OAuth wizard** — only if the user already manages a Google Cloud project they want Stitch billed against
+   - **I'll set it up myself** — user prefers to read the docs and configure manually
+
+3. **If API Key**:
+   - Ask the user to open <https://aistudio.google.com/apikey>, sign in with their Stitch Google account, click **Create API key**, and copy the value.
+   - Once they confirm they have the key, tell them to run (replacing `YOUR_API_KEY`):
+     ```bash
+     claude mcp add stitch \
+       --transport http https://stitch.googleapis.com/mcp \
+       --header "X-Goog-Api-Key: YOUR_API_KEY" \
+       -s user
+     ```
+   - Tell them to **fully quit and reopen Claude Code**, then re-invoke `/ui-designer`.
+
+4. **If OAuth wizard**:
+   - Tell them to run `npx @_davideast/stitch-mcp init` and follow the prompts (select Claude Code as the client, OAuth as the auth mode).
+   - Tell them to **fully quit and reopen Claude Code**, then re-invoke `/ui-designer`.
+
+5. **If "I'll set it up myself"**: point them to `.claude/skills/ui-designer/references/stitch-setup.md` for the full guide and stop.
+
+**STOP** in all cases — Stitch MCP cannot be activated within a running Claude Code session. The user must restart Claude Code before re-invoking the skill.
 
 ---
 
