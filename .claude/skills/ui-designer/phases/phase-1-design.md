@@ -12,13 +12,15 @@
 Design Progress:
 - [ ] Step 1.1: Gather screen requirements
 - [ ] Step 1.1.5: Cross-Screen Chrome Consistency Snapshot (MANDATORY when prior features exist)
+- [ ] Step 1.1.6: State Coverage Selection (MANDATORY) — user picks which optional states this feature needs
+- [ ] Step 1.1.7: Design missing shared screens (conditional) — runs only when opted-in shared screen does not yet exist
 - [ ] Step 1.2a: Read current XTheme color scheme (MANDATORY)
 - [ ] Step 1.2b: Generate screens in Stitch
 - [ ] Step 1.3: Present designs to user
 - [ ] Step 1.4: Iterate on feedback (if needed)
 - [ ] Step 1.5: Finalize approved success design
-- [ ] Step 1.6: Generate state designs (loading, failed, empty)
-- [ ] Step 1.7: Acquire HTML & Token Inventories (MANDATORY)
+- [ ] Step 1.6: Generate state designs for selected optional states only
+- [ ] Step 1.7: Acquire HTML & Token Inventories for selected states (MANDATORY)
 - [ ] Step 1.8: Color Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.9: Generate Implementation Blueprint
 - [ ] Step 1.10: Update stitch-project.json
@@ -58,18 +60,33 @@ For the screen, capture:
 - **States** (loading, success, empty, error - per the 4-state pattern)
 - **Visual style notes** (dark theme, accent colors, typography preferences)
 
-### Screen State Coverage (Mandatory)
+### List-Based Determination (`isListBased`)
 
-Every screen **must** have designs for these states:
+A screen is **list-based** when its primary content is a collection of homogeneous items (`LazyColumn`, `LazyRow`, `LazyVerticalGrid`, `LazyVerticalStaggeredGrid`). This drives whether the Empty option is offered in Step 1.1.6 — an empty state only makes sense when there is a list that can be empty.
 
-| State | Required | Source |
-|-------|----------|--------|
+- **List-based**: feed, search results, message list, transactions, notifications, gallery — the success state is "many of the same thing".
+- **Not list-based**: forms (login, settings, profile edit), detail views (product detail, transaction detail), modal/wizard steps, dashboards with fixed sections (a sub-list inside a dashboard does **not** count — design empty separately if needed).
+
+If the determination is unambiguous from requirements, set `isListBased` directly. If it isn't, ask:
+
+> **"Is this screen primarily a scrollable list/grid of items where 'no items yet' is a meaningful state?"** — Yes / No.
+
+Record `isListBased` in working context for Step 1.1.6.
+
+### Screen State Coverage
+
+Only the **success state is mandatory**. Loading, failed, and empty are **optional per feature** — the user selects which they need in Step 1.1.6, gated on the per-state conditions below.
+
+| State | Inclusion gate | Source when included |
+|-------|----------------|----------------------|
 | **Success** | Always | Generated per-feature in shared project |
-| **Loading** | Always | **Shared screen from project config — not generated per-feature** |
-| **Failed** | Always | **Shared screen from project config — not generated per-feature** |
-| **Empty** | List screens only | Generated per-feature by editing success screen |
+| **Loading** | User opt-in | **Shared screen from project config** — reused as-is; never re-designed per-feature |
+| **Failed** | User opt-in | **Shared screen from project config** — reused as-is; never re-designed per-feature |
+| **Empty** | User opt-in **AND** `isListBased == true` — both required, neither is sufficient alone | Generated per-feature by editing the approved success screen, then iterated via single approve-or-edit loop |
 
-Steps 1.2–1.5 handle the **success state** variant selection. Step 1.6 generates the remaining state designs based on the approved success design.
+If the user opts **out** of a state — or, for Empty, if `isListBased == false` — that state is **skipped entirely** for the feature: no design, no token inventory, no blueprint section, no implementation reference. Implementation skills will fall back to generic handling for skipped states (Rule 4 in `patterns.md` still applies — the feature code must still handle all UI states, just without a design reference for the skipped ones).
+
+Steps 1.2–1.5 handle the **success state** variant selection. Step 1.6 generates the remaining state designs, gated on Step 1.1.6 selections.
 
 ---
 
@@ -157,6 +174,83 @@ Carry forward into Step 1.2b:
 - `sharedConventionsBlock` — the markdown block to paste verbatim into the Stitch prompt.
 
 Step 1.6 (empty state) does **not** need this output — its edit prompt says "Keep everything exactly the same", which automatically preserves whatever chrome the approved success screen ended up with.
+
+---
+
+## Step 1.1.6: State Coverage Selection (MANDATORY)
+
+**Purpose**: Loading, failed, and empty are optional per feature. Capture the user's selection here so the rest of Phase 1 knows which states to design, tokenize, audit, and include in the blueprint.
+
+Opt-in semantics:
+- **Loading / Failed** — reuse the shared screens from Project Init. Opting out means no design reference; implementation falls back to generic handling.
+- **Empty** — designed per-feature by editing the approved success screen. Offered **only when `isListBased == true`**.
+
+### Ask the User
+
+Use `AskUserQuestion` with `multiSelect: true`. The option list is dynamic — include **Empty state** only when `isListBased == true`; otherwise show only Loading and Failed.
+
+> **"Which optional states does this feature need?"**
+
+| Option | When shown | Description |
+|--------|-----------|-------------|
+| Loading state | Always | Reuse the shared loading screen |
+| Failed state | Always | Reuse the shared failed screen |
+| Empty state | Only if `isListBased == true` | Design a per-feature empty state (approve-or-edit loop after success) |
+
+Record selections:
+
+- `needsLoading = "Loading state" in selections`
+- `needsFailed = "Failed state" in selections`
+- **`needsEmpty = isListBased && ("Empty state" in selections)`** — the dual gate. If `isListBased == false`, `needsEmpty` is `false` regardless of user input.
+
+### Persist Selection
+
+Write `stitch-project.json.features[featurename].states = { loading: {needsLoading}, failed: {needsFailed}, empty: {needsEmpty} }` so the selection survives across resumes. Update `features[featurename].updatedAt` and top-level `updatedAt`.
+
+These booleans drive Steps 1.1.7, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11.
+
+---
+
+## Step 1.1.7: Design Missing Shared Screens (Conditional)
+
+**Purpose**: Shared Loading/Failed screens are deferred at Project Init — they're designed lazily by the first feature that opts in. If this feature opted in (Step 1.1.6) and the corresponding shared screen doesn't yet exist, design it **now, before the feature's success screen**. The result lives at `_shared/designs/` and is inherited by every future feature that opts in.
+
+If neither shared screen needs creation, this step is a **no-op**.
+
+### Detect missing shared screens
+
+For each state in `[loading, failed]`:
+
+```
+needs{State} == true
+  AND (sharedStateScreens.{state}.screenId is null
+       OR .claude/docs/_shared/designs/{state}.png is missing
+       OR .claude/docs/_shared/designs/extracted/stitch_{state}.html is missing)
+  → mark {state} as "missing — must design"
+```
+
+If neither state is marked missing, skip the rest of this step and proceed to Step 1.2.
+
+### Inform the user
+
+For each state marked missing:
+
+> "The shared {state} screen doesn't exist in this project yet. Designing it now before your {featurename} success screen — it will be reused by every future feature that opts in to {state} state."
+
+### Run the on-demand procedure
+
+For each missing state, invoke the canonical procedure documented in [`phase-init.md`](phase-init.md) → **On-Demand Procedures** section:
+
+- Loading → run **On-Demand: Generate Shared Loading Screen** end-to-end (generation, screen sync, approve-or-edit loop, HTML download + tokenize, persistence to `sharedStateScreens.loading`).
+- Failed → run **On-Demand: Generate Shared Failed Screen** end-to-end.
+
+Both procedures already write to `_shared/designs/` and `stitch-project.json.sharedStateScreens.{state}` — no additional persistence work here.
+
+Run the procedures **sequentially** (Loading first if both are missing) so each completes before the next starts. Each can use up to 10 approve-or-edit iterations.
+
+### Verify and proceed
+
+After every required procedure completes, re-read `stitch-project.json` and confirm `sharedStateScreens.{state}.screenId` is non-null for each previously-missing state. Then proceed to Step 1.2.
 
 ---
 
@@ -408,27 +502,31 @@ This is optional but recommended for clarity.
 
 ---
 
-## Step 1.6: Generate State Designs
+## Step 1.6: Generate State Designs (Selected States Only)
 
-Loading and Failed states use shared screens from Project Init. Empty state (list screens only) is generated per-feature by editing the approved success screen.
+This step is gated on the selections from Step 1.1.6 (`needsLoading`, `needsFailed`, `needsEmpty`).
 
-### Loading and Failed States — Use Shared Screens (Skip Generation)
+| State | Action when selected | Action when NOT selected |
+|-------|---------------------|--------------------------|
+| Loading | Reuse shared screen — no generation | **Skip entirely** — no design, no token, no blueprint section |
+| Failed | Reuse shared screen — no generation | **Skip entirely** |
+| Empty | Generate by editing the approved success screen, then iterate via approve-or-edit loop | **Skip entirely** |
 
-These screens already exist in the shared project from Project Init. No copy, no generation, no Stitch calls needed.
+### Loading State
 
-The canonical files are:
-- `.claude/docs/_shared/designs/loading.png`
-- `.claude/docs/_shared/designs/failed.png`
+Skip if `needsLoading == false`. Otherwise no generation needed — reference the shared screen at `.claude/docs/_shared/designs/loading.png` (HTML and tokens under `_shared/designs/extracted/`; screen ID at `stitch-project.json.sharedStateScreens.loading.screenId`).
 
-Screen IDs are in `stitch-project.json.sharedStateScreens.loading.screenId` and `.failed.screenId`.
+### Failed State
 
-### Empty State — Generate Per-Feature (List Screens Only)
+Skip if `needsFailed == false`. Otherwise no generation needed — reference the shared screen at `.claude/docs/_shared/designs/failed.png` (HTML and tokens under `_shared/designs/extracted/`; screen ID at `stitch-project.json.sharedStateScreens.failed.screenId`).
 
-If the screen is a list screen (shows a list of items), generate the empty state by editing the approved success screen:
+### Empty State
 
-**Resume check**: If `.claude/docs/{featurename}/designs/{featurename}_empty.png` already exists, skip generation — the prior run's screenshot is still valid.
+Skip entirely if `needsEmpty == false`. Otherwise generate by editing the approved success screen and iterate with the user via a single approve-or-edit loop.
 
-**Generation procedure**:
+**Resume check**: If `.claude/docs/{featurename}/designs/{featurename}_empty.png` already exists AND `stitch-project.json.features[featurename].emptyScreenId` is non-null, skip generation — the prior run's screenshot is still valid. Jump to **Approve-or-Edit Loop** below using the stored `emptyScreenId`.
+
+#### Initial Generation
 
 1. **Record baseline**: Call `mcp__stitch__list_screens` with `projectId` from `stitch-project.json`.
 2. **Call** `mcp__stitch__edit_screens` with:
@@ -439,28 +537,52 @@ If the screen is a list screen (shows a list of items), generate the empty state
    deviceType: MOBILE
    modelId: GEMINI_3_FLASH
    ```
-3. **Handle timeout / connection errors**: If the call times out or fails with a connection reset, **do NOT retry `edit_screens`** — this is a known Google Stitch bug where the request usually completed server-side and retrying produces duplicate screens. Run the **Screen Sync Procedure** below immediately. Only retry the edit if `list_screens` confirms no new screen appeared after the browser sync (max 3 attempts total).
+3. **Handle timeout / connection errors**: If the call times out or fails with a connection reset, **do NOT retry `edit_screens`** — this is a known Google Stitch bug where the request usually completed server-side and retrying produces duplicate screens. Run the **Screen Sync Procedure** (Step 1.2b) immediately. Only retry the edit if `list_screens` confirms no new screen appeared after the browser sync (max 3 attempts total).
 4. **Screen Sync Procedure**: Ask the user to open the project in their browser and confirm the new screen is visible. Wait for confirmation before calling `list_screens`. Max 2 sync attempts.
-5. **Identify new screen**: Compare screen list with baseline to find the newly created screen ID.
+5. **Identify new screen**: Compare screen list with baseline to find the newly created screen ID. This is the working `emptyScreenId`.
 6. **Download**: `curl -sL "{downloadUrl}=s0" -o .claude/docs/{featurename}/designs/{featurename}_empty.png`
-7. **Write emptyScreenId** to project-wide config:
-   - `stitch-project.json.features[featurename].emptyScreenId = {emptyScreenId}`
-   - Update `stitch-project.json.features[featurename].updatedAt`. Write the file.
 
-### Present State Designs
+#### Approve-or-Edit Loop
 
-Tell the user the state design screenshots are ready and list their file paths — **do not read/display inline**. Ask user for approval:
+After each generation (initial or post-edit), tell the user the empty state screenshot is ready and give its file path — **do not read/display inline** — then ask via `AskUserQuestion`:
+
+> **"How does the empty state design look?"**
 
 | Option | Description |
 |--------|-------------|
-| Approve all | All state designs look good |
-| Edit | Request changes to the empty state (loading/failed cannot be edited here — they are shared) |
+| Approve (Recommended) | Use this design as the final empty state |
+| Edit | Request specific changes to the empty state |
 
-If user requests edits to the empty state, use `mcp__stitch__edit_screens` on the empty state screen, re-download, and present again.
+**If Approve** → exit the loop. Proceed to **Persist Empty State**.
+
+**If Edit**:
+1. Use `AskUserQuestion` (free text via "Other") to capture the user's edit request, OR collect the request inline if the user already specified it.
+2. Record baseline by calling `mcp__stitch__list_screens`.
+3. Call `mcp__stitch__edit_screens` with:
+   ```
+   projectId: {stitch-project.json.projectId}
+   selectedScreenIds: [{current emptyScreenId}]
+   prompt: {user's edit request}
+   deviceType: MOBILE
+   modelId: GEMINI_3_FLASH
+   ```
+4. Apply the same timeout/connection-reset handling as the initial generation (Screen Sync Procedure, no blind retries).
+5. Diff `list_screens` against baseline to find the new screen ID. Update the working `emptyScreenId` to this new ID.
+6. Re-download as `.claude/docs/{featurename}/designs/{featurename}_empty.png` (overwrite).
+7. Return to the top of the Approve-or-Edit Loop.
+
+**Iteration limit**: Maximum 10 edit iterations for the empty state. If not converging, ask the user to clarify requirements before continuing.
+
+#### Persist Empty State
+
+After the user approves:
+
+- `stitch-project.json.features[featurename].emptyScreenId = {approved emptyScreenId}`
+- Update `stitch-project.json.features[featurename].updatedAt`. Write the file.
 
 ### Save Design Description
 
-Save `.claude/docs/{featurename}/designs/{featurename}.md`:
+Save `.claude/docs/{featurename}/designs/{featurename}.md`. The state rows are conditional on selections:
 
 ```markdown
 # {Screen Name}
@@ -478,23 +600,27 @@ Save `.claude/docs/{featurename}/designs/{featurename}.md`:
 
 ## Screenshots
 - Success: `{featurename}.png`
-- Loading: `.claude/docs/_shared/designs/loading.png` (shared)
-- Failed: `.claude/docs/_shared/designs/failed.png` (shared)
-- Empty: `{featurename}_empty.png` (list screens only)
+{if needsLoading} - Loading: `.claude/docs/_shared/designs/loading.png` (shared)
+{if needsFailed}  - Failed: `.claude/docs/_shared/designs/failed.png` (shared)
+{if needsEmpty}   - Empty: `{featurename}_empty.png`
 ```
+
+Only emit a screenshot line for a state if the corresponding `needs*` flag is true. Do NOT list skipped states with a "(skipped)" placeholder — omit them entirely.
 
 ---
 
-## Step 1.7: Acquire HTML & Token Inventories (MANDATORY)
+## Step 1.7: Acquire HTML & Token Inventories (Selected States Only)
 
-After all state designs are approved (success + loading + failed + empty), acquire each state's HTML and token inventory. Success and empty are downloaded from Stitch. Loading and failed are read directly from `_shared/` — no copy needed.
+Acquire HTML + token inventory for each **selected** state. Success is always acquired; loading/failed/empty only when their `needs*` flag is true.
 
-| State | HTML | Tokens |
-|-------|------|--------|
-| success | Download from `features[featurename].successScreenId` | Extract per-feature |
-| loading | **Read directly** from `.claude/docs/_shared/designs/extracted/stitch_loading.html` | **Read directly** from `.claude/docs/_shared/designs/extracted/tokens_loading.md` |
-| failed | **Read directly** from `.claude/docs/_shared/designs/extracted/stitch_failed.html` | **Read directly** from `.claude/docs/_shared/designs/extracted/tokens_failed.md` |
-| empty | Download from `features[featurename].emptyScreenId` (if applicable) | Extract per-feature |
+| State | Condition | HTML source | Tokens source |
+|-------|-----------|-------------|---------------|
+| success | Always | Download from `features[featurename].successScreenId` | Extract per-feature |
+| loading | `needsLoading` | Read from `_shared/designs/extracted/stitch_loading.html` | Read from `_shared/designs/extracted/tokens_loading.md` |
+| failed | `needsFailed` | Read from `_shared/designs/extracted/stitch_failed.html` | Read from `_shared/designs/extracted/tokens_failed.md` |
+| empty | `needsEmpty` | Download from `features[featurename].emptyScreenId` | Extract per-feature |
+
+Skipped states are not processed in any sub-step below.
 
 ### Resume Check (Partial Failure Recovery)
 
@@ -512,16 +638,16 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
    mkdir -p .claude/docs/{featurename}/designs/extracted
    ```
 
-2. **For loading and failed states — no action needed.** Read directly from:
-   - `.claude/docs/_shared/designs/extracted/stitch_loading.html`
-   - `.claude/docs/_shared/designs/extracted/tokens_loading.md`
-   - `.claude/docs/_shared/designs/extracted/stitch_failed.html`
-   - `.claude/docs/_shared/designs/extracted/tokens_failed.md`
+2. **For loading and failed states (only if `needsLoading` / `needsFailed`) — no action needed.** Read directly from:
+   - `.claude/docs/_shared/designs/extracted/stitch_loading.html` (only if `needsLoading`)
+   - `.claude/docs/_shared/designs/extracted/tokens_loading.md` (only if `needsLoading`)
+   - `.claude/docs/_shared/designs/extracted/stitch_failed.html` (only if `needsFailed`)
+   - `.claude/docs/_shared/designs/extracted/tokens_failed.md` (only if `needsFailed`)
 
-3. **For success and empty states — download from Stitch.** **Sequentially** (concurrent downloads can race the URL's single-use semantics):
+3. **For success and empty states — download from Stitch.** **Sequentially** (concurrent downloads can race the URL's single-use semantics). Success is always downloaded. Empty is downloaded **only if `needsEmpty == true`**:
    - screenId source:
      - success → `stitch-project.json.features[featurename].successScreenId`
-     - empty → `stitch-project.json.features[featurename].emptyScreenId`
+     - empty → `stitch-project.json.features[featurename].emptyScreenId` (skip this entire line if `needsEmpty == false`)
    - Call `get_screen` for each screenId (see [Get Screen Call Pattern](../references/stitch-guide.md#get-screen-call-pattern)) and use `htmlCode.downloadUrl`, `width`, `height` from the response.
      ```
      projectId = stitch-project.json.projectId   ← always the shared project
@@ -532,7 +658,7 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
    - Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
    - Record the screen dimensions (`width`, `height`) from the `get_screen` response.
 
-4. **Tokenize success and empty states** with the shared extractor:
+4. **Tokenize success (always) and empty (only if `needsEmpty == true`)** with the shared extractor:
    ```bash
    python3 .claude/skills/_shared/extract_tokens.py \
      .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
@@ -540,7 +666,7 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
    ```
    These inventories are the canonical, deterministic Tailwind→Compose conversion (spacing, font-size, colors with opacity, custom border-radius config, arbitrary values). Same script `/verify-ui` runs at audit time, so blueprint values and audit values come from the same source by construction.
 
-   Do NOT re-tokenize loading/failed — those were already tokenized at Project Init time and copied in step 2.
+   Do NOT re-tokenize loading/failed — those were already tokenized at Project Init time and live in `_shared/`.
 
 5. **Do not delete.** The HTML and token inventories live in `extracted/` from now on. `/verify-ui` will detect and reuse them — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
 
@@ -548,15 +674,17 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
 
 ## Step 1.8: Color Audit (MANDATORY)
 
-Audit every color used across all approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.7**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
+Audit every color used across the **selected** approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.7**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
 
-For any color found in `tokens_loading.md` or `tokens_failed.md`, annotate it with "(shared state screen)" in the audit output to make clear it originates from the shared Project Init screens.
+Only audit token inventories for **selected** states (`needsLoading`/`needsFailed`/`needsEmpty`). Skipped states contribute zero colors. Success is always audited.
+
+For any color found in `tokens_loading.md` or `tokens_failed.md` (only if those states are selected), annotate it with "(shared state screen)" in the audit output to make clear it originates from the shared Project Init screens.
 
 ### Procedure
 
 1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`).
 
-2. **Collect every color from the inventories** in `.claude/docs/{featurename}/designs/extracted/tokens_*.md`. The extractor resolves each color class to its hex (custom Tailwind config + default palette + arbitrary values), so iterate through every inventory entry whose conversion contains a color.
+2. **Collect every color from the inventories** in `.claude/docs/{featurename}/designs/extracted/tokens_*.md` for the **selected** states only (always success; loading/failed/empty per their flags — loading/failed inventories live under `.claude/docs/_shared/designs/extracted/`). The extractor resolves each color class to its hex (custom Tailwind config + default palette + arbitrary values), so iterate through every inventory entry whose conversion contains a color.
 
 3. **Reconcile against prompts.** Compare the inventory hexes against the "Defined" / "Proposed" hexes you specified in the Stitch prompts (Steps 1.2b and 1.6). If a color drifted (e.g., prompt asked for `#181228`, Stitch produced `#1A1A1F`), **the inventory wins** — record the inventory hex. Flag any drift in a single line at the top of the Color Audit so it's visible to the user.
 
@@ -607,41 +735,29 @@ This audit is the input for Phase 2, where missing roles are added to **both** `
 
 **Condition**: Always runs after design approval.
 
-This step parses the Stitch HTML export (already downloaded in Step 1.7) into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
+This step parses the Stitch HTML exports (downloaded/read in Step 1.7) into a structured Compose Implementation Blueprint that provides exact component trees, design tokens, typography, and spacing for implementation.
 
 ### Procedure
 
-1. **Read the persisted inputs** from `.claude/docs/{featurename}/designs/extracted/`:
-   - `stitch_{state}.html` per state (raw HTML)
-   - `tokens_{state}.md` per state (token inventory — authoritative for already-converted classes)
+1. **Read the persisted inputs** for **selected states only**:
+   - Success — `.claude/docs/{featurename}/designs/extracted/stitch_success.html` + `tokens_success.md` (always)
+   - Loading — `.claude/docs/_shared/designs/extracted/stitch_loading.html` + `tokens_loading.md` (only if `needsLoading`)
+   - Failed — `.claude/docs/_shared/designs/extracted/stitch_failed.html` + `tokens_failed.md` (only if `needsFailed`)
+   - Empty — `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` + `tokens_empty.md` (only if `needsEmpty`)
 
-2. **Generate the blueprint**: Feed ALL state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
-   - All HTML file contents (labeled by state: success, loading, failed, empty)
-   - All token inventories (labeled by state) — authoritative for already-converted classes
+2. **Generate the blueprint**: Feed the selected state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
+   - HTML file contents for selected states (labeled by state)
+   - Token inventories for selected states (labeled by state) — authoritative for already-converted classes
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
    - The Color Audit M3 role mappings (from Step 1.8 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
+   - The `needsLoading`, `needsFailed`, `needsEmpty` flags so the prompt knows which sections to emit
 
-3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-   - The blueprint covers all states in a single file
-   - Shared scaffold (toolbar, background, bottom nav) is described once
-   - Per-state content sections capture only the differences
-   - For Loading and Failed state sections in the blueprint Component Tree, use these standard entries:
+3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. The blueprint covers **only selected states**; shared scaffold is described once. Use the canonical Component-Tree entries from [blueprint-spec.md → Component Tree](../references/blueprint-spec.md#component-tree):
+   - `states.loading` true → shared-screen entry; false → "Skipped" marker.
+   - `states.failed` true → shared-screen entry; false → "Skipped" marker.
+   - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
 
-   ```markdown
-   ### Loading State
-   Shared screen — see: `.claude/docs/_shared/designs/loading.png`
-   Token inventory: `.claude/docs/_shared/designs/extracted/tokens_loading.md`
-   - Box (fillMaxSize, Center) → XCircularProgressIndicator
-   ```
-
-   ```markdown
-   ### Failed State
-   Shared screen — see: `.claude/docs/_shared/designs/failed.png`
-   Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
-   - Column (fillMaxSize, Center) → XIcon + XText("Something went wrong") + XButton("Retry")
-   ```
-
-4. **Verify** the blueprint file was written and contains all expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with all states, Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with selected states, Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
 
 ---
 
@@ -658,6 +774,7 @@ Update `.claude/docs/_project/stitch-project.json` after design approval:
   - `dimensions`: width/height from Step 1.7
   - `designFile`: `"designs/{featurename}.md"`
   - `blueprintFile`: `"designs/{featurename}_blueprint.md"`
+  - `emptyScreenId`: the approved empty screen ID **if `needsEmpty == true`**, otherwise leave `null` (the `states` map was already written in Step 1.1.6 and does not change here)
   - **`"blueprintConsumed": false`** — signals to implementation skills that a new blueprint is available
   - `approved`: `true`
   - `approvedAt`: current ISO date
@@ -668,7 +785,7 @@ Update `.claude/docs/_project/stitch-project.json` after design approval:
 
 ## Step 1.11: User Final Approval
 
-Present all approved designs:
+Present all approved designs. Only emit table rows for **selected** states:
 
 ```
 ## UI Designer Complete: {FeatureName}
@@ -679,9 +796,12 @@ Design System ID: {designSystemAssetId}
 | State | Screenshot |
 |-------|------------|
 | Success | designs/{featurename}.png |
-| Loading | .claude/docs/_shared/designs/loading.png (shared) |
-| Failed | .claude/docs/_shared/designs/failed.png (shared) |
-| Empty | designs/{featurename}_empty.png |
+{if needsLoading} | Loading | .claude/docs/_shared/designs/loading.png (shared) |
+{if needsFailed}  | Failed  | .claude/docs/_shared/designs/failed.png (shared) |
+{if needsEmpty}   | Empty   | designs/{featurename}_empty.png |
+
+States selected: success{, loading if needsLoading}{, failed if needsFailed}{, empty if needsEmpty}
+States skipped (no design reference): {comma-separated skipped states, or "none"}
 
 Design spec: designs/{featurename}.md
 Blueprint: designs/{featurename}_blueprint.md
@@ -696,14 +816,14 @@ Show completion report from SKILL.md and stop. The user controls the next step �
 ## Output
 
 After Phase 1 completes:
-- Success screenshot: `.claude/docs/{featurename}/designs/{featurename}.png`
-- Loading screenshot: `.claude/docs/_shared/designs/loading.png` (shared)
-- Failed screenshot: `.claude/docs/_shared/designs/failed.png` (shared)
-- Empty screenshot: `.claude/docs/{featurename}/designs/{featurename}_empty.png` (list screens)
-- Design description: `.claude/docs/{featurename}/designs/{featurename}.md`
-- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`
-- Persisted HTML + token inventories: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`)
-- stitch-project.json updated with approved screen, all state screenshots, and `blueprintConsumed: false`
+- Success screenshot: `.claude/docs/{featurename}/designs/{featurename}.png` (always)
+- Loading screenshot: `.claude/docs/_shared/designs/loading.png` — **only if `needsLoading`**
+- Failed screenshot: `.claude/docs/_shared/designs/failed.png` — **only if `needsFailed`**
+- Empty screenshot: `.claude/docs/{featurename}/designs/{featurename}_empty.png` — **only if `needsEmpty`**
+- Design description: `.claude/docs/{featurename}/designs/{featurename}.md` (with state rows for selected states only)
+- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (selected states only; skipped state sections marked "Skipped" for loading/failed, omitted for empty)
+- Persisted HTML + token inventories for selected states: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`). Loading/failed inventories continue to live in `.claude/docs/_shared/`.
+- stitch-project.json updated with approved screen, per-feature `states` selection map, screenshots for selected states, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received
 

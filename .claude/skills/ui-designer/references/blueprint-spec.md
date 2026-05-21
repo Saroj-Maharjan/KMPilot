@@ -51,13 +51,19 @@ Shared screen — see: `.claude/docs/_shared/designs/loading.png`
 Token inventory: `.claude/docs/_shared/designs/extracted/tokens_loading.md`
 - `Box` (fillMaxSize, Center) → `XCircularProgressIndicator`
 
+> When `states.loading == false`, replace the section body with: **Skipped** (user opted out). Implementation must still handle Rule 4's Loading UI state; use a generic loading indicator.
+
 ### Failed State
 Shared screen — see: `.claude/docs/_shared/designs/failed.png`
 Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 - `Column` (fillMaxSize, center) → `XIcon` + `XText("Something went wrong")` + `XButton("Retry")`
 
-### Empty State (list screens only)
+> When `states.failed == false`, replace the section body with: **Skipped** (user opted out). Implementation must still handle Rule 4's Failed UI state; use a generic error indicator with retry.
+
+### Empty State
 - `Column` (fillMaxSize, center) → `XIcon` + `XText("No {items} yet")`
+
+> Omit this entire section when `states.empty == false`. Empty is a content variant, not a Rule-4 UI state, so no "Skipped" placeholder is emitted.
 
 ## Pre-Implementation Contract
 
@@ -137,18 +143,19 @@ Example annotation in the blueprint component tree:
 ## Extraction Prompt Template
 
 Feed this prompt with:
-1. Raw HTML content (all state files, labeled by state)
-   - success: `.claude/docs/{featurename}/designs/extracted/stitch_success.html`
-   - loading: `.claude/docs/_shared/designs/extracted/stitch_loading.html` **(shared state)**
-   - failed: `.claude/docs/_shared/designs/extracted/stitch_failed.html` **(shared state)**
-   - empty: `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` (if applicable)
-2. **Token inventories** from `extract_tokens.py` (one per state, labeled by state) — authoritative for already-converted classes
-   - success: `.claude/docs/{featurename}/designs/extracted/tokens_success.md`
-   - loading: `.claude/docs/_shared/designs/extracted/tokens_loading.md` **(shared state)**
-   - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared state)**
-   - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (if applicable)
+1. Raw HTML content for **selected states only** (labeled by state) — read `features[featurename].states` to know which states are selected:
+   - success: `.claude/docs/{featurename}/designs/extracted/stitch_success.html` (always)
+   - loading: `.claude/docs/_shared/designs/extracted/stitch_loading.html` **(shared state — include only if `states.loading == true`)**
+   - failed: `.claude/docs/_shared/designs/extracted/stitch_failed.html` **(shared state — include only if `states.failed == true`)**
+   - empty: `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` (include only if `states.empty == true`)
+2. **Token inventories** from `extract_tokens.py` for the same selected states (labeled by state) — authoritative for already-converted classes
+   - success: `.claude/docs/{featurename}/designs/extracted/tokens_success.md` (always)
+   - loading: `.claude/docs/_shared/designs/extracted/tokens_loading.md` **(shared — only if `states.loading == true`)**
+   - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared — only if `states.failed == true`)**
+   - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (only if `states.empty == true`)
 3. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
 4. Color Audit M3 role mappings (from Phase 1 Step 1.8)
+5. The `states` map (`{ loading, failed, empty }`) from `stitch-project.json.features[featurename]` — used to decide which state sections the blueprint emits (see rule 21 below)
 
 ```
 You are a design-to-code translator. Convert this Stitch HTML export into a Compose Implementation Blueprint.
@@ -279,6 +286,11 @@ RULES:
 20. **Post-Implementation Checklist**: After the Pre-Implementation Contract, emit a
     `## Post-Implementation Checklist` with verification items: XTheme updates, component completeness,
     modifier fidelity, color fidelity, component override application, build validation, ktlint format.
+21. **Optional states**: The `states` map controls which sections appear in the Component Tree:
+    - `states.loading == false` → emit the "Skipped" form of the Loading State section (see template).
+    - `states.failed == false` → emit the "Skipped" form of the Failed State section.
+    - `states.empty == false` → **omit the Empty State section entirely** (empty is a content variant, not a Rule-4 UI state).
+    Only consume HTML/token inputs for states that are selected; do not invent content for skipped states.
 
 X-COMPONENT MAPPING TABLE:
 {paste from stitch-guide.md}

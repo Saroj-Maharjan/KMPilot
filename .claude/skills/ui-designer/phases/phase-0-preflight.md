@@ -155,6 +155,7 @@ This is the **only place** feature ↔ screen identity is established. Never ass
        "successScreenId": null,
        "successScreenName": null,
        "emptyScreenId": null,
+       "states": { "loading": false, "failed": false, "empty": false },
        "screenshot": null,
        "htmlPath": null,
        "tokensPath": null,

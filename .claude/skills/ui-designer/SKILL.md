@@ -27,7 +27,7 @@ After `ui-designer` completes, the user can invoke `/modifying-kmp-feature` or `
 ```
 
 ### Project Init (One-Time Per Repo)
-Run when `.claude/docs/_project/stitch-project.json` does not exist or `initState.completedAt` is null. Creates the shared Stitch project, design system, and shared Loading/Failed state screens.
+Run when `.claude/docs/_project/stitch-project.json` does not exist or `initState.completedAt` is null. Creates the shared Stitch project and design system. **Shared Loading/Failed screens are NOT generated at init time** — they are designed lazily by the first feature that opts in (Phase 1 Step 1.1.7).
 See: [Project Init](phases/phase-init.md)
 
 ### Phase 0: Preflight Checks
@@ -43,13 +43,18 @@ See: [Phase 1: Design](phases/phase-1-design.md)
 1. **User Confirmation Required** after Phase 1 (design approval) - never proceed without explicit approval
 2. **All design changes go through Stitch** - never modify designs outside of Stitch MCP tools
 3. **Screenshots stored at** `.claude/docs/{featurename}/designs/` - visible to user
-4. **Single config architecture**: All Stitch state lives in `.claude/docs/_project/stitch-project.json`. It is the source of projectId, shared screen IDs, per-feature screen metadata, and `blueprintConsumed`. There are no per-feature `stitch.json` files.
+4. **Single config architecture**: All Stitch state lives in `.claude/docs/_project/stitch-project.json`. It is the source of projectId, shared screen IDs, per-feature screen metadata, per-feature state selections (`features[featurename].states`), and `blueprintConsumed`. There are no per-feature `stitch.json` files.
 5. **Stitch MCP is mandatory** - if not available, stop and ask user to configure it
 6. **Blueprint is the handoff artifact** — contains Pre-Implementation Contract + Post-Implementation Checklist. Implementation skills consume it via `blueprintConsumed` flag in `stitch-project.json.features[featurename]`
 7. **`blueprintConsumed` lifecycle** — ui-designer sets `blueprintConsumed: false` in `stitch-project.json.features[featurename]` when saving a new blueprint. Implementation skills set it to `true` after consuming the blueprint
 8. **M3 Color Roles Only** - All design colors must map to M3 roles defined in `XTheme.kt`'s `XLightColors` and `XDarkColors`. After design approval, a Color Audit identifies missing roles which are documented in the blueprint's Pre-Implementation Contract. Feature code uses `MaterialTheme.colorScheme.*` exclusively — never hardcoded `Color()`. Custom `XTheme.Colors.*` extensions are last resort for non-semantic colors (gradients, decorative effects).
 9. **Project Init is a prerequisite** — Phase 0 preflight checks for `.claude/docs/_project/stitch-project.json` before proceeding. If absent or incomplete, the user must run Project Init first (invoke `/ui-designer` without a feature name argument).
 10. **Cross-Screen Chrome Consistency** — When generating a screen for a project that already has approved features, the **shared chrome** (top app bar style, bottom navigation presence/style, screen background) must match the existing feature screens. The only exception is when the user **explicitly** asks for a different chrome ("no bottom nav", "centered title bar", "full-screen modal", etc.). The chrome snapshot is captured in Phase 1 Step 1.1.5 and injected as a "Shared Conventions" block into the Stitch generation prompt (Step 1.2b).
+11. **Optional States — User-Selected, Lazily Designed, Confirmable** — Only success is mandatory per feature. Loading/Failed/Empty are gated in Phase 1 Step 1.1.6:
+    - **Loading / Failed** — user opt-in. Reuse the shared screens. **Project Init does NOT auto-generate shared Loading/Failed**; they're designed lazily by the first feature that opts in via **Step 1.1.7** (which invokes phase-init.md's On-Demand Procedures, before the feature's success screen). Every subsequent feature that opts in inherits them for free.
+    - **Empty** — dual gate: user opt-in **AND** `isListBased == true` (determined in Step 1.1). When `isListBased == false`, the Empty option is not even offered. When both gates pass, design per-feature via a single approve-or-edit loop.
+    - **Skipped states** are omitted everywhere: no token inventory, no implementation reference. Loading/Failed sections in the blueprint show an explicit "Skipped" marker; Empty is omitted entirely.
+    - All shared and empty designs use the same single approve-or-edit loop pattern (max 10 iterations).
 
 ## Stitch MCP Reference
 
@@ -68,21 +73,24 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 
 ## Completion Report
 
+Emit one screenshot row per **selected** state only. Always show Success. Loading/Failed/Empty rows appear only when `stitch-project.json.features[{featurename}].states.{state} == true`.
+
 ```
 ## UI Designer Complete: {FeatureName}
 
 Stitch Project ID: {projectId} (shared project)
 Design System ID: {designSystemAssetId}
-Loading: designs/{featurename}_loading.png (shared)
-Failed: designs/{featurename}_failed.png (shared)
 Project config: .claude/docs/_project/stitch-project.json
 
 | State | Screenshot |
 |-------|------------|
 | Success | designs/{featurename}.png |
-| Loading | designs/{featurename}_loading.png (shared) |
-| Failed | designs/{featurename}_failed.png (shared) |
-| Empty | designs/{featurename}_empty.png |
+{if states.loading} | Loading | .claude/docs/_shared/designs/loading.png (shared) |
+{if states.failed}  | Failed  | .claude/docs/_shared/designs/failed.png (shared) |
+{if states.empty}   | Empty   | designs/{featurename}_empty.png |
+
+States selected: success{, loading if states.loading}{, failed if states.failed}{, empty if states.empty}
+States skipped (no design reference): {comma-separated list, or "none"}
 
 Design spec: designs/{featurename}.md
 Blueprint: designs/{featurename}_blueprint.md
@@ -92,6 +100,7 @@ blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 ## What's next
 
 - Implementation skill will auto-detect the blueprint and enter design-aware mode.
+- For skipped states, implementation will use generic handling (Rule 4 in patterns.md still applies — feature code must handle all four UI states, just without a design reference for the skipped ones).
 - After implementation, run `/verify-ui {featurename}` to audit code against the design.
 
 ---

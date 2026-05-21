@@ -17,10 +17,10 @@ Project Init Progress:
 - [ ] Init-2: Theme setup
 - [ ] Init-3: Create shared Stitch project
 - [ ] Init-4: Create design system from XTheme.kt
-- [ ] Init-5: Generate shared Loading state screen
-- [ ] Init-6: Generate shared Failed state screen
-- [ ] Init-7: Persist and finalize
+- [ ] Init-5: Persist and finalize
 ```
+
+**Shared Loading/Failed screens are NOT generated during init.** They are designed on-demand by the first feature that opts in to them (Phase 1 Step 1.1.7 in `phase-1-design.md`), then persisted to `_shared/` and inherited by every subsequent feature that opts in. The canonical generation procedures live in **On-Demand Procedures** at the bottom of this file.
 
 ---
 
@@ -30,8 +30,9 @@ Before running any init step, read `.claude/docs/_project/stitch-project.json` i
 
 - `initState.projectCreated == true` → skip Init-3
 - `initState.designSystemCreated == true` → skip Init-4
-- `initState.sharedScreensGenerated == true` → skip Init-5 and Init-6
 - `initState.completedAt` non-null → Init is already complete; stop and inform user
+
+**Legacy compatibility**: older projects may have `initState.sharedScreensGenerated == true` and populated `sharedStateScreens.{loading,failed}`. The new init flow no longer sets this flag, but legacy projects continue to work — their shared screens already exist, so Step 1.1.7 will detect them and skip generation.
 
 For each step that is skipped, mark it as `[done]` in the checklist display.
 
@@ -284,7 +285,6 @@ After completing theme setup:
   "initState": {
     "projectCreated": false,
     "designSystemCreated": false,
-    "sharedScreensGenerated": false,
     "completedAt": null
   },
   "createdAt": "{ISO timestamp}",
@@ -350,7 +350,39 @@ Proceed to Init-5.
 
 ---
 
-## Init-5: Generate Shared Loading Screen
+## Init-5: Persist and Finalize
+
+Set `initState.completedAt` to the current ISO timestamp.
+Update `updatedAt` to the current ISO timestamp.
+Write the file.
+
+### Completion Summary
+
+Present to the user:
+
+```
+Project Init Complete
+
+Shared Stitch Project: {projectId}
+Design System: {designSystemAssetId}
+Config: .claude/docs/_project/stitch-project.json
+
+Shared Loading and Failed screens are NOT generated yet — they will be
+designed on demand by the first feature that opts in to each state
+(Phase 1 Step 1.1.7).
+
+---
+
+> **Next step —** run `/ui-designer {featurename}` to design any feature's screens.
+```
+
+---
+
+# On-Demand Procedures
+
+> The two procedures below are **not part of the linear init flow**. They are invoked from Phase 1 Step 1.1.7 the first time a feature opts in to a Loading or Failed state. Each procedure writes to `_shared/designs/` and `sharedStateScreens.{state}` in `stitch-project.json`; the result is reused by every subsequent feature that opts in.
+
+## On-Demand: Generate Shared Loading Screen
 
 ### Prepare Prompt
 
@@ -385,13 +417,13 @@ The screen represents a raw generic loading state overlaid by the feature. Keep 
    - Wait for the user's confirmation that they have opened the project and can see the new screen.
    - Then call `mcp__stitch__list_screens` and diff against the baseline to identify the new screen ID. If `list_screens` still shows nothing after browser sync, ask the user to refresh the browser page once more. Max 2 sync attempts.
 
-4. Call `mcp__stitch__list_screens` again with `projectId`. Diff against baseline → identify the new screen ID.
+4. Call `mcp__stitch__list_screens` again with `projectId`. Diff against baseline → identify the new screen ID. This is the working `loadingScreenId`.
 
 5. Call `get_screen` for the new screenId:
    ```
    projectId = stitch-project.json.projectId
-   name      = "projects/{projectId}/screens/{screenId}"
-   screenId  = {screenId}
+   name      = "projects/{projectId}/screens/{loadingScreenId}"
+   screenId  = {loadingScreenId}
    ```
    Use `screenshot.downloadUrl` from the response.
 
@@ -400,18 +432,49 @@ The screen represents a raw generic loading state overlaid by the feature. Keep 
    mkdir -p .claude/docs/_shared/designs
    ```
 
-7. Download screenshot:
+7. Download screenshot to the canonical shared path (overwritten on each edit iteration; only finalized once the user approves below):
    ```bash
    curl -sL "{downloadUrl}=s0" -o .claude/docs/_shared/designs/loading.png
    ```
 
-8. Record dimensions (`width`, `height`) from the `get_screen` response.
+### Approve-or-Edit Loop (single loop, applies once per iteration)
 
-9. Write to `stitch-project.json.sharedStateScreens.loading`:
+After each generation/edit, tell the user the screenshot is at `.claude/docs/_shared/designs/loading.png` and ask via `AskUserQuestion`:
+
+> **"How does the shared Loading screen look? It will be reused by every feature that opts in to a loading state."**
+
+| Option | Description |
+|--------|-------------|
+| Approve (Recommended) | Save this as the canonical shared Loading screen |
+| Edit | Request changes (the current screen will be edited in Stitch) |
+
+**If Approve** → exit the loop; continue to step 8.
+
+**If Edit**:
+1. Use `AskUserQuestion` (free text via "Other") to capture the user's edit request.
+2. Record baseline by calling `mcp__stitch__list_screens`.
+3. Call `mcp__stitch__edit_screens` with:
+   ```
+   projectId: {stitch-project.json.projectId}
+   selectedScreenIds: [{current loadingScreenId}]
+   prompt: {user's edit request}
+   deviceType: MOBILE
+   modelId: GEMINI_3_FLASH
+   ```
+4. Apply the same timeout/connection-reset handling as the initial generation (Screen Sync Procedure, no blind retries — max 2 sync attempts).
+5. Diff `list_screens` against baseline. The new screen ID becomes the working `loadingScreenId`.
+6. Re-download as `.claude/docs/_shared/designs/loading.png` (overwrite).
+7. Return to the top of the Approve-or-Edit Loop.
+
+**Iteration limit**: Maximum 10 edit iterations. If not converging, ask the user to clarify before continuing.
+
+8. Record dimensions (`width`, `height`) from the most recent `get_screen` response for the approved `loadingScreenId`.
+
+9. Write to `stitch-project.json.sharedStateScreens.loading` using the **approved** `loadingScreenId`:
    ```json
    {
-     "screenId": "{screenId}",
-     "screenName": "projects/{projectId}/screens/{screenId}",
+     "screenId": "{loadingScreenId}",
+     "screenName": "projects/{projectId}/screens/{loadingScreenId}",
      "screenshot": ".claude/docs/_shared/designs/loading.png",
      "htmlPath": null,
      "tokensPath": null,
@@ -421,13 +484,21 @@ The screen represents a raw generic loading state overlaid by the feature. Keep 
    }
    ```
 
-10. Update `stitch-project.json.updatedAt`. Write the file.
+10. **Download HTML and tokenize** so verify-ui and feature blueprints can read the loading inventory:
+    ```bash
+    mkdir -p .claude/docs/_shared/designs/extracted
+    curl -sL -o .claude/docs/_shared/designs/extracted/stitch_loading.html {htmlCode.downloadUrl from a fresh get_screen call}
+    python3 .claude/skills/_shared/extract_tokens.py \
+      .claude/docs/_shared/designs/extracted/stitch_loading.html \
+      > .claude/docs/_shared/designs/extracted/tokens_loading.md
+    ```
+    Update `sharedStateScreens.loading.htmlPath` and `.tokensPath`.
 
-Proceed to Init-6.
+11. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.1.7).
 
 ---
 
-## Init-6: Generate Shared Failed Screen
+## On-Demand: Generate Shared Failed Screen
 
 ### Prepare Prompt
 
@@ -453,7 +524,7 @@ The screen represents a raw generic failed/error state. No chrome — no app bar
 
 ### Generation Procedure
 
-Same baseline-diff procedure as Init-5:
+Same baseline-diff procedure as the Loading on-demand procedure above:
 
 1. **Record baseline**: Call `mcp__stitch__list_screens` with `projectId` from `stitch-project.json`.
 
@@ -463,24 +534,55 @@ Same baseline-diff procedure as Init-5:
    - `deviceType`: MOBILE
    - `modelId`: GEMINI_3_FLASH
 
-3. **Timeout / connection-reset handling**: Same as Init-5 — **do NOT retry `generate_screen_from_text`** on timeout/connection reset (known Google Stitch bug, causes duplicate screens). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync, wait for confirmation, then call `mcp__stitch__list_screens` and diff against the baseline. Max 2 sync attempts.
+3. **Timeout / connection-reset handling**: Same as the Loading procedure — **do NOT retry `generate_screen_from_text`** on timeout/connection reset (known Google Stitch bug, causes duplicate screens). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync, wait for confirmation, then call `mcp__stitch__list_screens` and diff against the baseline. Max 2 sync attempts.
 
-4. Call `mcp__stitch__list_screens` again. Diff against baseline → identify the new screen ID.
+4. Call `mcp__stitch__list_screens` again. Diff against baseline → identify the new screen ID. This is the working `failedScreenId`.
 
-5. Call `get_screen` for the new screenId (same pattern as Init-5). Use `screenshot.downloadUrl`.
+5. Call `get_screen` for the new screenId (same pattern as the Loading procedure). Use `screenshot.downloadUrl`.
 
 6. Download screenshot:
    ```bash
    curl -sL "{downloadUrl}=s0" -o .claude/docs/_shared/designs/failed.png
    ```
 
-7. Record dimensions.
+### Approve-or-Edit Loop (single loop, applies once per iteration)
 
-8. Write to `stitch-project.json.sharedStateScreens.failed`:
+After each generation/edit, tell the user the screenshot is at `.claude/docs/_shared/designs/failed.png` and ask via `AskUserQuestion`:
+
+> **"How does the shared Failed screen look? It will be reused by every feature that opts in to a failed state."**
+
+| Option | Description |
+|--------|-------------|
+| Approve (Recommended) | Save this as the canonical shared Failed screen |
+| Edit | Request changes (the current screen will be edited in Stitch) |
+
+**If Approve** → exit the loop; continue to step 7.
+
+**If Edit**:
+1. Use `AskUserQuestion` (free text via "Other") to capture the user's edit request.
+2. Record baseline by calling `mcp__stitch__list_screens`.
+3. Call `mcp__stitch__edit_screens` with:
+   ```
+   projectId: {stitch-project.json.projectId}
+   selectedScreenIds: [{current failedScreenId}]
+   prompt: {user's edit request}
+   deviceType: MOBILE
+   modelId: GEMINI_3_FLASH
+   ```
+4. Apply the same timeout/connection-reset handling (Screen Sync Procedure, no blind retries — max 2 sync attempts).
+5. Diff `list_screens` against baseline. The new screen ID becomes the working `failedScreenId`.
+6. Re-download as `.claude/docs/_shared/designs/failed.png` (overwrite).
+7. Return to the top of the Approve-or-Edit Loop.
+
+**Iteration limit**: Maximum 10 edit iterations.
+
+7. Record dimensions from the most recent `get_screen` response for the approved `failedScreenId`.
+
+8. Write to `stitch-project.json.sharedStateScreens.failed` using the **approved** `failedScreenId`:
    ```json
    {
-     "screenId": "{screenId}",
-     "screenName": "projects/{projectId}/screens/{screenId}",
+     "screenId": "{failedScreenId}",
+     "screenName": "projects/{projectId}/screens/{failedScreenId}",
      "screenshot": ".claude/docs/_shared/designs/failed.png",
      "htmlPath": null,
      "tokensPath": null,
@@ -490,82 +592,23 @@ Same baseline-diff procedure as Init-5:
    }
    ```
 
-9. Update `stitch-project.json.initState.sharedScreensGenerated = true`. Update `updatedAt`. Write the file.
-
-Mark Init-5 and Init-6 complete. Proceed to Init-7.
-
----
-
-## Init-7: Persist and Finalize
-
-### Download HTML and Tokenize Shared Screens
-
-1. Create the extraction directory:
+9. **Download HTML and tokenize** so verify-ui and feature blueprints can read the failed inventory:
    ```bash
    mkdir -p .claude/docs/_shared/designs/extracted
-   ```
-
-2. **Download HTML for Loading screen**: Call `get_screen` for `sharedStateScreens.loading.screenId` using `projectId` from `stitch-project.json`. Use `htmlCode.downloadUrl`.
-   ```bash
-   curl -sL -o .claude/docs/_shared/designs/extracted/stitch_loading.html {htmlCode.downloadUrl}
-   ```
-   Verify with `wc -c` — if 0 bytes, call `get_screen` again for a fresh URL and retry once.
-
-3. **Tokenize Loading HTML**:
-   ```bash
-   python3 .claude/skills/_shared/extract_tokens.py \
-     .claude/docs/_shared/designs/extracted/stitch_loading.html \
-     > .claude/docs/_shared/designs/extracted/tokens_loading.md
-   ```
-
-4. **Download HTML for Failed screen**: Same procedure using `sharedStateScreens.failed.screenId`.
-   ```bash
-   curl -sL -o .claude/docs/_shared/designs/extracted/stitch_failed.html {htmlCode.downloadUrl}
-   ```
-   Verify with `wc -c`. Retry once on empty.
-
-5. **Tokenize Failed HTML**:
-   ```bash
+   curl -sL -o .claude/docs/_shared/designs/extracted/stitch_failed.html {htmlCode.downloadUrl from a fresh get_screen call}
    python3 .claude/skills/_shared/extract_tokens.py \
      .claude/docs/_shared/designs/extracted/stitch_failed.html \
      > .claude/docs/_shared/designs/extracted/tokens_failed.md
    ```
+   Update `sharedStateScreens.failed.htmlPath` and `.tokensPath`.
 
-### Update stitch-project.json
-
-Update HTML and token paths for both shared screens:
-- `stitch-project.json.sharedStateScreens.loading.htmlPath = ".claude/docs/_shared/designs/extracted/stitch_loading.html"`
-- `stitch-project.json.sharedStateScreens.loading.tokensPath = ".claude/docs/_shared/designs/extracted/tokens_loading.md"`
-- `stitch-project.json.sharedStateScreens.failed.htmlPath = ".claude/docs/_shared/designs/extracted/stitch_failed.html"`
-- `stitch-project.json.sharedStateScreens.failed.tokensPath = ".claude/docs/_shared/designs/extracted/tokens_failed.md"`
-
-Set `initState.completedAt` to the current ISO timestamp.
-Update `updatedAt` to the current ISO timestamp.
-Write the file.
-
-### Completion Summary
-
-Present to the user:
-
-```
-Project Init Complete
-
-Shared Stitch Project: {projectId}
-Design System: {designSystemAssetId}
-Loading screen: .claude/docs/_shared/designs/loading.png
-Failed screen: .claude/docs/_shared/designs/failed.png
-Config: .claude/docs/_project/stitch-project.json
-
----
-
-> **Next step —** run `/ui-designer {featurename}` to design any feature's screens.
-```
+10. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.1.7).
 
 ---
 
 ## stitch-project.json Full Schema
 
-Created at Init-2, progressively filled through Init-8. The authoritative schema reference is in [stitch-guide.md](../references/stitch-guide.md#stitch-project-schema).
+Created at Init-2, progressively filled through Init-5. The authoritative schema reference is in [stitch-guide.md](../references/stitch-guide.md#stitch-project-schema). Shared state screens start with `null` IDs and are populated lazily by Phase 1 Step 1.1.7.
 
 ```json
 {
@@ -614,7 +657,12 @@ Created at Init-2, progressively filled through Init-8. The authoritative schema
     "{featurename}": {
       "successScreenId": "string — Stitch screen ID for success state",
       "successScreenName": "string — Full resource name",
-      "emptyScreenId": "string or null — Stitch screen ID for empty state (list screens only)",
+      "emptyScreenId": "string or null — Stitch screen ID for empty state (only when states.empty == true)",
+      "states": {
+        "loading": "boolean — true if this feature opts in to the shared loading screen",
+        "failed":  "boolean — true if this feature opts in to the shared failed screen",
+        "empty":   "boolean — true if this feature has a per-feature empty design"
+      },
       "screenshot": "string — path to success .png",
       "htmlPath": "string — path to success .html",
       "tokensPath": "string — path to success tokens.md",
@@ -632,8 +680,8 @@ Created at Init-2, progressively filled through Init-8. The authoritative schema
   "initState": {
     "projectCreated": "boolean",
     "designSystemCreated": "boolean",
-    "sharedScreensGenerated": "boolean",
-    "completedAt": "string or null — ISO timestamp when Init-8 completed"
+    "completedAt": "string or null — ISO timestamp when init finalized (Init-5)",
+    "sharedScreensGenerated": "boolean — LEGACY only; set by the old init flow when it auto-generated shared screens. Not written by the new init flow. Safe to ignore."
   },
   "createdAt": "string — ISO timestamp",
   "updatedAt": "string — ISO timestamp"

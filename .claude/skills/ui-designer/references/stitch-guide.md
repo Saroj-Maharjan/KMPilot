@@ -382,8 +382,8 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
   "initState": {
     "projectCreated": "boolean",
     "designSystemCreated": "boolean",
-    "sharedScreensGenerated": "boolean",
-    "completedAt": "string or null — ISO timestamp when Init-8 completed"
+    "completedAt": "string or null — ISO timestamp when init finalized (Init-5)",
+    "sharedScreensGenerated": "boolean — LEGACY only; the old init flow auto-generated shared loading/failed screens at init time. The new flow defers them to on-demand creation by Phase 1 Step 1.1.7. Not written by new init; safe to ignore."
   },
   "createdAt": "string — ISO timestamp",
   "updatedAt": "string — ISO timestamp"
