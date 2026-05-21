@@ -660,8 +660,8 @@ class DashboardIntegrationTest {
 
                 assertNotNull(capturedUrl)
                 assertTrue(
-                    capturedUrl.contains("/api/finance/dashboard.json"),
-                    "Expected URL to contain /api/finance/dashboard.json but was: $capturedUrl",
+                    capturedUrl.contains("/finance/dashboard.json"),
+                    "Expected URL to contain /finance/dashboard.json but was: $capturedUrl",
                 )
 
                 cancelAndIgnoreRemainingEvents()

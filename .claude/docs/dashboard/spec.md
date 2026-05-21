@@ -126,7 +126,7 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 | DashboardLocalDataSourceImpl | Hard-coded finance dashboard data |
 | DashboardRemoteDataSource | Interface for remote API operations |
 | DashboardRemoteDataSourceImpl | API implementation using ApiClient |
-| DashboardResources | Ktor Resource definitions for /api/finance/dashboard.json endpoint |
+| DashboardResources | Ktor Resource definitions for /finance/dashboard.json endpoint |
 | DashboardRepository | Interface for business logic |
 | DashboardRepositoryImpl | Business logic implementation (delegates to remote data source; returns Either<DashboardData>) |
 | DashboardViewModel | State management using MutableStateFlow + setState |
@@ -197,7 +197,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 │   │   ├── DashboardData.kt         # All finance data models (@Serializable)
 │   │   └── DashboardItem.kt            # Empty — replaced by DashboardData.kt
 │   ├── remote/
-│   │   └── DashboardResources.kt       # Ktor Resource for /api/finance/dashboard.json
+│   │   └── DashboardResources.kt       # Ktor Resource for /finance/dashboard.json
 │   ├── datasource/
 │   │   ├── DashboardLocalDataSource.kt        # Interface
 │   │   ├── DashboardLocalDataSourceImpl.kt    # Hard-coded finance data
@@ -264,7 +264,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 
 ### 5.1 API Contracts
 
-**Endpoint:** `GET /api/finance/dashboard.json`
+**Endpoint:** `GET /finance/dashboard.json`
 
 **Description:** Fetches the full finance dashboard data.
 
@@ -274,7 +274,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 
 **Notes:**
 - Served from `https://thisissadeghi.github.io/KMPilot/mock-api/`
-- File lives at `mock-api/api/finance/dashboard.json` in this repo
+- File lives at `mock-api/finance/dashboard.json` in this repo
 
 ### 5.2 Internal Contracts
 

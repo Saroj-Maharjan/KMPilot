@@ -385,7 +385,7 @@ class DashboardRemoteDataSourceTest {
             dataSource.getDashboard()
 
             assertNotNull(capturedUrl)
-            assertTrue(capturedUrl.contains("/api/finance/dashboard.json"), "URL was: $capturedUrl")
+            assertTrue(capturedUrl.contains("/finance/dashboard.json"), "URL was: $capturedUrl")
         }
 
     @Test

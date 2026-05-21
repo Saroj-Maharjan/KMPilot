@@ -3,7 +3,7 @@ package thisissadeghi.dashboard.data.remote
 import io.ktor.resources.Resource
 import kotlinx.serialization.Serializable
 
-@Resource("/api/finance")
+@Resource("/finance")
 @Serializable
 class DashboardResources {
     @Resource("/dashboard.json")
