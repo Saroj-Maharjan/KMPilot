@@ -39,13 +39,15 @@ https://github.com/user-attachments/assets/ca64c2cb-e530-4e88-88e2-755932dc5493
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh \
-  | sh -s MyApp com.acme.myapp
+  | bash -s MyApp com.acme.myapp
 ```
 
 - `MyApp` — project name (used for the folder, root project, and Android app label)
 - `com.acme.myapp` — package prefix / application ID (used for `namespace`, `applicationId`, and source-set package roots)
 
 Clones the template, renames packages, initializes fresh git.
+
+> **Windows:** run the same command inside **Git Bash** (ships with [Git for Windows](https://git-scm.com/download/win)) or WSL — not PowerShell or `cmd`. The installer uses bash + GNU `sed`/`find`, both of which are present in Git Bash. iOS targets remain macOS-only.
 
 **2. Open in Claude Code**
 
