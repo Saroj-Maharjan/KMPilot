@@ -42,6 +42,8 @@ import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
 import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.toolbar.XTopAppBar
+import thisissadeghi.designsystem.toolbar.XTopAppBarAlignment
 import thisissadeghi.receive.presentation.ReceiveUiModel
 import thisissadeghi.receive.presentation.ReceiveUiState
 import thisissadeghi.receive.presentation.ReceiveViewModel
@@ -74,39 +76,30 @@ fun ReceiveScreenRoot(
     XScaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .background(Color.Transparent)
-                        .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                XIconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.size(40.dp),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                ) {
-                    XIcon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+            XTopAppBar(
+                title = {
+                    XText(
+                        text = "Receive",
                     )
-                }
-                XText(
-                    text = "Receive",
-                    modifier = Modifier.padding(start = 8.dp),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
+                },
+                navigationIcon = {
+                    XIconButton(
+                        onClick = onBackClick,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                            ),
+                    ) {
+                        XIcon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                alignment = XTopAppBarAlignment.Start,
+            )
         },
         bottomBar = {
             when (uiState.state) {

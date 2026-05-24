@@ -47,6 +47,7 @@ import thisissadeghi.designsystem.XIconButton
 import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.toolbar.XTopAppBar
+import thisissadeghi.designsystem.toolbar.XTopAppBarAlignment
 import thisissadeghi.send.presentation.SendUiModel
 import thisissadeghi.send.presentation.SendUiState
 import thisissadeghi.send.presentation.SendViewModel
@@ -99,10 +100,6 @@ fun SendScreenRoot(
                 title = {
                     XText(
                         text = "Send",
-                        style =
-                            TextStyle(
-                                fontWeight = FontWeight.SemiBold,
-                            ),
                     )
                 },
                 navigationIcon = {
@@ -121,6 +118,7 @@ fun SendScreenRoot(
                     }
                 },
                 backgroundColor = Color.Transparent,
+                alignment = XTopAppBarAlignment.Start,
             )
         },
         bottomBar = {
