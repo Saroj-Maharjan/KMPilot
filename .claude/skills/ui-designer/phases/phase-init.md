@@ -57,7 +57,7 @@ Call `mcp__stitch__list_projects`.
    - **I'll set it up myself** — user prefers to read the docs and configure manually
 
 3. **If API Key**:
-   - Ask the user to open <https://aistudio.google.com/apikey>, sign in with their Stitch Google account, click **Create API key**, and copy the value.
+   - Ask the user to open <https://stitch.withgoogle.com/settings>, sign in with their Stitch Google account, find the **API keys** section, click **Create API key**, and copy the value. **Do NOT use AI Studio (`aistudio.google.com/apikey`) — those keys are rejected by the Stitch API with "API keys are not supported by this API".**
    - Once they confirm they have the key, tell them to run (replacing `YOUR_API_KEY`):
      ```bash
      claude mcp add stitch \

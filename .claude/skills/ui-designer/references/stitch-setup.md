@@ -37,10 +37,12 @@ Use `AskUserQuestion` to let the user choose:
 
 Direct the user:
 
-1. Open <https://aistudio.google.com/apikey> in a browser.
-2. Sign in with the same Google account that has Stitch access at <https://stitch.withgoogle.com>.
-3. Click **Create API key**, copy the value (starts with `AIza…`), and store it somewhere safe.
+1. Open <https://stitch.withgoogle.com/settings> in a browser.
+2. Sign in with the Google account that has Stitch access.
+3. Find the **API keys** section, click **Create API key**, copy the value, and store it somewhere safe.
 
+> The key MUST come from Stitch's own settings page. Keys created at <https://aistudio.google.com/apikey> are AI Studio keys and are **rejected by the Stitch API for tool calls** ("API keys are not supported by this API"). Only Stitch-issued keys work.
+>
 > The API key is sent as the `X-Goog-Api-Key` header on every request. Treat it like a password.
 
 ### Step 2: Register the MCP server with Claude Code
@@ -100,7 +102,8 @@ After the user restarts Claude Code and re-invokes `/ui-designer`, the skill's p
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Tool `mcp__stitch__list_projects` not found | Claude Code was not restarted, or the server entry is in a scope Claude Code does not load | Quit Claude Code fully and reopen. Verify with `claude mcp list` |
-| 401 / 403 from Stitch | Invalid or revoked API key | Generate a fresh key at <https://aistudio.google.com/apikey> and re-run `claude mcp add stitch …` (it will overwrite the existing entry) |
+| 401 / 403 from Stitch with "API keys are not supported by this API" | Key was created at AI Studio (`aistudio.google.com/apikey`) — Stitch rejects those | Create a Stitch-issued key at <https://stitch.withgoogle.com/settings> and re-run `claude mcp add stitch …` |
+| 401 / 403 from Stitch (other) | Invalid or revoked API key | Generate a fresh key at <https://stitch.withgoogle.com/settings> and re-run `claude mcp add stitch …` (it will overwrite the existing entry) |
 | `npx` command not found | Node.js not installed or PATH issue | `node -v` to check; install Node 18+ |
 | Connection timeout on every call | Corporate firewall blocking `stitch.googleapis.com` | Switch to the proxy variant: `claude mcp add stitch -e STITCH_API_KEY=YOUR_API_KEY -- npx @_davideast/stitch-mcp proxy` |
 
@@ -125,7 +128,7 @@ When preflight detects that Stitch MCP is missing, present this short version (t
 Stitch MCP is not configured. The /ui-designer skill needs it for all Stitch operations.
 
 Fastest setup (≈2 minutes):
-  1. Get an API key at https://aistudio.google.com/apikey
+  1. Get a Stitch API key at https://stitch.withgoogle.com/settings (NOT aistudio.google.com — AI Studio keys are rejected by the Stitch API)
   2. Run in your terminal:
        claude mcp add stitch \
          --transport http https://stitch.googleapis.com/mcp \
