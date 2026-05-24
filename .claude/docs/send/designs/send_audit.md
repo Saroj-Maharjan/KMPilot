@@ -156,7 +156,7 @@
 | 6 | `XPrimaryScrollableTabRow` no divider | N/A. |
 | 7 | `XRadioButton` unselected = primary | N/A. |
 
-## Component Overrides Check (Step 5.3.5)
+## Component Overrides Check (Step 5.4)
 
 All 10 rows from the blueprint's `Component Overrides` table are satisfied in code (CTA `RoundedCornerShape(24.dp)`, paste/QR `Color.Transparent`, recipient/asset/network/summary custom `Box`/`Column` surfaces, custom quick chips). The decorative `gold-glow` is the only omitted entry and is already covered under MINOR above.
 

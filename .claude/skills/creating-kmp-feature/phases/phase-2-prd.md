@@ -1,8 +1,8 @@
-# Phase 1: Prompt Analysis & PRD Generation
+# Phase 2: Prompt Analysis & PRD Generation
 
 **Purpose**: Analyze user's request and generate an adaptive PRD (Product Requirements Document).
 
-**Prerequisites**: Phase 0 (Context Discovery) completed.
+**Prerequisites**: Phase 0 (Context Discovery) and Phase 1 (Design Artifact Detection) completed.
 
 ---
 
@@ -10,15 +10,15 @@
 
 ```
 PRD Generation Progress:
-- [ ] Step 1.1: Analyze the prompt
-- [ ] Step 1.2: Determine complexity (Simple/Medium/Complex)
-- [ ] Step 1.3: Generate PRD using appropriate template
-- [ ] Step 1.4: Save PRD and request confirmation
+- [ ] Step 2.1: Analyze the prompt
+- [ ] Step 2.2: Determine complexity (Simple/Medium/Complex)
+- [ ] Step 2.3: Generate PRD using appropriate template
+- [ ] Step 2.4: Save PRD and request confirmation
 ```
 
 ---
 
-## Step 1.1: Analyze the Prompt
+## Step 2.1: Analyze the Prompt
 
 Extract the following from the user's prompt:
 
@@ -49,7 +49,7 @@ Extract the following from the user's prompt:
 
 ---
 
-## Step 1.2: Determine Complexity
+## Step 2.2: Determine Complexity
 
 | Complexity | Criteria | Task Count |
 |------------|----------|------------|
@@ -72,7 +72,7 @@ If Medium/Complex:
 
 ---
 
-## Step 1.3: Generate PRD
+## Step 2.3: Generate PRD
 
 Load the appropriate template and fill in:
 
@@ -105,7 +105,7 @@ Load the appropriate template and fill in:
 
 ---
 
-## Step 1.4: Save PRD and Request Confirmation
+## Step 2.4: Save PRD and Request Confirmation
 
 1. **Create directory**:
    ```bash
@@ -133,7 +133,7 @@ Load the appropriate template and fill in:
    > **Next step —** review the PRD at `.claude/docs/{featurename}/prd.md` and confirm to proceed with task generation, or request changes.
    ```
 
-6. **Wait for user approval** before proceeding to Phase 2
+6. **Wait for user approval** before proceeding to Phase 3
 
 ---
 
@@ -151,4 +151,4 @@ Load the appropriate template and fill in:
 After user confirms PRD:
 - PRD saved to `.claude/docs/{featurename}/prd.md`
 - User has approved the approach
-- Ready to proceed to **Phase 2: Task Generation**
+- Ready to proceed to **Phase 3: Task Generation**

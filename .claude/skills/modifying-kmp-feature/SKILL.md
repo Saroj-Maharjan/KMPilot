@@ -40,7 +40,7 @@ to generate one, then re-invoke /modifying-kmp-feature.
 
 Do NOT auto-invoke `/audit-spec` — skills do not call each other; the user controls the pipeline.
 
-### Step 2.5: Design Artifact Detection
+### Step 3: Design Artifact Detection
 
 Check for a Stitch design blueprint:
 
@@ -60,10 +60,10 @@ Design artifact detected: .claude/docs/{featurename}/designs/{featurename}_bluep
 Entering design-aware mode. Blueprint will drive UI implementation.
 ```
 
-### Step 3: Understand Current Implementation
+### Step 4: Understand Current Implementation
 Read spec sections: Requirements, Architecture, State Management, Navigation
 
-### Step 4: Plan Changes
+### Step 5: Plan Changes
 Determine affected layers and load architecture as needed:
 - Data changes: @../creating-kmp-feature/architecture/data.md
 - UI changes: @../creating-kmp-feature/architecture/ui.md
@@ -71,7 +71,7 @@ Determine affected layers and load architecture as needed:
 
 **Design-aware branch**: If in design-aware mode, read the blueprint's **Pre-Implementation Contract** section. Plan XTheme updates first (missing M3 roles from the contract's Color Audit). Include blueprint component tree in the UI plan.
 
-### Step 5: Draft Spec Changes
+### Step 6: Draft Spec Changes
 Propose updates using diff format:
 ```markdown
 ## Proposed Spec Changes: {featurename}
@@ -87,7 +87,7 @@ Propose updates using diff format:
 {Why these changes are needed}
 ```
 
-### Step 6: Review Gate (REQUIRED)
+### Step 7: Review Gate (REQUIRED)
 Present changes to user with:
 - [ ] **Approve** - Proceed with implementation
 - [ ] **Modify** - Request changes
@@ -95,7 +95,7 @@ Present changes to user with:
 
 **Never skip this step.**
 
-### Step 7: Implement Changes
+### Step 8: Implement Changes
 Follow patterns from @../_shared/patterns.md
 
 For UI changes: Load @../using-design-system/references/component-mappings.md
@@ -133,7 +133,7 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
    - Override via parameter: pass explicit `colors`, `shape`, or `contentPadding` to win over the default
    - Accept as architectural limitation: note it — do not fight it with hacks
 
-3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from step 2.
+3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from sub-step 2.
 4. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
    - All XTheme missing roles added to BOTH schemes
    - Every component in blueprint exists in implementation
@@ -141,13 +141,13 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
    - All colors use `MaterialTheme.colorScheme.{role}` — no raw `Color()` hex
    - Component override sizes/colors applied
 
-### Step 8: Validate Build
+### Step 9: Validate Build
 ```bash
 ./gradlew :feature:{featurename}:assembleAndroidMain
 ./gradlew :feature:{featurename}:ktlintFormat
 ```
 
-### Step 9: Update Specification
+### Step 10: Update Specification
 Apply APPROVED changes (don't regenerate). Add changelog:
 ```markdown
 ## Last Updated

@@ -26,7 +26,7 @@ Read: .claude/docs/{featurename}/designs/{featurename}_blueprint.md (if exists)
 Read: .claude/docs/_project/stitch-project.json (if it exists; for blueprintConsumed flag)
 ```
 
-### Phase 1.5: Rule 11 Guardrail (Grep Gate — run first)
+### Phase 2: Rule 11 Guardrail (Grep Gate — run first)
 
 Two cheap greps that surface the most common architectural mistake. Run before the full review so the failure is loud and the rest of the review can still complete.
 
@@ -39,13 +39,13 @@ grep -rEn 'import\s+\S+\.presentation\.' \
 find feature/{featurename}/src/commonMain/kotlin -name '*UiState.kt'
 ```
 
-Both must return empty. If either returns matches → record as **Critical (P1)** in the review output under Rule 11, with the matched file paths. Continue Phase 2 regardless so the rest of the review still completes.
+Both must return empty. If either returns matches → record as **Critical (P1)** in the review output under Rule 11, with the matched file paths. Continue Phase 3 regardless so the rest of the review still completes.
 
 If feature not found: Report error, stop.
 If spec missing: Note in review, recommend `/audit-spec {featurename}`.
-If blueprint missing: Skip the Design-Aware section in Phase 4.
+If blueprint missing: Skip the Design-Aware section in Phase 6.
 
-### Phase 2: Architecture Rules (Grep-first)
+### Phase 3: Architecture Rules (Grep-first)
 
 | Rule | Check Pattern |
 |------|---------------|
@@ -64,7 +64,7 @@ If blueprint missing: Skip the Design-Aware section in Phase 4.
 | Utility placement | Pure helpers (non-`@Composable` functions: formatters, validators, mappers) belong in `presentation/ui/{Feature}Utils.kt`, **not** under `components/`. Glob `presentation/ui/components/*.kt` and grep each file for files that contain zero `@Composable` declarations → flag as Warning ("non-composable utility file misplaced under components/"). Also: any `fun` declaration in `components/*.kt` that is **not** preceded by `@Composable` and is **not** a `private` helper of a composable in the same file → flag as Warning. |
 | Preview import | If any file imports `org.jetbrains.compose.ui.tooling.preview.Preview` → flag as Warning. Use `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+, available from commonMain). Grep `import org\.jetbrains\.compose\.ui\.tooling\.preview\.` in `presentation/ui/**/*.kt` → expect 0. |
 
-### Phase 3: Integration Points (Parallel Grep)
+### Phase 4: Integration Points (Parallel Grep)
 
 | # | File | Pattern |
 |---|------|---------|
@@ -73,7 +73,7 @@ If blueprint missing: Skip the Design-Aware section in Phase 4.
 | 3 | initKoin.kt | `{Feature}Modules.initialize()` |
 | 4 | BaseAppNavHost.kt | `{featurename}(` |
 
-### Phase 4: Spec Compliance (if spec exists)
+### Phase 5: Spec Compliance (if spec exists)
 
 Compare implementation against spec:
 - Data Models: spec vs actual `model/*.kt`
@@ -81,7 +81,7 @@ Compare implementation against spec:
 - State: spec UiState vs actual
 - Navigation: spec callbacks vs actual
 
-### Phase 5: Design-Aware Compliance (if blueprint exists)
+### Phase 6: Design-Aware Compliance (if blueprint exists)
 
 If `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` was found in Phase 1:
 

@@ -27,28 +27,29 @@ flowchart TD
     subgraph Phase1[Phase 1 — Design in Stitch]
         direction TB
         Phase1Start([Phase 1 begin]) --> S11[Step 1.1: Gather requirements<br/>+ determine isListBased]
-        S11 --> S115{Other approved features exist?}
-        S115 -->|Yes| S115Run[Step 1.1.5: Chrome snapshot<br/>+ override confirmation]
-        S115 -->|No| S116
-        S115Run --> S116
-        S116[Step 1.1.6: State Selection<br/>set needsLoading / needsFailed / needsEmpty]:::decision
-        S116 --> S117{Any opted-in shared screen<br/>missing in sharedStateScreens?}
-        S117 -->|Yes| S117Run[Step 1.1.7: Design missing shared screens<br/>runs phase-init On-Demand Procedures<br/>approve-or-edit loop each]:::gated
-        S117 -->|No| S12
-        S117Run --> S12[Step 1.2: Generate success screen<br/>in Stitch]
-        S12 --> S13[Step 1.3: Present designs]
-        S13 --> S14{User picks}
-        S14 -->|Edit / Variants / Regenerate| S12
-        S14 -->|Approve| S15[Step 1.5: Finalize success]
-        S15 --> S16[Step 1.6: State designs<br/>gated on selections]:::gated
-        S16 --> S17[Step 1.7: HTML + token inventories<br/>selected states only]:::gated
-        S17 --> S18[Step 1.8: Color audit<br/>selected inventories only]:::gated
-        S18 --> S19[Step 1.9: Generate blueprint<br/>selected sections only]:::gated
-        S19 --> S110[Step 1.10: Update stitch-project.json<br/>blueprintConsumed: false]
-        S110 --> S111[Step 1.11: Final approval report]
+        S11 --> S12Gate{Other approved features exist?}
+        S12Gate -->|Yes| S12Run[Steps 1.2 → 1.6: Chrome snapshot<br/>+ override confirmation]
+        S12Gate -->|No| S17
+        S12Run --> S17
+        S17[Step 1.7: State Selection<br/>set needsLoading / needsFailed / needsEmpty]:::decision
+        S17 --> S18Gate{Any opted-in shared screen<br/>missing in sharedStateScreens?}
+        S18Gate -->|Yes| S18Run[Step 1.8: Design missing shared screens<br/>runs phase-init On-Demand Procedures<br/>approve-or-edit loop each]:::gated
+        S18Gate -->|No| S19
+        S18Run --> S19[Step 1.9: Read current XTheme color scheme]
+        S19 --> S110[Step 1.10: Generate success screen<br/>in Stitch]
+        S110 --> S111[Step 1.11: Present designs]
+        S111 --> S112Q{User picks}
+        S112Q -->|Edit / Variants / Regenerate| S110
+        S112Q -->|Approve| S113[Step 1.13: Finalize success]
+        S113 --> S114[Step 1.14: State designs<br/>gated on selections]:::gated
+        S114 --> S115[Step 1.15: HTML + token inventories<br/>selected states only]:::gated
+        S115 --> S116[Step 1.16: Color audit<br/>selected inventories only]:::gated
+        S116 --> S117[Step 1.17: Generate blueprint<br/>selected sections only]:::gated
+        S117 --> S118[Step 1.18: Update stitch-project.json<br/>blueprintConsumed: false]
+        S118 --> S119[Step 1.19: Final approval report]
     end
 
-    S111 --> Done([Complete — user invokes<br/>/creating-kmp-feature or /modifying-kmp-feature]):::done
+    S119 --> Done([Complete — user invokes<br/>/creating-kmp-feature or /modifying-kmp-feature]):::done
 
     classDef user fill:#1e3a8a,stroke:#1e40af,color:#fff
     classDef sub fill:#7c2d12,stroke:#9a3412,color:#fff
@@ -59,7 +60,7 @@ flowchart TD
 
 ---
 
-## 2. State Coverage decision tree (Step 1.1 → 1.1.6)
+## 2. State Coverage decision tree (Step 1.1 → 1.7)
 
 The dual gate for Empty is the most subtle part of the flow. This diagram makes it explicit.
 
@@ -72,8 +73,8 @@ flowchart TD
     LQ -->|Yes| LY
     LQ -->|No| LN
 
-    LY --> Ask3[Step 1.1.6 question<br/>3 options: Loading / Failed / Empty]
-    LN --> Ask2[Step 1.1.6 question<br/>2 options: Loading / Failed]
+    LY --> Ask3[Step 1.7 question<br/>3 options: Loading / Failed / Empty]
+    LN --> Ask2[Step 1.7 question<br/>2 options: Loading / Failed]
 
     Ask3 --> Pick3[User selects subset]
     Ask2 --> Pick2[User selects subset]
@@ -84,7 +85,7 @@ flowchart TD
     Compute3 --> Persist[Write features featurename states<br/>to stitch-project.json]
     Compute2 --> Persist
 
-    Persist --> Down[Flags drive Steps 1.6 through 1.11]
+    Persist --> Down[Flags drive Steps 1.14 through 1.19]
 
     classDef gate fill:#854d0e,stroke:#a16207,color:#fff
     class L,LQ gate
@@ -102,12 +103,12 @@ flowchart TD
 
 ---
 
-## 3. Step 1.1.7 — on-demand shared screen design
+## 3. Step 1.8 — on-demand shared screen design
 
 ```mermaid
 flowchart TD
-    Enter([Step 1.1.7 begin]) --> Check{For each opted-in state in loading, failed:<br/>does sharedStateScreens.state.screenId exist<br/>AND _shared/designs/state.png exist?}
-    Check -->|All shared screens exist<br/>or none opted in| Skip[No-op — proceed to Step 1.2]
+    Enter([Step 1.8 begin]) --> Check{For each opted-in state in loading, failed:<br/>does sharedStateScreens.state.screenId exist<br/>AND _shared/designs/state.png exist?}
+    Check -->|All shared screens exist<br/>or none opted in| Skip[No-op — proceed to Step 1.9]
     Check -->|At least one missing| Inform[Inform user:<br/>'Designing shared state screen now<br/>before featurename success screen']
 
     Inform --> RunL{Loading missing<br/>AND needsLoading?}
@@ -117,7 +118,7 @@ flowchart TD
     RunF -->|Yes| InitF[Run On-Demand Failed procedure:<br/>generate + approve-or-edit loop<br/>persist to sharedStateScreens.failed]
     RunF -->|No| Verify
     InitF --> Verify[Verify all expected<br/>sharedStateScreens.state.screenId<br/>are non-null]
-    Verify --> Exit([Step 1.1.7 done — proceed to Step 1.2])
+    Verify --> Exit([Step 1.8 done — proceed to Step 1.9])
     Skip --> Exit
 
     classDef gen fill:#365314,stroke:#4d7c0f,color:#fff
@@ -126,15 +127,15 @@ flowchart TD
     class Skip skip
 ```
 
-The "Run On-Demand procedure" boxes invoke the **On-Demand Procedures** in `phase-init.md` (Generate Shared Loading Screen, Generate Shared Failed Screen) — same generation prompts, same approve-or-edit loops, same persistence targets. There is no separate implementation; Step 1.1.7 is the trigger, the on-demand procedures own the work.
+The "Run On-Demand procedure" boxes invoke the **On-Demand Procedures** in `phase-init.md` (Generate Shared Loading Screen, Generate Shared Failed Screen) — same generation prompts, same approve-or-edit loops, same persistence targets. There is no separate implementation; Step 1.8 is the trigger, the on-demand procedures own the work.
 
 ---
 
-## 4. Step 1.6 — per-state branching
+## 4. Step 1.14 — per-state branching
 
 ```mermaid
 flowchart TD
-    Enter([Step 1.6 begin]) --> L{needsLoading?}
+    Enter([Step 1.14 begin]) --> L{needsLoading?}
     L -->|true| LRef[Reference shared screen<br/>_shared/designs/loading.png]
     L -->|false| LSkip[Skip Loading entirely]
     LRef --> F
@@ -155,7 +156,7 @@ flowchart TD
     EEdit --> ELoop
     EQ -->|Approve| EPersist[Write emptyScreenId<br/>to stitch-project.json]
 
-    ESkip --> Exit([Step 1.6 done])
+    ESkip --> Exit([Step 1.14 done])
     EPersist --> Exit
 
     classDef skip fill:#7f1d1d,stroke:#991b1b,color:#fff
@@ -209,19 +210,24 @@ Loading/Failed shared screens are **never copied** into the per-feature director
 | 0.4 | Register/resume feature entry | No | **Yes** — seeds entry with `states` defaults |
 | 0.5 | Create docs dir | No | No |
 | 1.1 | Gather requirements + determine `isListBased` | If requirements unclear OR list-based ambiguous | No |
-| 1.1.5 | Chrome snapshot from prior features | Only if explicit chrome override detected | No |
-| 1.1.6 | State Selection (the new gate) | **Always** — multi-select | **Yes** — writes `features.states` |
-| 1.1.7 | Design missing shared loading/failed on demand | Only when opted-in shared screen is absent: approve-or-edit loop per state | **Yes** — writes `sharedStateScreens.{state}` and `_shared/designs/` artifacts |
-| 1.2 | Generate success screen in Stitch | Possibly: browser-sync prompt on timeout | No |
-| 1.3 | Present designs | **Always** — Approve / Edit / Variants / Regen | No |
-| 1.4 | Iterate (loops to 1.3) | Per iteration | No |
-| 1.5 | Finalize approved success design | Asks user to clean up Stitch UI | **Yes** — writes `successScreenId`, `successScreenName` |
-| 1.6 | State designs gated on selections | Empty: approve-or-edit loop (if `needsEmpty`) | **Yes** — writes `emptyScreenId` when empty approved |
-| 1.7 | Acquire HTML + tokens for selected states | No (only browser-sync on timeout) | No |
-| 1.8 | Color audit reconciled against inventories | No | No |
-| 1.9 | Generate blueprint (selected sections) | No | No |
-| 1.10 | Final write of `features.{featurename}` | No | **Yes** — full metadata + `blueprintConsumed: false` |
-| 1.11 | Final report shown to user | Read-only | No |
+| 1.2 | Chrome snapshot from prior features (gate: when to run) | No — gate only | No |
+| 1.3 | Detect explicit chrome override | No — derived from earlier prompt | No |
+| 1.4 | Snapshot existing chrome from approved features | Only if approved features disagree | No |
+| 1.5 | Build the Shared Conventions block | No | No |
+| 1.6 | Confirm with user (only when overriding) | Only if user override detected | No |
+| 1.7 | State Selection (the new gate) | **Always** — multi-select | **Yes** — writes `features.states` |
+| 1.8 | Design missing shared loading/failed on demand | Only when opted-in shared screen is absent: approve-or-edit loop per state | **Yes** — writes `sharedStateScreens.{state}` and `_shared/designs/` artifacts |
+| 1.9 | Read current XTheme color scheme | No | No |
+| 1.10 | Generate success screen in Stitch | Possibly: browser-sync prompt on timeout | No |
+| 1.11 | Present designs | **Always** — Approve / Edit / Variants / Regen | No |
+| 1.12 | Iterate (loops to 1.11) | Per iteration | No |
+| 1.13 | Finalize approved success design | Asks user to clean up Stitch UI | **Yes** — writes `successScreenId`, `successScreenName` |
+| 1.14 | State designs gated on selections | Empty: approve-or-edit loop (if `needsEmpty`) | **Yes** — writes `emptyScreenId` when empty approved |
+| 1.15 | Acquire HTML + tokens for selected states | No (only browser-sync on timeout) | No |
+| 1.16 | Color audit reconciled against inventories | No | No |
+| 1.17 | Generate blueprint (selected sections) | No | No |
+| 1.18 | Final write of `features.{featurename}` | No | **Yes** — full metadata + `blueprintConsumed: false` |
+| 1.19 | Final report shown to user | Read-only | No |
 
 ---
 
@@ -231,7 +237,7 @@ Loading/Failed shared screens are **never copied** into the per-feature director
 |----------|-----------------|
 | Stitch screen | Not referenced; for empty, `emptyScreenId` stays `null` |
 | Screenshot file | None on disk (loading/failed: not even a copy of the shared `.png`) |
-| Token inventory | Not read in Step 1.7; not consulted in Step 1.8 color audit |
+| Token inventory | Not read in Step 1.15; not consulted in Step 1.16 color audit |
 | Blueprint section — loading/failed | Replaced with explicit `**Skipped**` marker pointing implementation at generic handling |
 | Blueprint section — empty | **Section omitted entirely** (empty is a content variant, not a Rule-4 UI state) |
 | `/verify-ui` audit | State excluded from the audit state list; no audit entry produced |
@@ -241,7 +247,7 @@ Loading/Failed shared screens are **never copied** into the per-feature director
 
 ## 8. Worked example — `/ui-designer carsdashboard`
 
-First feature in a fresh project, non-list dashboard, user picks Loading + Failed. Because init no longer auto-generates shared screens, Step 1.1.7 kicks in and designs both before the success screen.
+First feature in a fresh project, non-list dashboard, user picks Loading + Failed. Because init no longer auto-generates shared screens, Step 1.8 kicks in and designs both before the success screen.
 
 ```mermaid
 sequenceDiagram
@@ -261,7 +267,7 @@ sequenceDiagram
     S->>U: State Selection — Loading / Failed only, Empty NOT shown
     U->>S: pick Loading + Failed
     S->>J: write features.carsdashboard.states — l:true f:true e:false
-    Note over S: Step 1.1.7 — shared screens missing<br/>sharedStateScreens.loading/failed.screenId == null
+    Note over S: Step 1.8 — shared screens missing<br/>sharedStateScreens.loading/failed.screenId == null
     S->>U: designing shared loading screen now before success
     S->>M: generate_screen_from_text — loading prompt
     S->>U: present shared loading screen — Approve / Edit
@@ -283,7 +289,7 @@ sequenceDiagram
     S->>U: present carsdashboard_v1.png — Approve
     U->>S: Approve
     S->>J: write successScreenId
-    Note over S: Step 1.6 — Loading/Failed reference shared refs<br/>just created, Empty skipped
+    Note over S: Step 1.14 — Loading/Failed reference shared refs<br/>just created, Empty skipped
     S->>M: get_screen + curl HTML for success
     S->>S: extract tokens for success, read shared tokens for loading/failed
     S->>S: color audit + blueprint generation
@@ -291,7 +297,7 @@ sequenceDiagram
     S->>U: Completion report — states success/loading/failed, skipped empty
 ```
 
-For a **second** feature (e.g. `/ui-designer transactions`) that also picks Loading + Failed: Step 1.1.7 sees the shared screens already exist (created during carsdashboard) and is a **no-op**. The transactions feature proceeds directly to its own success-screen design.
+For a **second** feature (e.g. `/ui-designer transactions`) that also picks Loading + Failed: Step 1.8 sees the shared screens already exist (created during carsdashboard) and is a **no-op**. The transactions feature proceeds directly to its own success-screen design.
 
 ---
 
@@ -300,7 +306,7 @@ For a **second** feature (e.g. `/ui-designer transactions`) that also picks Load
 - Skill entry: [`ui-designer/SKILL.md`](../../../skills/ui-designer/SKILL.md)
 - Phase Init (project bootstrap + On-Demand Procedures for shared screens): [`ui-designer/phases/phase-init.md`](../../../skills/ui-designer/phases/phase-init.md)
 - Per-feature preflight: [`ui-designer/phases/phase-0-preflight.md`](../../../skills/ui-designer/phases/phase-0-preflight.md)
-- Design phase (Steps 1.1 → 1.11, all gating logic): [`ui-designer/phases/phase-1-design.md`](../../../skills/ui-designer/phases/phase-1-design.md)
+- Design phase (Steps 1.1 → 1.19, all gating logic): [`ui-designer/phases/phase-1-design.md`](../../../skills/ui-designer/phases/phase-1-design.md)
 - Blueprint template + skipped-state markers: [`ui-designer/references/blueprint-spec.md`](../../../skills/ui-designer/references/blueprint-spec.md)
 - Stitch MCP usage patterns + known issues: [`ui-designer/references/stitch-guide.md`](../../../skills/ui-designer/references/stitch-guide.md)
 - Downstream auditor honoring `states`: [`verify-ui/SKILL.md`](../../../skills/verify-ui/SKILL.md)

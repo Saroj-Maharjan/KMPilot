@@ -52,7 +52,7 @@ The model is always `GEMINI_3_FLASH` for all Stitch generation calls. Device typ
      **STOP** — do not proceed.
    - If valid: proceed.
 
-3. Load the following into working context (do NOT re-read XTheme.kt here — deferred to Step 1.2a):
+3. Load the following into working context (do NOT re-read XTheme.kt here — deferred to Step 1.9):
    - `projectId` — from `stitch-project.json.projectId`
    - `projectName` — from `stitch-project.json.projectName`
    - `designSystemAssetId` — from `stitch-project.json.designSystem.assetId`

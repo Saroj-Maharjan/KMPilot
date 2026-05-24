@@ -1,4 +1,4 @@
-# Phase 2: Task Generation
+# Phase 3: Task Generation
 
 **Purpose**: Break down PRD into implementation-ready tasks with agent assignments.
 
@@ -10,16 +10,16 @@
 
 ```
 Task Generation Progress:
-- [ ] Step 2.1: Determine task count based on complexity
-- [ ] Step 2.2: Generate structured task files
-- [ ] Step 2.3: Define task groups for validation
-- [ ] Step 2.4: Create summary file (tasks.md)
-- [ ] Step 2.5: Request user confirmation
+- [ ] Step 3.1: Determine task count based on complexity
+- [ ] Step 3.2: Generate structured task files
+- [ ] Step 3.3: Define task groups for validation
+- [ ] Step 3.4: Create summary file (tasks.md)
+- [ ] Step 3.5: Request user confirmation
 ```
 
 ---
 
-## Step 2.1: Determine Task Count
+## Step 3.1: Determine Task Count
 
 Based on PRD complexity:
 
@@ -45,7 +45,7 @@ Based on PRD complexity:
 
 ---
 
-## Step 2.2: Generate Task Files
+## Step 3.2: Generate Task Files
 
 Create individual task files in `.claude/docs/{featurename}/`:
 - `task-1-{title}.md`
@@ -71,7 +71,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 
 ---
 
-## Step 2.3: Define Task Groups for Validation
+## Step 3.3: Define Task Groups for Validation
 
 ### Group 1: Data Layer
 - **Agent**: `data-layer-agent`
@@ -100,7 +100,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 
 ---
 
-## Step 2.4: Create Summary File
+## Step 3.4: Create Summary File
 
 Create `tasks.md` as overview:
 
@@ -128,7 +128,7 @@ Create `tasks.md` as overview:
 
 ---
 
-## Step 2.5: Request Confirmation
+## Step 3.5: Request Confirmation
 
 1. **Display first 2-3 task files** as examples
 
@@ -146,7 +146,7 @@ Create `tasks.md` as overview:
    > **Next step —** review the tasks at `.claude/docs/{featurename}/tasks.md` and confirm to proceed with implementation, or request changes.
    ```
 
-5. **Wait for user approval** before proceeding to Phase 3
+5. **Wait for user approval** before proceeding to Phase 4
 
 ---
 
@@ -156,4 +156,4 @@ After user confirms tasks:
 - Individual task files saved to `.claude/docs/{featurename}/task-*.md`
 - Summary file saved to `.claude/docs/{featurename}/tasks.md`
 - Agent assignments clear for each task
-- Ready to proceed to **Phase 3: Implementation**
+- Ready to proceed to **Phase 4: Implementation**

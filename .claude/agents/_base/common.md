@@ -30,7 +30,7 @@ Provided when relevant to the agent's layer (see table):
 | `{NAV_HOST_PATH}` | — | — | ✅ |
 
 Source of truth for what the orchestrator passes:
-`@../../skills/creating-kmp-feature/phases/phase-3-implementation.md`.
+`@../../skills/creating-kmp-feature/phases/phase-4-implementation.md`.
 
 ## Build Validation
 

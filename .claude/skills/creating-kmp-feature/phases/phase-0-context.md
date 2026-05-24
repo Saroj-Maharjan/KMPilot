@@ -116,7 +116,7 @@ PROJECT_CONTEXT:
   CORE_MODULES: {list of modules}
 ```
 
-**Important**: Pass this context when invoking any specialized agent in Phase 3.
+**Important**: Pass this context when invoking any specialized agent in Phase 4.
 
 ---
 
@@ -127,4 +127,4 @@ After completing context discovery, you should have all values needed for:
 - Passing context to specialized agents
 - Knowing exact paths for integration points
 
-Proceed to **Phase 1: PRD Generation**.
+Proceed to **Phase 1: Design Artifact Detection**.

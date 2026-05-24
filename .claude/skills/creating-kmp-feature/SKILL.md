@@ -5,7 +5,7 @@ allowed-tools: ["Task", "Read", "Write", "Edit", "Glob", "Grep", "Bash(./gradlew
 
 # Creating KMP Features
 
-Orchestrates complete feature creation using a 5-phase workflow.
+Orchestrates complete feature creation using a 6-phase workflow.
 
 **Architecture Reference:** @../_shared/patterns.md
 
@@ -15,20 +15,20 @@ Before editing any feature files, activate the skill marker so the PreToolUse ho
 ```bash
 touch /tmp/.claude-kmpilot-skill-active
 ```
-After Phase 4 completes (or on any early exit), remove it:
+After Phase 5 completes (or on any early exit), remove it:
 ```bash
 rm -f /tmp/.claude-kmpilot-skill-active
 ```
 
 ## Workflow
 
-**Phase 0** → **Phase 0.5** → **Phase 1** → [USER CONFIRMS] → **Phase 2** → [USER CONFIRMS] → **Activate marker** → **Phase 3** → **Phase 4** → **Remove marker** → Done
+**Phase 0** → **Phase 1** → **Phase 2** → [USER CONFIRMS] → **Phase 3** → [USER CONFIRMS] → **Activate marker** → **Phase 4** → **Phase 5** → **Remove marker** → Done
 
 ### Phase 0: Context Discovery (Auto)
 Detect: `PKG_PREFIX`, `INIT_KOIN_PATH`, `NAV_HOST_PATH` from existing features.
 See: @phases/phase-0-context.md
 
-### Phase 0.5: Design Artifact Detection
+### Phase 1: Design Artifact Detection
 
 Check for a Stitch design blueprint:
 
@@ -48,24 +48,24 @@ Design artifact detected: .claude/docs/{featurename}/designs/{featurename}_bluep
 Entering design-aware mode. Blueprint will drive UI layer implementation.
 ```
 
-If blueprint exists and `blueprintConsumed == false`, the blueprint's Pre-Implementation Contract will auto-populate the UI section of the PRD in Phase 1.
+If blueprint exists and `blueprintConsumed == false`, the blueprint's Pre-Implementation Contract will auto-populate the UI section of the PRD in Phase 2.
 
-### Phase 1: PRD Generation
+### Phase 2: PRD Generation
 Analyze prompt → Generate PRD → Save to `.claude/docs/{featurename}/prd.md`
 Template: @templates/prd-simple.md or @templates/prd-complex.md
-See: @phases/phase-1-prd.md
+See: @phases/phase-2-prd.md
 
 **Design-aware note**: If blueprint exists, incorporate the blueprint's design tokens, component tree, and color audit into the PRD's UI section automatically.
 
-### Phase 2: Task Generation
+### Phase 3: Task Generation
 Break PRD into tasks → Assign to agents → Save task files
 Template: @templates/task-template.md
-See: @phases/phase-2-tasks.md
+See: @phases/phase-3-tasks.md
 
-### Phase 3: Implementation
+### Phase 4: Implementation
 **Parallel** (recommended): Data + UI agents together → Integration agent
 **Sequential**: Data → UI → Integration
-See: @phases/phase-3-implementation.md
+See: @phases/phase-4-implementation.md
 
 | Agent | Layer | Runs |
 |-------|-------|------|
@@ -73,13 +73,13 @@ See: @phases/phase-3-implementation.md
 | `ui-layer-agent` | UiModel, ViewModel, Screens, Navigation | Second (or parallel) |
 | `integration-agent` | DI, 4 integration points, spec.md | Last |
 
-### Phase 4: Cleanup
+### Phase 5: Cleanup
 Verify spec.md → Remove prd.md + tasks.md + task-*.md
-See: @phases/phase-4-cleanup.md
+See: @phases/phase-5-cleanup.md
 
 ## Critical Rules
 
-1. **User Confirmation Required** after Phase 1 and Phase 2 - never proceed without explicit approval
+1. **User Confirmation Required** after Phase 2 and Phase 3 - never proceed without explicit approval
 2. **Documentation**: `.claude/docs/{featurename}/` - PRD/tasks ephemeral, spec.md permanent
 3. **Validate build** after each layer: `./gradlew :feature:{featurename}:assembleAndroidMain`
 

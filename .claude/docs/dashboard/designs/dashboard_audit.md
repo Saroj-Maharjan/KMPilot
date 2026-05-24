@@ -100,7 +100,7 @@ All `androidx.compose.material3.*` imports are `MaterialTheme` only, which is al
 | 6 | XPrimaryScrollableTabRow no divider | NO |
 | 7 | XRadioButton unselected = primary | NO |
 
-## Component Overrides Check (Step 5.3.5) — all applied correctly
+## Component Overrides Check (Step 5.4) — all applied correctly
 
 All 11 rows from the blueprint's Pre-Implementation Contract → Component Overrides table are honored:
 - All cards use Box/Column with `RoundedCornerShape(24.dp)` + explicit `Modifier.background(surface)` (no `XCard`).

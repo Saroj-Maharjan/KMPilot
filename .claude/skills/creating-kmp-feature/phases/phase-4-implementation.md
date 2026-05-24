@@ -1,4 +1,4 @@
-# Phase 3: Orchestrated Implementation
+# Phase 4: Orchestrated Implementation
 
 **Purpose**: Invoke specialized agents to implement the feature layers.
 
@@ -10,14 +10,14 @@
 
 ```
 Implementation Progress:
-- [ ] Step 3.1: Choose execution strategy (Sequential or Parallel)
-- [ ] Step 3.2: Invoke specialized agents
-- [ ] Step 3.3: Verify spec generation
+- [ ] Step 4.1: Choose execution strategy (Sequential or Parallel)
+- [ ] Step 4.2: Invoke specialized agents
+- [ ] Step 4.3: Verify spec generation
 ```
 
 ---
 
-## Step 3.1: Execution Strategy
+## Step 4.1: Execution Strategy
 
 Ask user for preference:
 
@@ -28,11 +28,11 @@ Ask user for preference:
 
 ---
 
-## Step 3.2: Invoke Specialized Agents
+## Step 4.2: Invoke Specialized Agents
 
 ### Design-Aware Blueprint Passthrough
 
-If in **design-aware mode** (Phase 0.5 detected an unconsumed blueprint):
+If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
 
 1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles
 2. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
@@ -155,7 +155,7 @@ If in **design-aware mode**, after all agents complete successfully:
 
 ---
 
-## Step 3.3: Verify Spec Generation
+## Step 4.3: Verify Spec Generation
 
 After all agents complete, verify the living specification was generated:
 
@@ -165,7 +165,7 @@ ls -la .claude/docs/{featurename}/spec.md
 
 **Expected**: The spec.md file should exist and contain the complete specification.
 
-**If spec.md exists** → Proceed to Phase 4 (Cleanup)
+**If spec.md exists** → Proceed to Phase 5 (Cleanup)
 
 **If spec.md missing** → Check integration agent output, may need to re-invoke
 
@@ -213,4 +213,4 @@ After all agents complete:
 - Build passing + ktlint formatted
 - spec.md generated
 - (Design-aware) blueprintConsumed set to true in stitch-project.json
-- Ready to proceed to **Phase 4: Cleanup**
+- Ready to proceed to **Phase 5: Cleanup**

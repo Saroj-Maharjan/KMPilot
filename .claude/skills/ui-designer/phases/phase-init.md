@@ -20,7 +20,7 @@ Project Init Progress:
 - [ ] Init-5: Persist and finalize
 ```
 
-**Shared Loading/Failed screens are NOT generated during init.** They are designed on-demand by the first feature that opts in to them (Phase 1 Step 1.1.7 in `phase-1-design.md`), then persisted to `_shared/` and inherited by every subsequent feature that opts in. The canonical generation procedures live in **On-Demand Procedures** at the bottom of this file.
+**Shared Loading/Failed screens are NOT generated during init.** They are designed on-demand by the first feature that opts in to them (Phase 1 Step 1.8 in `phase-1-design.md`), then persisted to `_shared/` and inherited by every subsequent feature that opts in. The canonical generation procedures live in **On-Demand Procedures** at the bottom of this file.
 
 ---
 
@@ -32,7 +32,7 @@ Before running any init step, read `.claude/docs/_project/stitch-project.json` i
 - `initState.designSystemCreated == true` → skip Init-4
 - `initState.completedAt` non-null → Init is already complete; stop and inform user
 
-**Legacy compatibility**: older projects may have `initState.sharedScreensGenerated == true` and populated `sharedStateScreens.{loading,failed}`. The new init flow no longer sets this flag, but legacy projects continue to work — their shared screens already exist, so Step 1.1.7 will detect them and skip generation.
+**Legacy compatibility**: older projects may have `initState.sharedScreensGenerated == true` and populated `sharedStateScreens.{loading,failed}`. The new init flow no longer sets this flag, but legacy projects continue to work — their shared screens already exist, so Step 1.8 will detect them and skip generation.
 
 For each step that is skipped, mark it as `[done]` in the checklist display.
 
@@ -369,7 +369,7 @@ Config: .claude/docs/_project/stitch-project.json
 
 Shared Loading and Failed screens are NOT generated yet — they will be
 designed on demand by the first feature that opts in to each state
-(Phase 1 Step 1.1.7).
+(Phase 1 Step 1.8).
 
 ---
 
@@ -380,7 +380,7 @@ designed on demand by the first feature that opts in to each state
 
 # On-Demand Procedures
 
-> The two procedures below are **not part of the linear init flow**. They are invoked from Phase 1 Step 1.1.7 the first time a feature opts in to a Loading or Failed state. Each procedure writes to `_shared/designs/` and `sharedStateScreens.{state}` in `stitch-project.json`; the result is reused by every subsequent feature that opts in.
+> The two procedures below are **not part of the linear init flow**. They are invoked from Phase 1 Step 1.8 the first time a feature opts in to a Loading or Failed state. Each procedure writes to `_shared/designs/` and `sharedStateScreens.{state}` in `stitch-project.json`; the result is reused by every subsequent feature that opts in.
 
 ## On-Demand: Generate Shared Loading Screen
 
@@ -494,7 +494,7 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
     ```
     Update `sharedStateScreens.loading.htmlPath` and `.tokensPath`.
 
-11. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.1.7).
+11. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.8).
 
 ---
 
@@ -602,13 +602,13 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
    ```
    Update `sharedStateScreens.failed.htmlPath` and `.tokensPath`.
 
-10. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.1.7).
+10. Update `stitch-project.json.updatedAt`. Write the file. **Return to caller** (Phase 1 Step 1.8).
 
 ---
 
 ## stitch-project.json Full Schema
 
-Created at Init-2, progressively filled through Init-5. The authoritative schema reference is in [stitch-guide.md](../references/stitch-guide.md#stitch-project-schema). Shared state screens start with `null` IDs and are populated lazily by Phase 1 Step 1.1.7.
+Created at Init-2, progressively filled through Init-5. The authoritative schema reference is in [stitch-guide.md](../references/stitch-guide.md#stitch-project-schema). Shared state screens start with `null` IDs and are populated lazily by Phase 1 Step 1.8.
 
 ```json
 {

@@ -48,13 +48,13 @@ Reading the blueprint's **token data** a second time in verify-ui caused three p
 
 So the token-level audit is `HTML ↔ Code` with the catalog as a render-behaviour overlay. Any conflict between the design and the implementation is reduced to one verdict: the code disagrees with the HTML, fix the code.
 
-### The exception: Component Overrides (Step 5.3.5)
+### The exception: Component Overrides (Step 5.4)
 
 The blueprint's `Pre-Implementation Contract → Component Overrides` table is the **only** blueprint section verify-ui consults. It records concrete X-component override decisions that the blueprint generator made by reconciling the HTML inventory against `X_COMPONENTS_CATALOG.md` defaults — e.g. "this `XCard` needs `containerColor = surface` because the X default doesn't match the HTML hex."
 
 This data is derivable in principle (HTML inventory + catalog), but the fixed 7-trap checklist in Step 5.3 deliberately does **not** walk every `X-component × every catalog property` combination — full sweeps were churn-y false-positive machines (see *Why Step 5.3 is a fixed Trap Checklist* below). The Component Overrides table is the catalog-style sweep, but pre-curated to the few rows that actually apply to **this** feature. Walking it costs ~N rows of work (typically 0–5) instead of the hundreds a full sweep generated.
 
-If the blueprint is missing or its Component Overrides table is empty, 5.3.5 silently skips. The token audit + 5.3 trap checklist still run as before.
+If the blueprint is missing or its Component Overrides table is empty, 5.4 silently skips. The token audit + 5.3 trap checklist still run as before.
 
 ---
 
@@ -81,7 +81,7 @@ Theme palette values (XDarkColors / XLightColors / Shapes) are mirrored from `XT
 
 The grep in Step 4.2 uses `\b...\(` (word boundary + open paren) to catch X-components nested inside other calls (e.g. `trailingIcon = { XIconButton(...) }`), assigned to variables (`val btn = XButton(...)`), or chained on the same line as another expression. A start-of-line anchor (`^\s*`) would miss all of these and silently drop instances from the reverse-sweep map.
 
-Also: preserve duplicates (no `sort -u`). Step 5.2.5 iterates every site, including repeated invocations of the same component.
+Also: preserve duplicates (no `sort -u`). Step 5.3 iterates every site, including repeated invocations of the same component.
 
 ---
 

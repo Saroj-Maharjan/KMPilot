@@ -1,6 +1,6 @@
 # X-Components Constraint Catalog
 
-> **Purpose**: Document every X-component's internal constraints — `defaultMinSize`, default colors, hardcoded padding, internal modifiers, and behavior overrides — that survive even when feature code passes parameters. Consumed by `/verify-ui` for the catalog-driven reverse sweep (Step 5.2.5).
+> **Purpose**: Document every X-component's internal constraints — `defaultMinSize`, default colors, hardcoded padding, internal modifiers, and behavior overrides — that survive even when feature code passes parameters. Consumed by `/verify-ui` for the catalog-driven reverse sweep (Step 5.3).
 >
 > **Maintenance**: Regenerate this file whenever any `core/designsystem/**/X*.kt` changes. The catalog is the **fourth source** of truth in the verify-ui audit (HTML, blueprint, code, **catalog**) — out-of-date entries cause silent audit drift.
 
@@ -275,7 +275,7 @@
 
 ## How to use this catalog (for verify-ui)
 
-1. **Identify every X-component instance** in the feature's `presentation/ui/` files (Step 3.5.1 grep).
+1. **Identify every X-component instance** in the feature's `presentation/ui/` files (Step 4.2 grep).
 2. **For each instance**, look up its catalog entry above.
 3. **For every default-rendered property** (containerColor, defaultMinSize, hardcoded padding, internal modifier):
    - If feature code passes an explicit override → use the override (token audit covers it).

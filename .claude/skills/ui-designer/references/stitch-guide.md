@@ -37,7 +37,7 @@ screenId  = {screenId}
 
 Throughout this skill, instructions of the form *"call `get_screen` for {screenId}"* mean: build the three params using the pattern above, then invoke the tool.
 
-The response carries both `screenshot.downloadUrl` (for `.png` screenshots) and `htmlCode.downloadUrl` (for raw HTML — used in Step 1.7 only).
+The response carries both `screenshot.downloadUrl` (for `.png` screenshots) and `htmlCode.downloadUrl` (for raw HTML — used in Step 1.15 only).
 
 ---
 
@@ -230,7 +230,7 @@ When translating designs to code, use this mapping:
 
 ### Downloading Screenshots
 
-`get_screen` returns both `screenshot.downloadUrl` (for `.png` previews) and `htmlCode.downloadUrl` (used in the HTML acquisition step, Phase 1 Step 1.7, which feeds the Color Audit (1.8) and the blueprint (1.9)). For the call signature, see [Get Screen Call Pattern](#get-screen-call-pattern).
+`get_screen` returns both `screenshot.downloadUrl` (for `.png` previews) and `htmlCode.downloadUrl` (used in the HTML acquisition step, Phase 1 Step 1.15, which feeds the Color Audit (1.16) and the blueprint (1.17)). For the call signature, see [Get Screen Call Pattern](#get-screen-call-pattern).
 
 ```bash
 # 1. Call get_screen for {screenId} per the Get Screen Call Pattern
@@ -280,7 +280,7 @@ When the user requests **variants**:
 
 Stitch HTML is always parsed into a structured blueprint after design approval. The blueprint is the self-contained handoff artifact for implementation skills. Full spec, extraction prompt, and edge cases: **[blueprint-spec.md](blueprint-spec.md)**
 
-See Phase 1 Step 1.9.
+See Phase 1 Step 1.17.
 
 ---
 
@@ -383,7 +383,7 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
     "projectCreated": "boolean",
     "designSystemCreated": "boolean",
     "completedAt": "string or null — ISO timestamp when init finalized (Init-5)",
-    "sharedScreensGenerated": "boolean — LEGACY only; the old init flow auto-generated shared loading/failed screens at init time. The new flow defers them to on-demand creation by Phase 1 Step 1.1.7. Not written by new init; safe to ignore."
+    "sharedScreensGenerated": "boolean — LEGACY only; the old init flow auto-generated shared loading/failed screens at init time. The new flow defers them to on-demand creation by Phase 1 Step 1.8. Not written by new init; safe to ignore."
   },
   "createdAt": "string — ISO timestamp",
   "updatedAt": "string — ISO timestamp"

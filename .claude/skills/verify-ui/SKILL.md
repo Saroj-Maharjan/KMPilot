@@ -46,7 +46,7 @@ If any prerequisite is missing, stop and inform the user.
 
 ## Step 2: Acquire HTML (reuse or download)
 
-`/ui-designer` Step 1.7 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
+`/ui-designer` Step 1.15 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
 2. Build the **audit state list**: always include `success`. Include `loading`/`failed`/`empty` **only when `states.{state} == true`** (per Step 1's derived flags). Skipped states are not acquired and not audited.
@@ -120,7 +120,7 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
 - **Code files**: `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
 - **X-components catalog**: from Step 4.1.
 
-> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.3.5.
+> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.4.
 
 ### 5.2 Convert and compare — Success state
 
@@ -146,8 +146,8 @@ For every visual element in the inventory, convert each Tailwind class to its dp
 When `N = 0`, write `**No mismatches.**` and stop. Do not produce a table.
 
 **Verdicts** (used as the "{Severity}" tag in the block heading):
-- **CRITICAL** — see Step 5.5.
-- **MINOR** — see Step 5.5.
+- **CRITICAL** — see Step 5.6.
+- **MINOR** — see Step 5.6.
 - (No OK blocks — they are summarised in the count line and never listed.)
 
 ### 5.3 Trap Checklist — Success state
@@ -168,11 +168,11 @@ The reverse sweep is a **fixed checklist** of the seven X-component default-rend
 
 Skip a row entirely when the X-component isn't used in the feature. Do **not** walk catalog properties beyond this list — full sweeps were removed because they produced churn-y false positives without proportionate catch.
 
-### 5.3.5 Component Overrides Check — feature-specific traps from the blueprint
+### 5.4 Component Overrides Check — feature-specific traps from the blueprint
 
-The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.8 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
+The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.16 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
 
-1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. Do not read any other blueprint section. If the blueprint is missing, skip 5.3.5 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
+1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. Do not read any other blueprint section. If the blueprint is missing, skip 5.4 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
 2. For each row (`Component | Property | HTML Value | X-component Default | Override Required`):
    - Locate every instance of that `Component` in the feature's `presentation/ui/` (use the instance map from Step 4.2).
    - Check the parameter named in `Property` against `Override Required`.
@@ -186,11 +186,11 @@ The fixed checklist in 5.3 catches the seven traps that have caused real bugs ac
      - **Source:** Blueprint Component Overrides
      ```
    - If the override is present and matches → silent pass (no row).
-3. If the blueprint table is empty, skip 5.3.5 — the blueprint generator detected no per-feature divergences.
+3. If the blueprint table is empty, skip 5.4 — the blueprint generator detected no per-feature divergences.
 
 This step is **additive** to 5.3, not a replacement. The seven generic traps still run.
 
-### 5.4 Loading, Failed, and Empty states — brief checklist
+### 5.5 Loading, Failed, and Empty states — brief checklist
 
 Run this subsection **only for non-success states present in the audit state list** (Step 2). Skipped states are omitted from the audit report entirely.
 
@@ -201,11 +201,11 @@ These states are typically trivial (a spinner, an error illustration, or an empt
 
 No "OK" bullets — silence means OK.
 
-### 5.5 Classify mismatches
+### 5.6 Classify mismatches
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
-| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.3.5** | Must fix |
+| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4** | Must fix |
 | **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width) | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
@@ -251,7 +251,7 @@ All M3 component violations are Critical.
 ### X-Components Compliance
 - Material3 violations: {N} ({PASS if 0, FAIL otherwise})
 
-{Mismatch blocks from Step 5.2 / 5.3 / 5.3.5 / 5.4 — only the blocks, no OK rows.}
+{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 — only the blocks, no OK rows.}
 
 {Compliance violations table (if any).}
 ```

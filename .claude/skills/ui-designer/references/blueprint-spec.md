@@ -154,7 +154,7 @@ Feed this prompt with:
    - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared — only if `states.failed == true`)**
    - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (only if `states.empty == true`)
 3. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
-4. Color Audit M3 role mappings (from Phase 1 Step 1.8)
+4. Color Audit M3 role mappings (from Phase 1 Step 1.16)
 5. The `states` map (`{ loading, failed, empty }`) from `stitch-project.json.features[featurename]` — used to decide which state sections the blueprint emits (see rule 21 below)
 
 ```
