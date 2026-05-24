@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -27,6 +28,11 @@ import org.jetbrains.compose.resources.painterResource
 import thisissadeghi.designsystem.util.ContentAlpha
 import thisissadeghi.designsystem.util.LocalContentAlpha
 
+enum class XTopAppBarAlignment {
+    Start,
+    Center,
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun XTopAppBar(
@@ -36,6 +42,7 @@ fun XTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = contentColorFor(backgroundColor),
+    alignment: XTopAppBarAlignment = XTopAppBarAlignment.Center,
 ) {
     val titleSlut = @Composable {
         // because of Material3's component has its own contentColor or textStyle and colors and the app is
@@ -73,14 +80,27 @@ fun XTopAppBar(
             actionIconContentColor = contentColor,
         )
 
-    CenterAlignedTopAppBar(
-        modifier = modifier,
-        title = titleSlut,
-        navigationIcon = navigationIconSlut,
-        actions = actionsSlut,
-        colors = colors,
-        windowInsets = WindowInsets(0, 0, 0, 0),
-    )
+    when (alignment) {
+        XTopAppBarAlignment.Center ->
+            CenterAlignedTopAppBar(
+                modifier = modifier,
+                title = titleSlut,
+                navigationIcon = navigationIconSlut,
+                actions = actionsSlut,
+                colors = colors,
+                windowInsets = WindowInsets(0, 0, 0, 0),
+            )
+
+        XTopAppBarAlignment.Start ->
+            TopAppBar(
+                modifier = modifier,
+                title = titleSlut,
+                navigationIcon = navigationIconSlut,
+                actions = actionsSlut,
+                colors = colors,
+                windowInsets = WindowInsets(0, 0, 0, 0),
+            )
+    }
 }
 
 @Composable
