@@ -81,9 +81,20 @@ Call `mcp__stitch__list_projects`.
 
 Run the **full theme setup logic** exactly as specified below. This is the same procedure as the old phase-0-preflight.md Step 0.1.
 
+### Discover XTheme.kt Path
+
+The path is project-specific (depends on the repo's package prefix). Discover it once here; every later step in this skill reads it from `stitch-project.json.designSystem.xthemePath`.
+
+1. Read `core/designsystem/build.gradle.kts` and grep `namespace = "..."`. Example: `namespace = "thisissadeghi.kmpilot.designsystem"`.
+2. Convert dots to slashes → `thisissadeghi/kmpilot/designsystem`.
+3. Derive `{XTHEME_PATH}` = `core/designsystem/src/commonMain/kotlin/{slash-path}/XTheme.kt`.
+4. Verify the file exists. **Fallback**: if it does not, use `Glob` with `core/designsystem/src/commonMain/kotlin/**/XTheme.kt` and take the first match.
+
+Store the resolved path as `{XTHEME_PATH}`; it will be written into `stitch-project.json` at the Init-2 Write Checkpoint below.
+
 ### Detect Existing Setup
 
-Read `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`.
+Read the file at `{XTHEME_PATH}`.
 
 **If both `XLightColors` (lightColorScheme) and `XDarkColors` (darkColorScheme) already exist** in `XTheme.kt`:
 
@@ -183,7 +194,7 @@ Apply the primary color's hue undertone consistently across all neutral roles. G
 
 ### Update XTheme.kt Structure
 
-Edit `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`:
+Edit the file at `{XTHEME_PATH}`:
 
 1. If the old private val was named `XColors`, rename it to `XLightColors`.
 2. Add `XDarkColors` using `darkColorScheme(...)` with the generated dark palette.
@@ -238,6 +249,7 @@ After completing theme setup:
     "name": null,
     "colorMode": "{LIGHT|DARK}",
     "sourceOfTruth": "XTheme.kt",
+    "xthemePath": "{XTHEME_PATH discovered above}",
     "syncedAt": null,
     "themeSnapshot": {
       "defaultTheme": "{light|dark}",
@@ -622,6 +634,7 @@ Created at Init-2, progressively filled through Init-5. The authoritative schema
     "name": "string — Design system resource name",
     "colorMode": "string — LIGHT or DARK",
     "sourceOfTruth": "string — Always XTheme.kt",
+    "xthemePath": "string — Discovered path to XTheme.kt (repo-specific; resolved at Init-2)",
     "syncedAt": "string — ISO timestamp of last XTheme.kt → Stitch sync",
     "themeSnapshot": {
       "defaultTheme": "string — light or dark",

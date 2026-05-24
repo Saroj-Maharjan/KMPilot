@@ -310,6 +310,7 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
     "name": "string — Design system resource name",
     "colorMode": "string — LIGHT or DARK",
     "sourceOfTruth": "string — Always XTheme.kt",
+    "xthemePath": "string — Repo-specific path to XTheme.kt, discovered at Init-2 from core/designsystem/build.gradle.kts namespace",
     "syncedAt": "string — ISO timestamp of last XTheme.kt → Stitch sync",
     "themeSnapshot": {
       "defaultTheme": "string — light or dark",

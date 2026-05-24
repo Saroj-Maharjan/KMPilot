@@ -220,56 +220,14 @@
 
 ## XTheme Reference (consumed by every X-component)
 
-> The Shapes / XDarkColors / XLightColors / XTheme.Colors tables below mirror `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`. Sync them manually when `XTheme.kt` changes — `XTheme.kt` is small and the sync is rare.
+Theme values (`Shapes`, `XLightColors`, `XDarkColors`, `XTheme.Colors.*`) are project-specific and live in `XTheme.kt`. The repo path is discovered by `/ui-designer` Init-2 and persisted as `stitch-project.json.designSystem.xthemePath`.
 
-### Shapes
-- small = `RoundedCornerShape(6.dp)`
-- medium = `RoundedCornerShape(12.dp)` ← used by `XCard`
-- large = `RoundedCornerShape(20.dp)` ← used by `XDialog`
+**To look up live values during a verify-ui audit:**
+1. Read `xthemePath` from `.claude/docs/_project/stitch-project.json` (the `designSystem.xthemePath` field).
+2. Open that `XTheme.kt` file directly to read the active scheme's hex values, the `Shapes` block, and any `XTheme.Colors.*` extensions.
+3. If `stitch-project.json` does not exist yet, fall back to `core/designsystem/build.gradle.kts` namespace → dots-to-slashes → `core/designsystem/src/commonMain/kotlin/{path}/XTheme.kt`, or `Glob` `core/designsystem/src/commonMain/kotlin/**/XTheme.kt`.
 
-### XDarkColors (default theme — `darkTheme = true`)
-| Role | Hex |
-|------|-----|
-| primary | `#9D70FF` |
-| onPrimary | `#1A0054` |
-| primaryContainer | `#350070` |
-| onPrimaryContainer | `#EDE0FF` |
-| background | `#0D0919` |
-| surface | `#181228` |
-| onBackground | `#E9E0FF` |
-| onSurface | `#E9E0FF` |
-| onSurfaceVariant | `#C5BCE0` |
-| surfaceVariant | `#231A38` |
-| outline | `#4A3F6B` |
-| outlineVariant | `#1E1A2E` |
-| error | `#FFB4AB` |
-| onError | `#690005` |
-| errorContainer | `#93000A` |
-| onErrorContainer | `#FFDAD6` |
-
-### XLightColors
-| Role | Hex |
-|------|-----|
-| primary | `#7B2FFF` |
-| onPrimary | `#FFFFFF` |
-| primaryContainer | `#EDE0FF` |
-| onPrimaryContainer | `#21005D` |
-| background | `#F8F5FF` |
-| surface | `#FFFBFF` |
-| onBackground | `#1C1B1F` |
-| onSurface | `#1C1B1F` |
-| onSurfaceVariant | `#49454E` |
-| surfaceVariant | `#E7E0EC` |
-| outline | `#7A757F` |
-| outlineVariant | `#CAC4CF` |
-| error | `#B3261E` |
-| onError | `#FFFFFF` |
-| errorContainer | `#F9DEDC` |
-| onErrorContainer | `#410E0B` |
-
-### XTheme.Colors (semantic — no M3 role equivalent)
-- `Success` = `#4ADE80` — Income, savings progress, on-track budgets.
-- `Danger` = `#FF6B6B` — Over-budget, expenses, overdue bills.
+Do not duplicate hex values here — they drift per project. `XTheme.kt` is the only source of truth.
 
 ---
 

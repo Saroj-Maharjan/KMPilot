@@ -56,11 +56,12 @@ The model is always `GEMINI_3_FLASH` for all Stitch generation calls. Device typ
    - `projectId` — from `stitch-project.json.projectId`
    - `projectName` — from `stitch-project.json.projectName`
    - `designSystemAssetId` — from `stitch-project.json.designSystem.assetId`
+   - `xthemePath` — from `stitch-project.json.designSystem.xthemePath` (the discovered path to XTheme.kt, written by Init-2)
    - `defaultTheme` — from `stitch-project.json.designSystem.themeSnapshot.defaultTheme`
    - `primaryHex` — from `stitch-project.json.designSystem.themeSnapshot.primaryHex`
    - `paletteCustomized` — from `stitch-project.json.designSystem.themeSnapshot.paletteCustomized`
 
-4. **Drift detection**: Read `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`. Extract the `primary` hex from the scheme matching `defaultTheme`. Compare it against `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary`.
+4. **Drift detection**: Read the file at `xthemePath`. Extract the `primary` hex from the scheme matching `defaultTheme`. Compare it against `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary`.
 
    If they differ, surface:
    ```

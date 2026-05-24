@@ -1,6 +1,6 @@
 # M3 Color Roles Reference
 
-**Single source of truth**: `core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt`
+**Single source of truth**: `XTheme.kt` — the actual repo path is discovered at Init-2 and persisted as `stitch-project.json.designSystem.xthemePath`. Read that field to get the live path.
 
 `XTheme.kt` defines all active M3 roles in two complementary schemes: `XLightColors` (`lightColorScheme`) and `XDarkColors` (`darkColorScheme`). Before writing any Stitch prompt or implementing any UI, read this file. Use the scheme that matches the `defaultTheme` established in Phase 0 Step 0.1 as the design reference; both schemes must stay in sync whenever roles are added or updated.
 

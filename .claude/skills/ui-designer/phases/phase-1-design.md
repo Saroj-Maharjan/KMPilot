@@ -290,7 +290,8 @@ After every required procedure completes, re-read `stitch-project.json` and conf
 **Before writing any Stitch prompt**, read the XTheme file to extract all currently defined M3 roles:
 
 ```
-Read: core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/XTheme.kt
+Read the file at: stitch-project.json.designSystem.xthemePath
+(the discovered path to XTheme.kt; resolved once at Init-2)
 ```
 
 Parse the color scheme that matches the `defaultTheme` established in Phase 0 Step 0.1:
