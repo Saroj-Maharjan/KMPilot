@@ -27,14 +27,41 @@ After `ui-designer` completes, the user can invoke `/modifying-kmp-feature` or `
 3. Run `/creating-kmp-feature {featurename}` (new) or `/modifying-kmp-feature {featurename}` (existing) to implement — they auto-detect the blueprint.
 4. Run `/verify-ui {featurename}` to audit code against the design.
 
+## Tooling Preflight
+
+Run this check **before any other work**, for every invocation (no-args init mode and `{featurename}` mode alike). It is cheap and must pass before Phase 0 or Project Init begin.
+
+**Python 3** is required by `.claude/skills/_shared/extract_tokens.py`, which is invoked during Stitch HTML token extraction (Phase 1 Step 1.16, plus the shared-state generation paths in `phase-init.md`).
+
+```bash
+python3 --version
+```
+
+If the command fails (`python3: command not found`, non-zero exit), **STOP** and tell the user:
+
+```
+Python 3 is not installed (or `python3` is not on PATH). /ui-designer extracts
+design tokens from Stitch HTML via `.claude/skills/_shared/extract_tokens.py`
+and cannot proceed without it.
+
+Install Python 3, then re-invoke /ui-designer:
+  - macOS:   brew install python3
+  - Linux:   sudo apt-get install python3   (or your distro's package manager)
+  - Windows: https://www.python.org/downloads/   (or `winget install Python.Python.3`)
+
+Verify with: python3 --version
+```
+
+Do not retry or work around the failure — wait for the user to install Python 3 and re-invoke the skill.
+
 ## Workflow
 
 ```
-[USER INVOKES] → Phase 0 (Preflight) ──┐                                  ┌──→ Phase 1 (Design) → [USER APPROVES] → DONE
-                                       │ (if stitch-project.json absent   │      Blueprint saved
-                                       │  or initState.completedAt null)  │
-                                       └──→ Project Init (phase-init.md) ─┘
-                                            (auto-runs; one-time per repo)
+[USER INVOKES] → Tooling Preflight (python3) → Phase 0 (Preflight) ──┐                                  ┌──→ Phase 1 (Design) → [USER APPROVES] → DONE
+                                                                     │ (if stitch-project.json absent   │      Blueprint saved
+                                                                     │  or initState.completedAt null)  │
+                                                                     └──→ Project Init (phase-init.md) ─┘
+                                                                          (auto-runs; one-time per repo)
 ```
 
 ### Project Init (One-Time Per Repo)

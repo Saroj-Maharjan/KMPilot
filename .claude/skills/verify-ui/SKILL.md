@@ -27,10 +27,28 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 ## Step 1: Preflight
 
 1. Parse feature name from `$ARGUMENTS` or ask the user.
-2. Verify files exist:
+2. Verify required tooling — **Python 3** (used by Step 3 to run `.claude/skills/_shared/extract_tokens.py`):
+   ```bash
+   python3 --version
+   ```
+   If the command fails (`python3: command not found`, non-zero exit), **STOP** and tell the user:
+   ```
+   Python 3 is not installed (or `python3` is not on PATH). /verify-ui extracts
+   design tokens from Stitch HTML via `.claude/skills/_shared/extract_tokens.py`
+   and cannot proceed without it.
+
+   Install Python 3, then re-invoke /verify-ui {featurename}:
+     - macOS:   brew install python3
+     - Linux:   sudo apt-get install python3   (or your distro's package manager)
+     - Windows: https://www.python.org/downloads/   (or `winget install Python.Python.3`)
+
+   Verify with: python3 --version
+   ```
+   Do not retry or work around the failure — wait for the user to install Python 3.
+3. Verify files exist:
    - `.claude/docs/_project/stitch-project.json` with `features[{featurename}]` entry
    - `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/`
-3. Verify build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`.
+4. Verify build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`.
 
 Read `.claude/docs/_project/stitch-project.json` to load:
 - `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`)
