@@ -98,6 +98,7 @@ On build failure, load troubleshooting:
 - UI layer implemented
 - Integration complete (4 points)
 - Build passing + ktlint formatted
+- @Preview composables present in UI files
 - Living spec: .claude/docs/{featurename}/spec.md
 - Ephemeral artifacts cleaned
 - Navigate: navController.navigate({FeatureName}Route)

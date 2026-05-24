@@ -30,24 +30,31 @@ ls -la .claude/docs/{featurename}/spec.md
 
 ---
 
-## Step 5.2: Rule 11 Guardrail (Grep Gate)
+## Step 5.2: Guardrail Checks (Grep Gate)
 
-Mechanical check that the feature follows the single-UiModel / DTO-wrapped-UiState convention. Two greps; both must return empty.
+Mechanical checks that the feature follows architectural conventions. All must pass.
 
 ```bash
-# (a) No data→presentation imports
+# (a) No data→presentation imports (Rule 11)
 grep -rEn 'import\s+\S+\.presentation\.' \
   feature/{featurename}/src/commonMain/kotlin/**/data/ \
   && echo "❌ Rule 11 violation: data layer imports from presentation" && exit 1
 
-# (b) No *UiState.kt file (collapsed into *UiModel.kt under Rule 11)
+# (b) No *UiState.kt file (Rule 11)
 find feature/{featurename}/src/commonMain/kotlin -name '*UiState.kt' \
   | grep . && echo "❌ Rule 11 violation: *UiState.kt found; collapse into *UiModel.kt" && exit 1
+
+# (c) @Preview exists in UI files
+grep -rn "@Preview" feature/{featurename}/src/commonMain/kotlin \
+  | grep -v "^Binary" | grep . \
+  || echo "⚠️ No @Preview composables found in feature/{featurename}. Add previews per patterns.md § Previews."
 ```
 
-**If either check fails**: Stop. Surface the violation to the user with the file path. Do NOT proceed to artifact cleanup — the feature is broken architecturally and the ephemeral artifacts (prd.md, tasks.md) are still needed for the fix.
+**If (a) or (b) fails**: Stop. Surface the violation to the user. Do NOT proceed to artifact cleanup.
 
-**If both pass**: Proceed to Step 5.3.
+**If (c) finds no previews**: Surface the warning but do NOT block cleanup — previews are required but a missing preview does not break the build or architecture. The user may choose to add them via `/modifying-kmp-feature`.
+
+**If all pass**: Proceed to Step 5.3.
 
 ---
 

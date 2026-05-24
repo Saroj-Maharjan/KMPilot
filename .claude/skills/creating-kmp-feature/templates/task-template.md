@@ -68,6 +68,11 @@ Template for individual task files in `.claude/docs/{featurename}/task-{N}-{titl
 | DI setup | ❌ Skip |
 | Pure data models | ❌ Skip |
 
+### UI Tasks: Required Checklist Items
+
+Every UI task verification checklist must include:
+- [ ] `@Preview` added for each top-level `@Composable` (private, same file, wrapped in `XTheme { ... }`)
+
 ### Agent Assignment
 
 | Group | Agent | Example Tasks |
