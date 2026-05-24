@@ -56,13 +56,32 @@ Determine what the screen needs to show. Sources (in priority order):
 1. **User's prompt**: "design a login screen with email/password fields"
 2. **Existing spec**: Load `.claude/docs/{featurename}/spec.md` if available (Section 4.5 UI Design)
 3. **Existing PRD**: Load `.claude/docs/{featurename}/prd.md` if available
-4. **Ask user**: If requirements are unclear, use `AskUserQuestion`
+4. **Ask user (Vague-Requirements Template)**: see below
 
 For the screen, capture:
 - **Screen name** (e.g., "Main Screen", "Detail Screen", "Settings Screen")
 - **Key elements** (buttons, lists, cards, forms, navigation)
 - **States** (loading, success, empty, error - per the 4-state pattern)
 - **Visual style notes** (dark theme, accent colors, typography preferences)
+
+#### Vague-Requirements Template
+
+**When to use**: No spec exists, no PRD exists, **and** the user's prompt doesn't already convey both purpose and primary content shape. Examples that should trigger this template: "design a dashboard", "make a settings screen". Examples that should NOT trigger it: "design a settings screen with toggles for notifications and dark mode" (already specific enough).
+
+Issue a **single `AskUserQuestion` call with 3 questions**:
+
+| # | Question text | Header | Type | Options |
+|---|--------------|--------|------|---------|
+| 1 | "What does the user do on this screen?" | Purpose | Free text (single-select with one "Describe…" option; users use Other) | "Describe the primary action" |
+| 2 | "What's the primary content shape?" | Content | Single-select | List/feed of items · Form with inputs · Detail/info view · Dashboard with mixed sections |
+| 3 | "Any specific elements or actions to highlight? (e.g., search at top, FAB for new item) — leave blank if none" | Elements | Free text via Other | "Specify…" · "None — use defaults" |
+
+After the user answers:
+- Use Q1 → screen purpose for the Stitch prompt's opening line.
+- Use Q2 → derives `isListBased` (List/feed → `true`; the other three → `false`). **Skip the standalone List-Based Determination question below** unless Q2 was answered with "Other" and the answer is ambiguous.
+- Use Q3 → adds 1-3 must-have UI elements to the Stitch prompt; otherwise fall back to chrome inheritance (Step 1.2) + content-shape defaults.
+
+Do **not** ask a visual-style question here — chrome inheritance covers non-first features, and the first feature's style emerges through the Step 1.11–1.12 approve/edit loop.
 
 ### List-Based Determination (`isListBased`)
 
@@ -71,7 +90,7 @@ A screen is **list-based** when its primary content is a collection of homogeneo
 - **List-based**: feed, search results, message list, transactions, notifications, gallery — the success state is "many of the same thing".
 - **Not list-based**: forms (login, settings, profile edit), detail views (product detail, transaction detail), modal/wizard steps, dashboards with fixed sections (a sub-list inside a dashboard does **not** count — design empty separately if needed).
 
-If the determination is unambiguous from requirements, set `isListBased` directly. If it isn't, ask:
+If the determination is unambiguous from requirements (or already answered by Q2 of the Vague-Requirements Template above), set `isListBased` directly. If it isn't, ask:
 
 > **"Is this screen primarily a scrollable list/grid of items where 'no items yet' is a meaningful state?"** — Yes / No.
 
@@ -716,9 +735,10 @@ For any color found in `tokens_loading.md` or `tokens_failed.md` (only if those 
 
 ### Color Audit Output
 
-Append to the design description file (`.claude/docs/{featurename}/designs/{featurename}.md`):
+Write the Color Audit section into the design description file (`.claude/docs/{featurename}/designs/{featurename}.md`). The section is delimited by HTML comment markers so re-runs (after edits, regenerations, or partial-failure recovery) **replace** the prior audit instead of stacking duplicates:
 
 ```markdown
+<!-- COLOR_AUDIT:BEGIN -->
 ## Color Audit
 
 Default theme for design: {light|dark}
@@ -739,7 +759,10 @@ Default theme for design: {light|dark}
 | Name | Hex | Justification |
 |------|-----|---------------|
 | (none expected — only if needed) | | |
+<!-- COLOR_AUDIT:END -->
 ```
+
+**Write procedure**: If `<!-- COLOR_AUDIT:BEGIN -->` already exists in the file, replace everything from that marker through `<!-- COLOR_AUDIT:END -->` (inclusive) with the new audit. Otherwise append the entire block (markers included) to the end of the file. Never let two `COLOR_AUDIT` blocks coexist.
 
 This audit is the input for Phase 2, where missing roles are added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` before any feature code is written.
 
