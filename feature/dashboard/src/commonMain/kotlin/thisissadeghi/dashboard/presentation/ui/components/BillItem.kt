@@ -1,7 +1,6 @@
 package thisissadeghi.dashboard.presentation.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,64 +9,33 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Subscriptions
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.bolt
+import kmpilot.feature.dashboard.generated.resources.payments
+import kmpilot.feature.dashboard.generated.resources.subscriptions
+import kmpilot.feature.dashboard.generated.resources.wifi
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import thisissadeghi.dashboard.data.model.UpcomingBill
 import thisissadeghi.dashboard.presentation.ui.formatMoney
-import thisissadeghi.designsystem.XHorizontalDivider
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
 
 @Composable
-internal fun UpcomingBillsCard(bills: List<UpcomingBill>) {
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        XText(
-            "Upcoming Bills",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
-                    .clip(RoundedCornerShape(24.dp)),
-        ) {
-            bills.forEachIndexed { index, bill ->
-                BillRow(bill)
-                if (index < bills.lastIndex) {
-                    XHorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    )
-                }
-            }
-        }
-    }
-}
+internal fun BillItem(bill: UpcomingBill) {
+    val iconTint = if (bill.isOverdue) XTheme.Colors.Danger else MaterialTheme.colorScheme.onSurfaceVariant
 
-@Composable
-private fun BillRow(bill: UpcomingBill) {
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -83,20 +51,15 @@ private fun BillRow(bill: UpcomingBill) {
                 contentAlignment = Alignment.Center,
             ) {
                 XIcon(
-                    imageVector = billIcon(bill.name),
-                    contentDescription = null,
-                    tint =
-                        if (bill.isOverdue) {
-                            XTheme.Colors.Danger
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                    painter = painterResource(billIcon(bill.name)),
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp),
                 )
             }
             Column {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     XText(
                         bill.name,
@@ -138,45 +101,29 @@ private fun BillRow(bill: UpcomingBill) {
     }
 }
 
-private fun billIcon(name: String): ImageVector =
+private fun billIcon(name: String): DrawableResource =
     when {
-        name.contains("netflix", ignoreCase = true) -> Icons.Filled.Subscriptions
-        name.contains("internet", ignoreCase = true) -> Icons.Filled.Wifi
-        name.contains("electric", ignoreCase = true) -> Icons.Filled.ElectricBolt
-        else -> Icons.Filled.Receipt
+        name.contains("netflix", ignoreCase = true) -> Res.drawable.subscriptions
+        name.contains("internet", ignoreCase = true) ||
+            name.contains("wifi", ignoreCase = true) -> Res.drawable.wifi
+        name.contains("electric", ignoreCase = true) ||
+            name.contains("electricity", ignoreCase = true) -> Res.drawable.bolt
+        else -> Res.drawable.payments
     }
 
 @Preview
 @Composable
-private fun UpcomingBillsCardPreview() {
+private fun BillItemPreview() {
     XTheme {
-        UpcomingBillsCard(
-            bills =
-                listOf(
-                    UpcomingBill(
-                        id = "1",
-                        name = "Netflix",
-                        amount = 15.49,
-                        dueDate = "May 24",
-                        currency = "$",
-                        isOverdue = false,
-                    ),
-                    UpcomingBill(
-                        id = "2",
-                        name = "Internet",
-                        amount = 59.99,
-                        dueDate = "May 26",
-                        currency = "$",
-                        isOverdue = false,
-                    ),
-                    UpcomingBill(
-                        id = "3",
-                        name = "Electric Bill",
-                        amount = 124.30,
-                        dueDate = "May 19",
-                        currency = "$",
-                        isOverdue = true,
-                    ),
+        BillItem(
+            bill =
+                UpcomingBill(
+                    id = "2",
+                    name = "Internet",
+                    amount = 59.99,
+                    dueDate = "May 15",
+                    currency = "$",
+                    isOverdue = true,
                 ),
         )
     }

@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.lightbulb
+import org.jetbrains.compose.resources.painterResource
 import thisissadeghi.dashboard.data.model.SpendingInsight
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
@@ -48,9 +49,9 @@ internal fun InsightBanner(insight: SpendingInsight) {
             contentAlignment = Alignment.Center,
         ) {
             XIcon(
-                imageVector = Icons.Filled.Lightbulb,
-                contentDescription = null,
+                painter = painterResource(Res.drawable.lightbulb),
                 tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
             )
         }
         Column {

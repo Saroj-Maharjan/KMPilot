@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value                                                   |
 |-------|---------------------------------------------------------|
-| Version | 3.3.0                                                   |
+| Version | 3.4.0                                                   |
 | Status | Approved                                                |
 | Author | System                                                  |
 | Created | 2026-01-05                                              |
-| Updated | 2026-05-19                                              |
+| Updated | 2026-05-26                                              |
 | Design | `.claude/docs/dashboard/designs/dashboard_blueprint.md` |
 | Reviewers | N/A                                                     |
 
@@ -42,7 +42,7 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 - Koin - Dependency injection framework
 - Kotlinx Serialization - Route serialization + model serialization
 - Compose Navigation - Screen navigation
-- Compose Material Icons Extended - Dashboard icons
+- Material Symbols XML drawables - Icon assets (downloaded to `composeResources/drawable/`)
 
 ### 2.3 Constraints
 - Data is served from GitHub Pages mock; local data source is retained but unused in production DI
@@ -133,16 +133,21 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 | DashboardUiModel | UI state container with 4-state pattern |
 | DashboardScreen | Main composable connecting ViewModel to UI |
 | DashboardScreenRoot | ViewModel-independent root for testing |
+| DashboardContent | Success-state root composable — LazyColumn with DashboardHeader + all sections |
 | BalanceCard | Total balance hero card — Box+border, no XCard, full AccountBalance |
-| QuickActionsSection | 4 stub action buttons — CircleShape circles, primaryContainer bg |
+| QuickActions | 4 stub action buttons — CircleShape circles, primaryContainer.copy(0.3f) bg |
 | InsightBanner | Raw Row — surface bg, outlineVariant border, primary icon tint |
-| MonthlySummaryCard | Single combined split-bar, INCOME/EXPENSES side-by-side |
-| BudgetsSection | 2-column grid; plain cards with 6dp progress bar, no icon circles |
-| SavingsGoalsSection | Cards with 20dp padding; icon derived from goal name; success progress bars |
-| UpcomingBillsCard | Single card + XHorizontalDivider; OVERDUE inline badge |
-| PortfolioSection | 3-column grid; each asset its own card (symbol + change %) |
-| RecentTransactionsSection | Each transaction its OWN card (no dividers); CircleShape icon circles |
-| DashboardHeader | Sticky Box — "Good morning," + "Dashboard" 20sp Bold |
+| MonthlySummary | Single combined split-bar, INCOME/EXPENSES side-by-side |
+| MonthlyBudgets | 2-column grid; plain cards with 6dp progress bar, no icon circles |
+| BudgetCard | Individual budget card — conditional Danger border when over budget |
+| SavingsGoals | Section wrapper for savings goal items |
+| SavingsGoalItem | Card with 20dp padding; icon derived from goal name; success progress bars |
+| UpcomingBills | Single card + XHorizontalDivider; OVERDUE inline badge |
+| BillItem | Individual bill row — icon circle + name/date + amount + optional OVERDUE badge |
+| Portfolio | 3-column row; each asset its own card (symbol + change %) |
+| PortfolioItem | Individual asset card — 32dp icon circle + symbol + change% |
+| RecentTransactions | Section wrapper for transaction items |
+| TransactionItem | Each transaction its OWN card (no dividers); CircleShape icon circles |
 | DashboardRoute | Navigation route (@Serializable data object) |
 | DashboardModules | DI configuration (BaseFeature object) |
 
@@ -210,18 +215,23 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 │   ├── DashboardViewModel.kt           # MutableStateFlow + setState {}
 │   ├── DashboardUiModel.kt             # @Stable data class
 │   ├── ui/
-│   │   ├── DashboardScreen.kt          # Screen + ScreenRoot + state routing
+│   │   ├── DashboardScreen.kt          # Screen + ScreenRoot + Loading/FailedContent
 │   │   └── components/
+│   │       ├── DashboardContent.kt     # Success-state LazyColumn (includes private DashboardHeader)
 │   │       ├── BalanceCard.kt
-│   │       ├── QuickActionsSection.kt
+│   │       ├── QuickActions.kt
 │   │       ├── InsightBanner.kt
-│   │       ├── MonthlySummaryCard.kt
-│   │       ├── BudgetsSection.kt
-│   │       ├── SavingsGoalsSection.kt
-│   │       ├── UpcomingBillsCard.kt
-│   │       ├── PortfolioSection.kt
-│   │       ├── RecentTransactionsSection.kt
-│   │       └── DashboardHeader.kt
+│   │       ├── MonthlySummary.kt
+│   │       ├── MonthlyBudgets.kt
+│   │       ├── BudgetCard.kt
+│   │       ├── SavingsGoals.kt
+│   │       ├── SavingsGoalItem.kt
+│   │       ├── UpcomingBills.kt
+│   │       ├── BillItem.kt
+│   │       ├── Portfolio.kt
+│   │       ├── PortfolioItem.kt
+│   │       ├── RecentTransactions.kt
+│   │       └── TransactionItem.kt
 │   └── navigation/
 │       └── DashboardNavigation.kt      # @Serializable route + extension
 └── di/
@@ -230,6 +240,10 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 
 ### 4.5 UI Design
 
+**Design artifact:** `.claude/docs/dashboard/designs/dashboard_blueprint.md` (consumed 2026-05-26)
+
+**Screenshots:** `.claude/docs/dashboard/designs/dashboard.png`
+
 **Theme:** Dark gold/champagne on warm obsidian — background `#0F0D09`, surface `#1C1910`, primary gold `#F5D76E`
 
 **Color tokens (M3 roles):**
@@ -237,26 +251,28 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 - Income/positive: `XTheme.Colors.Success` (`#4ADE80`)
 - Expense/negative/overdue: `XTheme.Colors.Danger` (`#FF6B6B`)
 
-**Dashboard Layout (`XScaffold` + Column, LazyColumn `contentPadding = start/end 24dp, bottom 48dp`) — section order:**
-1. **BalanceCard** — Box+border+clip (not XCard); gold 3dp top strip; 36sp ExtraBold amount; trend pill CircleShape (no border); "vs last month" text
-2. **QuickActionsSection** — `spacedBy(16dp)` Row, `weight(1f)` columns; `CircleShape` circles; `primaryContainer.copy(0.3f)` bg + `outlineVariant` border
-3. **InsightBanner** — `surface` bg + `outlineVariant` border; `primary` icon bg `primary.copy(0.1f)` + `RoundedCornerShape(20dp)`; 20dp padding
-4. **MonthlySummaryCard** — section heading "Monthly Summary"; INCOME/EXPENSES side-by-side 24sp; single combined split bar 12dp
-5. **BudgetsSection** — section heading "Monthly Budgets"; 2-column chunked grid; plain cards with 6dp progress bar; no icon circles, no accent strips
-6. **SavingsGoalsSection** — section heading; cards 20dp padding; icon derived from goal name; `XTheme.Colors.Success` progress bars (8dp)
-7. **UpcomingBillsCard** — section heading; single card + `XHorizontalDivider(outlineVariant.copy(0.3f))`; icon circles `surfaceVariant + RoundedCornerShape(20dp)`; inline OVERDUE badge
-8. **PortfolioSection** — section heading "Portfolio"; 3-column chunked grid; each asset its own card (32dp circle + symbol + change%)
-9. **RecentTransactionsSection** — section heading; each transaction its OWN card (no dividers); `CircleShape` icon circles; income bg `Success.copy(0.1f)`, expense bg `surfaceVariant`
+**Icons:** Material Symbols XMLs (`Res.drawable.*`) — 20 icons in `composeResources/drawable/`; no `Icons.*` imports from Material Icons Extended.
 
-**Header:** Sticky `Box` OUTSIDE `LazyColumn` — "Good morning," subtitle 14sp Medium `onSurfaceVariant`; "Dashboard" title 20sp Bold `onSurface` letterSpacing (-0.5).sp; `background(background)`
+**Dashboard Layout (`XScaffold` + `DashboardContent`, LazyColumn `contentPadding = start/end 24dp, bottom 48dp`) — section order:**
+1. **BalanceCard** — Box+border+clip (not XCard); gold 3dp top strip; 36sp ExtraBold amount; trend pill CircleShape (no border); "vs last month" text
+2. **QuickActions** — `spacedBy(16dp)` Row, `weight(1f)` columns; `CircleShape` circles; `primaryContainer.copy(0.3f)` bg + `outlineVariant` border; icons: send, download, payments, add_circle
+3. **InsightBanner** — `surface` bg + `outlineVariant` border; `primary` icon bg `primary.copy(0.1f)` + `RoundedCornerShape(20dp)`; 20dp padding
+4. **MonthlySummary** — section heading "Monthly Summary"; INCOME/EXPENSES side-by-side 24sp; single combined split bar 12dp
+5. **MonthlyBudgets** — section heading "Monthly Budgets"; 2-column chunked grid; **BudgetCard** with 6dp progress bar; conditional Danger border (30% alpha) when `isOverBudget`
+6. **SavingsGoals** — section heading; **SavingsGoalItem** cards 20dp padding; icon derived from goal name; `XTheme.Colors.Success` progress bars (8dp)
+7. **UpcomingBills** — section heading; single card + `XHorizontalDivider(outlineVariant.copy(0.3f))`; **BillItem** rows; icon circles `surfaceVariant + RoundedCornerShape(20dp)`; inline OVERDUE badge (`Danger.copy(0.2f)` bg, 10sp Bold Danger)
+8. **Portfolio** — section heading "Portfolio"; 3-column Row; each **PortfolioItem** card (32dp icon circle + symbol + change%)
+9. **RecentTransactions** — section heading; each **TransactionItem** its OWN card (no dividers); `CircleShape` icon circles; income bg `Success.copy(0.1f)`, expense bg `surfaceVariant`
+
+**DashboardHeader:** Private composable in `DashboardContent.kt` — "Good morning," subtitle 14sp Medium `onSurfaceVariant`; "Dashboard" title 20sp Bold `onSurface` letterSpacing (-0.5).sp; Row SpaceBetween; `background(background)`; padding(horizontal=24dp, vertical=16dp)
 
 **All cards:** `RoundedCornerShape(24.dp)` + `border(1.dp, outline/outlineVariant)` via `Modifier.background(surface, ...)` — **no XCard**
 
 **Progress bar tracks:** `MaterialTheme.colorScheme.surfaceVariant` — no hardcoded Color()
 
-**Loading state:** Layered loader (centered) — 96dp decorative outline ring (1dp `outlineVariant.copy(alpha = 0.3f)`, CircleShape) wrapping a 64dp track (4dp `surfaceVariant` border, CircleShape), a 4dp `primary.copy(alpha = 0.4f)` indeterminate arc, and a central 8dp `primary` dot.
+**Loading state:** Centered `XCircularProgressIndicator` on `colorScheme.background`.
 
-**Failed state:** Warning icon backed by an 80dp `error.copy(alpha = 0.1f)` circular glow; "Something went wrong" title 20sp SemiBold with `letterSpacing = (-0.5).sp` and `lineHeight = 32.5.sp`; primary `Retry` `XButton` followed by a secondary `XTextButton("Return to Dashboard", color = onSurfaceVariant, 14sp Medium)`.
+**Failed state:** `failed_background.png` decorative image (alpha=0.2f, 265dp, BottomStart); warning icon (80dp `Res.drawable.warning`) on `error.copy(0.1f)` 120dp glow ring; "Something went wrong" 20sp SemiBold; primary `Retry` `XButton` (fillMaxWidth, widthIn(200dp), 56dp height, RoundedCornerShape(12dp)); secondary `XTextButton("Return to Dashboard", onSurfaceVariant, 14sp Medium)`.
 
 ---
 
@@ -418,6 +434,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 |---------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3.4.0 | 2026-05-26 | Blueprint implementation (modifying-kmp-feature skill, design-aware mode): Extracted `DashboardContent` to `components/DashboardContent.kt`; renamed 7 components (QuickActionsSection→QuickActions, MonthlySummaryCard→MonthlySummary, BudgetsSection→MonthlyBudgets, SavingsGoalsSection→SavingsGoals, UpcomingBillsCard→UpcomingBills, PortfolioSection→Portfolio, RecentTransactionsSection→RecentTransactions); split monolithic section files into one-file-per-component (BudgetCard, SavingsGoalItem, BillItem, PortfolioItem, TransactionItem); replaced all `Icons.*` imports with `Res.drawable.*` XML icons; downloaded 20 Material Symbol XMLs + `failed_background.png`; simplified LoadingContent to centered XCircularProgressIndicator; updated FailedContent with decorative background image; removed DashboardHeader.kt (now private in DashboardContent.kt). |
 | 3.3.0 | 2026-05-19 | Switched to remote data source: `DashboardRepositoryImpl` now delegates to `DashboardRemoteDataSource` (returns `Either<DashboardData>`); `DashboardRepository` interface return type updated to `Either<DashboardData>`; `DashboardViewModel` replaced try/catch with `Either` pattern; `LocalDataSource` removed from DI (files retained); `DashboardResources` path updated to `/api/finance/dashboard.json`; `BASE_URL` pointed at GitHub Pages mock (`https://thisissadeghi.github.io/KMPilot/mock-api/`). |
 | 3.2.1 | 2026-05-15 | UI fidelity fixes from `dashboard_audit.md`: removed extra "Monthly Summary" heading + outer Column wrapper in `MonthlySummaryCard`; fixed Portfolio icon→symbol spacing (0dp → 4dp); dropped "• {date}" suffix from `RecentTransactionsSection` category line; rebuilt layered Loading state (96dp outline ring + 64dp surface-variant track + 4dp primary arc + 8dp central dot); added "Return to Dashboard" secondary `XTextButton` + new `onBackToDashboard: () -> Unit` callback threaded through `DashboardScreen`, `DashboardScreenRoot`, the `dashboard()` nav extension, and `BaseAppNavHost` (pops to dashboard); added `letterSpacing = (-0.5).sp` + `lineHeight = 32.5.sp` to "Something went wrong" title; removed 32dp spacer between subtitle and Retry button; added 80dp `error.copy(alpha = 0.1f)` decorative glow behind the warning icon. |
 | 3.2.0 | 2026-05-11 | Blueprint implementation (ui-designer skill): gold/champagne theme (#F5D76E primary), component renames (BalanceCard, QuickActionsSection, InsightBanner, MonthlySummaryCard, UpcomingBillsCard), XScaffold replacing manual Column, 2-col budget grid, 3-col portfolio grid, single split-bar monthly summary (12dp), individual transaction cards, single bills card with dividers, XTheme.Colors.Success/Danger replacing obsolete ExpenseRed/tertiary usage, DashboardHeader sticky Box with background.                                                                                                                                                                                                                                                                                                                                                   |

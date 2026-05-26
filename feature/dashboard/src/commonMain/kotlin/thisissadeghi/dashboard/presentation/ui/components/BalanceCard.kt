@@ -6,16 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.trending_up
+import org.jetbrains.compose.resources.painterResource
 import thisissadeghi.dashboard.data.model.AccountBalance
 import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XIcon
@@ -56,8 +55,8 @@ internal fun BalanceCard(balance: AccountBalance) {
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(bottom = 8.dp),
             )
-            Spacer(Modifier.height(8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 XText(
                     "$${balance.totalBalance.formatMoney()}",
@@ -78,12 +77,10 @@ internal fun BalanceCard(balance: AccountBalance) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         XIcon(
-                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                            contentDescription = null,
+                            painter = painterResource(Res.drawable.trending_up),
                             tint = XTheme.Colors.Success,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(14.dp).padding(end = 4.dp),
                         )
-                        Spacer(Modifier.width(4.dp))
                         XText(
                             "+${balance.changePercent}% (${balance.currency}${balance.changeAmount.formatMoney()})",
                             color = XTheme.Colors.Success,

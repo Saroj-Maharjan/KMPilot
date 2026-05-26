@@ -38,33 +38,35 @@ All cards use surface (#1C1910) background with 1dp outline (#726A48) border and
 
 ---
 
+<!-- COLOR_AUDIT:BEGIN -->
 ## Color Audit
 
-Default theme for design: **dark**
+Default theme for design: dark
 
-### Defined M3 Roles (already in XDarkColors)
+### Defined M3 Roles (already in active scheme — XDarkColors)
 
 | Role | Hex (inventory) | Usage in Design |
 |------|-----------------|-----------------|
-| background | #0F0D09 | Screen background, header background |
-| surface | #1C1910 | All card backgrounds |
-| surfaceVariant | #302B1C | Progress bar tracks, quick action button bg, expense/neutral icon circles |
-| primary | #F5D76E | Balance amount, balance top strip, action icons, section icons, progress fills (on-track budgets), savings icons |
-| onPrimary | #2C1900 | Text on gold (retry button in failed state) |
-| primaryContainer | #4A3200 | Quick action button circle background (@ 30% opacity), insight icon bg (@10% opacity), BTC/SOL symbol circles (@10% opacity) |
-| onSurface | #EDE8D5 | Primary text everywhere — titles, amounts, bill names, transaction names |
-| onSurfaceVariant | #C4BA94 | "Good morning," subtitle, section labels, muted amounts, due dates, quick action labels, ETH symbol circle |
-| outline | #726A48 | Card borders (1dp) |
-| outlineVariant | #3F3822 | Bill section dividers (@30%), budget/savings card borders, insight/summary card borders |
-| error | #FFB4AB | Failed state icon, failed state glow |
+| background | #0F0D09 | Screen background, header background, loading/failed screen background |
+| surface | #1C1910 | All card backgrounds (balance, insight, summary, budget, savings, bills, portfolio, transactions) |
+| surfaceVariant | #302B1C | Progress bar tracks, neutral transaction/bill icon containers |
+| onSurface | #EDE8D5 | Primary text — section titles, balance amounts, card labels, transaction names |
+| onSurfaceVariant | #C4BA94 | Muted text — "Good morning," greeting, quick action labels, secondary info, failed screen heading |
+| primary | #F5D76E | Balance amount, 3dp accent bar, quick action icon tints, insight icon, on-track budget progress fills, savings icon tints |
+| primaryContainer | #4A3200 | Quick action button circles (@ 30% opacity), insight icon bg (@ 10% opacity), BTC/SOL portfolio icon circles (@ 10% opacity) |
+| onPrimary | #2C1900 | Text on primary-colored Retry button (failed state) |
+| outline | #726A48 | Balance Card border (1dp) |
+| outlineVariant | #3F3822 | Most card borders, bill section dividers (@ 30%), loading screen ring border |
+| error | #FFB4AB | Failed state warning icon, failed state glow background |
 
-### Missing M3 Roles
+### Missing M3 Roles (must add to BOTH XLightColors and XDarkColors before implementation)
 
 None — all design colors map to existing XDarkColors roles or XTheme.Colors custom extensions.
 
-### Custom Colors (XTheme.Colors.* — justified exceptions)
+### Custom Colors (XTheme.Colors.* — justified exceptions only)
 
 | Name | Hex | Justification |
 |------|-----|---------------|
-| Success | #4ADE80 | Income amounts, savings progress bars, positive % changes, income icon circles (@10%), budget "On track" text — M3 has no "success" semantic role |
-| Danger | #FF6B6B | Expense amounts, over-budget borders/bars/text, OVERDUE badge, negative % changes — distinct from error (#FFB4AB coral); represents financial negative state |
+| Success | #4ADE80 | Income amounts, savings progress bars, positive % changes, income/freelance transaction icon circles (@ 10%), savings goal completion % — M3 has no semantic success role |
+| Danger | #FF6B6B | Expense amounts, over-budget borders/bars/text, OVERDUE badge, overdue bill amount, negative % changes — financially distinct from M3 error (#FFB4AB coral) |
+<!-- COLOR_AUDIT:END -->
