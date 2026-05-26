@@ -58,6 +58,7 @@ Each class is followed by its deterministic token interpretation when one applie
 **Element formats:**
 - **Visual elements** (any class converts to a visual token, or has inline style) get a full block with one line per class.
 - **Layout-only elements** (only structural classes like `flex`, `items-center`, `justify-between`) get a single compact line — they still appear in order so structural mismatches (Row vs Column, arrangement, alignment) remain visible.
+- **Classless text children** (e.g. `<span>Label</span>` inside a button) also appear as a one-liner with their text, so sibling DOM order inside a flex container is preserved — compare it against the Compose content lambda order.
 
 - [1] `<html>` `dark`
 **[2] `<body>`**

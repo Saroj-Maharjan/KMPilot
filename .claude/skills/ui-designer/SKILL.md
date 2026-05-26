@@ -31,7 +31,11 @@ After `ui-designer` completes, the user can invoke `/modifying-kmp-feature` or `
 
 Run this check **before any other work**, for every invocation (no-args init mode and `{featurename}` mode alike). It is cheap and must pass before Phase 0 or Project Init begin.
 
-**Python 3** is required by `.claude/skills/_shared/extract_tokens.py`, which is invoked during Stitch HTML token extraction (Phase 1 Step 1.16, plus the shared-state generation paths in `phase-init.md`).
+**Python 3** is required by two scripts invoked during Phase 1 Step 1.15:
+- `.claude/skills/_shared/extract_tokens.py` — Stitch HTML token extraction (sub-step 4; also used by the shared-state generation paths in `phase-init.md`).
+- `.claude/skills/_shared/download_assets.py` — generates the **icons manifest** (`--type icons`, sub-step 5) AND the **images manifest** (`--type images`, sub-step 6). `/ui-designer` always invokes it with `--manifest-only` (doc artifact only).
+
+XML downloads, image downloads, `DesignSystemResources.kt` edits, and cross-feature Kotlin import rewrites all happen later in `/creating-kmp-feature` or `/modifying-kmp-feature` (which run the same script without `--manifest-only`).
 
 ```bash
 python3 --version
@@ -41,8 +45,9 @@ If the command fails (`python3: command not found`, non-zero exit), **STOP** and
 
 ```
 Python 3 is not installed (or `python3` is not on PATH). /ui-designer extracts
-design tokens from Stitch HTML via `.claude/skills/_shared/extract_tokens.py`
-and cannot proceed without it.
+design tokens via .claude/skills/_shared/extract_tokens.py and generates the
+icons + images manifests via .claude/skills/_shared/download_assets.py
+(--type icons | --type images). Cannot proceed without it.
 
 Install Python 3, then re-invoke /ui-designer:
   - macOS:   brew install python3

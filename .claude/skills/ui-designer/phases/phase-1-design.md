@@ -24,7 +24,7 @@ Design Progress:
 - [ ] Step 1.12: Iterate on feedback (if needed)
 - [ ] Step 1.13: Finalize approved success design
 - [ ] Step 1.14: Generate state designs for selected optional states only
-- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY)
+- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY) — includes Material Symbols icons manifest (sub-step 5) and `<img>` assets manifest (sub-step 6); both manifest-only — no XML/image downloads here
 - [ ] Step 1.16: Color Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.17: Generate Implementation Blueprint
 - [ ] Step 1.18: Update stitch-project.json
@@ -702,7 +702,56 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
 
    Do NOT re-tokenize loading/failed — those were already tokenized at Project Init time and live in `_shared/`.
 
-5. **Do not delete.** The HTML and token inventories live in `extracted/` from now on. `/verify-ui` will detect and reuse them — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
+5. **Generate the Material Symbols icons manifest** for every `<span class="material-symbols-*" data-icon="...">` found in the selected-state HTML files. `/ui-designer` is a **design-only** skill — it does NOT download XML files or mutate any source code. It only writes the declarative `icons.json` manifest that downstream implementation skills consume.
+
+   ```bash
+   python3 .claude/skills/_shared/download_assets.py \
+     --type icons \
+     --feature {featurename} \
+     --project-root {repo_root} \
+     --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+     [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
+     [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty] \
+     --manifest-only
+   ```
+
+   The `--manifest-only` flag is **mandatory** in `/ui-designer`. Without it the script would download XML files and edit `DesignSystemResources.kt` — both source-tree mutations that belong to `/creating-kmp-feature` or `/modifying-kmp-feature` (which activate the protect-feature-files hook marker before mutating source). Running the script without `--manifest-only` from within `/ui-designer` violates the blueprint-artifact-contract.
+
+   - Pass `--html` once per **selected** state (success always; loading/failed/empty per their `needs*` flag — same selection logic as the tokenizer above).
+   - **Placement algorithm (usage-based, declarative)**: the manifest classifies each icon as chrome or domain based on cross-feature usage. The script scans every existing `.claude/docs/*/designs/extracted/icons.json` manifest, computes `users = {features that declare this icon} ∪ {current feature}`, and classifies `len(users) >= 2` → **chrome**, otherwise **domain**. The chrome icon's predicted path is `core/designsystem/.../composeResources/drawable/{ident}.xml`; the domain icon's is `feature/{featurename}/.../composeResources/drawable/{ident}.xml`. The implementing skill materializes the XML at the declared path.
+   - **Doc-artifact promotion** is allowed and automatic in manifest-only mode: when adding a feature that pushes an icon from 1 → 2 users, every affected other feature's `icons.json` is updated in place to reflect the new chrome scope. These are all artifacts under `.claude/docs/` — never source.
+   - **No source mutation**: the script never writes to `feature/*/composeResources/drawable/`, never edits `DesignSystemResources.kt`, never rewrites any `.kt` import. Those happen later in `/creating-kmp-feature` (or `/modifying-kmp-feature`) when the marker is active.
+   - **Manifest fields** for each icon: `name`, `style`, `filled`, `scope`, `drawable_name`, predicted `drawable_path`, predicted `res_reference`, `source_url`, `download_status: "pending"`, `usage_count`, `users`, `occurrences`. Step 1.17 feeds this manifest to the blueprint generator so icon references resolve correctly.
+   - Non-outlined styles (rounded, sharp) emit a warning — Stitch defaults to outlined, so divergence usually signals a design intent worth noting.
+
+   **Materialization happens later, in the implementation skill.** When the user runs `/creating-kmp-feature {featurename}` or `/modifying-kmp-feature {featurename}` in design-aware mode, it invokes the same script **without** `--manifest-only`. That run downloads each XML to its declared path, applies the JetBrains-required KMP cleanup pass (strip `android:tint`, `android:autoMirrored`, replace `@android:color/white` with `#000000`), extends `DesignSystemResources.kt` for any chrome additions, and inline-migrates any stale `feature/X/drawable/{ident}.xml` copies plus their Kotlin imports for icons whose scope flipped.
+
+6. **Generate the `<img>` assets manifest** for every `<img>` tag found in the selected-state HTML files. Stitch generates decorative raster assets (background textures, hero illustrations) hosted on its CDN (`lh3.googleusercontent.com/aida-public/...`); they are **design assets**, NOT runtime data. The downloader bundles them in the same place icons live — Compose resources — referenced via `painterResource`.
+
+   `/ui-designer` is design-only — it writes only the declarative manifest. Actual downloads happen later in `/creating-kmp-feature` or `/modifying-kmp-feature`.
+
+   ```bash
+   python3 .claude/skills/_shared/download_assets.py \
+     --type images \
+     --feature {featurename} \
+     --project-root {repo_root} \
+     --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+     [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
+     [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty] \
+     --manifest-only
+   ```
+
+   The `--manifest-only` flag is **mandatory** in `/ui-designer` (same rule as for `--type icons`).
+
+   - **Filename derivation**: `{state}_{role}[_idx]` — state from the input HTML filename; role inferred from CSS context (e.g., `absolute + pointer-events-none + opacity-low → background`; `rounded-full + small width → avatar`; `aspect-square + small → thumbnail`; `w-full + tall → hero`; otherwise `image`). HTML comments adjacent to the `<img>` (Stitch labels like `<!-- Decorative Image ... -->`) override CSS heuristics when present.
+   - **Placement (usage-based, identical to icons)**: cross-feature scan of all `images.json` manifests; `len(users) >= 2 → chrome` (placed in `core/designsystem/.../composeResources/drawable/`); else **domain** (feature's own dir). Shared-state-screen images naturally promote to chrome once a second feature opts in.
+   - **No KMP cleanup pass** needed (raster images don't have Android-specific attributes to scrub).
+   - **Extension** is left as `unknown` in manifest-only mode; full-mode downloads set it from the response's `Content-Type` header (PNG / JPEG / WebP).
+   - **The blueprint emits `Image(painter = painterResource({res_reference}))`**, NOT `AsyncImage`. `AsyncImage` is reserved for runtime data the implementer wires up post-hoc (user avatars, product photos, anything sourced from the API at runtime).
+
+7. **Do not delete.** The HTML, token inventories, `icons.json`, and `images.json` manifests live in `extracted/` from now on. The downloaded XMLs and image assets live under `composeResources/drawable/` in the appropriate module **after the implementation skill materializes them**. `/verify-ui` will detect and reuse all of these — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
 
 ---
 
@@ -786,6 +835,8 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
 2. **Generate the blueprint**: Feed the selected state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
    - HTML file contents for selected states (labeled by state)
    - Token inventories for selected states (labeled by state) — authoritative for already-converted classes
+   - The icons manifest at `.claude/docs/{featurename}/designs/extracted/icons.json` (from Step 1.15 sub-step 5) — authoritative for every Material Symbols `<span>` in the design, resolving each to its drawable name and Compose `res_reference`. The blueprint must use the exact `res_reference` from the manifest (no manual `Icons.Default.*` fallback).
+   - The images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Step 1.15 sub-step 6) — authoritative for every `<img>` tag in the design, resolving each to its drawable name and Compose `res_reference`. The blueprint must emit `Image(painter = painterResource({res_reference}))` using the manifest's exact `res_reference` (never `AsyncImage` for Stitch CDN URLs).
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
    - The Color Audit M3 role mappings (from Step 1.16 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
    - The `needsLoading`, `needsFailed`, `needsEmpty` flags so the prompt knows which sections to emit
@@ -861,6 +912,8 @@ After Phase 1 completes:
 - Design description: `.claude/docs/{featurename}/designs/{featurename}.md` (with state rows for selected states only)
 - Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (selected states only; skipped state sections marked "Skipped" for loading/failed, omitted for empty)
 - Persisted HTML + token inventories for selected states: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`). Loading/failed inventories continue to live in `.claude/docs/_shared/`.
+- Icons manifest: `.claude/docs/{featurename}/designs/extracted/icons.json` (consumed by Step 1.17 blueprint generator, `/creating-kmp-feature` / `/modifying-kmp-feature` in design-aware mode, and `/verify-ui`). The manifest declares predicted drawable paths and `res_reference` values for every icon, with `download_status: "pending"` until an implementation skill materializes them.
+- Images manifest: `.claude/docs/{featurename}/designs/extracted/images.json` (consumed by the same downstream skills). Same shape as the icons manifest — declares predicted drawable paths and `res_reference` values for every `<img>` tag, with `download_status: "pending"`.
 - stitch-project.json updated with approved screen, per-feature `states` selection map, screenshots for selected states, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received
