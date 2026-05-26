@@ -346,6 +346,20 @@ node_modules/
 # tasks.json
 # tasks/
 
+# graphify
+graphify-out/
+
+# caveman
+.agents/
+skills-lock.json
+.claude/skills/caveman
+.claude/skills/caveman-commit
+.claude/skills/caveman-compress
+.claude/skills/caveman-help
+.claude/skills/caveman-review
+.claude/skills/caveman-stats
+.claude/skills/cavecrew
+
 # KMPilot sync markers
 .scripts/*
 .github/*
