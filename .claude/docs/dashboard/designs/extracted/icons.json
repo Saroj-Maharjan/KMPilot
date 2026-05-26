@@ -1,0 +1,448 @@
+{
+  "feature": "dashboard",
+  "type": "icons",
+  "icons": [
+    {
+      "name": "add_circle",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "add_circle",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/add_circle.xml",
+      "res_reference": "Res.drawable.add_circle",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/add_circle/materialsymbolsoutlined/add_circle_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "bolt",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "bolt",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/bolt.xml",
+      "res_reference": "Res.drawable.bolt",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/bolt/materialsymbolsoutlined/bolt_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "coffee",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "coffee",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/coffee.xml",
+      "res_reference": "Res.drawable.coffee",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/coffee/materialsymbolsoutlined/coffee_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "currency_bitcoin",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "currency_bitcoin",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/currency_bitcoin.xml",
+      "res_reference": "Res.drawable.currency_bitcoin",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/currency_bitcoin/materialsymbolsoutlined/currency_bitcoin_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "currency_exchange",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "currency_exchange",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/currency_exchange.xml",
+      "res_reference": "Res.drawable.currency_exchange",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/currency_exchange/materialsymbolsoutlined/currency_exchange_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "directions_car",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "directions_car",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/directions_car.xml",
+      "res_reference": "Res.drawable.directions_car",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/directions_car/materialsymbolsoutlined/directions_car_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "download",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "download",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/download.xml",
+      "res_reference": "Res.drawable.download",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/download/materialsymbolsoutlined/download_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "flight",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "flight",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/flight.xml",
+      "res_reference": "Res.drawable.flight",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/flight/materialsymbolsoutlined/flight_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "laptop_mac",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "laptop_mac",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/laptop_mac.xml",
+      "res_reference": "Res.drawable.laptop_mac",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/laptop_mac/materialsymbolsoutlined/laptop_mac_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "lightbulb",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "lightbulb",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/lightbulb.xml",
+      "res_reference": "Res.drawable.lightbulb",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/lightbulb/materialsymbolsoutlined/lightbulb_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "payments",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/payments.xml",
+      "res_reference": "Res.drawable.payments",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/payments/materialsymbolsoutlined/payments_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "savings",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "savings",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/savings.xml",
+      "res_reference": "Res.drawable.savings",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/savings/materialsymbolsoutlined/savings_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "send",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/send.xml",
+      "res_reference": "Res.drawable.send",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/send/materialsymbolsoutlined/send_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "shopping_bag",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "shopping_bag",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/shopping_bag.xml",
+      "res_reference": "Res.drawable.shopping_bag",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/shopping_bag/materialsymbolsoutlined/shopping_bag_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "subscriptions",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/subscriptions.xml",
+      "res_reference": "Res.drawable.subscriptions",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/subscriptions/materialsymbolsoutlined/subscriptions_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "token",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "token",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/token.xml",
+      "res_reference": "Res.drawable.token",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/token/materialsymbolsoutlined/token_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "trending_up",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "trending_up",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/trending_up.xml",
+      "res_reference": "Res.drawable.trending_up",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/trending_up/materialsymbolsoutlined/trending_up_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "warning",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "warning",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/warning.xml",
+      "res_reference": "Res.drawable.warning",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/warning/materialsymbolsoutlined/warning_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "failed",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "wifi",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "wifi",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/wifi.xml",
+      "res_reference": "Res.drawable.wifi",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/wifi/materialsymbolsoutlined/wifi_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "work",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "work",
+      "extension": "xml",
+      "drawable_path": "feature/dashboard/src/commonMain/composeResources/drawable/work.xml",
+      "res_reference": "Res.drawable.work",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/work/materialsymbolsoutlined/work_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "generator": "download_assets.py",
+  "version": 1
+}
