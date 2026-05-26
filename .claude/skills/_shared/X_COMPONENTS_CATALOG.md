@@ -183,6 +183,15 @@
 ### `XIcon`
 - Default tint: `LocalContentColor.current` — inherits parent color (text color of enclosing scope).
 - No size default — caller must pass `Modifier.size(...)`.
+- **Two overloads** — pick by source:
+  - `XIcon(imageVector: ImageVector, ...)` — legacy callers using `androidx.compose.material.icons.*`. The library is pinned/deprecated; do **not** reach for it for new features.
+  - `XIcon(painter: Painter, ...)` — canonical path for Material Symbols rendered from XML vector drawables. Used by every feature created via `/ui-designer` (Phase 1 Step 1.15 sub-step 5 downloads the XMLs; the blueprint emits `XIcon(painter = painterResource({res_reference}))`).
+- Resource references follow the chrome/domain split decided by **cross-feature usage** (`download_assets.py` scans all `.claude/docs/*/designs/extracted/icons.json` manifests; an icon used by ≥2 features is chrome, otherwise domain):
+  - **Chrome icons** (shared across features) live in `core/designsystem/src/commonMain/composeResources/drawable/` and are referenced via the `DesignSystemResources.drawable.{name}` indirection (matches the existing pattern in `core/designsystem/.../DesignSystemResources.kt`). `/creating-kmp-feature` and `/modifying-kmp-feature` auto-extend `DesignSystemResources.kt` when promoting an icon.
+  - **Domain icons** (feature-specific) live in `feature/{featurename}/src/commonMain/composeResources/drawable/` and are referenced via the feature's own generated `Res.drawable.{name}`.
+  - **Skill ownership**: `/ui-designer` writes only the declarative manifest under `.claude/docs/`. XML downloads, `DesignSystemResources.kt` extensions, and cross-feature Kotlin import migrations all happen in `/creating-kmp-feature` or `/modifying-kmp-feature` (design-aware mode), where the protect-feature-files hook marker is active and source mutations are legitimate.
+  - Promotion from domain → chrome is automatic and idempotent; the implementing skill rewrites affected features' imports and the doc-artifact promotion (other features' manifests) already happened during `/ui-designer`'s manifest-only run. Demotion is not performed.
+- Filled-variant icons (Stitch HTML `data-weight="fill"`) get a `_fill` filename and resource suffix (e.g. `bolt_fill.xml` → `Res.drawable.bolt_fill`).
 
 ### `XText` *(wraps M3 `Text`)*
 - No additional internal constraints — pure pass-through to M3 Text with all M3 defaults.
