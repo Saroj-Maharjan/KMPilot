@@ -34,9 +34,50 @@ Ask user for preference:
 
 If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
 
-1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles
-2. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
-3. **X-Component Constraint Check**: Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
+1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles. Also read the manifests at:
+   - `.claude/docs/{featurename}/designs/extracted/icons.json` (Material Symbols, from `/ui-designer` sub-step 5)
+   - `.claude/docs/{featurename}/designs/extracted/images.json` (`<img>` assets, from `/ui-designer` sub-step 6)
+
+   Every entry in both manifests has `download_status: "pending"`.
+2. **Materialize Material Symbols XML drawables** by running the shared downloader **without** `--manifest-only` so it actually downloads, applies the JetBrains-required KMP cleanup pass, extends `DesignSystemResources.kt` for any chrome additions, and inline-migrates any stale `feature/X/drawable/{ident}.xml` plus their Kotlin imports for icons that just promoted from domain to chrome:
+
+   ```bash
+   python3 .claude/skills/_shared/download_assets.py \
+     --type icons \
+     --feature {featurename} \
+     --project-root {repo_root} \
+     --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+     [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
+     [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty]
+   ```
+
+   - **Pass `--html` for the same selected states** the manifest covers (`needsLoading`/`needsFailed`/`needsEmpty` flags from `stitch-project.json.features[{featurename}].states`).
+   - **Why before XTheme**: icons are a deterministic script with no LLM reasoning; running it first surfaces network/404 failures early before any UI work begins. If any download fails, the script reports `http-404` etc. in its summary — fix the failing icon name in the design, re-run `/ui-designer` to refresh the manifest, then retry.
+   - **What the script does in full mode** (matches the manifest's predictions):
+     - Downloads each XML from `google/material-design-icons` master, applies the cleanup pass (strip `android:tint`, strip `android:autoMirrored`, replace `@android:color/white` with `#000000`), writes to the path the manifest declared.
+     - For chrome icons: extends `core/designsystem/.../DesignSystemResources.kt` idempotently (`val {ident} = Res.drawable.{ident}` inside `object drawable`).
+     - For promoted icons (those whose `users` set includes another feature): deletes the stale `feature/{other}/.../drawable/{ident}.xml` AND rewrites every `.kt` under `feature/{other}/src/` from `Res.drawable.{ident}` → `DesignSystemResources.drawable.{ident}` (imports fixed). Doc-artifact promotion of other features' manifests was already done by `/ui-designer`; this step just brings their source in sync.
+   - **Idempotent**: existing XMLs are skipped, existing `DesignSystemResources` entries are skipped, Kotlin files that no longer reference `Res.drawable.{ident}` are skipped. Safe to re-run after a failed mid-flight.
+   - After this step, run `./gradlew :core:designsystem:assembleAndroidMain` to confirm `DesignSystemResources.kt` additions compile cleanly.
+3. **Materialize `<img>` assets** by running the same downloader with `--type images`:
+
+   ```bash
+   python3 .claude/skills/_shared/download_assets.py \
+     --type images \
+     --feature {featurename} \
+     --project-root {repo_root} \
+     --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+     [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
+     [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty]
+   ```
+
+   - Same skill-ownership model as icons: downloads each `<img>` from its Stitch CDN URL, detects extension from `Content-Type` (PNG / JPEG / WebP), places files at the path the manifest declared, extends `DesignSystemResources.kt` for chrome assets, inline-migrates stale references in other features.
+   - Idempotent: existing files are skipped via `skip-exists`.
+   - The blueprint references images by `res_reference` (e.g. `Res.drawable.failed_background`); the UI agent emits `Image(painter = painterResource(...))` exactly as declared. **Do NOT emit `AsyncImage` for these — that composable is reserved for runtime data, not bundled design assets.**
+4. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
+5. **X-Component Constraint Check**: Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
    - `defaultMinSize` constraints (e.g. `XButton` enforces `minWidth=100.dp, minHeight=44.dp`)
    - Default parameter values that differ from the blueprint's intent (e.g. `XIconButton` defaults to a visible `surface` background)
    - Hardcoded internal padding that overrides `contentPadding` (e.g. `XTextField` hardcodes `top=10.dp, bottom=10.dp`)
@@ -50,7 +91,7 @@ If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
    - Accept as architectural limitation: note it in the agent prompt
 
    **Pass the conflict list to the UI agent** as additional context alongside the blueprint.
-4. **Pass blueprint to UI agent**: Include the blueprint path, design screenshots, and constraint conflict list as context. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
+6. **Pass blueprint to UI agent**: Include the blueprint path, design screenshots, constraint conflict list, **and the now-materialized icons and images manifests** as context. The blueprint's Component Tree references icons and images by `res_reference` (e.g. `Res.drawable.qr_code_scanner`, `DesignSystemResources.drawable.arrow_back` for icons; `Res.drawable.failed_background` for images); the UI agent emits `XIcon(painter = painterResource({res_reference}))` for icons and `Image(painter = painterResource({res_reference}))` for images exactly as declared. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
 
 ### Option A: Sequential Execution
 

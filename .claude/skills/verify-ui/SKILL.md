@@ -137,6 +137,8 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
 - **Global styles**: in the inventory file under "Global Styles".
 - **Code files**: `feature/{featurename}/src/commonMain/kotlin/**/presentation/ui/**/*.kt` only. Skip `ViewModel`, `UiState`, `UiModel`, `data/`, `di/`, `navigation/`.
 - **X-components catalog**: from Step 4.1.
+- **Icons manifest**: `.claude/docs/{featurename}/designs/extracted/icons.json` — drives Step 5.7. Skipped when absent.
+- **Images manifest**: `.claude/docs/{featurename}/designs/extracted/images.json` — drives Step 5.8. Skipped when absent.
 
 > **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.4.
 
@@ -223,11 +225,117 @@ No "OK" bullets — silence means OK.
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
-| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4** | Must fix |
-| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width) | Report; fix if requested |
+| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4**, **any manifest-audit CRITICAL from 5.7 or 5.8** | Must fix |
+| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8** | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
-Save the audit report to `.claude/docs/{featurename}/designs/{featurename}_audit.md`.
+This is a **reference table only**. Apply these labels inline as you produce mismatch blocks in 5.2–5.5 and 5.7–5.8. The actual save happens in 5.9 (after all audit sub-sections complete).
+
+### 5.7 Icons Manifest Audit
+
+**Purpose**: Verify the implementation matches the icons manifest produced by `/ui-designer` Step 1.15 sub-step 5 and materialized by `/creating-kmp-feature` / `/modifying-kmp-feature` (design-aware mode).
+
+**Skip condition**: If `.claude/docs/{featurename}/designs/extracted/icons.json` does not exist OR `stitch-project.json.features[{featurename}].blueprintConsumed != true`, skip this step with: `### Icons Manifest Audit: skipped — feature not implemented in design-aware mode.`
+
+**Inputs**:
+- `.claude/docs/{featurename}/designs/extracted/icons.json` (manifest)
+- Feature Kotlin sources (instance map already built in Step 4.2 — extend it with a generic grep over `painterResource(...)` calls and import lines)
+
+**Per-entry checks** (CRITICAL severity unless noted):
+
+For each entry in `icons.json.icons`:
+
+1. **File presence** — confirm the XML file exists at `entry.drawable_path` (relative to repo root). If missing → CRITICAL:
+   ```markdown
+   ### CRITICAL — Icon XML file missing: {entry.drawable_name}
+   - **Where:** `{entry.drawable_path}` (declared in icons.json)
+   - **Code:** file does not exist on disk
+   - **Fix:** Re-run `python3 .claude/skills/_shared/download_assets.py --type icons --feature {featurename} --project-root . --html …` (full mode) to materialize.
+   - **Source:** icons.json
+   ```
+
+2. **Code reference present** — grep for the exact `entry.res_reference` literal in feature Kotlin. If zero matches → MINOR (the design declares the icon but the UI agent didn't wire it; could be intentional incremental work):
+   ```markdown
+   ### MINOR — Icon declared but not referenced in code: {entry.drawable_name}
+   - **HTML:** icon present in design (state(s): {entry.occurrences})
+   - **Code:** no `painterResource({entry.res_reference})` call found in `feature/{featurename}/src/`
+   - **Fix:** Either reference the icon in the relevant composable, or remove its `<span>` from the Stitch design and re-run `/ui-designer`.
+   - **Source:** icons.json
+   ```
+
+3. **Wrong scope reference** — for `entry.scope == "chrome"`, code MUST use `DesignSystemResources.drawable.{ident}`. If any `.kt` references the same ident via `Res.drawable.{ident}` (feature-local Res) instead → CRITICAL "Chrome icon referenced via feature-local Res":
+   ```markdown
+   ### CRITICAL — Chrome icon referenced via feature-local Res: {entry.drawable_name}
+   - **Where:** `{File.kt:LINE}`
+   - **Code:** `Res.drawable.{ident}` (would resolve to feature-local generated Res, not the design system's)
+   - **Fix:** Change to `DesignSystemResources.drawable.{ident}` and adjust imports.
+   - **Source:** icons.json
+   ```
+
+4. **Forbidden legacy imports** — grep all feature Kotlin for `import androidx.compose.material.icons.`. Any match is CRITICAL (the pinned `material-icons-extended` library is deprecated; every icon usage in a design-aware feature must go through `XIcon(painter = painterResource(...))`):
+   ```markdown
+   ### CRITICAL — Deprecated material-icons-extended import
+   - **Where:** `{File.kt:LINE}`
+   - **Code:** `import androidx.compose.material.icons.{name}`
+   - **Fix:** Replace `XIcon(imageVector = Icons.*)` with `XIcon(painter = painterResource(...))` using the matching entry's `res_reference` from icons.json.
+   - **Source:** project-wide rule (pinned/deprecated library)
+   ```
+
+5. **Orphan XML files** — list every `*.xml` under `feature/{featurename}/.../composeResources/drawable/` and `core/designsystem/.../composeResources/drawable/`. Cross-reference each ident against the union of all `icons.json` manifests under `.claude/docs/*/designs/extracted/`. Any file whose ident is in NONE of the manifests AND **not actively referenced** by any `.kt` (grep for `Res.drawable.{ident}` or `DesignSystemResources.drawable.{ident}` across all feature and core sources) → MINOR "Orphan icon XML":
+   ```markdown
+   ### MINOR — Orphan icon XML: {ident}.xml
+   - **Where:** `{drawable_dir}/{ident}.xml`
+   - **Code:** not referenced by any icons.json manifest AND no `.kt` code references it
+   - **Fix:** If the icon is no longer used by any feature, delete it. If it should be in a feature's manifest, re-run `/ui-designer {featurename}` to regenerate.
+   ```
+
+   The "not actively referenced" rule alone is sufficient — pre-existing project assets (the design system's logos, placeholders, level icons, etc.) survive because their Kotlin call-sites still reference them. No hardcoded allowlist needed.
+
+### 5.8 Images Manifest Audit
+
+**Purpose**: Verify the implementation matches the images manifest produced by `/ui-designer` Step 1.15 sub-step 6 and materialized by `/creating-kmp-feature` / `/modifying-kmp-feature`.
+
+**Skip condition**: If `.claude/docs/{featurename}/designs/extracted/images.json` does not exist OR `stitch-project.json.features[{featurename}].blueprintConsumed != true`, skip with: `### Images Manifest Audit: skipped — feature not implemented in design-aware mode.`
+
+**Inputs**:
+- `.claude/docs/{featurename}/designs/extracted/images.json`
+- Feature Kotlin sources
+
+**Per-entry checks** — identical structure to 5.7 with raster-asset specifics:
+
+1. **File presence** — confirm a file exists at `entry.drawable_path` (extension included). If `entry.extension == "unknown"`, glob for `{drawable_name}.{png,jpg,jpeg,webp}` in the predicted directory. Missing → CRITICAL.
+
+2. **Code reference present** — grep for `painterResource({entry.res_reference})` in feature Kotlin. Missing → MINOR.
+
+3. **Wrong scope reference** — same chrome/domain rule as icons (5.7 check 3).
+
+4. **Forbidden Stitch CDN `AsyncImage`** — grep for the Stitch CDN URL prefix in any `AsyncImage(...)` call in feature Kotlin:
+   ```bash
+   grep -rnE 'AsyncImage\([^)]*model\s*=\s*"https://lh3\.googleusercontent\.com/aida-public/' \
+     feature/{featurename}/src/commonMain/
+   ```
+   Any match → CRITICAL "Stitch CDN URL used with AsyncImage":
+   ```markdown
+   ### CRITICAL — Stitch CDN URL used with AsyncImage: {ident}
+   - **Where:** `{File.kt:LINE}`
+   - **Code:** `AsyncImage(model = "https://lh3.googleusercontent.com/aida-public/...")`
+   - **Fix:** Stitch CDN URLs are bundled design assets, not runtime data. Replace with `Image(painter = painterResource({entry.res_reference}), contentDescription = …)`. AsyncImage is reserved for runtime URLs from the app's API.
+   - **Source:** images.json + project-wide rule
+   ```
+
+   This check intentionally does NOT flag `AsyncImage(model = uiModel.{field})` — runtime-data binding via ViewModel state is the legitimate `AsyncImage` use case.
+
+5. **Orphan image files** — list every `*.png|*.jpg|*.jpeg|*.webp` under the feature and design-system drawable dirs. Cross-reference against the union of all `images.json` manifests. Files whose ident is in NONE of the manifests AND **not actively referenced** by any `.kt` (same safety rule as 5.7) → MINOR "Orphan image".
+
+### 5.9 Save the audit report
+
+After all of 5.2–5.8 complete, write the full report (all mismatch blocks from 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8, classification per 5.6) to:
+
+```
+.claude/docs/{featurename}/designs/{featurename}_audit.md
+```
+
+This is the single save point for the entire token-audit section. Step 7 (Present Results) reads from the in-memory report; Step 9 (Cleanup) records the audit metadata in `stitch-project.json`.
 
 ---
 
@@ -266,10 +374,18 @@ All M3 component violations are Critical.
 - Critical mismatches: {N}
 - Minor mismatches: {N}
 
+### Icons Manifest Audit (Step 5.7)
+- Manifest entries: {N} (or "skipped — no manifest")
+- Missing files: {N} | Wrong-scope refs: {N} | Deprecated imports: {N} | Orphans: {N}
+
+### Images Manifest Audit (Step 5.8)
+- Manifest entries: {N} (or "skipped — no manifest")
+- Missing files: {N} | Wrong-scope refs: {N} | Stitch-CDN AsyncImage misuse: {N} | Orphans: {N}
+
 ### X-Components Compliance
 - Material3 violations: {N} ({PASS if 0, FAIL otherwise})
 
-{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 — only the blocks, no OK rows.}
+{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8 — only the blocks, no OK rows.}
 
 {Compliance violations table (if any).}
 ```
@@ -337,6 +453,12 @@ This skill does not invoke `/modifying-kmp-feature` — the user controls the pi
 | Success | {N} | {N} | {PASS/FAIL} |
 | Loading | {N} | {N} | {PASS/FAIL} |
 | Failed | {N} | {N} | {PASS/FAIL} |
+
+### Asset Manifest Audit
+| Manifest | Critical | Minor | Status |
+|----------|----------|-------|--------|
+| Icons (5.7)  | {N} | {N} | {PASS/FAIL or SKIPPED} |
+| Images (5.8) | {N} | {N} | {PASS/FAIL or SKIPPED} |
 
 ### X-Components Compliance
 | Check | Violations | Status |
