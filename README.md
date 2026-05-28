@@ -37,13 +37,15 @@ https://github.com/user-attachments/assets/ca64c2cb-e530-4e88-88e2-755932dc5493
 
 **1. Install**
 
+Replace `<MyApp>` and `<com.acme.myapp>` with your own values:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh \
-  | bash -s MyApp com.acme.myapp
+  | bash -s <MyApp> <com.acme.myapp>
 ```
 
-- `MyApp` — project name (used for the folder, root project, and Android app label)
-- `com.acme.myapp` — package prefix / application ID (used for `namespace`, `applicationId`, and source-set package roots)
+- **`MyApp`** — project name (used for the folder, root project, and Android app label)
+- **`com.acme.myapp`** — package prefix / application ID (used for `namespace`, `applicationId`, and source-set package roots)
 
 Clones the template, renames packages, initializes fresh git.
 
