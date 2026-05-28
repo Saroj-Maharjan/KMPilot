@@ -28,6 +28,11 @@ object DashboardUiFixtures {
             dashboardState = UiState.Failed(ErrorModel.Message(message)),
         )
 
+    fun createEmptyState() =
+        createSuccessState(
+            DashboardFixtures.createDashboardDataWithEmptyLists(),
+        )
+
     // === SUCCESS VARIATIONS ===
 
     fun createSuccessWithEmptyLists() =

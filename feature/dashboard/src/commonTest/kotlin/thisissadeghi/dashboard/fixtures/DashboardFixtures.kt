@@ -585,6 +585,48 @@ object DashboardFixtures {
             spendingInsight = createSpendingInsightWithUnicode(),
         )
 
+    fun createDashboardDataWithBlankStrings() =
+        createDashboardData(
+            monthlySummary = createMonthlySummary(monthName = "   "),
+            spendingInsight = createSpendingInsightWithBlankMessage(),
+        )
+
+    fun createDashboardDataWithLongStrings() =
+        createDashboardData(
+            monthlySummary = createMonthlySummaryWithLongMonthName(),
+            spendingInsight = createSpendingInsightWithLongMessage(),
+            recentTransactions = listOf(createTransactionWithLongStrings()),
+            budgetCategories = listOf(createBudgetCategoryWithSpecialCharacters()),
+            savingsGoals = listOf(createSavingsGoalWithSpecialCharacters()),
+            quickActions = listOf(createQuickActionWithLongStrings()),
+            upcomingBills = listOf(createUpcomingBillWithUnicode()),
+            portfolioAssets = listOf(createPortfolioAssetWithUnicode()),
+        )
+
+    fun createDashboardDataWithMaxValues() =
+        createDashboardData(
+            accountBalance = createAccountBalanceWithMaxValues(),
+            monthlySummary = createMonthlySummary(income = Double.MAX_VALUE, expenses = Double.MAX_VALUE),
+            recentTransactions = listOf(createTransactionWithMaxValues()),
+            budgetCategories = listOf(createBudgetCategoryWithMaxValues()),
+            savingsGoals = listOf(createSavingsGoalWithMaxValues()),
+            upcomingBills = listOf(createUpcomingBillWithMaxValues()),
+            portfolioAssets = listOf(createPortfolioAssetWithMaxValues()),
+            spendingInsight = createSpendingInsightWithMaxValues(),
+        )
+
+    fun createDashboardDataWithMinValues() =
+        createDashboardData(
+            accountBalance = createAccountBalanceWithMinValues(),
+            monthlySummary = createMonthlySummaryWithZeroValues(),
+            recentTransactions = listOf(createTransactionWithMinValues()),
+            budgetCategories = listOf(createZeroSpentCategory()),
+            savingsGoals = listOf(createZeroProgressSavingsGoal()),
+            upcomingBills = listOf(createUpcomingBillWithMinValues()),
+            portfolioAssets = listOf(createPortfolioAssetWithMinValues()),
+            spendingInsight = createSpendingInsightWithMinValues(),
+        )
+
     // === ERROR HELPERS ===
 
     val networkError = ErrorConst.NoNetwork
