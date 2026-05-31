@@ -57,7 +57,7 @@ Find the biggest gap across all features (the row with the most ❌ entries), th
 ```
 ---
 
-> **Next step —** run `/audit-spec {feature}` to generate the missing spec for one of the flagged features.
+> **Next step —** run `/clear` to free the context window, then `/audit-spec {feature}` to generate the missing spec for one of the flagged features.
 ```
 
 **If most features are missing tests:**
@@ -65,7 +65,7 @@ Find the biggest gap across all features (the row with the most ❌ entries), th
 ```
 ---
 
-> **Next step —** run `/feature-test {feature}` to generate tests for one of the flagged features.
+> **Next step —** run `/clear` to free the context window, then `/feature-test {feature}` to generate tests for one of the flagged features.
 ```
 
 **If most features are missing a review:**
@@ -73,7 +73,7 @@ Find the biggest gap across all features (the row with the most ❌ entries), th
 ```
 ---
 
-> **Next step —** run `/feature-review {feature}` to validate one of the flagged features.
+> **Next step —** run `/clear` to free the context window, then `/feature-review {feature}` to validate one of the flagged features.
 ```
 
 **If all rows pass:**
@@ -81,5 +81,5 @@ Find the biggest gap across all features (the row with the most ❌ entries), th
 ```
 ---
 
-> **Next step —** run `/coverage` to see the full coverage report across all features.
+> **Next step —** run `/clear` to free the context window, then `/coverage` to see the full coverage report across all features.
 ```

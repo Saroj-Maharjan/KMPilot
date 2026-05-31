@@ -81,7 +81,7 @@ Pick the matching literal footer based on the review status and emit it as the v
 ```
 ---
 
-> **Next step —** run `/feature-test {featurename}` to generate comprehensive tests for the feature.
+> **Next step —** run `/clear` to free the context window, then `/feature-test {featurename}` to generate comprehensive tests for the feature.
 ```
 
 **If status is PASS WITH WARNINGS or FAIL:**
@@ -89,5 +89,5 @@ Pick the matching literal footer based on the review status and emit it as the v
 ```
 ---
 
-> **Next step —** run `/modifying-kmp-feature {featurename} apply fixes from @.claude/docs/{featurename}/fixes.md` to address the review findings.
+> **Next step —** run `/clear` to free the context window, then `/modifying-kmp-feature {featurename} apply fixes from @.claude/docs/{featurename}/fixes.md` to address the review findings.
 ```

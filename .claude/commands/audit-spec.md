@@ -57,7 +57,7 @@ Audit, generate, or compare specifications for existing features.
 
    ---
 
-   > **Next step —** review `.claude/docs/{featurename}/spec.md` and fill any TODO sections, then run `/feature-review {featurename}` to validate the implementation against it.
+   > **Next step —** review `.claude/docs/{featurename}/spec.md` and fill any TODO sections, then run `/clear` to free the context window, followed by `/feature-review {featurename}` to validate the implementation against it.
    ```
 
 ## Mode 2: Compare/Drift Detection (--compare)

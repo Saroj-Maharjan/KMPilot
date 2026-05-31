@@ -150,5 +150,5 @@ blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 
 ---
 
-> **Next step —** run `/creating-kmp-feature {featurename}` (new feature) or `/modifying-kmp-feature {featurename}` (existing feature) to implement this design.
+> **Next step —** run `/clear` to free the context window, then `/creating-kmp-feature {featurename}` (new feature) or `/modifying-kmp-feature {featurename}` (existing feature) to implement this design.
 ```

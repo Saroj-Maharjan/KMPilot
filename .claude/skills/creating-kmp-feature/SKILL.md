@@ -106,5 +106,5 @@ On build failure, load troubleshooting:
 
 ---
 
-> **Next step —** run `/feature-review {featurename}` to validate against Clean Architecture guidelines.
+> **Next step —** run `/clear` to free the context window, then `/feature-review {featurename}` to validate against Clean Architecture guidelines.
 ```

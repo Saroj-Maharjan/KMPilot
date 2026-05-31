@@ -173,3 +173,11 @@ Design system: Activate `/using-design-system`
 - [ ] Changelog entry added
 - [ ] Version bumped
 - [ ] (Design-aware) blueprintConsumed set to true in stitch-project.json
+
+## What's next
+
+Emit this blockquote as the very last line of output:
+
+---
+
+> **Next step —** run `/clear` to free the context window, then `/feature-review {featurename}` to validate the changes — or `/verify-ui {featurename}` if you applied a design.
