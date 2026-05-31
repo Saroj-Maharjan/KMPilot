@@ -9,10 +9,10 @@ rm -f /tmp/.claude-kmpilot-skill-active
 cat <<'RULES'
 ## Critical Architecture Rules (Re-injected After Compaction)
 
-**10 Rules:**
+**11 Rules:**
 1. Interface + Impl pairs for DataSource/Repository
 2. Either<T> for errors - NEVER throw exceptions
-3. setState { copy() } - NEVER _state.value =
+3. setState { copy() } - NEVER _uiModel.value =
 4. 4 UI states: Uninitialized / Loading / Success / Failed
 5. X-components from :core:designsystem - NO Material3
 6. ImmutableList with .toImmutableList()
@@ -20,6 +20,7 @@ cat <<'RULES'
 8. DI: singleOf(::Impl).bind<Interface>() + BaseFeature
 9. No UseCases - ViewModels call repositories directly
 10. Callback params (onBackClick) - not navController
+11. Single *UiModel + DTO-wrapped UiState<T> - NO *UiState.kt; data/ never imports presentation/
 
 **4 Integration Points (all required):**
 1. settings.gradle.kts - include(":feature:{name}")
