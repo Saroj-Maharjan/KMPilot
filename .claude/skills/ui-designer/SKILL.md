@@ -37,6 +37,8 @@ Run this check **before any other work**, for every invocation (no-args init mod
 
 XML downloads, image downloads, `DesignSystemResources.kt` edits, and cross-feature Kotlin import rewrites all happen later in `/creating-kmp-feature` or `/modifying-kmp-feature` (which run the same script without `--manifest-only`).
 
+> **MANDATORY — `download_assets.py` is the ONLY asset acquisition mechanism.** Never download, fetch, or write any icon/image asset yourself (no `curl`/`wget`/WebFetch to icon or image URLs, no hand-written SVG/XML/raster files). Material Symbols are font glyphs in the HTML, not files — never "source" an icon. The only sanctioned path is `.claude/skills/_shared/download_assets.py` (manifest-only in `/ui-designer`; full materialization in the implementation skills). If that script cannot produce an asset, **STOP and report** — do not improvise a download. Improvised fetches grab SVGs, which crash on Android at runtime.
+
 ```bash
 python3 --version
 ```
