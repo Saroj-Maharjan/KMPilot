@@ -212,7 +212,7 @@ Loading/Failed shared screens are **never copied** into the per-feature director
 | 1.1 | Gather requirements + determine `isListBased` | If requirements unclear OR list-based ambiguous | No |
 | 1.2 | Chrome snapshot from prior features (gate: when to run) | No — gate only | No |
 | 1.3 | Detect explicit chrome override | No — derived from earlier prompt | No |
-| 1.4 | Snapshot existing chrome from approved features | Only if approved features disagree | No |
+| 1.4 | Snapshot existing chrome from all approved features | Only if structural divergence between chrome archetypes (cosmetic auto-resolves) | No |
 | 1.5 | Build the Shared Conventions block | No | No |
 | 1.6 | Confirm with user (only when overriding) | Only if user override detected | No |
 | 1.7 | State Selection (the new gate) | **Always** — multi-select | **Yes** — writes `features.states` |
