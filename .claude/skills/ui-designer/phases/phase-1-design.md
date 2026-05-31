@@ -141,11 +141,9 @@ If no override is detected, all elements inherit.
 
 ## Step 1.4: Snapshot Existing Chrome
 
-Pick the **most recently approved** feature (max `approvedAt`) among the collected entries — this is the "reference feature".
+**Read chrome from ALL approved features**, not just one. For each approved feature, read its token inventory at `.claude/docs/{feature}/designs/extracted/tokens_success.md` (and HTML header/footer regions if needed).
 
-Read its token inventory: `.claude/docs/{reference_feature}/designs/extracted/tokens_success.md`. Also read the HTML excerpt if needed: `.claude/docs/{reference_feature}/designs/extracted/stitch_success.html` (header and footer regions only).
-
-Extract:
+Extract the following per feature:
 
 | Element | What to capture |
 |---------|-----------------|
@@ -153,11 +151,27 @@ Extract:
 | **Bottom navigation** | Presence (yes/no). If present: height (dp), background color (hex + M3 role), item count, item style (icon-only / icon+label), selected/unselected color treatment |
 | **Screen background** | Color (hex + M3 role) or surface treatment |
 
-If multiple approved features disagree on a property, surface the disagreement to the user via `AskUserQuestion`:
+### Pattern Divergence Detection (MANDATORY before picking a reference)
 
-> "Existing features differ on {property}: {feature A → value A}, {feature B → value B}. Which should the new screen follow?"
+After extracting chrome from all features, compare them. Classify any divergence as either **structural** or **cosmetic**:
 
-Options = each distinct value seen, plus "Other (specify)".
+- **Structural divergence** — the leading icon differs (back arrow vs. none), or the bar is present in some features and absent in others, or the title area has a fundamentally different layout (single title line vs. greeting + title). This signals that the project has multiple chrome *archetypes* (e.g., hub screens vs. detail screens).
+- **Cosmetic divergence** — same structure but minor token differences (slightly different padding, font weight). Resolve by using the most recently approved feature's value (max `approvedAt`); no user question needed.
+
+**If structural divergence is detected** — do NOT auto-select a reference. Ask the user via `AskUserQuestion`:
+
+> "Existing screens use different chrome patterns. Which should '{featurename}' follow?"
+
+Options: one option per distinct structural pattern found, described concisely by its chrome shape and the `{featurename}` that exemplifies it (e.g., "Hub screen, like {featureA} — no back arrow, greeting-style header" / "Detail screen, like {featureB} — back arrow, transparent bar"). Max 4 options plus "Other (specify)".
+
+Use the user's chosen pattern as the reference for Step 1.5. Record which feature exemplifies that pattern as `{reference_feature}`.
+
+**If the user picks "Other (specify)"** — their free-text describes a chrome that matches no existing archetype. Treat it as an **explicit chrome override** and route it into the override flow:
+- Parse the free-text for top-app-bar / bottom-nav / background instructions and record the affected element(s) as overrides exactly as Step 1.3 does (they are excluded from the Shared Conventions block in Step 1.5).
+- Still set `{reference_feature}` to the most recently approved feature (max `approvedAt`) so any **non-overridden** element inherits as usual.
+- This override is carried into Step 1.6, which confirms the deviation before generating.
+
+**If no structural divergence** — pick the most recently approved feature (max `approvedAt`) and record it as `{reference_feature}`. No user question needed.
 
 ---
 
@@ -185,7 +199,7 @@ If the user overrode an element, replace its line with an explicit instruction. 
 
 ## Step 1.6: Confirm with User (only when overriding)
 
-If any override was detected in Step 1.3, present the conventions block to the user via `AskUserQuestion` so they can confirm the deviation is intentional:
+If any override was detected in Step 1.3 — **or routed from a Step 1.4 "Other (specify)" chrome pattern** — present the conventions block to the user via `AskUserQuestion` so they can confirm the deviation is intentional:
 
 > "Existing features in this project use {summary of inherited chrome}. Your request overrides: {list of overridden elements}. Confirm or revise?"
 
