@@ -21,6 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.expenses_label
+import kmpilot.feature.dashboard.generated.resources.income_label
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -48,7 +52,7 @@ internal fun MonthlySummary(summary: MonthlySummaryData) {
             ) {
                 Column {
                     XText(
-                        "INCOME",
+                        stringResource(Res.string.income_label),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -63,7 +67,7 @@ internal fun MonthlySummary(summary: MonthlySummaryData) {
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     XText(
-                        "EXPENSES",
+                        stringResource(Res.string.expenses_label),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

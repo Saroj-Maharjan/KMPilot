@@ -9,6 +9,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.section_recent_transactions
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.Transaction
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -20,7 +23,7 @@ internal fun RecentTransactions(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         XText(
-            "Recent Transactions",
+            stringResource(Res.string.section_recent_transactions),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,

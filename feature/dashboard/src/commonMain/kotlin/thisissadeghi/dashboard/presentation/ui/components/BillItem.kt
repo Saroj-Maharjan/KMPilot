@@ -20,10 +20,12 @@ import androidx.compose.ui.unit.sp
 import kmpilot.feature.dashboard.generated.resources.Res
 import kmpilot.feature.dashboard.generated.resources.bolt
 import kmpilot.feature.dashboard.generated.resources.payments
+import kmpilot.feature.dashboard.generated.resources.status_overdue
 import kmpilot.feature.dashboard.generated.resources.subscriptions
 import kmpilot.feature.dashboard.generated.resources.wifi
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.UpcomingBill
 import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XIcon
@@ -76,7 +78,7 @@ internal fun BillItem(bill: UpcomingBill) {
                                     ).padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
                             XText(
-                                "OVERDUE",
+                                stringResource(Res.string.status_overdue),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = XTheme.Colors.Danger,

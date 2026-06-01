@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Header -->
+    <string name="greeting">Good morning,</string>
+    <string name="dashboard_title">Dashboard</string>
+
+    <!-- Balance card -->
+    <string name="total_net_worth">TOTAL NET WORTH</string>
+    <string name="vs_last_month">vs last month</string>
+
+    <!-- Quick actions -->
+    <string name="quick_action_send">Send</string>
+    <string name="quick_action_receive">Receive</string>
+    <string name="quick_action_pay">Pay</string>
+    <string name="quick_action_top_up">Top Up</string>
+
+    <!-- Insight -->
+    <string name="smart_insight">Smart Insight</string>
+
+    <!-- Monthly summary -->
+    <string name="income_label">INCOME</string>
+    <string name="expenses_label">EXPENSES</string>
+
+    <!-- Section headers -->
+    <string name="section_monthly_budgets">Monthly Budgets</string>
+    <string name="section_savings_goals">Savings Goals</string>
+    <string name="section_upcoming_bills">Upcoming Bills</string>
+    <string name="section_portfolio">Portfolio</string>
+    <string name="section_recent_transactions">Recent Transactions</string>
+
+    <!-- Status badges -->
+    <string name="status_overdue">OVERDUE</string>
+
+    <!-- Failed state -->
+    <string name="error_title">Something went wrong</string>
+    <string name="error_message">An unexpected error occurred. Please try again or check your connection.</string>
+    <string name="retry_label">Retry</string>
+    <string name="return_to_dashboard">Return to Dashboard</string>
+</resources>

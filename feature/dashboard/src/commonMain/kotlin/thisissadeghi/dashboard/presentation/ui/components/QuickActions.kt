@@ -22,9 +22,14 @@ import kmpilot.feature.dashboard.generated.resources.Res
 import kmpilot.feature.dashboard.generated.resources.add_circle
 import kmpilot.feature.dashboard.generated.resources.download
 import kmpilot.feature.dashboard.generated.resources.payments
+import kmpilot.feature.dashboard.generated.resources.quick_action_pay
+import kmpilot.feature.dashboard.generated.resources.quick_action_receive
+import kmpilot.feature.dashboard.generated.resources.quick_action_send
+import kmpilot.feature.dashboard.generated.resources.quick_action_top_up
 import kmpilot.feature.dashboard.generated.resources.send
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -41,10 +46,10 @@ internal fun QuickActions(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        QuickActionButton(Res.drawable.send, "Send", onSendClick, Modifier.weight(1f))
-        QuickActionButton(Res.drawable.download, "Receive", onReceiveClick, Modifier.weight(1f))
-        QuickActionButton(Res.drawable.payments, "Pay", onPayClick, Modifier.weight(1f))
-        QuickActionButton(Res.drawable.add_circle, "Top Up", onTopUpClick, Modifier.weight(1f))
+        QuickActionButton(Res.drawable.send, stringResource(Res.string.quick_action_send), onSendClick, Modifier.weight(1f))
+        QuickActionButton(Res.drawable.download, stringResource(Res.string.quick_action_receive), onReceiveClick, Modifier.weight(1f))
+        QuickActionButton(Res.drawable.payments, stringResource(Res.string.quick_action_pay), onPayClick, Modifier.weight(1f))
+        QuickActionButton(Res.drawable.add_circle, stringResource(Res.string.quick_action_top_up), onTopUpClick, Modifier.weight(1f))
     }
 }
 

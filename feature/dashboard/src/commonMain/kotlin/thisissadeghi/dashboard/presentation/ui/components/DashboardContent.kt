@@ -17,6 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.dashboard_title
+import kmpilot.feature.dashboard.generated.resources.greeting
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.DashboardData
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -70,13 +74,13 @@ private fun DashboardHeader() {
     ) {
         Column {
             XText(
-                "Good morning,",
+                stringResource(Res.string.greeting),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
             )
             XText(
-                "Dashboard",
+                stringResource(Res.string.dashboard_title),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,

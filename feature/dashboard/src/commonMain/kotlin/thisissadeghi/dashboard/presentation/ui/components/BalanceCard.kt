@@ -22,8 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.total_net_worth
 import kmpilot.feature.dashboard.generated.resources.trending_up
+import kmpilot.feature.dashboard.generated.resources.vs_last_month
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.AccountBalance
 import thisissadeghi.dashboard.presentation.ui.formatMoney
 import thisissadeghi.designsystem.XIcon
@@ -50,7 +53,7 @@ internal fun BalanceCard(balance: AccountBalance) {
         )
         Column(modifier = Modifier.padding(24.dp)) {
             XText(
-                "TOTAL NET WORTH",
+                stringResource(Res.string.total_net_worth),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -89,7 +92,7 @@ internal fun BalanceCard(balance: AccountBalance) {
                         )
                     }
                     XText(
-                        "vs last month",
+                        stringResource(Res.string.vs_last_month),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                     )

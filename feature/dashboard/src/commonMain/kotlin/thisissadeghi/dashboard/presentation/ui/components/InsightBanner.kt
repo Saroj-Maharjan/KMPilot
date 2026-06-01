@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kmpilot.feature.dashboard.generated.resources.Res
 import kmpilot.feature.dashboard.generated.resources.lightbulb
+import kmpilot.feature.dashboard.generated.resources.smart_insight
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.SpendingInsight
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
@@ -56,7 +58,7 @@ internal fun InsightBanner(insight: SpendingInsight) {
         }
         Column {
             XText(
-                "Smart Insight",
+                stringResource(Res.string.smart_insight),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )

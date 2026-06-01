@@ -14,6 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.section_upcoming_bills
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.UpcomingBill
 import thisissadeghi.designsystem.XHorizontalDivider
 import thisissadeghi.designsystem.XText
@@ -26,7 +29,7 @@ internal fun UpcomingBills(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         XText(
-            "Upcoming Bills",
+            stringResource(Res.string.section_upcoming_bills),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,

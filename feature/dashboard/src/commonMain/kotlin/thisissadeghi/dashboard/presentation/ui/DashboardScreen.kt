@@ -28,9 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.error_message
+import kmpilot.feature.dashboard.generated.resources.error_title
 import kmpilot.feature.dashboard.generated.resources.failed_background
+import kmpilot.feature.dashboard.generated.resources.retry_label
+import kmpilot.feature.dashboard.generated.resources.return_to_dashboard
 import kmpilot.feature.dashboard.generated.resources.warning
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.ErrorModel
 import thisissadeghi.common.UiState
 import thisissadeghi.dashboard.data.model.AccountBalance
@@ -164,7 +169,7 @@ private fun FailedContent(
                 }
             }
             XText(
-                "Something went wrong",
+                stringResource(Res.string.error_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -174,7 +179,7 @@ private fun FailedContent(
                 modifier = Modifier.fillMaxWidth(),
             )
             XText(
-                "An unexpected error occurred. Please try again or check your connection.",
+                stringResource(Res.string.error_message),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center,
@@ -195,11 +200,11 @@ private fun FailedContent(
                             contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                 ) {
-                    XText("Retry", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    XText(stringResource(Res.string.retry_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
                 XTextButton(onClick = onBackToDashboard) {
                     XText(
-                        "Return to Dashboard",
+                        stringResource(Res.string.return_to_dashboard),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

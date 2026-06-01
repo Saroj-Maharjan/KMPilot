@@ -11,6 +11,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.dashboard.generated.resources.Res
+import kmpilot.feature.dashboard.generated.resources.section_portfolio
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.PortfolioAsset
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -22,7 +25,7 @@ internal fun Portfolio(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         XText(
-            "Portfolio",
+            stringResource(Res.string.section_portfolio),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
