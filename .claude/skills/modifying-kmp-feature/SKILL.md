@@ -68,6 +68,7 @@ Determine affected layers and load architecture as needed:
 - Data changes: @../creating-kmp-feature/architecture/data.md
 - UI changes: @../creating-kmp-feature/architecture/ui.md
 - Integration changes: @../creating-kmp-feature/architecture/integration.md
+- Bottom-bar tab changes ("add/remove bottom-bar tab", "make this a tab", "show in bottom nav"): @../creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"
 
 **Design-aware branch**: If in design-aware mode, read the blueprint's **Pre-Implementation Contract** section. Plan XTheme updates first (missing M3 roles from the contract's Color Audit). Include blueprint component tree in the UI plan.
 
@@ -101,6 +102,8 @@ Follow patterns from @../_shared/patterns.md
 For UI changes: Load @../using-design-system/references/component-mappings.md
 
 **Strings (Rule 12)**: any new user-facing text → a key in the feature's `composeResources/values/strings.xml`, referenced via `stringResource(Res.string.*)` (or `UiText` for ViewModel-origin messages). Never add a hardcoded display literal. If the feature has no `strings.xml` yet, create it. See `@../_shared/patterns.md` → "Strings & Localization (Rule 12)".
+
+**Bottom-bar tab (optional)**: if the change is "add/remove bottom-bar tab", follow `@../creating-kmp-feature/architecture/integration.md` → "5. Bottom-Bar Tab (Optional)". This edits the **app module** (`App.kt`, `navigation/TopLevelDestination.kt`, app `strings.xml`) and `:core:designsystem` (chrome icon) — NOT the feature module itself; the feature stays independent. **Add**: append one `TopLevelDestination` enum entry (or scaffold the shell if this is the first tab); the tab label lives in the **app module** `composeResources/values/strings.xml` (key `tab_{featurename}`), the icon as a `:core:designsystem` chrome drawable. **Remove**: delete the enum entry (the route remains a valid pushed destination). No registry exists — orphaned entries/labels/icons must be removed by hand.
 
 **UI file layout (strict allowlist)**: when adding or moving composables, respect the rules in `@../_shared/patterns.md` ("UI File Organization"):
 - `{Feature}Screen.kt` accepts only the 5 allowlist names (`Screen`, `ScreenRoot`, and optionally `LoadingContent`/`FailedContent`/`EmptyContent`)

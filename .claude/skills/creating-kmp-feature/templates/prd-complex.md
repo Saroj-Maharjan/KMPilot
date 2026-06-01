@@ -96,6 +96,7 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 - Entry: `navController.navigate({Feature}Route)`
 - Exit: `onBackClick` callback
 - Internal: {describe any internal navigation}
+- Top-level tab? {No | Yes — label: "{Tab Label}", icon: {icon_name}, order: {N}} — if Yes, this feature is a bottom-bar destination (Integration Point 5); if No, it is a pushed screen
 
 ## Technical Architecture
 

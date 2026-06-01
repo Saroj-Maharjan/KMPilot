@@ -42,6 +42,8 @@ Use for: UI-only features, no API, < 3 screens
 ### Screens
 1. **{ScreenName}Screen** - {purpose}
 
+> Top-level tab? {No (pushed screen) | Yes — label / icon / order}. If Yes, see Integration Point 5 (bottom-bar tab).
+
 ### Components
 - {Component1} - {purpose}
 - {Component2} - {purpose}

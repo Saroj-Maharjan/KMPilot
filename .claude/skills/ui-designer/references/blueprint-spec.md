@@ -41,6 +41,8 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
   - topBar: `XTopAppBar` (title, navigationIcon: back arrow)
   - content: **[state-specific content slot]**
 
+> **Bottom bar is app-shell chrome, not a feature screen element.** If the design shows a bottom navigation bar, it belongs to the app shell (`App.kt`), rendered once via `XNavigationBar` and shared across all top-level (tab) features — do NOT add a `bottomBar` to this feature's `XScaffold`. Tab **icons** are chrome (extract into `icons.json` so `download_assets.py` promotes them to `:core:designsystem`); tab **labels** are app-module strings. Implementation lives in Integration Point 5 (see creating-kmp-feature/architecture/integration.md), wired by `/creating-kmp-feature` or `/modifying-kmp-feature`, not by per-feature screen design.
+
 ### Success State
 - `LazyColumn` (spacedBy 8.dp, contentPadding: 16.dp)
   - `{ComponentName}` (extracted named component)

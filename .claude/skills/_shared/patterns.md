@@ -39,6 +39,8 @@ Every feature requires exactly these 4 integrations:
 | 3 | DI Init | `{INIT_KOIN_PATH}` | `{Feature}Modules.initialize()` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 
+**Optional 5th point — Bottom-Bar Tab**: only for features that are top-level (bottom-bar) destinations, not pushed screens. It registers the feature as a tab via a `TopLevelDestination` enum entry in the app module + an `XNavigationBar` in `App.kt`. This is **not** a rule and not required — most features skip it. Full playbook + canonical code: [creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"](../creating-kmp-feature/architecture/integration.md).
+
 ## Naming Conventions
 
 | Type | Pattern | Example |

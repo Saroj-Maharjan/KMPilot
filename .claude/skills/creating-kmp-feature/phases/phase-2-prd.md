@@ -41,6 +41,7 @@ Extract the following from the user's prompt:
 - How many screens?
 - What components are needed?
 - Navigation flows?
+- Top-level bottom-bar tab, or a pushed screen? (default: pushed screen; if a tab → capture label, icon, order)
 - Form inputs or read-only displays?
 
 ### 5. Dependencies

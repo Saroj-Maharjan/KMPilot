@@ -135,10 +135,11 @@ Invoke integration-agent with:
 - Feature name: {featurename}
 - Task files: .claude/docs/{featurename}/task-*-integration-*.md
 - Project context:
-  - PKG_PREFIX, PKG_PATH
+  - PKG_PREFIX, PKG_PATH, PROJECT_NAMESPACE
   - CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG
   - INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES
-- Expected: All 4 integration points + full build + ktlint + spec.md
+- Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5)
+- Expected: integration points 1–4 (+ point 5 if a tab) + full build + ktlint + spec.md
 ```
 
 **Wait for completion** → Verify success
@@ -176,11 +177,12 @@ Each agent works in isolated context window.
 ```
 Invoke integration-agent with:
 - Feature name: {featurename}
-- Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
+- Project context: PKG_PREFIX, PKG_PATH, PROJECT_NAMESPACE, CORE_COMMON_PKG,
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
   NAV_HOST_PATH, CORE_MODULES
+- Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen
 - Integrates both data and UI layers
-- Completes 4 integration points
+- Completes integration points 1–4 (+ point 5 if a tab)
 - Final validation + formatting
 - Generates spec.md
 ```

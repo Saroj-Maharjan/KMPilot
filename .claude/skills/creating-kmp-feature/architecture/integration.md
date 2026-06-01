@@ -1,9 +1,11 @@
 # Integration Architecture Principles
 
-Principles for integrating features into KMP apps. Every feature requires exactly 4 integration points.
+Principles for integrating features into KMP apps. Every feature requires exactly 4 integration points; a 5th (bottom-bar tab) is **optional** and applies only to features that are top-level destinations.
 
 **Note**: Uses placeholders that are resolved via Context Discovery:
 - `{PKG_PREFIX}` - Package prefix (e.g., `com.example`, `com.myapp`)
+- `{PROJECT_NAMESPACE}` - Root segment of the generated-resources package (derived from the app module, e.g. `kmpilot`)
+- `{CORE_DESIGNSYSTEM_PKG}` - Package of the `:core:designsystem` module
 - `{INIT_KOIN_PATH}` - Path to initKoin.kt file
 - `{NAV_HOST_PATH}` - Path to navigation host file
 
@@ -16,6 +18,11 @@ Principles for integrating features into KMP apps. Every feature requires exactl
 4. **Navigation Wiring** - Wire navigation callbacks
 
 Missing any of these will result in build errors or runtime crashes.
+
+**1 Optional Integration Point** (only when the feature is a bottom-bar destination):
+5. **Bottom-Bar Tab** - Register the feature as a top-level tab (see "5. Bottom-Bar Tab (Optional)" below)
+
+Most features are pushed screens (reached via a callback `navController.navigate(...)`), **not** tabs. Only add point 5 when the PRD/spec Navigation section marks the feature as a top-level destination.
 
 ## Spec Generation (Integration Agent Responsibility)
 
@@ -172,6 +179,126 @@ fun BaseAppNavHost(navController: NavHostController) {
 - `onNavigateTo{Feature} = { navController.navigate({Feature}Route) }` - Navigate to another screen
 - `onNavigateTo{Feature} = { id -> navController.navigate({Feature}Route(id)) }` - Navigate with parameters
 
+## 5. Bottom-Bar Tab (Optional)
+
+**Purpose**: Register a feature as a **top-level destination** in the app's bottom navigation bar.
+
+**When to apply**: ONLY if the feature's PRD/spec Navigation section marks it as a top-level tab. Skip for pushed screens (the common case). A bottom bar holds 3–5 tabs (Material guidance) — do not add more.
+
+**Where it lives**: the app shell, NOT the feature. The bottom bar is rendered in `App.kt` (`{NAV_HOST_PATH}`'s sibling) and the tab list is a single enum in the app module. This is consistent with point 4 — `{NAV_HOST_PATH}` already imports every feature's `Route`. The feature module stays independent (it never imports another feature); the app module composes the tabs.
+
+### Design (official Compose Navigation best practices)
+
+- **Tab list = one `enum class TopLevelDestination`** in the app module. Tabs are homogeneous (route + icon + label), so an enum's `entries` gives the ordered list for free. Each tab feature appends exactly one entry.
+- **Selected tab is derived from the back stack** via `currentBackStackEntryAsState()` + `hierarchy` + `hasRoute` — never a parallel `selectedIndex` state (which breaks on back press / deep links).
+- **Tab switching uses the multiple-back-stack pattern** (`popUpTo(start){ saveState } + launchSingleTop + restoreState`) so each tab keeps its own back stack.
+- **The bar is hidden on non-top-level (pushed) screens**, computed from the current destination.
+- **Rendering**: plain `XNavigationBar` + `XNavigationBarItem` (already in `:core:designsystem`). Adaptive (`NavigationSuiteScaffold` rail/drawer) is intentionally **out of scope** for mobile-first apps.
+
+### Resource placement (forced by the `internal` Res rule)
+
+The bar renders in the app module, and each feature's generated `Res` is `internal` per module (Rule 12) — so the app module **cannot** import a feature's `Res`. Therefore:
+
+- **Tab label → app-module strings**: `composeApp/src/commonMain/composeResources/values/strings.xml` (create the file if absent — typically only `drawable/` exists). Key `tab_{featurename}`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.string.tab_{featurename}`.
+- **Tab icon + selectedIcon → `:core:designsystem` chrome**: drawable XMLs in `core/designsystem/.../composeResources/drawable/` + a line each in `DesignSystemResources.kt` `object drawable`. This reuses the existing chrome-promotion path (`download_assets.py` / `/ui-designer`). The feature contributes only the enum entry referencing these.
+
+### First tab vs. append
+
+**Detect the shell**: does `App.kt` already contain `XNavigationBar`?
+
+- **No → this is the first tab**: scaffold the shell (code A + B + C below). This mirrors the First-feature (Welcome) Handoff — a one-time app-shell mutation.
+- **Yes → append**: add one `TopLevelDestination` entry (code A) and ensure the route is registered as a top-level `composable` in `{NAV_HOST_PATH}` (point 4). No structural change to `App.kt`.
+
+### Code A — `TopLevelDestination.kt` (app module `navigation/` package)
+
+```kotlin
+package {PKG_PREFIX}.{PROJECT_NAMESPACE}.navigation
+
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
+import {PKG_PREFIX}.{featurename}.presentation.navigation.{Feature}Route
+import {CORE_DESIGNSYSTEM_PKG}.DesignSystemResources
+import {PROJECT_NAMESPACE}.composeapp.generated.resources.Res
+import {PROJECT_NAMESPACE}.composeapp.generated.resources.tab_{featurename}
+
+/** App bottom-bar destinations. Each tab feature appends ONE entry. route = the feature's @Serializable nav route. */
+enum class TopLevelDestination(
+    val route: Any,
+    val icon: DrawableResource,
+    val selectedIcon: DrawableResource,
+    val label: StringResource,
+) {
+    {FEATURE}({Feature}Route, DesignSystemResources.drawable.{featurename}, DesignSystemResources.drawable.{featurename}_fill, Res.string.tab_{featurename}),
+    // append new tab features here
+}
+```
+
+### Code B — `App.kt` `AppContent` (migrate raw `Scaffold` → `XScaffold`, lift `navController`)
+
+`XScaffold` is a 1:1 slot match for M3 `Scaffold` (`topBar`/`bottomBar`/`snackbarHost`/`contentWindowInsets`), default `containerColor = PaleLavender`. Lift `navController` out of `{NAV_HOST_PATH}` into `App.kt` so the bar and the NavHost share it.
+
+```kotlin
+val navController = rememberNavController()
+val entry by navController.currentBackStackEntryAsState()
+val onTopLevel = TopLevelDestination.entries.any { dest ->
+    entry?.destination?.hierarchy?.any { it.hasRoute(dest.route::class) } == true
+}
+
+XScaffold(
+    modifier = Modifier.windowInsetsPadding(WindowInsets.ime),
+    topBar = { ToolbarRenderer(config = currentToolbarConfig) },
+    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    contentWindowInsets = WindowInsets.statusBars,
+    bottomBar = {
+        if (onTopLevel) {
+            XNavigationBar {
+                TopLevelDestination.entries.forEach { dest ->
+                    val selected = entry?.destination?.hierarchy?.any { it.hasRoute(dest.route::class) } == true
+                    XNavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(dest.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            XIcon(
+                                painter = painterResource(if (selected) dest.selectedIcon else dest.icon),
+                                contentDescription = stringResource(dest.label),
+                            )
+                        },
+                        label = { XText(stringResource(dest.label)) },
+                    )
+                }
+            }
+        }
+    },
+) { innerPadding ->
+    BaseAppNavHost(navController = navController, modifier = Modifier.fillMaxSize().padding(innerPadding))
+    Toast(state = toastState)
+    SnackbarController(snackbarHostState = snackbarHostState)
+}
+```
+
+Imports to add in `App.kt`: `androidx.navigation.compose.rememberNavController`, `androidx.navigation.compose.currentBackStackEntryAsState`, `androidx.navigation.NavDestination.Companion.hierarchy`, `androidx.navigation.NavDestination.Companion.hasRoute`, `androidx.navigation.NavGraph.Companion.findStartDestination`, `org.jetbrains.compose.resources.painterResource`, `org.jetbrains.compose.resources.stringResource`, and the `XScaffold`/`XNavigationBar`/`XNavigationBarItem`/`XIcon`/`XText` X-components.
+
+### Code C — `{NAV_HOST_PATH}` (accept `navController` instead of creating it)
+
+```kotlin
+@Composable
+fun BaseAppNavHost(navController: NavHostController, modifier: Modifier) {
+    XNavHost(modifier = modifier, navController = navController, startDestination = {Start}Route) {
+        // existing route registrations unchanged
+    }
+}
+```
+
+### Removing a tab
+
+Delete the feature's `TopLevelDestination` entry. The route stays a valid destination (now reachable only programmatically). **There is no registry** — orphaned entries are not auto-removed; deleting a tab feature requires removing its enum entry, label string, and (if unused elsewhere) its chrome icon by hand. This is the accepted trade-off for keeping the wiring static and dependency-free.
+
 ## DI Pattern (feature/di/{Feature}Modules.kt)
 
 **Purpose**: Define feature's dependency injection modules
@@ -304,7 +431,7 @@ fun NavGraphBuilder.feature(
 ```
 
 **What full validation checks**:
-- All 4 integration points configured correctly
+- All required integration points (1–4) configured correctly (+ bottom-bar tab if the feature is a top-level tab)
 - No compilation errors
 - No DI configuration issues
 - Code formatting with ktlint

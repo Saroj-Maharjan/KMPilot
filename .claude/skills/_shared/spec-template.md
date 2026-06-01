@@ -99,6 +99,7 @@ feature/{featurename}/src/commonMain/kotlin/{pkg_prefix}/{featurename}/
 | Dependency | composeApp/build.gradle.kts | ✅ |
 | DI init | initKoin.kt | ✅ |
 | Navigation | BaseAppNavHost.kt | ✅ |
+| Bottom-bar tab (optional) | App.kt + navigation/TopLevelDestination.kt | ✅ / N/A |
 
 ## State Management
 
