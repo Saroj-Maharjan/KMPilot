@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Top bar -->
+    <string name="send_title">Send</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_back">Back</string>
+    <string name="cd_error">Error</string>
+    <string name="cd_paste">Paste</string>
+    <string name="cd_scan_qr">Scan QR</string>
+
+    <!-- Hero amount -->
+    <string name="balance_amount_template">Balance %1$s ·&#160;</string>
+    <string name="usd_amount_template">$%1$s</string>
+
+    <!-- Recipient -->
+    <string name="recipient_label">TO RECIPIENT</string>
+    <string name="recipient_placeholder">Wallet address or ENS name</string>
+
+    <!-- Asset / network selectors -->
+    <string name="asset_label">ASSET</string>
+    <string name="network_label">NETWORK</string>
+
+    <!-- Transaction summary -->
+    <string name="network_fee_label">Network Fee</string>
+    <string name="total_deduct_label">Total Deduct</string>
+    <string name="estimated_arrival_label">Estimated Arrival</string>
+
+    <!-- Footer / actions -->
+    <string name="secured_by_vault">SECURED BY KMPILOT VAULT</string>
+    <string name="send_bitcoin_button">Send Bitcoin</string>
+
+    <!-- Failed state -->
+    <string name="error_title">Something went wrong</string>
+    <string name="error_message">An unexpected error occurred. Please try again.</string>
+    <string name="retry_label">Retry</string>
+    <string name="return_to_dashboard">Return to Dashboard</string>
+</resources>

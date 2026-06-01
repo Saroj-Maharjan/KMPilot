@@ -22,6 +22,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.send.generated.resources.Res
+import kmpilot.feature.send.generated.resources.balance_amount_template
+import kmpilot.feature.send.generated.resources.usd_amount_template
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XText
 
 @Composable
@@ -86,7 +90,7 @@ fun HeroAmountSection(
 
         Row {
             XText(
-                text = "Balance $balanceBtc · ",
+                text = stringResource(Res.string.balance_amount_template, balanceBtc),
                 style =
                     TextStyle(
                         fontSize = 14.sp,
@@ -95,7 +99,7 @@ fun HeroAmountSection(
                     ),
             )
             XText(
-                text = "$$balanceUsd",
+                text = stringResource(Res.string.usd_amount_template, balanceUsd),
                 style =
                     TextStyle(
                         fontSize = 14.sp,

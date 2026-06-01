@@ -27,6 +27,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.send.generated.resources.Res
+import kmpilot.feature.send.generated.resources.cd_paste
+import kmpilot.feature.send.generated.resources.cd_scan_qr
+import kmpilot.feature.send.generated.resources.recipient_label
+import kmpilot.feature.send.generated.resources.recipient_placeholder
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
 import thisissadeghi.designsystem.XText
@@ -57,7 +63,7 @@ fun RecipientCard(
         )
         Column(modifier = Modifier.padding(20.dp)) {
             XText(
-                text = "TO RECIPIENT",
+                text = stringResource(Res.string.recipient_label),
                 style =
                     TextStyle(
                         fontSize = 12.sp,
@@ -85,7 +91,7 @@ fun RecipientCard(
                     decorationBox = { innerTextField ->
                         if (address.isEmpty()) {
                             XText(
-                                text = "Wallet address or ENS name",
+                                text = stringResource(Res.string.recipient_placeholder),
                                 style =
                                     TextStyle(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
@@ -108,7 +114,7 @@ fun RecipientCard(
                     ) {
                         XIcon(
                             imageVector = Icons.Default.ContentPaste,
-                            contentDescription = "Paste",
+                            contentDescription = stringResource(Res.string.cd_paste),
                         )
                     }
                     XIconButton(
@@ -121,7 +127,7 @@ fun RecipientCard(
                     ) {
                         XIcon(
                             imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = "Scan QR",
+                            contentDescription = stringResource(Res.string.cd_scan_qr),
                         )
                     }
                 }

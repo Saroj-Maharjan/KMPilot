@@ -26,6 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.send.generated.resources.Res
+import kmpilot.feature.send.generated.resources.asset_label
+import kmpilot.feature.send.generated.resources.network_label
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -45,7 +49,7 @@ fun AssetNetworkGrid(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         AssetSelectorCard(
-            label = "ASSET",
+            label = stringResource(Res.string.asset_label),
             iconContent = {
                 Box(
                     modifier =
@@ -68,7 +72,7 @@ fun AssetNetworkGrid(
             modifier = Modifier.weight(1f),
         )
         AssetSelectorCard(
-            label = "NETWORK",
+            label = stringResource(Res.string.network_label),
             iconContent = {
                 Box(
                     modifier =

@@ -22,6 +22,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.send.generated.resources.Res
+import kmpilot.feature.send.generated.resources.estimated_arrival_label
+import kmpilot.feature.send.generated.resources.network_fee_label
+import kmpilot.feature.send.generated.resources.total_deduct_label
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -48,7 +53,7 @@ fun TransactionSummaryCard(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         SummaryRow(
-            label = "Network Fee",
+            label = stringResource(Res.string.network_fee_label),
             value = networkFee,
             valueStyle =
                 TextStyle(
@@ -58,7 +63,7 @@ fun TransactionSummaryCard(
                 ),
         )
         SummaryRow(
-            label = "Total Deduct",
+            label = stringResource(Res.string.total_deduct_label),
             value = totalDeduct,
             valueStyle =
                 TextStyle(
@@ -86,7 +91,7 @@ fun TransactionSummaryCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 XText(
-                    text = "Estimated Arrival",
+                    text = stringResource(Res.string.estimated_arrival_label),
                     style =
                         TextStyle(
                             fontSize = 14.sp,

@@ -39,6 +39,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kmpilot.feature.send.generated.resources.Res
+import kmpilot.feature.send.generated.resources.cd_back
+import kmpilot.feature.send.generated.resources.cd_error
+import kmpilot.feature.send.generated.resources.error_message
+import kmpilot.feature.send.generated.resources.error_title
+import kmpilot.feature.send.generated.resources.retry_label
+import kmpilot.feature.send.generated.resources.return_to_dashboard
+import kmpilot.feature.send.generated.resources.secured_by_vault
+import kmpilot.feature.send.generated.resources.send_bitcoin_button
+import kmpilot.feature.send.generated.resources.send_title
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.UiState
 import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
@@ -99,7 +110,7 @@ fun SendScreenRoot(
             XTopAppBar(
                 title = {
                     XText(
-                        text = "Send",
+                        text = stringResource(Res.string.send_title),
                     )
                 },
                 navigationIcon = {
@@ -113,7 +124,7 @@ fun SendScreenRoot(
                     ) {
                         XIcon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.cd_back),
                         )
                     }
                 },
@@ -237,7 +248,7 @@ private fun SuccessContent(
             )
             Spacer(modifier = Modifier.width(8.dp))
             XText(
-                text = "SECURED BY KMPILOT VAULT",
+                text = stringResource(Res.string.secured_by_vault),
                 style =
                     TextStyle(
                         fontSize = 10.sp,
@@ -266,13 +277,13 @@ private fun FailedContent(
     ) {
         XIcon(
             imageVector = Icons.Default.Warning,
-            contentDescription = "Error",
+            contentDescription = stringResource(Res.string.cd_error),
             modifier = Modifier.size(80.dp),
             tint = MaterialTheme.colorScheme.error,
         )
         Spacer(modifier = Modifier.height(32.dp))
         XText(
-            text = "Something went wrong",
+            text = stringResource(Res.string.error_title),
             style =
                 TextStyle(
                     fontSize = 20.sp,
@@ -286,7 +297,7 @@ private fun FailedContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         XText(
-            text = "An unexpected error occurred. Please try again.",
+            text = stringResource(Res.string.error_message),
             style =
                 TextStyle(
                     fontSize = 14.sp,
@@ -311,7 +322,7 @@ private fun FailedContent(
                 ),
         ) {
             XText(
-                text = "Retry",
+                text = stringResource(Res.string.retry_label),
                 style =
                     TextStyle(
                         fontSize = 16.sp,
@@ -321,7 +332,7 @@ private fun FailedContent(
         }
         Spacer(modifier = Modifier.height(8.dp))
         XText(
-            text = "Return to Dashboard",
+            text = stringResource(Res.string.return_to_dashboard),
             style =
                 TextStyle(
                     fontSize = 14.sp,
@@ -365,7 +376,7 @@ private fun SendBottomBar(onSendClick: () -> Unit) {
             contentPadding = PaddingValues(horizontal = 24.dp),
         ) {
             XText(
-                text = "Send Bitcoin",
+                text = stringResource(Res.string.send_bitcoin_button),
                 style =
                     TextStyle(
                         fontSize = 16.sp,
