@@ -35,6 +35,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kmpilot.feature.receive.generated.resources.Res
+import kmpilot.feature.receive.generated.resources.cd_back
+import kmpilot.feature.receive.generated.resources.copy_address_label
+import kmpilot.feature.receive.generated.resources.error_message
+import kmpilot.feature.receive.generated.resources.error_title
+import kmpilot.feature.receive.generated.resources.receive_title
+import kmpilot.feature.receive.generated.resources.retry_label
+import kmpilot.feature.receive.generated.resources.share_label
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.UiState
 import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
@@ -79,7 +88,7 @@ fun ReceiveScreenRoot(
             XTopAppBar(
                 title = {
                     XText(
-                        text = "Receive",
+                        text = stringResource(Res.string.receive_title),
                     )
                 },
                 navigationIcon = {
@@ -93,7 +102,7 @@ fun ReceiveScreenRoot(
                     ) {
                         XIcon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.cd_back),
                         )
                     }
                 },
@@ -210,7 +219,7 @@ private fun ReceiveBottomBar(
         ) {
             XIcon(imageVector = Icons.Default.Share, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.size(8.dp))
-            XText(text = "Share", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            XText(text = stringResource(Res.string.share_label), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
         XButton(
             onClick = onCopyClick,
@@ -233,7 +242,7 @@ private fun ReceiveBottomBar(
         ) {
             XIcon(imageVector = Icons.Default.ContentCopy, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.size(8.dp))
-            XText(text = "Copy Address", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            XText(text = stringResource(Res.string.copy_address_label), fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -272,7 +281,7 @@ private fun ReceiveFailedContent(
             }
             Spacer(modifier = Modifier.height(24.dp))
             XText(
-                text = "Failed to Load Address",
+                text = stringResource(Res.string.error_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -283,7 +292,7 @@ private fun ReceiveFailedContent(
                         .padding(bottom = 12.dp),
             )
             XText(
-                text = "Unable to retrieve your wallet address. Please try again.",
+                text = stringResource(Res.string.error_message),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.outline,
@@ -306,7 +315,7 @@ private fun ReceiveFailedContent(
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
             ) {
-                XText(text = "Retry", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                XText(text = stringResource(Res.string.retry_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

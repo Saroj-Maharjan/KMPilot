@@ -17,6 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.receive.generated.resources.Res
+import kmpilot.feature.receive.generated.resources.warning_message
+import kmpilot.feature.receive.generated.resources.warning_title
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 
@@ -43,13 +47,13 @@ fun NetworkWarningBanner(modifier: Modifier = Modifier) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             XText(
-                text = "Only send Bitcoin (BTC)",
+                text = stringResource(Res.string.warning_title),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             XText(
-                text = "Sending any other asset to this address may result in permanent loss.",
+                text = stringResource(Res.string.warning_message),
                 fontSize = 12.sp,
                 lineHeight = (12 * 1.625).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

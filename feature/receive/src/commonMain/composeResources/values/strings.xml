@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Top bar -->
+    <string name="receive_title">Receive</string>
+    <string name="cd_back">Back</string>
+
+    <!-- Address card -->
+    <string name="address_label">Your Bitcoin address</string>
+
+    <!-- Network warning -->
+    <string name="warning_title">Only send Bitcoin (BTC)</string>
+    <string name="warning_message">Sending any other asset to this address may result in permanent loss.</string>
+
+    <!-- Bottom bar actions -->
+    <string name="share_label">Share</string>
+    <string name="copy_address_label">Copy Address</string>
+
+    <!-- Failed state -->
+    <string name="error_title">Failed to Load Address</string>
+    <string name="error_message">Unable to retrieve your wallet address. Please try again.</string>
+    <string name="retry_label">Retry</string>
+</resources>

@@ -24,6 +24,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import kmpilot.feature.receive.generated.resources.Res
+import kmpilot.feature.receive.generated.resources.address_label
+import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
 import thisissadeghi.designsystem.XText
@@ -44,7 +47,7 @@ fun AddressCard(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             XText(
-                text = "Your Bitcoin address",
+                text = stringResource(Res.string.address_label),
                 modifier = Modifier.padding(bottom = 24.dp),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
