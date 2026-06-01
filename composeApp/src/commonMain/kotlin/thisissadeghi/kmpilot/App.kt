@@ -1,6 +1,7 @@
 package thisissadeghi.kmpilot
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
@@ -61,7 +62,8 @@ private fun AppContent() {
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding),
                 )
 
                 Toast(state = toastState)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -200,7 +201,7 @@ private fun ReceiveBottomBar(
                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .padding(horizontal = 16.dp)
                 .padding(top = 16.dp)
-                .padding(bottom = 32.dp),
+                .navigationBarsPadding(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         XButton(
