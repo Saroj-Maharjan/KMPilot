@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import thisissadeghi.common.locale.ProvideAppLocale
 import thisissadeghi.designsystem.SnackbarController
 import thisissadeghi.designsystem.Toast
 import thisissadeghi.designsystem.XTheme
@@ -26,9 +27,15 @@ import thisissadeghi.designsystem.toolbar.ToolbarRenderer
 
 @Composable
 fun App() {
-    val toastState = rememberToastState()
+    ProvideAppLocale {
+        AppContent()
+    }
+}
 
+@Composable
+private fun AppContent() {
     XTheme {
+        val toastState = rememberToastState()
         var currentToolbarConfig by remember { mutableStateOf<ToolbarConfig>(ToolbarConfig.None) }
         val setToolbarConfig: (ToolbarConfig) -> Unit = { config ->
             currentToolbarConfig = config

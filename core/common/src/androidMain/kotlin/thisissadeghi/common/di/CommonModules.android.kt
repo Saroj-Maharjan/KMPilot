@@ -1,9 +1,12 @@
 package thisissadeghi.common.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import thisissadeghi.common.locale.AndroidLanguagePreferenceStore
+import thisissadeghi.common.locale.LanguagePreferenceStore
 import thisissadeghi.common.util.AndroidLinkHandler
 import thisissadeghi.common.util.LinkHandler
 
@@ -14,4 +17,5 @@ import thisissadeghi.common.util.LinkHandler
 actual val commonPlatformModule: Module =
     module {
         singleOf(::AndroidLinkHandler).bind<LinkHandler>()
+        single<LanguagePreferenceStore> { AndroidLanguagePreferenceStore(androidContext()) }
     }

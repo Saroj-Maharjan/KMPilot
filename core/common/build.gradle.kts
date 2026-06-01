@@ -7,6 +7,11 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        // LocalAppLocale is an `expect object` (a classifier); expect/actual
+        // classifiers are Beta and require this flag to suppress the warning.
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
@@ -46,12 +51,14 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.compose.components.resources)
+                implementation(libs.compose.ui)
                 implementation(libs.kotlinCollection)
                 implementation(libs.kotlinxSerialization)
                 api(libs.androidx.lifecycle.viewmodel)
                 api(libs.androidx.lifecycle.runtime.compose)
 
                 api(libs.koin.core)
+                implementation(libs.koin.compose)
                 implementation(libs.kotlinx.datetime)
             }
         }
@@ -59,6 +66,7 @@ kotlin {
         androidMain {
             dependencies {
                 implementation(libs.koin.android)
+                implementation(libs.coreKtx)
             }
         }
 
