@@ -2,7 +2,7 @@
 
 All skills and agents import this file. Do not duplicate these rules elsewhere.
 
-## 11 Critical Rules
+## 12 Critical Rules
 
 1. **Interface + Impl** - DataSource and Repository always have interface + implementation pair
 2. **Either<T>** - Return `Either<T>` for fallible operations, never throw exceptions
@@ -15,6 +15,7 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 9. **No UseCases** - ViewModels invoke repositories directly
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
 11. **Single UiModel + DTO-wrapped UiState** - `*UiModel` is the only presentation state container (no `*UiState.kt`). It holds plain UI fields + one `UiState<DTO>` slot per async operation, where DTO is the data-layer model (use `UiState<Unit>` for void ops). Repository returns `Either<DTO>`; data layer never imports from `presentation`. UI-derived display values live as sibling fields on `*UiModel`, never as mirror DTO types.
+12. **No hardcoded user-facing strings** - Every display string (text, labels, content descriptions, placeholders) comes from a string resource via `stringResource(Res.string.*)` (feature-local) or `DesignSystemResources` (shared). Feature strings live in `composeResources/values/strings.xml`; translations in `values-{lang}/strings.xml`. `*UiModel` carries `UiText`/`StringResource`, never English literals — ViewModels build `UiText`, composables resolve with `.asString()`. **Not strings**: control sentinels parsed in logic, single-glyph symbols (`$`, `₿`, `✓`, `%`), and repository-supplied data (merchant names, dates, tickers). See "Strings & Localization" below.
 
 ## Design-Aware Implementation
 
@@ -111,6 +112,50 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 }
 ```
 
+### Strings & Localization (Rule 12)
+
+Every user-facing string is a string resource. No English literals in composables or on `*UiModel`.
+
+**Where strings live** (per-module):
+
+```
+feature/{featurename}/src/commonMain/composeResources/
+├── values/strings.xml          # default (English) — the source of truth for keys
+└── values-{lang}/strings.xml   # one per translation (e.g. values-fa, values-es) — same keys
+```
+
+Shared strings (Yes/No/Retry/Cancel, common errors) already live in `:core:designsystem` and are consumed via `DesignSystemResources` — do not duplicate them per feature.
+
+**Key naming**: `{area}_{purpose}` snake_case. Suffix `_template` for format strings, `cd_` for content descriptions, `section_` for headers, `status_` for badges. Examples: `send_title`, `recipient_placeholder`, `balance_amount_template`, `cd_back`, `section_portfolio`, `status_overdue`.
+
+**In composables** — feature-local via the module's generated `Res`:
+```kotlin
+import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.Res
+import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.send_title
+import org.jetbrains.compose.resources.stringResource
+
+XText(text = stringResource(Res.string.send_title))
+XText(text = stringResource(Res.string.balance_amount_template, balanceBtc))  // format args
+XIcon(contentDescription = stringResource(Res.string.cd_back))                // a11y text too
+```
+
+`{PROJECT_NAMESPACE}` is the root segment of the generated-resources package (`kmpilot` in this repo, derived from the app module) — distinct from `{PKG_PREFIX}`, the Kotlin source package. Both are project-specific; substitute your own.
+
+**Strings that originate in a ViewModel** (validation messages, computed labels): ViewModels cannot call the `@Composable stringResource`. Carry them as `UiText` (in `:core:common`) on `*UiModel`, resolve in the composable:
+```kotlin
+// *UiModel:        val emailError: UiText? = null
+// ViewModel:       copy(emailError = UiText.Resource(Res.string.email_required))
+// Composable:      uiModel.emailError?.let { XText(it.asString()) }
+// Coroutine/suspend context: getString(Res.string.x) or uiText.resolve()
+```
+`ErrorModel.Resource(...) + ErrorModel.asString()` is the same pattern for errors and already exists.
+
+**Not strings** (leave as literals): control sentinels parsed in logic (e.g. `label == "MAX"`), single-glyph symbols (`$`, `₿`, `✓`, `%`), and repository-supplied data (merchant names, dates, tickers, coin names). Currency-symbol formatting is a data concern, not UI i18n.
+
+**Adding a language**: drop a `values-{lang}/strings.xml` into each module that owns strings (same keys, translated values). The locale mechanism lives in `:core:common` (`{PKG_PREFIX}.common.locale`): drive selection at runtime via `LanguageController.setLanguage(tag)`; the app root feeds the tag to `LocalAppLocale` and recomposes. `null` tag = follow system locale. The picker UI is app-specific — each app builds its own.
+
+**Gradle**: feature modules already depend on `libs.compose.components.resources` and have a `composeResources/` dir — no extra config. The generated `Res` is `internal` per module (default); keep it.
+
 ## Module Dependencies
 
 | Feature depends on | When |
@@ -140,6 +185,17 @@ object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString())
 │   └── navigation/      # Routes + NavGraphBuilder
 └── di/
     └── {Feature}Modules.kt
+```
+
+Resources are a sibling of `kotlin/` under the same source set (not in the package tree):
+
+```
+feature/{featurename}/src/commonMain/
+├── kotlin/...                       # the tree above
+└── composeResources/
+    ├── values/strings.xml           # Rule 12 — feature strings (default/English)
+    ├── values-{lang}/strings.xml    # translations (same keys), e.g. values-fa
+    └── drawable/                     # feature-local icons/images
 ```
 
 ### UI File Organization

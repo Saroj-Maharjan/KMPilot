@@ -860,7 +860,7 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - `states.failed` true → shared-screen entry; false → "Skipped" marker.
    - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
 
-4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with selected states, Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
 
 ---
 

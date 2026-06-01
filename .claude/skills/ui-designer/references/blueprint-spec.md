@@ -65,6 +65,19 @@ Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 
 > Omit this entire section when `states.empty == false`. Empty is a content variant, not a Rule-4 UI state, so no "Skipped" placeholder is emitted.
 
+## String Inventory
+
+> Every user-facing text node in the design → a proposed string-resource key (Rule 12). The implementer creates `composeResources/values/strings.xml` from this table and references the keys via `stringResource(Res.string.*)`. **Exclude**: repository-supplied data (names, dates, tickers), single-glyph symbols (`$`, `₿`, `%`, `✓`), and control sentinels. Key naming: `{area}_{purpose}` snake_case (suffix `_template` for format strings, `cd_` for content descriptions, `section_` for headers, `status_` for badges).
+
+| Key | Default (English) value | Where used | Notes |
+|-----|-------------------------|------------|-------|
+| {feature}_title | {Title} | top bar | |
+| cd_back | Back | nav icon | content description |
+| section_{name} | {Header} | section header | |
+| {area}_{purpose}_template | {Text %1$s} | {component} | has format arg |
+
+Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed here — they come from `DesignSystemResources`.
+
 ## Pre-Implementation Contract
 
 > Architecture rules, color rules, and X-component defaults are project-wide and live in their canonical sources — do not restate them here:
@@ -110,6 +123,7 @@ Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 - [ ] Every Modifier in blueprint (border, shadow, alpha, padding, size) is present in code
 - [ ] All colors use MaterialTheme.colorScheme.{role} — no raw Color() hex
 - [ ] Component override sizes/colors from Pre-Implementation Contract applied
+- [ ] Every String Inventory key exists in `composeResources/values/strings.xml` and is referenced via `stringResource` — no hardcoded display literals (Rule 12)
 - [ ] Build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`
 - [ ] Code formatted: `./gradlew :feature:{featurename}:ktlintFormat`
 ```
@@ -292,7 +306,12 @@ RULES:
       treats each missing override as a CRITICAL — keep it accurate and minimal.
 20. **Post-Implementation Checklist**: After the Pre-Implementation Contract, emit a
     `## Post-Implementation Checklist` with verification items: XTheme updates, component completeness,
-    modifier fidelity, color fidelity, component override application, build validation, ktlint format.
+    modifier fidelity, color fidelity, component override application, string-key coverage, build validation, ktlint format.
+20a. **String Inventory (Rule 12)**: After the Component Tree (before the Pre-Implementation Contract), emit a
+    `## String Inventory` table — one row per user-facing text node in the HTML, mapping it to a proposed
+    `{area}_{purpose}` string-resource key + the default English value. Exclude repository data, single-glyph
+    symbols, and control sentinels. Do not list shared strings (Retry/Yes/No/common errors) — they come from
+    `DesignSystemResources`. The implementer builds `composeResources/values/strings.xml` from this table.
 21. **Material Symbols icons**: For every `<span class="material-symbols-*" data-icon="...">` in the HTML, look up the icon in the `icons.json` manifest and emit `XIcon(painter = painterResource({res_reference}))` using the manifest's exact `res_reference` value (e.g. `DesignSystemResources.drawable.arrow_back` for chrome icons, `Res.drawable.qr_code_scanner` for domain icons). The manifest already encodes the fill-variant naming (`_fill` suffix when `data-weight="fill"`) and the chrome/domain split — do not re-derive these from the HTML. **Never** emit `Icons.Default.{Name}` or any reference to `androidx.compose.material.icons.*` — that library is pinned/deprecated and produces a different glyph family from the Material Symbols Stitch renders.
 21b. **`<img>` raster assets**: For every `<img src="https://lh3.googleusercontent.com/aida-public/...">` in the HTML, look up the entry in the `images.json` manifest (keyed by `url`) and emit `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop)` using the manifest's exact `res_reference`. Pass the manifest's `alt` field as `contentDescription` (truncate to a reasonable length if very long). Apply CSS-derived modifiers from the HTML (size, shape, opacity) as Compose `Modifier` chains. **Never** emit `AsyncImage` for Stitch CDN URLs — `AsyncImage` is for runtime data the developer wires up separately by editing the generated code.
 22. **Optional states**: The `states` map controls which sections appear in the Component Tree:

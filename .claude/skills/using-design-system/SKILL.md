@@ -39,6 +39,7 @@ Usage examples: @references/usage-examples.md
 3. **Theme**: Never wrap screens in `XTheme` (app-level only), use `XScaffold`
 4. **Navigation**: Use `XNavHost` (pre-configured animations)
 5. **ScreenRoot Pattern**: `{Feature}Screen` + `{Feature}ScreenRoot` pair required
+6. **Strings (Rule 12)**: `XText`/`XIcon` text args take `stringResource(Res.string.*)`, never literals. Shared strings via `DesignSystemResources`; ViewModel-origin via `UiText`. See `@../_shared/patterns.md` → "Strings & Localization (Rule 12)".
 
 ## Allowed Exceptions
 
@@ -52,6 +53,7 @@ Material3 allowed only in:
 - [ ] No Material3 component imports in feature files
 - [ ] All buttons use XButton variants
 - [ ] All text uses XText
+- [ ] No hardcoded display strings — `stringResource`/`UiText` only (Rule 12)
 - [ ] Screen wrapped in XScaffold (NOT XTheme)
 - [ ] XTopAppBar from `{CORE_DESIGNSYSTEM_PKG}.toolbar`
 - [ ] AsyncImage uses `url` parameter (not `model`)

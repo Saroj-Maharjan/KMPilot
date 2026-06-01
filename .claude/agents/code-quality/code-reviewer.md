@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Expert KMP feature reviewer. Reviews against Clean Architecture, 11 critical rules, 4 integration points. Accepts feature name as input.
+description: Expert KMP feature reviewer. Reviews against Clean Architecture, 12 critical rules, 4 integration points. Accepts feature name as input.
 allowed-tools: ["Read", "Grep", "Glob", "Write"]
 model: sonnet
 color: red
@@ -60,6 +60,7 @@ If blueprint missing: Skip the Design-Aware section in Phase 6.
 | 9. No UseCases | Grep `UseCase` → expect 0 |
 | 10. Callbacks | Read Screen params → no navController |
 | 11. Single UiModel + DTO-wrapped UiState | **(a)** Glob `presentation/*UiState.kt` → expect 0 results. **(b)** Glob `presentation/*UiModel.kt` → expect exactly 1 file. **(c)** Grep `import .*\.presentation\.` in any file under `data/` → expect 0. **(d)** Read `{Feature}UiModel.kt`: every `UiState<T>` slot's `T` must be a class from `data/model/` (DTO) or `Unit`. Flag any `T` that's a class defined in `presentation/` — that's a Rule 11 violation. **(e)** Read `{Feature}RepositoryImpl.kt`: return types must be `Either<DTO>`, not `Either<{UiType}>`. **(f)** Read ViewModel: public flow should be `val uiModel: StateFlow<{Feature}UiModel>` (under Rule 11 convention). |
+| 12. No hardcoded strings | **(a)** Glob `presentation/composeResources/values/strings.xml` OR `src/commonMain/composeResources/values/strings.xml` → expect it to exist if the feature renders any text. **(b)** Grep `(text\|label\|placeholder\|contentDescription)\s*=\s*"` and `\bX(Text\|Button)\s*\(\s*"` in `presentation/ui/**/*.kt`. For each hit, flag as **Critical** unless it is: inside a `@Preview` fixture, a control sentinel parsed in logic (`== "MAX"`), a single-glyph symbol (`$`/`₿`/`%`/`✓`), or repository data passed through (names/dates/tickers). **(c)** `*UiModel.kt` must not hold English `String` literals for display — ViewModel-origin messages use `UiText`/`StringResource`. |
 | UI File Org | Read `presentation/ui/{Feature}Screen.kt`. ScreenRoot must take `uiModel: {Feature}UiModel` (not `uiState`). **Allowlist check (strict):** the only top-level `@Composable fun` declarations permitted in `Screen.kt` are: (1) `{Feature}Screen` public, (2) `{Feature}ScreenRoot` public, (3) `LoadingContent` private *optional*, (4) `FailedContent` private *optional*, (5) `EmptyContent` private *optional*. **`@Preview`-annotated composables are exempt** — they are always allowed alongside the composable they preview. Grep `^@Composable\s*$\n(?:.*\n)?(?:private\s+)?fun\s+(\w+)` against the file scope; for each match, check the preceding line(s) for `@Preview` — if present, exempt; otherwise flag **any** match outside the 5 allowed names as a **Warning** with the offending name and line. Typical violation: `{Feature}Content` or section composables defined inline in `Screen.kt` — they must move to `presentation/ui/components/{Name}.kt`, one file per component. The three state-shell composables (3–5) are *optional* and present only when the design specifies a dedicated state screen — do not flag their *absence*, only their misplacement. **Content location:** Glob `presentation/ui/components/{Feature}Content.kt` → expect it to exist for both Shape A (success-content) and Shape B (form). If `{Feature}Content` is defined inside `Screen.kt`, flag as Warning. **Shape detection** (see `architecture/ui.md` → "Screen Shapes"): Shape A uses `when (uiModel.{slot}State)` inside `ScreenRoot` and calls the optional state shells. Shape B has no `when`-routing in `ScreenRoot`; it derives `isLoading`/`errorMessage` from `submitState` and always calls `{Feature}Content`. Shape B requires a Design Decisions entry in `.claude/docs/{featurename}/spec.md`; if missing, flag as Warning. |
 | Utility placement | Pure helpers (non-`@Composable` functions: formatters, validators, mappers) belong in `presentation/ui/{Feature}Utils.kt`, **not** under `components/`. Glob `presentation/ui/components/*.kt` and grep each file for files that contain zero `@Composable` declarations → flag as Warning ("non-composable utility file misplaced under components/"). Also: any `fun` declaration in `components/*.kt` that is **not** preceded by `@Composable` and is **not** a `private` helper of a composable in the same file → flag as Warning. |
 | Preview import | If any file imports `org.jetbrains.compose.ui.tooling.preview.Preview` → flag as Warning. Use `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+, available from commonMain). Grep `import org\.jetbrains\.compose\.ui\.tooling\.preview\.` in `presentation/ui/**/*.kt` → expect 0. |
@@ -112,7 +113,7 @@ If blueprint missing or `blueprintConsumed: true` already, skip this phase silen
 | State | ✅/⚠️ | ... |
 | Navigation | ✅/⚠️ | ... |
 
-## Rules (1-10)
+## Rules (1-12)
 ### ✅/❌ Rule N: {Name}
 **Files**: path:line
 **Findings**: {details}

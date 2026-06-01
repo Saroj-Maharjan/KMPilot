@@ -364,3 +364,6 @@ skills-lock.json
 .scripts/*
 .github/*
 !.github/workflows/
+
+# Python bytecode cache from .claude tooling scripts
+.claude/skills/_shared/__pycache__/

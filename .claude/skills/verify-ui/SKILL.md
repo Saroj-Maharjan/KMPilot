@@ -362,6 +362,29 @@ import coil3.compose.AsyncImage       // use AsyncImage from :core:designsystem
 
 All M3 component violations are Critical.
 
+### 6.3 String-resource compliance (Rule 12)
+
+Scan feature composables for hardcoded user-facing literals:
+
+```
+grep -rnHE '(text|label|placeholder|contentDescription)\s*=\s*"[^"]' feature/{featurename}/src/commonMain/**/presentation/ui/
+grep -rnHE '\bX(Text|Button)\s*\(\s*"[^"]' feature/{featurename}/src/commonMain/**/presentation/ui/
+```
+
+For each hit, classify:
+- **Violation (Critical)** — a display string not wrapped in `stringResource(...)` / `UiText`.
+- **Allowed** — inside a `@Preview` fixture, a control sentinel parsed in logic (e.g. `label == "MAX"`), a single-glyph symbol (`$`, `₿`, `%`, `✓`), or repository-supplied data passed through (names, dates, tickers).
+
+Also confirm `composeResources/values/strings.xml` exists and every `Res.string.*` referenced resolves to a key in it.
+
+```markdown
+## String Resource Compliance (Rule 12): {FeatureName}
+
+| File | Line | Literal | Verdict | Fix |
+|------|------|---------|---------|-----|
+| RecipientCard.kt | 88 | "Wallet address or ENS name" | Violation | extract to strings.xml → stringResource |
+```
+
 ---
 
 ## Step 7: Present Results

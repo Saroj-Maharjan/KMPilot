@@ -21,11 +21,13 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 2. Load architecture references only when needed
 3. Implement single `{Feature}UiModel` (`presentation/{Feature}UiModel.kt`) — plain UI fields + `UiState<DTO>` slots, where DTO is from `data/model/` (Rule 11). Do NOT create `{Feature}UiState.kt` and do NOT create presentation-layer mirrors of DTOs.
 4. Implement ViewModel with `_uiModel.setState { copy() }`; expose `val uiModel: StateFlow<{Feature}UiModel>`
-5. Implement Screen + ScreenRoot (BOTH required) — `ScreenRoot` takes `uiModel: {Feature}UiModel` only
-6. Handle all 4 UI states (Uninitialized/Loading/Success/Failed) per async slot
-7. Implement Navigation with callbacks
-8. Self-check (Rule 11): grep `import .*\.presentation\.` is zero in any file you generated under `data/`; no `{Feature}UiState.kt` file exists
-9. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
+5. **Strings (Rule 12)**: create `composeResources/values/strings.xml` and add a key per user-facing string FIRST. In composables, resolve via the module's generated `Res` — `stringResource(Res.string.key)` for `text`/`label`/`placeholder`/`contentDescription`, format args for templates. ViewModel-origin messages → `UiText` on `*UiModel`, resolved with `.asString()`. Shared strings (Retry/Yes/No) → `DesignSystemResources`. If a blueprint is present, use its String Inventory keys. See `@../../skills/_shared/patterns.md` → "Strings & Localization (Rule 12)".
+6. Implement Screen + ScreenRoot (BOTH required) — `ScreenRoot` takes `uiModel: {Feature}UiModel` only
+7. Handle all 4 UI states (Uninitialized/Loading/Success/Failed) per async slot
+8. Implement Navigation with callbacks
+9. Self-check (Rule 11): grep `import .*\.presentation\.` is zero in any file you generated under `data/`; no `{Feature}UiState.kt` file exists
+10. Self-check (Rule 12): grep your composables for `text = "`, `contentDescription = "`, `label = "` followed by a literal — every hit must be `stringResource(...)` (allowed exceptions: control sentinels, single-glyph symbols, repository data). `composeResources/values/strings.xml` exists and every referenced key is present.
+11. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
 
 ## Critical: ScreenRoot Pattern
 
@@ -144,5 +146,6 @@ data class FeatureUiModel(
 ✅ Callback parameters
 ✅ Single {Feature}UiModel.kt — no {Feature}UiState.kt (Rule 11)
 ✅ UiState<> slots wrap DTOs from data/model/ — no presentation-layer mirrors (Rule 11)
+✅ All display text via stringResource/UiText — composeResources/values/strings.xml created (Rule 12)
 ✅ Build successful
 ```

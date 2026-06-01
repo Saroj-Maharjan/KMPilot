@@ -2,6 +2,8 @@
 
 **Note**: Replace `{PKG_PREFIX}` and `{CORE_DESIGNSYSTEM_PKG}` with your project's package prefix and design system package.
 
+**Strings (Rule 12)**: examples below use string literals (`XText("Login")`) for brevity, to keep the focus on component shape. **Real feature code never hardcodes display text** — use `XText(stringResource(Res.string.login_button))`, shared strings via `DesignSystemResources`, and `UiText` for ViewModel-origin messages. See `@../../_shared/patterns.md` → "Strings & Localization (Rule 12)".
+
 ## Pattern 1: Screen Structure (ScreenRoot Pattern)
 
 **Every feature screen has TWO composables:**

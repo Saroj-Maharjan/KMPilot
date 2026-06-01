@@ -174,8 +174,13 @@ fun FeatureScreenRoot(
     XScaffold(
         topBar = {
             XTopAppBar(
-                title = { XText("Title") },
-                navigationIcon = { XIconButton(onClick = onBackClick) { /* icon */ } }
+                // Rule 12 — no hardcoded strings; resolve from the module's generated Res
+                title = { XText(stringResource(Res.string.feature_title)) },
+                navigationIcon = {
+                    XIconButton(onClick = onBackClick) {
+                        XIcon(/* ... */, contentDescription = stringResource(Res.string.cd_back))
+                    }
+                }
             )
         },
         modifier = modifier.fillMaxSize(),
@@ -499,6 +504,30 @@ The reviewer uses the spec's Design Decisions to know which shape is expected. W
 
 **Note**: XTheme is app-level only (in `composeApp`), features don't wrap in XTheme
 
+## Strings & Localization (Rule 12)
+
+**No hardcoded user-facing strings.** Every `text`, `label`, `placeholder`, and `contentDescription` resolves from a string resource. Full rules and the `UiText`/`DesignSystemResources` patterns live in `@../../_shared/patterns.md` → "Strings & Localization (Rule 12)". UI-layer essentials:
+
+1. **Create the catalog first**: `feature/{featurename}/src/commonMain/composeResources/values/strings.xml`. Add a key per display string before/while writing the composable. Key naming: `{area}_{purpose}` (e.g. `send_title`, `recipient_placeholder`, `cd_back`, `section_portfolio`).
+
+2. **Resolve in the composable** via the module's generated `Res`:
+   ```kotlin
+   import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.Res
+   import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.send_title
+   import org.jetbrains.compose.resources.stringResource
+
+   XText(text = stringResource(Res.string.send_title))
+   XText(text = stringResource(Res.string.balance_amount_template, balanceBtc))  // format args
+   ```
+
+3. **ViewModel-origin text** (validation/computed messages) → carry as `UiText` on `*UiModel`, resolve with `.asString()` in the composable. ViewModels never call `stringResource`.
+
+4. **Shared strings** (Retry/Yes/No/common errors) come from `DesignSystemResources`, not a per-feature key.
+
+5. **Leave as literals**: control sentinels parsed in logic, single-glyph symbols (`$`, `₿`, `%`), and repository-supplied data (names, dates, tickers).
+
+No Gradle change needed — feature modules already include `libs.compose.components.resources` and a `composeResources/` dir.
+
 ## Computed Display Values (Rule 11)
 
 **Pattern**: If the UI needs a formatted/derived value from a DTO (e.g. `"3 days ago"` from a `Long` timestamp, `"$12.99"` from a `Double`), add a **sibling field** to `*UiModel` and populate it in the ViewModel when the source `UiState<DTO>` becomes Success.
@@ -564,7 +593,8 @@ class FeatureViewModel(
 
 ### Form Validation Pattern (form fields live on *UiModel)
 ```kotlin
-// FeatureUiModel: data class FeatureUiModel(val email: String = "", val emailError: String? = null, val submitState: UiState<Unit> = UiState.Uninitialized)
+// FeatureUiModel: error messages are UiText, not String literals (Rule 12)
+// data class FeatureUiModel(val email: String = "", val emailError: UiText? = null, val submitState: UiState<Unit> = UiState.Uninitialized)
 
 fun updateEmail(email: String) {
     _uiModel.setState { copy(email = email, emailError = null) }
@@ -572,9 +602,10 @@ fun updateEmail(email: String) {
 
 fun validateEmail(): Boolean {
     val email = _uiModel.value.email
-    val error = when {
-        email.isBlank() -> "Email is required"
-        !email.contains("@") -> "Invalid email format"
+    // ViewModel can't call stringResource — build UiText, resolve in the composable with .asString()
+    val error: UiText? = when {
+        email.isBlank() -> UiText.Resource(Res.string.email_required)
+        !email.contains("@") -> UiText.Resource(Res.string.email_invalid)
         else -> null
     }
     _uiModel.setState { copy(emailError = error) }

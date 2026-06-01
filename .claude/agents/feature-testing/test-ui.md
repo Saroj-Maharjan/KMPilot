@@ -249,9 +249,31 @@ Add the corresponding import: `import androidx.compose.ui.test.performScrollToIn
 - `onShow{Dialog}` / `onDismiss{Dialog}` - dialog visibility
 - `onConfirm{Action}` - confirm dialog action
 
+## Strings & Localization (Rule 12)
+
+Feature UI text comes from `composeResources/values/strings.xml`, not literals. **Assert against the resource value, not a hardcoded English copy** — otherwise tests break when copy is edited or a non-default locale is active.
+
+```kotlin
+import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.Res
+import {PROJECT_NAMESPACE}.feature.{featurename}.generated.resources.retry_label
+import org.jetbrains.compose.resources.getString
+import kotlinx.coroutines.runBlocking
+
+@Test
+fun failedState_showsRetry() = runComposeUiTest {
+    val retry = runBlocking { getString(Res.string.retry_label) }   // resolve the resource, don't hardcode
+    setContent { FeatureScreenRoot(uiModel = failedModel, onRetry = {}) }
+    onNodeWithText(retry).assertIsDisplayed()
+}
+```
+
+Resolve each asserted label once via `getString(Res.string.*)` and reuse the value. Content descriptions follow the same rule (`getString(Res.string.cd_back)`). Repository-supplied data (entity names, dates) is asserted directly from the test fixture, as before.
+
 ## Checklist
 
 **State Rendering:** Uninitialized → initial UI | Loading → indicator | Loading → disable interactive | Success → content | Success → hide loading | Success → all list items | Empty → placeholder | Failed → error message | Failed → retry button
+
+**Strings (Rule 12):** asserted UI labels/content-descriptions resolved via `getString(Res.string.*)`, never hardcoded English
 
 **Callbacks:** Back button → onBackClick | Retry → onRetry | Item click → onItemClick with entity | Primary action → correct callback | Delete → onDelete | Form submit → onSubmit
 

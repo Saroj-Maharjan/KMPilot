@@ -55,6 +55,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 
 ## Last Updated
 
+- 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings (top bar, address label, network warning, bottom-bar actions, failed state) to `composeResources/values/strings.xml`, replaced with `stringResource`. Coin/network names left as data (VM-supplied). No behavior change.
 - 2026-05-17 — UI audit fixes: corrected failed-state typography (20sp/SemiBold/onSurfaceVariant title; 14sp/outline body), added Retry button to failed state, fixed loading spinner (64dp), fixed success content top padding (24dp), fixed bottom bar padding, fixed address label center alignment
 - 2026-05-11 — Design-aware update: aligned to Stitch gold/warm theme; AddressCard replaces AddressPill; custom Row top bar; redesigned bottom bar
 - 2026-05-03 — Initial spec generated from implementation
