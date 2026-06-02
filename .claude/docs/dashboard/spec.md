@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value                                                   |
 |-------|---------------------------------------------------------|
-| Version | 3.5.0                                                   |
+| Version | 3.6.0                                                   |
 | Status | Approved                                                |
 | Author | System                                                  |
 | Created | 2026-01-05                                              |
-| Updated | 2026-05-31                                              |
+| Updated | 2026-06-02                                              |
 | Design | `.claude/docs/dashboard/designs/dashboard_blueprint.md` |
 | Reviewers | N/A                                                     |
 
@@ -253,7 +253,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 
 **Icons:** Material Symbols XMLs (`Res.drawable.*`) — 20 icons in `composeResources/drawable/`; no `Icons.*` imports from Material Icons Extended.
 
-**Dashboard Layout (`XScaffold` + `DashboardContent`, LazyColumn `contentPadding = start/end 24dp, bottom 48dp`) — section order:**
+**Dashboard Layout (`XScreen` + `DashboardContent`, LazyColumn `contentPadding = start/end 24dp, bottom 48dp`) — section order:**
 1. **BalanceCard** — Box+border+clip (not XCard); gold 3dp top strip; 36sp ExtraBold amount; trend pill CircleShape (no border); "vs last month" text
 2. **QuickActions** — `spacedBy(16dp)` Row, `weight(1f)` columns; `CircleShape` circles; `primaryContainer.copy(0.3f)` bg + `outlineVariant` border; icons: send, download, payments, add_circle
 3. **InsightBanner** — `surface` bg + `outlineVariant` border; `primary` icon bg `primary.copy(0.1f)` + `RoundedCornerShape(20dp)`; 20dp padding
@@ -434,6 +434,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 |---------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3.6.0 | 2026-06-02 | Rule 13 (single app-shell Scaffold): `DashboardScreenRoot` migrated from `XScaffold` to `XScreen`; dropped `paddingValues` threading (removed `paddingValues` param from `DashboardContent`, `LoadingContent`/`FailedContent` now plain `Modifier.fillMaxSize()`). The app-shell `Scaffold` in `App.kt` owns all window insets; the feature adds none. No behavior change. |
 | 3.5.0 | 2026-05-31 | i18n (Rule 12): extracted all hardcoded UI chrome (header greeting/title, BalanceCard labels, quick-action labels, INCOME/EXPENSES, Smart Insight, section headers, OVERDUE badge, failed-state text) to `composeResources/values/strings.xml`, replaced with `stringResource`. `@Preview` sample data, repository-supplied text (transaction/merchant/coin names, dates, categories), and currency-symbol formatting left as-is (data, not UI strings). No behavior change. |
 | 3.4.0 | 2026-05-26 | Blueprint implementation (modifying-kmp-feature skill, design-aware mode): Extracted `DashboardContent` to `components/DashboardContent.kt`; renamed 7 components (QuickActionsSection→QuickActions, MonthlySummaryCard→MonthlySummary, BudgetsSection→MonthlyBudgets, SavingsGoalsSection→SavingsGoals, UpcomingBillsCard→UpcomingBills, PortfolioSection→Portfolio, RecentTransactionsSection→RecentTransactions); split monolithic section files into one-file-per-component (BudgetCard, SavingsGoalItem, BillItem, PortfolioItem, TransactionItem); replaced all `Icons.*` imports with `Res.drawable.*` XML icons; downloaded 20 Material Symbol XMLs + `failed_background.png`; simplified LoadingContent to centered XCircularProgressIndicator; updated FailedContent with decorative background image; removed DashboardHeader.kt (now private in DashboardContent.kt). |
 | 3.3.0 | 2026-05-19 | Switched to remote data source: `DashboardRepositoryImpl` now delegates to `DashboardRemoteDataSource` (returns `Either<DashboardData>`); `DashboardRepository` interface return type updated to `Either<DashboardData>`; `DashboardViewModel` replaced try/catch with `Either` pattern; `LocalDataSource` removed from DI (files retained); `DashboardResources` path updated to `/api/finance/dashboard.json`; `BASE_URL` pointed at GitHub Pages mock (`https://thisissadeghi.github.io/KMPilot/mock-api/`). |

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
@@ -29,11 +30,12 @@ import thisissadeghi.designsystem.XTheme
 internal fun DashboardContent(
     data: DashboardData,
     onActionClick: (String) -> Unit,
-    paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize().padding(paddingValues),
+        // No bottom action bar on this screen → clear the system nav bar here
+        // the shell pads top + sides, the bottom is each screen's responsibility.
+        modifier = modifier.fillMaxSize().navigationBarsPadding(),
         contentPadding = PaddingValues(bottom = 48.dp),
     ) {
         item { DashboardHeader() }

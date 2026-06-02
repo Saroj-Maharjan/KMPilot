@@ -54,7 +54,7 @@ import thisissadeghi.dashboard.presentation.ui.components.DashboardContent
 import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
-import thisissadeghi.designsystem.XScaffold
+import thisissadeghi.designsystem.XScreen
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTextButton
 import thisissadeghi.designsystem.XTheme
@@ -84,26 +84,25 @@ fun DashboardScreenRoot(
     onBackToDashboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    XScaffold(
+    XScreen(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
-    ) { paddingValues ->
+    ) {
         when (val state = uiState.dashboardState) {
             UiState.Uninitialized, UiState.Loading ->
-                LoadingContent(modifier = Modifier.padding(paddingValues).fillMaxSize())
+                LoadingContent(modifier = Modifier.fillMaxSize())
 
             is UiState.Failed ->
                 FailedContent(
                     onRetry = onRetry,
                     onBackToDashboard = onBackToDashboard,
-                    modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                 )
 
             is UiState.Success ->
                 DashboardContent(
                     data = state.value,
                     onActionClick = onActionClick,
-                    paddingValues = paddingValues,
                 )
         }
     }
