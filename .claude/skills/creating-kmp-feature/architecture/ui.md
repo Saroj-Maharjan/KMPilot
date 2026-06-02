@@ -22,7 +22,7 @@ Principles for implementing the UI/presentation layer in KMP features using Comp
 
 1. **setState Extension**: Always use `_uiModel.setState { copy(...) }`, NEVER `_uiModel.value =` or direct assignment
 2. **4 UI States**: Handle all 4 states (Uninitialized/Loading/Success/Failed) for every async data field
-3. **X-components Only**: Use X-components from `:core:designsystem` (XScaffold, XButton, XText), NO Material3
+3. **X-components Only**: Use X-components from `:core:designsystem` (XScreen, XButton, XText), NO Material3
 4. **ImmutableList**: Use `.toImmutableList()` for collections in state
 5. **Callback Parameters**: Screens take callbacks (e.g., `onBackClick: () -> Unit`), not `navController`
 6. **ScreenRoot Pattern**: ALWAYS create `{Feature}ScreenRoot` for ViewModel-independent, testable UI
@@ -138,7 +138,7 @@ Anything else — including `{Feature}Content` and every sub-component — lives
    - **This is what UI tests target**
 
 **Key Rules**:
-- Only X-components allowed (XScaffold, XTopAppBar, XButton, XText, etc.) - NO Material3 directly
+- Only X-components allowed (XScreen, XTopAppBar, XButton, XText, etc.) - NO Material3 directly. Feature screens use `XScreen`, never `XScaffold` (Rule 13)
 - Handle all 4 UiState cases for each async data slot in `*UiModel`
 - Use `Modifier` parameters for customization
 - ScreenRoot has NO ViewModel dependency
@@ -171,7 +171,9 @@ fun FeatureScreenRoot(
     onAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    XScaffold(
+    // Rule 13 — feature screens use XScreen, NEVER a Scaffold/XScaffold.
+    // The single Scaffold lives in App.kt and owns all window insets; XScreen adds none.
+    XScreen(
         topBar = {
             XTopAppBar(
                 // Rule 12 — no hardcoded strings; resolve from the module's generated Res
@@ -184,16 +186,15 @@ fun FeatureScreenRoot(
             )
         },
         modifier = modifier.fillMaxSize(),
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            // Route on the relevant async slot inside the UiModel.
-            // state.value is the DTO from data/model/ (Rule 11).
-            when (val state = uiModel.dataState) {
-                UiState.Uninitialized -> EmptyContent()                  // optional shell, design-driven
-                UiState.Loading      -> LoadingContent()                 // optional shell, design-driven
-                is UiState.Success   -> FeatureContent(data = state.value) // always from components/
-                is UiState.Failed    -> FailedContent(state.error, onRetry) // optional shell, design-driven
-            }
+    ) {
+        // Content fills XScreen's weight(1f) box — no paddingValues to thread.
+        // Route on the relevant async slot inside the UiModel.
+        // state.value is the DTO from data/model/ (Rule 11).
+        when (val state = uiModel.dataState) {
+            UiState.Uninitialized -> EmptyContent()                  // optional shell, design-driven
+            UiState.Loading      -> LoadingContent()                 // optional shell, design-driven
+            is UiState.Success   -> FeatureContent(data = state.value) // always from components/
+            is UiState.Failed    -> FailedContent(state.error, onRetry) // optional shell, design-driven
         }
     }
 }
@@ -393,14 +394,12 @@ fun ProductDetailScreenRoot(
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
 ) {
-    XScaffold(topBar = { /* ... */ }) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            when (val state = uiModel.productState) {
-                UiState.Uninitialized -> EmptyContent()                              // optional shell
-                UiState.Loading      -> LoadingContent()                             // optional shell
-                is UiState.Success   -> ProductDetailContent(product = state.value)  // from components/
-                is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry) // optional shell
-            }
+    XScreen(topBar = { /* XTopAppBar(...) */ }) {   // Rule 13 — XScreen, not XScaffold
+        when (val state = uiModel.productState) {
+            UiState.Uninitialized -> EmptyContent()                              // optional shell
+            UiState.Loading      -> LoadingContent()                             // optional shell
+            is UiState.Success   -> ProductDetailContent(product = state.value)  // from components/
+            is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry) // optional shell
         }
     }
 }
@@ -436,14 +435,13 @@ fun LoginScreenRoot(
         LaunchedEffect(Unit) { onLoginSuccess() }
     }
 
-    XScaffold { padding ->
+    XScreen {   // Rule 13 — XScreen, not XScaffold; no paddingValues to thread
         LoginContent(
             username = uiModel.username,
             password = uiModel.password,
             isLoading = isLoading,
             errorMessage = errorMessage,
             // ... callbacks
-            modifier = Modifier.padding(padding),
         )
     }
 }
@@ -493,7 +491,7 @@ The reviewer uses the spec's Design Decisions to know which shape is expected. W
 **Required**: All UI must use X-components from `:core:designsystem`
 
 **Common X-components**:
-- Layout: `XScaffold`, `XColumn`, `XRow`, `XBox`, `XSpacer`
+- Layout: `XScreen` (feature screen container — Rule 13), `XColumn`, `XRow`, `XBox`, `XSpacer` — `XScaffold` is app-shell only, never in a feature
 - Text: `XText`, `XTextField`, `XOutlinedTextField`
 - Buttons: `XButton`, `XTextButton`, `XIconButton`, `XFilledButton`
 - App bars: `XTopAppBar`, `XBottomAppBar`

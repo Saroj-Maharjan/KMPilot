@@ -25,7 +25,7 @@ If a Stitch design blueprint exists (`.claude/docs/{featurename}/designs/{featur
 | `Button` | `XButton` (7 variants) |
 | `TextField` | `XTextField` |
 | `Text` | `XText` |
-| `Scaffold` | `XScaffold` |
+| `Scaffold` (feature screen) | `XScreen` (Rule 13 — `XScaffold` is app-shell only) |
 | `CircularProgressIndicator` | `XCircularProgressIndicator` |
 | `coil3.compose.AsyncImage` | `{CORE_DESIGNSYSTEM_PKG}.AsyncImage` |
 
@@ -36,7 +36,7 @@ Usage examples: @references/usage-examples.md
 
 1. **Imports**: `import {CORE_DESIGNSYSTEM_PKG}.*` (avoid Material3 in features)
 2. **4-State UI**: Uninitialized → Loading → Success → Failed (mandatory)
-3. **Theme**: Never wrap screens in `XTheme` (app-level only), use `XScaffold`
+3. **Theme**: Never wrap screens in `XTheme` (app-level only). Feature screens use `XScreen` (Rule 13) — never a `Scaffold`/`XScaffold`, which would nest a second Scaffold and double the insets
 4. **Navigation**: Use `XNavHost` (pre-configured animations)
 5. **ScreenRoot Pattern**: `{Feature}Screen` + `{Feature}ScreenRoot` pair required
 6. **Strings (Rule 12)**: `XText`/`XIcon` text args take `stringResource(Res.string.*)`, never literals. Shared strings via `DesignSystemResources`; ViewModel-origin via `UiText`. See `@../_shared/patterns.md` → "Strings & Localization (Rule 12)".
@@ -54,7 +54,7 @@ Material3 allowed only in:
 - [ ] All buttons use XButton variants
 - [ ] All text uses XText
 - [ ] No hardcoded display strings — `stringResource`/`UiText` only (Rule 12)
-- [ ] Screen wrapped in XScaffold (NOT XTheme)
+- [ ] Screen uses `XScreen` (NOT `XScaffold`/`Scaffold`, NOT `XTheme`) — Rule 13
 - [ ] XTopAppBar from `{CORE_DESIGNSYSTEM_PKG}.toolbar`
 - [ ] AsyncImage uses `url` parameter (not `model`)
 - [ ] 4-state pattern implemented

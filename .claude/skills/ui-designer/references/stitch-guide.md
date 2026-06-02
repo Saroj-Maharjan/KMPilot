@@ -187,7 +187,7 @@ When translating designs to code, use this mapping:
 | Search bar | `SearchField` | `core.designsystem` |
 | Loading spinner | `XCircularProgressIndicator` | `core.designsystem` |
 | Remote image | `AsyncImage` | `core.designsystem` |
-| Screen scaffold | `XScaffold` | `core.designsystem` |
+| Screen container | `XScreen` (Rule 13 — not `XScaffold`) | `core.designsystem` |
 | Dialog/modal | `XDialog` | `core.designsystem` |
 | Dropdown menu | `XDropDown` | `core.designsystem` |
 | Radio selection | `XRadioButton` | `core.designsystem` |

@@ -105,7 +105,14 @@
 - Default colors: `CardDefaults.cardColors()` (M3: surfaceVariant bg, onSurface content).
 - Default elevation: `CardDefaults.cardElevation()`.
 
-### `XScaffold`
+### `XScreen` *(feature screen container — Rule 13)*
+- The container **every feature screen** uses. Plain `Column { topBar(); Box(Modifier.fillMaxWidth().weight(1f)){ content() }; bottomBar() }`.
+- Slots: `topBar` (usually `XTopAppBar`), `bottomBar` (optional sticky CTA), `content: @Composable BoxScope.() -> Unit`.
+- **Touches NO window insets** — the single app-shell `Scaffold` (`App.kt`) owns them and pads the NavHost. This is the whole point: it cannot double-count insets the way a nested `Scaffold` does.
+- `content` receives **no** `paddingValues` (it fills the weight box). Default `containerColor`: `XScaffoldDefaults.containerColor`.
+
+### `XScaffold` *(app-shell only — NOT for features)*
+- The thin M3 `Scaffold` wrapper. Used **only** by the app shell (`App.kt`) — feature screens must use `XScreen` instead (Rule 13). A feature-level `XScaffold` nests a second Scaffold and double-counts insets.
 - **Default containerColor**: `XTheme.Colors.PaleLavender` *(referenced in source but not defined on `XTheme.Colors` — only `Success` and `Danger` are. Treat this as a known issue: passing an explicit `containerColor` is required, otherwise resolution may fail at compile/runtime.)*
 - Default contentColor: `contentColorFor(containerColor)`.
 - Default contentWindowInsets: `ScaffoldDefaults.contentWindowInsets`.
@@ -131,6 +138,7 @@
 ## Top Bars & Navigation
 
 ### `XTopAppBar`
+- Rendered **inside `XScreen`'s `topBar` slot** (Rule 13), never as a `Scaffold` topBar in a feature.
 - **Always renders title center-aligned** via `CenterAlignedTopAppBar` — designs that show left-aligned titles cannot match exactly. (Verify-ui treats this as a MINOR mismatch when the design appears left-aligned.)
 - **Default backgroundColor**: `colorScheme.surface`.
 - **windowInsets**: `WindowInsets(0, 0, 0, 0)` — explicitly zero (no system bar padding added).

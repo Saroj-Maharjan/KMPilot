@@ -36,12 +36,13 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 
 ## Component Tree
 
-### Shared Scaffold (all states)
-- `XScaffold`
+### Shared Screen container (all states)
+- `XScreen` (Rule 13 — feature screens use `XScreen`, never `XScaffold`/`Scaffold`; the one Scaffold lives in `App.kt` and owns all insets)
   - topBar: `XTopAppBar` (title, navigationIcon: back arrow)
-  - content: **[state-specific content slot]**
+  - bottomBar: **[optional sticky CTA slot — `XScreen` bottomBar, NOT a Scaffold bottomBar]**
+  - content: **[state-specific content slot]** (fills `XScreen`'s weight box; no `paddingValues` to thread)
 
-> **Bottom bar is app-shell chrome, not a feature screen element.** If the design shows a bottom navigation bar, it belongs to the app shell (`App.kt`), rendered once via `XNavigationBar` and shared across all top-level (tab) features — do NOT add a `bottomBar` to this feature's `XScaffold`. Tab **icons** are chrome (extract into `icons.json` so `download_assets.py` promotes them to `:core:designsystem`); tab **labels** are app-module strings. Implementation lives in Integration Point 5 (see creating-kmp-feature/architecture/integration.md), wired by `/creating-kmp-feature` or `/modifying-kmp-feature`, not by per-feature screen design.
+> **Tab/navigation bottom bar is app-shell chrome, not a feature screen element.** If the design shows a bottom *navigation* bar, it belongs to the app shell (`App.kt`), rendered once via `XNavigationBar` and shared across all top-level (tab) features — do NOT add it to this feature's `XScreen`. A per-screen *sticky CTA* (e.g. a "Send" button) is different: it goes in this feature's `XScreen` `bottomBar` slot. Tab **icons** are chrome (extract into `icons.json` so `download_assets.py` promotes them to `:core:designsystem`); tab **labels** are app-module strings. Implementation lives in Integration Point 5 (see creating-kmp-feature/architecture/integration.md), wired by `/creating-kmp-feature` or `/modifying-kmp-feature`, not by per-feature screen design.
 
 ### Success State
 - `LazyColumn` (spacedBy 8.dp, contentPadding: 16.dp)
@@ -208,7 +209,7 @@ RULES:
    - grid grid-cols-{N} → LazyVerticalGrid(columns = GridCells.Fixed(N)). If grid items have
      different heights (no uniform aspect-* or h-*), use LazyVerticalStaggeredGrid instead.
    - grid gap-{N} → horizontalArrangement + verticalArrangement spacedBy(...)
-   - fixed/sticky bottom → XScaffold bottomBar
+   - fixed/sticky bottom → `XScreen` bottomBar slot (Rule 13 — never a Scaffold bottomBar in a feature)
    - shadow-sm/shadow/shadow-md/shadow-lg/shadow-xl/shadow-2xl → Modifier.shadow(elevation, shape).
      Map: sm=1dp, default=2dp, md=4dp, lg=8dp, xl=12dp, 2xl=16dp.
      Custom `shadow-[...]` glow effects → note as `[decorative shadow — omit or use drawBehind]`
@@ -247,11 +248,11 @@ RULES:
     no custom config exists. `rounded-full` resolves to `CircleShape`. Map the inventory's dp
     value to `RoundedCornerShape(N.dp)`.
 12. **System inset padding**: Stitch HTML assumes padding starts from the screen edge (no system
-    bars). On device, `XScaffold`'s `paddingValues` already includes system bar insets (status bar,
-    navigation bar). When the HTML has a top padding like `pt-6` (24dp) or `pt-12` (48dp) on the
-    outermost container, this value INCLUDES the status bar area. In Compose, subtract the system
-    inset from that value since `paddingValues` already handles it. Typically use `8.dp` top padding
-    for the first content element after applying `paddingValues`.
+    bars). On device, the **app-shell `Scaffold`** (`App.kt`) already pads the whole NavHost by the
+    system bar insets (status bar + navigation bar) — `XScreen` and `XTopAppBar` add **none** (Rule 13).
+    When the HTML has a top padding like `pt-6` (24dp) or `pt-12` (48dp) on the outermost container,
+    that value INCLUDES the status bar area. In Compose, subtract the system inset since the shell
+    already handles it. Typically use `8.dp` top padding for the first content element.
 13. **Image mapping**: Stitch HTML `<img>` tags are **bundled design assets** — always emit
     `Image(painter = painterResource({res_reference}))` using the `res_reference` from the
     images manifest (rule 21b below). **Never** emit `AsyncImage` for Stitch CDN URLs
@@ -354,7 +355,7 @@ HTML CONTENT:
 | `<svg><circle>` with `stroke-dasharray`/`stroke-dashoffset` | `XCircularProgressIndicator(progress = { 1 - (dashoffset / dasharray) })` in a `Box` with text overlay |
 | `<img>` tags (Stitch CDN `lh3.googleusercontent.com/aida-public/*`) | `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop, modifier = ...)` — look up `{res_reference}` in `extracted/images.json`. Stitch CDN URLs are **design assets** to bundle, NOT runtime data. **Never emit `AsyncImage` for these.** `AsyncImage` is reserved for app-runtime data (user avatars, product photos from API) that the developer wires up post-hoc by editing the generated code. |
 | Material Symbols `<span class="material-symbols-*" data-icon="{name}">` | `XIcon(painter = painterResource({res_reference}))` — look up `{res_reference}` in `extracted/icons.json` (chrome icons → `DesignSystemResources.drawable.{name}`; domain icons → `Res.drawable.{name}`). The manifest is authoritative. Chrome vs domain is decided declaratively by cross-feature usage count; the XML files themselves are materialized by `/creating-kmp-feature` or `/modifying-kmp-feature` in design-aware mode (not by `/ui-designer`). Filled variants (HTML has `data-weight="fill"`) get a `_fill` suffix in the resource name. **Never fall back to `Icons.Default.*` from the deprecated `material-icons-extended` library.** |
-| `position: fixed` bottom | `XScaffold` `bottomBar` parameter |
+| `position: fixed` bottom | `XScreen` `bottomBar` slot (Rule 13 — never a Scaffold bottomBar in a feature) |
 | CSS `box-shadow` | `Modifier.shadow(elevation, shape)` |
 | `opacity: {N}` | `Modifier.alpha({N}f)` |
 | `bg-clip-text text-transparent bg-gradient-to-*` | `XText(style = TextStyle(brush = Brush.linearGradient(...)))` — NOT a `Box` with gradient background behind transparent text |

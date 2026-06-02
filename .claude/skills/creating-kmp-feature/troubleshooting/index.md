@@ -27,7 +27,7 @@ import {CORE_COMMON_PKG}.setState
 
 // X-components
 import {CORE_DESIGNSYSTEM_PKG}.XButton
-import {CORE_DESIGNSYSTEM_PKG}.XScaffold
+import {CORE_DESIGNSYSTEM_PKG}.XScreen   // feature screen container — not XScaffold
 ```
 
 ### Package Mismatch

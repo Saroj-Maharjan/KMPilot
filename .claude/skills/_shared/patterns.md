@@ -2,7 +2,7 @@
 
 All skills and agents import this file. Do not duplicate these rules elsewhere.
 
-## 12 Critical Rules
+## 13 Critical Rules
 
 1. **Interface + Impl** - DataSource and Repository always have interface + implementation pair
 2. **Either<T>** - Return `Either<T>` for fallible operations, never throw exceptions
@@ -16,6 +16,7 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
 11. **Single UiModel + DTO-wrapped UiState** - `*UiModel` is the only presentation state container (no `*UiState.kt`). It holds plain UI fields + one `UiState<DTO>` slot per async operation, where DTO is the data-layer model (use `UiState<Unit>` for void ops). Repository returns `Either<DTO>`; data layer never imports from `presentation`. UI-derived display values live as sibling fields on `*UiModel`, never as mirror DTO types.
 12. **No hardcoded user-facing strings** - Every display string (text, labels, content descriptions, placeholders) comes from a string resource via `stringResource(Res.string.*)` (feature-local) or `DesignSystemResources` (shared). Feature strings live in `composeResources/values/strings.xml`; translations in `values-{lang}/strings.xml`. `*UiModel` carries `UiText`/`StringResource`, never English literals — ViewModels build `UiText`, composables resolve with `.asString()`. **Not strings**: control sentinels parsed in logic, single-glyph symbols (`$`, `₿`, `✓`, `%`), and repository-supplied data (merchant names, dates, tickers). See "Strings & Localization" below.
+13. **Single app-shell Scaffold** - The one `Scaffold` lives in the app shell (`App.kt`); `contentWindowInsets = WindowInsets(0, 0, 0, 0)` (consumes nothing). The shell pads the NavHost with the **top + horizontal** safe area (`WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)`) plus `imePadding()` — **not** the bottom. The bottom (nav-bar) inset is owned by whatever sits at the bottom of each screen: a **bottom action bar** bleeds its background to the screen edge and pads its own content with `Modifier.windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (= `max(0, navBar − ime)`: clears the nav bar when the keyboard is closed, collapses to 0 when the shell's `imePadding()` lifts the screen — plain `navigationBarsPadding()` would stack on that lift and float the CTA a nav-bar height above the keyboard); a **full-bleed scroll screen** with no bar pads its own content (e.g. `Modifier.navigationBarsPadding()` on the list). Feature screens **NEVER** nest a `Scaffold`/`XScaffold` — they use `XScreen(topBar = …, bottomBar = …) { … }` with a plain `XTopAppBar`. `XScreen` and `XTopAppBar` add **no** insets of their own. Sticky CTAs go in `XScreen`'s `bottomBar` slot. Nesting a second Scaffold reintroduces double safe-area/nav-bar padding. See "Single App-Shell Scaffold" below.
 
 ## Design-Aware Implementation
 
@@ -93,12 +94,46 @@ fun FeatureScreen(viewModel: FeatureViewModel, onBackClick: () -> Unit) {
     FeatureScreenRoot(uiModel = uiModel, onBackClick = onBackClick, onRetry = viewModel::retry)
 }
 
-// ScreenRoot: ViewModel-independent (TESTABLE)
+// ScreenRoot: ViewModel-independent (TESTABLE) — uses XScreen, never a Scaffold (Rule 13)
 @Composable
 fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry: () -> Unit) {
-    // All UI implementation here; route on uiModel.dataState for the async slot
+    XScreen(
+        topBar = { XTopAppBar(/* title, back */) },
+        bottomBar = { /* optional sticky CTA, e.g. only on Success */ },
+    ) {
+        // route on uiModel.dataState for the async slot; content fills XScreen's weight box
+    }
 }
 ```
+
+### Single App-Shell Scaffold (Rule 13)
+
+There is exactly **one** `Scaffold` in the whole app, in `App.kt`. Feature screens use `XScreen` — a plain `Column { topBar(); Box(weight 1f){ content() }; bottomBar() }` that **touches no window insets**.
+
+```kotlin
+// App.kt — the ONE Scaffold (shell)
+Scaffold(
+    snackbarHost = {
+        SnackbarHost(snackbarHostState, modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
+    },
+    bottomBar = { /* XNavigationBar tabs when used; empty otherwise */ },
+    contentWindowInsets = WindowInsets(0, 0, 0, 0),   // consume nothing
+) { _ ->
+    BaseAppNavHost(
+        modifier = Modifier
+            .fillMaxSize()
+            // TOP + HORIZONTAL only (status bar + cutout); bottom is owned per-screen so
+            // bottom action bars can bleed to the edge. imePadding lifts the screen for the keyboard.
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .imePadding(),
+    )
+}
+```
+
+- **Bottom inset is NOT applied at the shell.** A bottom action bar (`XScreen`'s `bottomBar`) draws its background full-bleed to the screen edge and pads its own content with `Modifier.windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` — so the bg sits behind the nav bar while the buttons clear it, and the nav-bar pad collapses to 0 when the shell's `imePadding()` lifts the screen for the keyboard. (Plain `navigationBarsPadding()` here would stack on top of that lift and float the CTA a nav-bar height above the keyboard.) A scroll screen with no bottom bar pads its own content (`Modifier.navigationBarsPadding()` on the list). This is the standard edge-to-edge pattern; centralising the bottom inset at the shell pushes bottom bars up off the edge and looks wrong.
+- **Why not `contentWindowInsets = systemBars` + `padding(innerPadding)`?** With an empty `bottomBar`, Scaffold does not reliably push the bottom (nav-bar) inset into `innerPadding`. Applying the top/horizontal safe area directly on the NavHost is version-independent.
+- Nesting a second `Scaffold`/`XScaffold` inside a feature reintroduces double safe-area / nav-bar padding. Don't.
+- `XScaffold` still exists but is **app-shell only**; feature screens never call it.
 
 ### DI Module (Rule 8)
 ```kotlin
@@ -209,7 +244,7 @@ feature/{featurename}/src/commonMain/
 | # | Name | Visibility | Required? |
 |---|------|------------|-----------|
 | 1 | `{Feature}Screen` | public | **Always** — ViewModel wrapper |
-| 2 | `{Feature}ScreenRoot` | public | **Always** — owns state routing |
+| 2 | `{Feature}ScreenRoot` | public | **Always** — owns state routing; renders `XScreen(topBar = …, bottomBar = …)`, never a `Scaffold`/`XScaffold` (Rule 13) |
 | 3 | `LoadingContent` | private | **Optional** — only if the design specifies a dedicated loading screen |
 | 4 | `FailedContent` | private | **Optional** — only if the design specifies a dedicated failure screen |
 | 5 | `EmptyContent` | private | **Optional** — only if the design specifies a dedicated empty/uninitialized screen |

@@ -21,14 +21,14 @@ implementation(projects.core.common)
 
 ## X-Components Not Found
 
-**Error:** `Unresolved reference: XButton/XText/XScaffold/XTheme`
+**Error:** `Unresolved reference: XButton/XText/XScreen/XTheme`
 
 **Fix:**
 ```kotlin
 // In file (replace {CORE_DESIGNSYSTEM_PKG} with actual package):
 import {CORE_DESIGNSYSTEM_PKG}.XButton
 import {CORE_DESIGNSYSTEM_PKG}.XText
-import {CORE_DESIGNSYSTEM_PKG}.XScaffold
+import {CORE_DESIGNSYSTEM_PKG}.XScreen
 import {CORE_DESIGNSYSTEM_PKG}.XTopAppBar
 import {CORE_DESIGNSYSTEM_PKG}.XTheme
 
@@ -63,7 +63,7 @@ import androidx.compose.material3.Scaffold
 // Right (replace {CORE_DESIGNSYSTEM_PKG} with actual package):
 import {CORE_DESIGNSYSTEM_PKG}.XButton
 import {CORE_DESIGNSYSTEM_PKG}.XText
-import {CORE_DESIGNSYSTEM_PKG}.XScaffold
+import {CORE_DESIGNSYSTEM_PKG}.XScreen   // feature screen container (Rule 13) — not XScaffold
 ```
 
 **Note:** Reference `using-design-system` skill for complete mappings

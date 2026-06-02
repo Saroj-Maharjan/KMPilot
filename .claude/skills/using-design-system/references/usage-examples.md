@@ -46,7 +46,9 @@ fun FeatureScreenRoot(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    XScaffold(
+    // Rule 13 — feature screens use XScreen, never XScaffold/Scaffold.
+    // The single Scaffold (App.kt) owns all insets; XScreen adds none.
+    XScreen(
         topBar = {
             XTopAppBar(
                 title = { XText("Feature Title") },
@@ -54,18 +56,17 @@ fun FeatureScreenRoot(
             )
         },
         modifier = modifier.fillMaxSize(),
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            when (val state = uiState.dataState) {
-                UiState.Uninitialized -> { /* Empty */ }
-                UiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        XCircularProgressIndicator()
-                    }
+    ) {
+        // content fills XScreen's weight(1f) box — no paddingValues to thread
+        when (val state = uiState.dataState) {
+            UiState.Uninitialized -> { /* Empty */ }
+            UiState.Loading -> {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    XCircularProgressIndicator()
                 }
-                is UiState.Success -> { SuccessContent(state.value) }
-                is UiState.Failed -> { ErrorState(state.error, onRetry) }
             }
+            is UiState.Success -> { SuccessContent(state.value) }
+            is UiState.Failed -> { ErrorState(state.error, onRetry) }
         }
     }
 }
@@ -76,8 +77,8 @@ fun FeatureScreenRoot(
 - ✅ ScreenRoot takes `UiState` + callbacks - **no ViewModel**
 - ✅ UI tests target `ScreenRoot` directly with test fixtures
 - ❌ **DO NOT** use `XTheme` in screens - it's already applied at App level
-- ✅ `XScaffold` for structure
-- ✅ `XTopAppBar` from `{CORE_DESIGNSYSTEM_PKG}.toolbar`
+- ✅ `XScreen` for structure (Rule 13 — never `XScaffold`/`Scaffold` in a feature)
+- ✅ `XTopAppBar` from `{CORE_DESIGNSYSTEM_PKG}.toolbar`, passed to `XScreen`'s `topBar` slot
 - ✅ 4-state pattern with `when`
 
 ---

@@ -92,27 +92,28 @@ XText(
 
 | Material3 | X-Component | Use Case |
 |-----------|------------------|----------|
-| `Scaffold` | `XScaffold` | Screen structure with topBar/bottomBar/snackbar |
+| `Scaffold` (feature screen) | `XScreen` | Feature screen container: topBar/bottomBar/content, **no insets** (Rule 13) |
+| `Scaffold` (app shell only) | `XScaffold` | The ONE app-shell Scaffold in `App.kt` — never in a feature |
 | `Card` | `XCard` | Card container (clickable or static) |
 
-**XScaffold** uses `PaleLavender` background by default.
+**XScreen** is a plain `Column { topBar(); Box(weight 1f){content}; bottomBar() }` that touches **no** window insets — the single app-shell `Scaffold` owns them (Rule 13). Feature screens **always** use `XScreen`; nesting an `XScaffold`/`Scaffold` inside a feature double-counts safe-area/nav-bar padding.
 **XCard** uses `MaterialTheme.shapes.medium` (12dp).
 
-**Import**: `import {CORE_DESIGNSYSTEM_PKG}.{XScaffold, XCard}`
+**Import**: `import {CORE_DESIGNSYSTEM_PKG}.{XScreen, XCard}`
 
 **Example**:
 ```kotlin
-// ❌ Material3
-Scaffold(
-    topBar = { TopAppBar(...) }
-) { padding ->
-    // content
-}
+// ❌ Material3 / nested Scaffold inside a feature
+Scaffold(topBar = { TopAppBar(...) }) { padding -> /* content */ }
 
-// ✅ X-component
-XScaffold(
-    topBar = { XTopAppBar(...) }
-) { padding ->
+// ❌ XScaffold inside a feature (still a nested Scaffold)
+XScaffold(topBar = { XTopAppBar(...) }) { padding -> /* content */ }
+
+// ✅ XScreen — no paddingValues; content fills the weight box
+XScreen(
+    topBar = { XTopAppBar(...) },
+    bottomBar = { /* optional sticky CTA */ },
+) {
     // content
 }
 ```
@@ -209,14 +210,14 @@ AsyncImage(
 **⚠️ XTheme is applied ONCE at App.kt level. Never wrap individual screens.**
 
 ```kotlin
-// ❌ WRONG - Don't wrap screens
+// ❌ WRONG - Don't wrap screens in XTheme
 fun LoginScreen() {
-    XTheme { XScaffold(...) }
+    XTheme { XScreen(...) }
 }
 
-// ✅ CORRECT - Use XScaffold directly
+// ✅ CORRECT - Use XScreen directly (Rule 13; never XScaffold in a feature)
 fun LoginScreen() {
-    XScaffold(...) { /* content */ }
+    XScreen(...) { /* content */ }
 }
 ```
 
