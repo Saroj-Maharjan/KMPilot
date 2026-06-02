@@ -64,9 +64,13 @@ Entering design-aware mode. Blueprint will drive UI implementation.
 Read spec sections: Requirements, Architecture, State Management, Navigation
 
 ### Step 5: Plan Changes
+
+**Platform Profile check (Rule 14)**: read the spec's **Platform Profile & Capabilities** field. If this change **introduces** a device capability or native view (map, camera, GPS, BLE, biometrics, WebView) that the feature didn't have, set/confirm the tag (`platform-capability` / `native-view` / `mixed`) — ask once with `AskUserQuestion` if ambiguous — and load `platform.md`. A change that stays `network` skips this.
+
 Determine affected layers and load architecture as needed:
 - Data changes: @../creating-kmp-feature/architecture/data.md
 - UI changes: @../creating-kmp-feature/architecture/ui.md
+- **Platform capability / native-view changes (Rule 14)**: @../creating-kmp-feature/architecture/platform.md
 - Integration changes: @../creating-kmp-feature/architecture/integration.md
 - Bottom-bar tab changes ("add/remove bottom-bar tab", "make this a tab", "show in bottom nav"): @../creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"
 
@@ -102,6 +106,13 @@ Follow patterns from @../_shared/patterns.md
 For UI changes: Load @../using-design-system/references/component-mappings.md
 
 **Strings (Rule 12)**: any new user-facing text → a key in the feature's `composeResources/values/strings.xml`, referenced via `stringResource(Res.string.*)` (or `UiText` for ViewModel-origin messages). Never add a hardcoded display literal. If the feature has no `strings.xml` yet, create it. See `@../_shared/patterns.md` → "Strings & Localization (Rule 12)".
+
+**Platform capability / native view (Rule 14)**: when the change adds a device capability or native view, follow `@../creating-kmp-feature/architecture/platform.md`:
+- Capability → `commonMain` DataSource interface returning `Either<DTO>` + per-platform actuals (android/ios/**desktop** fallback) + `expect/actual val platformModule` added to `{Feature}Modules`.
+- Native view → `expect @Composable PlatformX` + `AndroidView`/`UIKitView`/desktop actuals under `components/` (Shape C); `{Feature}Content` stays pure Compose.
+- Update `build.gradle.kts` per-platform deps (build-gradle-template → "Platform-specific dependencies").
+- **iOS actual needs Swift** → write the `iosMain` interface/stub and **stop**: emit *"Run `/bridging-swift-kotlin` for `{Feature}Bridge`"* in the completion report. Do not write Swift; skills never call each other.
+- Bump the spec's **Platform Profile** field to the new tag.
 
 **Bottom-bar tab (optional)**: if the change is "add/remove bottom-bar tab", follow `@../creating-kmp-feature/architecture/integration.md` → "5. Bottom-Bar Tab (Optional)". This edits the **app module** (`App.kt`, `navigation/TopLevelDestination.kt`, app `strings.xml`) and `:core:designsystem` (chrome icon) — NOT the feature module itself; the feature stays independent. **Add**: append one `TopLevelDestination` enum entry (or scaffold the shell if this is the first tab); the tab label lives in the **app module** `composeResources/values/strings.xml` (key `tab_{featurename}`), the icon as a `:core:designsystem` chrome drawable. **Remove**: delete the enum entry (the route remains a valid pushed destination). No registry exists — orphaned entries/labels/icons must be removed by hand.
 

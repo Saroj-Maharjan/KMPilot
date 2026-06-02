@@ -10,10 +10,44 @@
 
 ```
 Implementation Progress:
+- [ ] Step 4.0: Read Platform Profile → select agent set
 - [ ] Step 4.1: Choose execution strategy (Sequential or Parallel)
 - [ ] Step 4.2: Invoke specialized agents
 - [ ] Step 4.3: Verify spec generation
+- [ ] Step 4.4: Platform follow-ups (iOS-Swift bridge route, if flagged)
 ```
+
+---
+
+## Step 4.0: Agent Set by Platform Profile (Rule 14)
+
+Read the PRD's **Platform Profile & Capabilities** section (set in Phase 2, Step 2.1b). The tag selects which agents run:
+
+| Tag | data-layer-agent | **platform-agent** | ui-layer-agent | integration-agent |
+|-----|:---:|:---:|:---:|:---:|
+| `network` | ✅ REST | — | ✅ | ✅ |
+| `platform-capability` | — | ✅ provider | ✅ | ✅ (+`platformModule`) |
+| `native-view` | — | ✅ if a capability backs the view¹ | ✅ (+ `expect/actual` composable) | ✅ (+`platformModule` **only if** ¹ a provider exists) |
+| `mixed` | ✅ REST | ✅ provider | ✅ | ✅ (+`platformModule`) |
+
+¹ A pure display view with no device data (e.g. a static WebView) may need no provider — then `platform-agent` is skipped and `ui-layer-agent` writes only the `expect/actual` composable.
+
+**Division of labor on the platform path** (no overlap):
+- **platform-agent** (provider-only): `commonMain` DataSource interface + per-platform `actual` classes (android/ios/**desktop**) + `expect/actual val platformModule`. Writes **no** `@Composable`.
+- **ui-layer-agent**: the `expect @Composable PlatformX` + `AndroidView`/`UIKitView`/desktop-fallback actuals under `components/`, plus the normal ViewModel/UiModel/Screen. Loads [architecture/platform.md](../architecture/platform.md) → "Pattern C".
+- **integration-agent**: adds `platformModule` to `{Feature}Modules.getKoinModules()` and any `androidContext()` the Android actual needs.
+
+**Module-scaffold owner (CRITICAL — build breaks if no one does it)**: `feature/{featurename}/build.gradle.kts` + the module dir structure are normally created by `data-layer-agent`. When `data-layer-agent` is **skipped** (pure `platform-capability` / `native-view`), the **first agent in the set** scaffolds the module instead, from [build-gradle-template.md](../architecture/build-gradle-template.md):
+
+| Profile | Module-scaffold owner |
+|---------|------------------------|
+| `network`, `mixed` | `data-layer-agent` (unchanged) |
+| `platform-capability`, `native-view` **with** a capability | `platform-agent` |
+| `native-view` **without** a capability (no provider) | `ui-layer-agent` |
+
+Tell that agent explicitly: *"You are the module-scaffold owner — create `build.gradle.kts` from the template first."* In **parallel** mode the scaffold owner must finish (or the orchestrator must pre-create `build.gradle.kts`) before the other agent edits it, to avoid a write race.
+
+Pass the **tag + chosen sourcing option + module-scaffold-owner flag** to every agent you invoke below.
 
 ---
 
@@ -109,6 +143,22 @@ Invoke data-layer-agent with:
 
 **Wait for completion** → Verify success
 
+> For a **pure `platform-capability` / `native-view`** feature, **skip Step 1** (no REST) and run Step 1b instead. For `mixed`, run both Step 1 and Step 1b.
+
+#### Step 1b: Platform Layer (tag ≠ `network`)
+```
+Invoke platform-agent with:
+- Feature name: {featurename}
+- Platform Profile tag + chosen sourcing option (from PRD Step 2.1b)
+- Capabilities to implement (e.g. current-location GPS)
+- Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG, CORE_MODULES
+- Expected: commonMain DataSource interface + actuals (android/ios/desktop)
+  + expect/actual val platformModule; provider-only (no composables);
+  flags any iOS-Swift-bridge follow-up
+```
+
+**Wait for completion** → Verify success. If the agent flagged an iOS-Swift dependency, carry it to Step 4.4.
+
 #### Step 2: UI Layer
 ```
 Invoke ui-layer-agent with:
@@ -124,6 +174,7 @@ Invoke ui-layer-agent with:
     Include shared screenshots only for selected states (`.claude/docs/_shared/designs/loading.png` if `states.loading`, `.claude/docs/_shared/designs/failed.png` if `states.failed`).
     Include `.claude/docs/{featurename}/designs/{featurename}_empty.png` if `states.empty`. Skipped states have no screenshot; the blueprint marks them "Skipped" so the agent uses generic handling.
 - Localization (Rule 12): create `composeResources/values/strings.xml`; ALL display text via `stringResource(Res.string.*)` — no hardcoded literals. If a blueprint is present, use its String Inventory keys.
+- Native-view (Rule 14, tag = `native-view`/`mixed`): write the `expect @Composable PlatformX` + `AndroidView`/`UIKitView`/desktop-fallback actuals under `components/`; `{Feature}Content` calls it and stays pure Compose. Load architecture/platform.md → "Pattern C". Consume the DataSource interface from platform-agent (do NOT write the provider).
 - Expected: UI layer complete (incl. strings.xml) + build validation
 ```
 
@@ -139,6 +190,7 @@ Invoke integration-agent with:
   - CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG
   - INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5)
+- Platform module (Rule 14, tag ≠ `network`): add `platformModule` (expect/actual) to `{Feature}Modules.getKoinModules()` and provide `androidContext()` if an Android actual needs it
 - Expected: integration points 1–4 (+ point 5 if a tab) + full build + ktlint + spec.md
 ```
 
@@ -150,10 +202,12 @@ Invoke integration-agent with:
 
 #### Step 1: Launch Data + UI Agents in Parallel
 
-**In ONE message**, invoke BOTH agents simultaneously:
+> **Platform features (tag ≠ `network`)**: launch **platform-agent** alongside ui-layer-agent (and data-layer-agent too, only for `mixed`). The platform agent (provider) and ui-layer-agent (composable + ViewModel) touch disjoint files, so they parallelize cleanly. Pass each the Platform Profile tag + sourcing option. ui-layer-agent gets the DataSource interface name so its wiring matches.
+
+**In ONE message**, invoke the agents in this feature's set (per Step 4.0) simultaneously — 2 for `network`, 2–3 for platform profiles:
 
 ```
-1. data-layer-agent with:
+1. data-layer-agent (network / mixed only) with:
    - Feature name: {featurename}
    - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG,
      CORE_DATA_PKG, CORE_MODULES, CORE_DESIGNSYSTEM_PKG
@@ -167,11 +221,18 @@ Invoke integration-agent with:
      - Success screenshot: .claude/docs/{featurename}/designs/{featurename}.png
      - State coverage: read `features[{featurename}].states` from `.claude/docs/_project/stitch-project.json` and include shared/empty screenshots only for selected states (loading/failed live under `.claude/docs/_shared/designs/`; empty under `.claude/docs/{featurename}/designs/{featurename}_empty.png`). Skipped states have no screenshot.
    - Localization (Rule 12): create `composeResources/values/strings.xml`; ALL display text via `stringResource(Res.string.*)` — no hardcoded literals. If a blueprint is present, use its String Inventory keys.
+   - Native-view (Rule 14, tag = `native-view`/`mixed`): write the `expect @Composable PlatformX` + `AndroidView`/`UIKitView`/desktop-fallback actuals under `components/`; consume platform-agent's DataSource interface; load architecture/platform.md → "Pattern C".
+
+3. platform-agent (tag ≠ `network`) with:
+   - Feature name + Platform Profile tag + sourcing option
+   - Capabilities to implement
+   - Project context: PKG_PREFIX, PKG_PATH, CORE_COMMON_PKG, CORE_MODULES
+   - Provider-only: DataSource interface + actuals (android/ios/desktop) + platformModule; flags any iOS-Swift-bridge follow-up
 ```
 
 Each agent works in isolated context window.
 
-**Wait for BOTH to complete** → Verify both succeeded
+**Wait for ALL launched agents to complete** → Verify each succeeded
 
 #### Step 2: Launch Integration Agent
 ```
@@ -181,7 +242,8 @@ Invoke integration-agent with:
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
   NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen
-- Integrates both data and UI layers
+- Platform module (Rule 14, tag ≠ `network`): add `platformModule` to `{Feature}Modules.getKoinModules()`; provide `androidContext()` if needed
+- Integrates data, platform, and UI layers
 - Completes integration points 1–4 (+ point 5 if a tab)
 - Final validation + formatting
 - Generates spec.md
@@ -213,6 +275,19 @@ ls -la .claude/docs/{featurename}/spec.md
 **If spec.md exists** → Proceed to Phase 5 (Cleanup)
 
 **If spec.md missing** → Check integration agent output, may need to re-invoke
+
+---
+
+## Step 4.4: Platform Follow-ups (iOS-Swift bridge route)
+
+If `platform-agent` (or `ui-layer-agent` for a native view) flagged that an **iOS `actual` needs Swift**, the Kotlin side is complete but the iOS implementation is a stub. Skills never call each other — **surface a route to the user** as part of the completion report:
+
+```
+> iOS note — {Feature}'s iOS actual needs a Swift implementation.
+> Run `/bridging-swift-kotlin` for {Feature}Bridge to complete the iOS side.
+```
+
+Do **not** invoke `/bridging-swift-kotlin` yourself. Android + desktop builds pass without it; the iOS framework links once the user completes the bridge. If no Swift dependency was flagged, omit this step entirely.
 
 ---
 

@@ -11,6 +11,7 @@
 ```
 PRD Generation Progress:
 - [ ] Step 2.1: Analyze the prompt
+- [ ] Step 2.1b: Classify Platform Profile (network / platform-capability / native-view / mixed)
 - [ ] Step 2.2: Determine complexity (Simple/Medium/Complex)
 - [ ] Step 2.3: Generate PRD using appropriate template
 - [ ] Step 2.4: Save PRD and request confirmation
@@ -35,6 +36,7 @@ Extract the following from the user's prompt:
 ### 3. Data Requirements
 - Does it need API integration? (Ktor Resources + DataSource + API models)
 - Does it use local data only? (Local models + mocked data)
+- Does it need a **device capability or native view**? (GPS, camera, BLE, biometrics, map, WebView → Rule 14, see Step 2.1b)
 - What are the data entities? (User, Product, Message, etc.)
 
 ### 4. UI Requirements
@@ -47,6 +49,28 @@ Extract the following from the user's prompt:
 ### 5. Dependencies
 - Which core modules? (common, data, designsystem)
 - External libraries? (DataStore, etc.)
+
+---
+
+## Step 2.1b: Classify Platform Profile (Rule 14)
+
+Before choosing a template, tag **how the feature gets its data / draws its UI**. This routes the right architecture docs and Phase 4 agents — and is the tripwire that stops a map/camera/sensor feature from silently falling into the REST path.
+
+| Tag | Meaning | Telltale prompt words |
+|-----|---------|------------------------|
+| `network` | data over HTTP only (the default) | "list", "fetch from API", "submit form", "profile" |
+| `platform-capability` | uses a device/native API, no native view on screen | "location", "GPS", "biometrics", "scan", "bluetooth", "sensor", "contacts" |
+| `native-view` | embeds a native view Compose can't draw | "map", "camera preview", "QR scanner view", "WebView" |
+| `mixed` | both REST **and** a capability/native view | "map of nearby <API results>", "scan then upload" |
+
+**Procedure:**
+1. Derive the tag from the prompt.
+2. **If unambiguous → proceed** (do not ask). Record the tag.
+3. **If ambiguous** (e.g. "show stores near me" — map view, or just a list?) → ask **once** with `AskUserQuestion`, options = the candidate tags.
+4. For `platform-capability` / `native-view` / `mixed`: load [architecture/platform.md](../architecture/platform.md) and pick a **sourcing option** (1 multiplatform lib / 2 expect-actual / 3 iOS-Swift bridge) per its decision tree — gate that choice with `AskUserQuestion` when more than one option is viable.
+5. Write the tag + capabilities + chosen sourcing option into the PRD's **Platform Profile & Capabilities** section (both templates have it).
+
+A `network` tag changes nothing downstream — the existing 3-agent flow runs unchanged.
 
 ---
 

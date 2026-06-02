@@ -23,6 +23,15 @@ Use for: UI-only features, no API, < 3 screens
 ## Background & Rationale
 {Brief explanation of why this feature is needed - 1-2 sentences}
 
+## Platform Profile & Capabilities
+<!-- Rule 14 — set in Phase 2 Step 2.1b. For a plain UI/REST feature this is just `network`. -->
+| Field | Value |
+|-------|-------|
+| Platform Profile | network / platform-capability / native-view / mixed |
+| Capabilities | {none, or e.g. location, camera, biometrics} |
+| Native view | {No, or e.g. map / camera preview} |
+| Sourcing option | {n/a, or 1 multiplatform lib / 2 expect-actual / 3 iOS-Swift bridge} |
+
 ## Design Decisions
 | Decision | Choice | Rationale |
 |----------|--------|-----------|

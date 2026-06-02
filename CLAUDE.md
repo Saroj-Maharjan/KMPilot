@@ -12,6 +12,7 @@
 | Test feature | `/feature-test` | "test", "generate tests" |
 | Design UI | `/ui-designer` | "design screen", "Stitch", "design UI", "mockup" |
 | Verify UI | `/verify-ui` | "verify UI", "audit UI", "check implementation" |
+| Bridge iOS↔Kotlin | `/bridging-swift-kotlin` | "iOS SDK", "Swift", "call Swift", "native framework", "MapKit", "biometrics", "Apple Pay" |
 
 **IMPORTANT:** Invoke the skill IMMEDIATELY upon recognizing feature work. Do NOT:
 - Read files first to "understand the codebase"
@@ -31,6 +32,10 @@ The design pipeline uses a **blueprint artifact contract** for decoupled skill c
 3. `/verify-ui` audits the implementation against the Stitch design (three-way token audit)
 
 Each skill is independently invocable — no skill calls another skill. The user controls the pipeline.
+
+### Platform Capabilities & Native Views (Rule 14)
+
+Features needing a device capability (GPS, camera, BLE, biometrics) or a native view (map, camera preview, WebView) are handled **inside** `/creating-kmp-feature` / `/modifying-kmp-feature` — no separate command. Those skills classify the feature's **Platform Profile** (`network` / `platform-capability` / `native-view` / `mixed`) in Phase 2, then route work to `kmp-platform-agent` (capability behind a `commonMain` DataSource → `Either<T>`, per-platform actuals incl. desktop) and `ui-layer-agent` (the `expect @Composable` native-view interop). When an iOS `actual` needs Swift, they finish the Kotlin side and route you to `/bridging-swift-kotlin` (the iOS-Swift leg). Full patterns: `.claude/skills/creating-kmp-feature/architecture/platform.md`.
 
 ---
 

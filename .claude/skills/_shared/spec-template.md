@@ -24,6 +24,16 @@
 <!-- TODO: Fill in - why does this feature exist? -->
 {Brief rationale for why this feature exists and key design decisions.}
 
+## Platform Profile & Capabilities
+<!-- Rule 14 — carried from the PRD. `network` for plain UI/REST features. The modify skill reads this. -->
+| Field | Value |
+|-------|-------|
+| Platform Profile | network / platform-capability / native-view / mixed |
+| Capabilities | {none, or e.g. location, camera} |
+| Native view | {No, or which view} |
+| Sourcing option | {n/a, or 1 multiplatform lib / 2 expect-actual / 3 iOS-Swift bridge} |
+| iOS-Swift bridge | {No / Yes — {Feature}Bridge} |
+
 ## Design Decisions
 <!-- TODO: Fill in - key architectural choices -->
 | Decision | Choice | Alternatives | Rationale |

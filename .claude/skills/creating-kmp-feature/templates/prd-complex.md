@@ -28,6 +28,16 @@ Use for: Features with API integration, multiple screens, business logic
 {2-3 sentences explaining the business or user need driving this feature.
 Reference any user feedback, analytics, or strategic goals if applicable.}
 
+## Platform Profile & Capabilities
+<!-- Rule 14 — set in Phase 2 Step 2.1b. Drives which Phase 4 agents run. -->
+| Field | Value |
+|-------|-------|
+| Platform Profile | network / platform-capability / native-view / mixed |
+| Capabilities | {none, or e.g. location (GPS), camera, biometrics, BLE} |
+| Native view | {No, or e.g. map (MapLibre) / camera preview / WebView} |
+| Sourcing option | {n/a, or 1 multiplatform lib / 2 expect-actual / 3 iOS-Swift bridge} — see architecture/platform.md decision tree |
+| iOS-Swift bridge needed | {No / Yes — run /bridging-swift-kotlin for {Feature}Bridge} |
+
 ## Design Decisions
 {Key architectural or UX decisions and why they were made}
 
@@ -127,12 +137,18 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 
 ### Task Groups
 
-**Group 1: Data Layer** (data-layer-agent)
+**Group 1: Data Layer** (data-layer-agent) — *network / mixed only*
 - Module structure + build.gradle.kts
 - Data models (@Serializable)
 - Ktor Resources (type-safe endpoints)
 - RemoteDataSource (interface + impl)
 - Repository (interface + impl)
+
+**Group 1b: Platform Layer** (platform-agent) — *Rule 14, tag ≠ `network` only*
+- Capability DataSource interface (commonMain) → `Either<DTO>`
+- Per-platform actuals (android / ios / **desktop** fallback)
+- `expect/actual val platformModule` (DI)
+- *(If `data-layer-agent` is absent, this group also owns module structure + build.gradle.kts)*
 
 **Group 2: UI Layer** (ui-layer-agent)
 - Single `{Feature}UiModel` (plain UI fields + `UiState<DTO>` slots) — Rule 11
