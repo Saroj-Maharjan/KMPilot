@@ -144,17 +144,12 @@ Kotlin Multiplatform project scaffolded from [KMPilot](https://github.com/ThisIs
 
 ## Quick start
 
-Build the dashboard feature:
-
 ```bash
-./gradlew :feature:dashboard:assembleAndroidMain
+./gradlew assembleDebug
 ```
 
-Run desktop tests:
-
-```bash
-./gradlew :feature:dashboard:desktopTest
-```
+The app opens on a Welcome screen. Add your first feature with Claude Code —
+it wires navigation and removes the Welcome screen for you.
 
 ## AI-assisted development
 

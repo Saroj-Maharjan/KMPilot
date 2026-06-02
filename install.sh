@@ -339,6 +339,16 @@ NAVHOST_EOF
 
     # 7. Stray macOS metadata
     find . -name ".DS_Store" -type f -delete 2>/dev/null || true
+
+    # 8. KMPilot-only project files (upstream meta + sample mock data, not
+    #    wanted in a user project). LICENSE/CONTRIBUTING are KMPilot's own;
+    #    mock-api/finance only fed the (now-removed) dashboard sample, and
+    #    .github/workflows/pages.yml only existed to publish that mock data;
+    #    assets/ held KMPilot README screenshots; the .pbxproj.backup is a
+    #    stray Xcode backup that rename.sh's *.pbxproj glob does not rewrite.
+    rm -f  CONTRIBUTING.md LICENSE
+    rm -rf .github assets mock-api
+    rm -f  iosApp/iosApp.xcodeproj/project.pbxproj.backup
 }
 
 echo "→ Cloning KMPilot template (branch: $TEMPLATE_BRANCH) into $NAME/"
@@ -352,8 +362,11 @@ trim_template
 echo "→ Renaming project..."
 bash scripts/rename.sh --name="$NAME" --pkg="$PKG"
 
-# Template-only files we don't need in a user project
+# Template-only files we don't need in a user project. scripts/rename.sh is a
+# one-shot installer tool (it has already run above and still embeds KMPilot's
+# OLD identifiers); scripts/ is empty once it's gone.
 rm -f install.sh
+rm -rf scripts
 
 # iOS: bootstrap CocoaPods so Xcode can build out of the box. macOS only —
 # pod install is required before the first iOS build because the Xcode project
