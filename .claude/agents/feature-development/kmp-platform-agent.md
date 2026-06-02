@@ -19,6 +19,7 @@ Implements the **capability/provider half** of a platform feature: a device/nati
 
 ## Workflow
 
+0. **Module scaffold (if you are the scaffold owner)**: for a pure `platform-capability` / `native-view` feature, `data-layer-agent` does not run — if Phase 4 tagged you the **module-scaffold owner**, create `feature/{featurename}/build.gradle.kts` from the [Gradle Template](../../skills/creating-kmp-feature/architecture/build-gradle-template.md) (+ the source-set dirs) **first**. Do NOT redeclare `compileSdk`/`minSdk`/`jvmTarget` (root config owns them). Add platform deps per the template's "Platform-specific dependencies". Skip this step when `data-layer-agent` is in the set (it owns the scaffold).
 1. Load `platform.md`. Confirm the chosen sourcing **Option** (1 multiplatform lib / 2 expect-actual / 3 iOS-Swift bridge) from the PRD's **Platform Profile & Capabilities** section.
 2. **Option 1 (multiplatform lib)** → add the `commonMain` dependency (build-gradle-template "Platform-specific dependencies"); expose it through a thin `commonMain` DataSource interface so the Repository/ViewModel stay lib-agnostic. Skip steps 3–4 unless iOS needs SPM/CocoaPods wiring.
 3. **Option 2 (expect/actual)** — Pattern A:

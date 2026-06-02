@@ -5,7 +5,7 @@ allowed-tools: ["Task", "Read", "Glob", "Grep", "Write"]
 
 # Review Feature Implementation
 
-Review a KMP feature against Clean Architecture, 12 critical rules, and 4 integration points.
+Review a KMP feature against Clean Architecture, 14 critical rules, and 4 integration points.
 
 **Architecture Reference:** @../skills/_shared/patterns.md
 
@@ -23,7 +23,7 @@ Review a KMP feature against Clean Architecture, 12 critical rules, and 4 integr
 
 ## What Gets Checked
 
-### Architecture Rules (12)
+### Architecture Rules (14)
 1. Interface + Impl pairs
 2. Either<T> returns
 3. setState usage
@@ -36,6 +36,8 @@ Review a KMP feature against Clean Architecture, 12 critical rules, and 4 integr
 10. Callback parameters
 11. Single UiModel + DTO-wrapped UiState (no `*UiState.kt`; `UiState<T>` wraps DTOs from `data/model/`; no `presentation` imports in `data/`)
 12. No hardcoded user-facing strings — all display text via `stringResource(Res.string.*)` / `DesignSystemResources` / `UiText`; `composeResources/values/strings.xml` exists. Grep `(text|label|placeholder|contentDescription) = "` and `X(Text|Button)("` in `presentation/ui/`; every hit must resolve from resources. Allowed: `@Preview` fixtures, control sentinels, single-glyph symbols (`$`/`₿`/`%`/`✓`), repository data (names/dates/tickers).
+13. Single app-shell Scaffold — feature screens use `XScreen`, never a `Scaffold`/`XScaffold`; no `contentWindowInsets`/`safeDrawing`/`statusBarsPadding`/`imePadding` in feature UI (the app shell owns them); the only inset a feature touches is the bottom nav-bar inset on its own bottom bar / scroll list.
+14. Platform capability / native view (Rule 14) — only when Platform Profile is `platform-capability`/`native-view`/`mixed` (N/A if `network` or field absent): capability behind a `commonMain` DataSource → `Either<DTO>` with actuals for **all** targets incl. desktop; native view via `expect @Composable` (`AndroidView`/`UIKitView`) under `components/`; `platformModule` (expect/actual) registered in `{Feature}Modules`; no platform types in ViewModel/Repository.
 
 ### Integration Points (4)
 1. settings.gradle.kts

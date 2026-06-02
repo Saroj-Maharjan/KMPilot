@@ -10,6 +10,8 @@ color: blue
 
 Test DataSource implementations using Ktor MockEngine. **Do NOT re-read source files** - use provided context.
 
+> **Scope (Rule 14)**: this agent covers **REST** DataSources (Ktor `ApiClient` + MockEngine) only. A **platform** DataSource (GPS/camera/biometrics behind an `expect/actual` interface) has no MockEngine and no HTTP — do not template it here. Platform capabilities are exercised by **faking the DataSource interface** (Mokkery) at the Repository/ViewModel level via `test-repository` / `test-viewmodel`; the per-platform `actual` classes are not unit-tested in `commonTest`.
+
 ## Output Path
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/data/datasource/{Feature}RemoteDataSourceTest.kt

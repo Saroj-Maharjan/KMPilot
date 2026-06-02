@@ -9,6 +9,10 @@ Kotlin interface in `iosMain` → Swift implements it in `iosApp` → Inject via
 
 **Architecture Reference:** @../_shared/patterns.md
 
+## When you arrive here
+
+This skill is the **iOS-Swift leg** of the Rule 14 platform path (`@../creating-kmp-feature/architecture/platform.md`). Reach it when a feature's iOS `actual` can't be written cleanly in Kotlin/Native and needs a Swift class. `/creating-kmp-feature` and `/modifying-kmp-feature` finish the Kotlin side (the `commonMain` interface + Android/desktop actuals + `expect/actual val platformModule`) and then route the user here — they never call this skill directly. Android almost never needs a bridge (Kotlin calls the Android SDK directly), so this is iOS-specific. The Provider-wraps-bridge-in-`Either<T>` pattern below is the same DataSource contract platform.md describes.
+
 ## Critical: Swift Inheritance
 
 Swift class inherits from `<ModulePrefix><InterfaceName>`:

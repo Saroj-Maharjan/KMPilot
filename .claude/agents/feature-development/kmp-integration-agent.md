@@ -34,8 +34,23 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 4. Integration Point 3: DI Initialization
 5. Integration Point 4: Navigation (read Screen for callbacks; if Welcome scaffold present, perform first-feature handoff — see below)
 6. Integration Point 5 (conditional): Bottom-bar tab — ONLY if the PRD/spec Navigation marks this feature a top-level tab (see "Bottom-Bar Tab Handoff" below)
-7. Validate: `./gradlew assembleDebug && ./gradlew ktlintFormat`
-8. Generate spec.md (preserve WHY from PRD)
+7. Platform module (conditional): if `platform-agent` produced a `platformModule`, register it (see below)
+8. Validate: `./gradlew assembleDebug && ./gradlew ktlintFormat`
+9. Generate spec.md (preserve WHY from PRD)
+
+## Platform Module (Rule 14 — conditional)
+
+**Gate**: only when `platform-agent` actually ran and produced an `expect/actual val platformModule` (profiles `platform-capability` / `mixed`, and `native-view` *with* a backing capability). A **pure `native-view` with no provider** has no `platformModule` — skip this step. When it exists, `platform-agent` has already written the `platformModule` + the per-platform DataSource actuals; your job is to **register it**:
+
+1. Add `platformModule` to `{Feature}Modules.getKoinModules()` alongside the common module:
+   ```kotlin
+   override fun getKoinModules(): List<Module> = listOf(
+       platformModule,                 // expect/actual — platform DataSource binding
+       module { /* repository, viewModel */ },
+   )
+   ```
+2. If an Android `actual` needs the `Context`, ensure the `androidMain` `platformModule` resolves it via `androidContext()` (Koin's Android context is initialized at app start — no per-feature wiring beyond passing it through the actual's constructor).
+3. **Do NOT** duplicate the Swift-bridge touchpoints (`MainViewController`, `ContentView`, framework `export`) — those are owned by `/bridging-swift-kotlin`. If the platform agent flagged an iOS-Swift dependency, carry the *"Run /bridging-swift-kotlin"* note into the completion report; the Android + desktop builds pass without it.
 
 ## First-feature Handoff
 

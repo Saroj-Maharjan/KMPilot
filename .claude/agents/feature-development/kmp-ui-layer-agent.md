@@ -13,6 +13,7 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 **Base Instructions:** @../_base/common.md
 **Architecture:** @../../skills/_shared/patterns.md (load on demand)
 **UI Patterns:** @../../skills/creating-kmp-feature/architecture/ui.md (load on demand)
+**Platform / native-view interop:** @../../skills/creating-kmp-feature/architecture/platform.md (load when tag = `native-view`/`mixed`)
 **Design System:** @../../skills/using-design-system/references/component-mappings.md (load on demand)
 
 ## Workflow
@@ -74,6 +75,20 @@ Everything else — including `{Feature}Content` and **every** sub-component rea
 - `presentation/ui/components/{Feature}Content.kt`
 - `presentation/ui/components/{SubComponent}.kt` × N (one per sub-component)
 - `presentation/navigation/{Feature}Navigation.kt`
+
+## Native-view interop (Shape C, Rule 14)
+
+When the Platform Profile tag is `native-view` or `mixed`, the feature embeds a native view (map, camera preview, WebView). Write it as an `expect @Composable` with per-platform actuals under `components/` — load `platform.md` → "Pattern C".
+
+- `components/PlatformX.kt` (`commonMain`) — `@Composable expect fun PlatformX(...)`.
+- `components/PlatformX.android.kt` — `actual` using `AndroidView` (`androidx.compose.ui.viewinterop.AndroidView`).
+- `components/PlatformX.ios.kt` — `actual` using `UIKitView` (`androidx.compose.ui.interop.UIKitView`).
+- `components/PlatformX.desktop.kt` — `actual` fallback (e.g. `XText(stringResource(Res.string.x_unavailable_desktop))`). **Required** — a missing desktop actual breaks the build.
+- `{Feature}Content` calls `PlatformX()` and otherwise stays pure Compose: it receives DTOs (e.g. `LatLng`) + callbacks, never platform types.
+
+**Boundary**: you do **NOT** write the device-capability provider (the `LocationDataSource` etc.) — that's `platform-agent`. Consume its DataSource interface through the ViewModel/Repository as usual. If the iOS actual of the native view itself needs a Swift class, leave a stub and flag a `/bridging-swift-kotlin` follow-up in your report.
+
+**Module-scaffold ownership**: normally `data-layer-agent` (or `platform-agent`) creates `feature/{featurename}/build.gradle.kts`. For a **pure `native-view` feature with no capability/provider** — where neither runs — Phase 4 tags **you** the module-scaffold owner: create `build.gradle.kts` from the [Gradle Template](../../skills/creating-kmp-feature/architecture/build-gradle-template.md) **first** (incl. any native-view platform deps), before writing UI. Otherwise the module already exists — only add the `@Preview` deps if missing.
 
 ## Utility Functions (non-`@Composable`)
 
