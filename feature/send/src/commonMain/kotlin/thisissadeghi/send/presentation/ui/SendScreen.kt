@@ -8,14 +8,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -56,7 +60,7 @@ import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
-import thisissadeghi.designsystem.XScaffold
+import thisissadeghi.designsystem.XScreen
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.toolbar.XTopAppBar
 import thisissadeghi.designsystem.toolbar.XTopAppBarAlignment
@@ -106,7 +110,7 @@ fun SendScreenRoot(
     onCoinSelectClick: () -> Unit = {},
     onNetworkSelectClick: () -> Unit = {},
 ) {
-    XScaffold(
+    XScreen(
         topBar = {
             XTopAppBar(
                 title = {
@@ -140,16 +144,15 @@ fun SendScreenRoot(
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
-    ) { paddingValues ->
+    ) {
         when (val state = uiState.state) {
             UiState.Uninitialized -> Box(modifier = Modifier.fillMaxSize())
 
-            UiState.Loading -> LoadingContent(paddingValues = paddingValues)
+            UiState.Loading -> LoadingContent()
 
             is UiState.Success ->
                 SuccessContent(
                     uiModel = state.value,
-                    paddingValues = paddingValues,
                     onAddressChange = onAddressChange,
                     onPasteClick = onPasteClick,
                     onQrClick = onQrScanClick,
@@ -160,7 +163,6 @@ fun SendScreenRoot(
 
             is UiState.Failed ->
                 FailedContent(
-                    paddingValues = paddingValues,
                     onRetry = onRetry,
                     onReturnToDashboard = onBackClick,
                 )
@@ -169,12 +171,9 @@ fun SendScreenRoot(
 }
 
 @Composable
-private fun LoadingContent(paddingValues: PaddingValues) {
+private fun LoadingContent() {
     Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         XCircularProgressIndicator(
@@ -187,7 +186,6 @@ private fun LoadingContent(paddingValues: PaddingValues) {
 @Composable
 private fun SuccessContent(
     uiModel: SendUiModel,
-    paddingValues: PaddingValues,
     onAddressChange: (String) -> Unit,
     onPasteClick: () -> Unit,
     onQrClick: () -> Unit,
@@ -199,7 +197,6 @@ private fun SuccessContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, top = 32.dp, end = 24.dp, bottom = 144.dp),
     ) {
@@ -263,7 +260,6 @@ private fun SuccessContent(
 
 @Composable
 private fun FailedContent(
-    paddingValues: PaddingValues,
     onRetry: () -> Unit,
     onReturnToDashboard: () -> Unit,
 ) {
@@ -271,7 +267,6 @@ private fun FailedContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -361,7 +356,10 @@ private fun SendBottomBar(onSendClick: () -> Unit) {
                             colors = listOf(Color.Transparent, background.copy(alpha = 0.8f)),
                         ),
                 ).padding(top = 24.dp, end = 24.dp, start = 24.dp)
-                .navigationBarsPadding(),
+                // Bar background bleeds to the screen edge; pad content clear of the nav bar.
+                // exclude(ime): when the keyboard is open the shell already lifts the whole NavHost
+                // by the IME inset, so drop the nav-bar pad here to avoid a double gap above the keyboard.
+                .windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime)),
     ) {
         XButton(
             onClick = onSendClick,

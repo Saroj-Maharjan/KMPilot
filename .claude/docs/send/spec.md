@@ -1,7 +1,7 @@
 # Feature Spec: Send
 
 **Status:** Complete
-**Version:** 2.1.0
+**Version:** 2.3.1
 **Module:** `:feature:send`
 **Package:** `thisissadeghi.send`
 **Generated:** 2026-02-25
@@ -36,6 +36,7 @@ The send flow is a core action in the crypto wallet app. This first iteration sh
 | UI states | All 4 states represented in UiState | Architecture rule; loading/failed driven by ViewModel init path |
 | Quick chips | Custom `Box` composable | `XFilterChip` defaults (CircleShape, surface bg) diverge too far from design |
 | RecipientCard accent bar | `Box` overlay at `TopStart` within clipped outer `Box` | Cleanest way to draw a full-height left bar on a rounded card |
+| Screen container | `XScreen` (Rule 13), not `XScaffold` | The app-shell `Scaffold` (`App.kt`) pads the NavHost top + horizontal + ime only — **not** the bottom; the sticky "Send" CTA lives in `XScreen`'s `bottomBar` slot. `SendBottomBar` owns the bottom nav-bar inset via `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (collapses to 0 when the shell's `imePadding()` lifts the screen) |
 
 ---
 
@@ -281,3 +282,4 @@ navController.navigate(SendRoute)
 - 2026-05-11 — KMPilot Gold redesign: purple → gold color scheme, 64sp hero amount, card-based layout, 2-column asset/network grid, gold accent bar, SecurityBadge (v2.0.0)
 - 2026-05-17 — UI audit fixes (11 critical, 2 minor): top padding 32dp, bottom padding 144dp, cursor spacer 8dp, label font 12sp/1.2sp, input font 16sp, spinner 64dp, CTA icon right, failed padding 32dp, subtitle max 240dp, retry inline with 12dp corners, "Return to Dashboard" action, title letter-spacing + line-height, inner icons 14dp (v2.1.0)
 - 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings to `composeResources/values/strings.xml`, replaced with `stringResource`. Balance/USD use format-arg templates. No behavior change. Quick-amount chips (`25%`/`50%`/`MAX`) intentionally left as raw control sentinels (parsed in logic); ₿/$ glyphs left as symbols (v2.2.0)
+- 2026-06-02 — Rule 13 (single app-shell Scaffold) + IME-inset fix: `SendScreenRoot` migrated `XScaffold` → `XScreen` (sticky `SendBottomBar` in `bottomBar` slot, Success-state only); removed `paddingValues` threading from `SuccessContent`/`LoadingContent`/`FailedContent`. The app shell pads the NavHost top + horizontal + ime; `SendBottomBar` owns its nav-bar inset, padding content with `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (`max(0, navBar − ime)`) so it clears the nav bar when the keyboard is closed and drops to 0 when the shell's `imePadding()` lifts the screen — avoiding a double gap above the keyboard. Background still bleeds to the screen edge (padding after `.background(...)`) (v2.3.1)
