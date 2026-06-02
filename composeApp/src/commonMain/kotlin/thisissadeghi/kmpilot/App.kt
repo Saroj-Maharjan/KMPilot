@@ -1,30 +1,23 @@
 package thisissadeghi.kmpilot
 
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import thisissadeghi.common.locale.ProvideAppLocale
 import thisissadeghi.designsystem.SnackbarController
 import thisissadeghi.designsystem.Toast
+import thisissadeghi.designsystem.XScaffold
 import thisissadeghi.designsystem.XTheme
 import thisissadeghi.designsystem.rememberToastState
-import thisissadeghi.designsystem.toolbar.LocalToolbarConfig
-import thisissadeghi.designsystem.toolbar.ToolbarConfig
-import thisissadeghi.designsystem.toolbar.ToolbarRenderer
 
 @Composable
 fun App() {
@@ -37,39 +30,35 @@ fun App() {
 private fun AppContent() {
     XTheme {
         val toastState = rememberToastState()
-        var currentToolbarConfig by remember { mutableStateOf<ToolbarConfig>(ToolbarConfig.None) }
-        val setToolbarConfig: (ToolbarConfig) -> Unit = { config ->
-            currentToolbarConfig = config
-        }
-
         val snackbarHostState = remember { SnackbarHostState() }
 
-        CompositionLocalProvider(LocalToolbarConfig provides setToolbarConfig) {
-            Scaffold(
-                modifier = Modifier.windowInsetsPadding(WindowInsets.ime),
-                snackbarHost = {
-                    SnackbarHost(hostState = snackbarHostState)
-                },
-                bottomBar = {},
-                topBar = {
-                    ToolbarRenderer(
-                        config = currentToolbarConfig,
-                    )
-                },
-                contentWindowInsets = WindowInsets.statusBars,
-            ) { innerPadding ->
-                BaseAppNavHost(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding),
+        // The single app-shell Scaffold : owns shared chrome + the screen-frame insets.
+        // contentWindowInsets = 0 so the Scaffold consumes nothing. The NavHost is padded by the
+        // TOP + HORIZONTAL safe area (status bar + display cutout) plus imePadding, but NOT the
+        // bottom — so bottom action bars can bleed their background to the screen edge and inset
+        // their own content via navigationBarsPadding (standard edge-to-edge pattern).
+        XScaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
                 )
+            },
+            bottomBar = {},
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        ) { _ ->
+            BaseAppNavHost(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                        ).imePadding(),
+            )
 
-                Toast(state = toastState)
+            Toast(state = toastState)
 
-                SnackbarController(snackbarHostState = snackbarHostState)
-            }
+            SnackbarController(snackbarHostState = snackbarHostState)
         }
     }
 }
