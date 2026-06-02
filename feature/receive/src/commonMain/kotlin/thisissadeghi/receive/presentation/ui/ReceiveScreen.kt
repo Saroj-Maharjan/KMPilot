@@ -6,16 +6,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,7 +53,7 @@ import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
-import thisissadeghi.designsystem.XScaffold
+import thisissadeghi.designsystem.XScreen
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.toolbar.XTopAppBar
 import thisissadeghi.designsystem.toolbar.XTopAppBarAlignment
@@ -83,7 +86,7 @@ fun ReceiveScreenRoot(
     onCopyClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
 ) {
-    XScaffold(
+    XScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             XTopAppBar(
@@ -121,32 +124,28 @@ fun ReceiveScreenRoot(
                 else -> {}
             }
         },
-    ) { paddingValues ->
+    ) {
         when (val state = uiState.state) {
             UiState.Uninitialized,
             UiState.Loading,
-            -> ReceiveLoadingContent(paddingValues = paddingValues)
+            -> ReceiveLoadingContent()
 
             is UiState.Success ->
                 ReceiveSuccessContent(
                     uiModel = state.value,
-                    paddingValues = paddingValues,
                     onAssetSelectorClick = onAssetSelectorClick,
                     onCopyClick = onCopyClick,
                 )
 
-            is UiState.Failed -> ReceiveFailedContent(paddingValues = paddingValues, onRetry = onRetry)
+            is UiState.Failed -> ReceiveFailedContent(onRetry = onRetry)
         }
     }
 }
 
 @Composable
-private fun ReceiveLoadingContent(paddingValues: PaddingValues) {
+private fun ReceiveLoadingContent() {
     Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         XCircularProgressIndicator(
@@ -160,7 +159,6 @@ private fun ReceiveLoadingContent(paddingValues: PaddingValues) {
 @Composable
 private fun ReceiveSuccessContent(
     uiModel: ReceiveUiModel,
-    paddingValues: PaddingValues,
     onAssetSelectorClick: () -> Unit,
     onCopyClick: () -> Unit,
 ) {
@@ -168,7 +166,6 @@ private fun ReceiveSuccessContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
                 .padding(top = 24.dp),
     ) {
@@ -201,7 +198,10 @@ private fun ReceiveBottomBar(
                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .padding(horizontal = 16.dp)
                 .padding(top = 16.dp)
-                .navigationBarsPadding(),
+                // Bar background bleeds to the screen edge; pad content clear of the nav bar.
+                // exclude(ime): when the keyboard is open the shell already lifts the whole NavHost
+                // by the IME inset, so drop the nav-bar pad here to avoid a double gap above the keyboard.
+                .windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime)),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         XButton(
@@ -249,15 +249,11 @@ private fun ReceiveBottomBar(
 }
 
 @Composable
-private fun ReceiveFailedContent(
-    paddingValues: PaddingValues,
-    onRetry: () -> Unit,
-) {
+private fun ReceiveFailedContent(onRetry: () -> Unit) {
     Box(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center,
     ) {

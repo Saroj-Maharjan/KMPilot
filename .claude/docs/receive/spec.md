@@ -4,10 +4,10 @@
 
 | Field | Value |
 |-------|-------|
-| Version | 1.1.1 |
+| Version | 1.2.1 |
 | Status | Active |
 | Created | 2026-05-03 |
-| Updated | 2026-05-11 |
+| Updated | 2026-06-02 |
 
 ---
 
@@ -45,7 +45,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 | Address source | Hardcoded static data in ViewModel | Remote API | Feature is offline-only; no network dependency required at this stage |
 | Address truncation | `TextOverflow.Ellipsis` | Show full address | Pills overflow on short screens; tap-to-copy exposes full value |
 | Warning style | Error-tinted banner (`errorContainer` bg @20% + `error` border @40%) | Toast / snackbar | Persistent visibility — user must see it before acting |
-| Bottom bar | Sticky `surface`-bg bar with rounded top corners in `bottomBar` slot | Floating buttons | `XScaffold` handles insets correctly via `bottomBar` |
+| Bottom bar | Sticky `surface`-bg bar with rounded top corners in `XScreen`'s `bottomBar` slot | Floating buttons | `XScreen` (Rule 13) lays the bar below content; the app-shell `Scaffold` pads the NavHost top + horizontal + ime only (not the bottom), so the bar owns its nav-bar inset via `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (collapses when the keyboard lifts the screen) |
 | No loading state | ViewModel jumps Uninitialized → Success synchronously | Show loading spinner | No async work; a visible loading flash would be a lie |
 | Top bar | Custom `Row` layout | `XTopAppBar` | `XTopAppBar` center-aligns titles; design requires left-aligned title next to back arrow |
 | Address card | `AddressCard` wraps private `AddressPill` | Standalone `AddressPill` | Design requires gold border + "Your Bitcoin address" label around the pill |
@@ -55,6 +55,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 
 ## Last Updated
 
+- 2026-06-02 — Rule 13 (single app-shell Scaffold) + IME-inset fix (v1.2.1): `ReceiveScreenRoot` migrated `XScaffold` → `XScreen` (sticky `ReceiveBottomBar` in `bottomBar` slot, Success-state only); removed `paddingValues` threading from `ReceiveLoadingContent`/`ReceiveSuccessContent`/`ReceiveFailedContent`. The app shell pads the NavHost top + horizontal + ime; `ReceiveBottomBar` owns its nav-bar inset, padding content with `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (`max(0, navBar − ime)`) so it clears the nav bar when the keyboard is closed and drops to 0 when the shell's `imePadding()` lifts the screen. Background still bleeds to the screen edge.
 - 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings (top bar, address label, network warning, bottom-bar actions, failed state) to `composeResources/values/strings.xml`, replaced with `stringResource`. Coin/network names left as data (VM-supplied). No behavior change.
 - 2026-05-17 — UI audit fixes: corrected failed-state typography (20sp/SemiBold/onSurfaceVariant title; 14sp/outline body), added Retry button to failed state, fixed loading spinner (64dp), fixed success content top padding (24dp), fixed bottom bar padding, fixed address label center alignment
 - 2026-05-11 — Design-aware update: aligned to Stitch gold/warm theme; AddressCard replaces AddressPill; custom Row top bar; redesigned bottom bar
