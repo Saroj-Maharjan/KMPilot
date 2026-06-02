@@ -371,16 +371,21 @@ when (val state = uiModel.dataState) {
 }
 ```
 
-## Screen Shapes: Data-Fetching vs Form
+## Screen Shapes: Data-Fetching, Form, Native-View
 
-Rule 4 mandates handling all four UI states. **How** to render them varies by what the screen is *for*. Two shapes are sanctioned; pick by the deciding question below.
+Rule 4 mandates handling all four UI states. **How** to render them varies by what the screen is *for*. Three shapes are sanctioned; pick by the deciding questions below.
 
 ### Deciding question
 
+> *"Does the screen embed a native platform view (map, camera preview, WebView)?"*
+
+- **Yes** → **Native-view host** (Shape C, Rule 14). The screen hosts a `PlatformX()` `expect @Composable` inside `{Feature}Content`. May combine with A or B for the surrounding chrome (e.g. a map + a form drawer). See Shape C below and [architecture/platform.md](./platform.md).
+- **No** → ask the next question:
+
 > *"Does the screen have content that must persist across state transitions — user input, focus, IME state?"*
 
-- **No** → **Data-fetching screen** (default). Visible content is entirely a function of the async result. Use the separated shape — one composable per UI state.
-- **Yes** → **Form screen** (exception). The form is the persistent UI; loading/error are decorations on it. Collapse states into a single Content composable with derived `isLoading`/`errorMessage` parameters.
+- **No** → **Data-fetching screen** (Shape A, default). Visible content is entirely a function of the async result. Use the separated shape — one composable per UI state.
+- **Yes** → **Form screen** (Shape B, exception). The form is the persistent UI; loading/error are decorations on it. Collapse states into a single Content composable with derived `isLoading`/`errorMessage` parameters.
 
 ### Shape A — Data-fetching screen (default)
 
@@ -461,9 +466,49 @@ Replacing the form with a `LoadingContent` on submit would:
 
 That's a UX cost only justified for forms. Data-fetching screens don't pay it because there's no input to preserve.
 
+### Shape C — Native-view host (Rule 14)
+
+Use for: map screen, camera preview, scanner, embedded WebView — any screen that displays a **native platform view** Compose cannot draw itself.
+
+The native view is isolated in an `expect @Composable PlatformX` (actuals: `AndroidView` / `UIKitView` / desktop fallback) living under `components/`. `{Feature}Content` calls it and stays pure Compose — it receives DTOs (e.g. `LatLng`) and emits callbacks, never platform types.
+
+```kotlin
+// In LocationPickerScreen.kt — ScreenRoot routes the surrounding state as Shape A/B,
+// the native view itself is just one component inside {Feature}Content.
+@Composable
+fun LocationPickerScreenRoot(
+    uiModel: LocationPickerUiModel,
+    onPick: (LatLng) -> Unit,
+    onConfirm: () -> Unit,
+    onBackClick: () -> Unit,
+) {
+    XScreen(
+        topBar = { /* XTopAppBar */ },
+        bottomBar = { /* sticky Confirm CTA */ },
+    ) {
+        LocationPickerContent(            // components/LocationPickerContent.kt — pure Compose
+            center = uiModel.center,
+            onPick = onPick,
+        )
+    }
+}
+
+// components/LocationPickerContent.kt
+@Composable
+fun LocationPickerContent(center: LatLng, onPick: (LatLng) -> Unit) {
+    PlatformMap(center = center, onPick = onPick, modifier = Modifier.fillMaxSize())  // expect @Composable
+}
+```
+
+- `PlatformMap` (the `expect`) + `PlatformMap.android.kt` / `.ios.kt` / `.desktop.kt` (actuals) are written by `ui-layer-agent`; the capability/data behind it (e.g. current-location GPS) is a DataSource written by `platform-agent` (see [platform.md](./platform.md)).
+- Loading/permission/error states still route through `UiState` slots on `*UiModel` exactly as Shape A. The native view replaces only the success-state *content*, not the state machine.
+- iOS `actual` needing Swift → stop and route to `/bridging-swift-kotlin` (platform.md → "iOS-Swift handoff").
+
+`Screen.kt` keeps the standard allowlist (`Screen` + `ScreenRoot` + optional state shells). The `expect/actual` composable lives in `components/`, never in `Screen.kt`.
+
 ### Mixed screens
 
-A screen with both a persistent input section and a separate data-fetched section gets **multiple `UiState<DTO>` slots** on its `*UiModel`. Apply Shape A to the data section and Shape B to the form section — they're independent state machines.
+A screen with both a persistent input section and a separate data-fetched section gets **multiple `UiState<DTO>` slots** on its `*UiModel`. Apply Shape A to the data section and Shape B to the form section — they're independent state machines. A native-view host (Shape C) composes with either: e.g. a map (C) plus a fetched list of nearby places (A).
 
 ### Documenting the choice
 
@@ -484,7 +529,8 @@ The reviewer uses the spec's Design Decisions to know which shape is expected. W
 |-------------|-------|----------------------------|--------------------------|
 | Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, and any of `LoadingContent`/`FailedContent`/`EmptyContent` that the design requires | `components/{Feature}Content.kt` |
 | Form (persistent input) | B — single Content | `Screen`, `ScreenRoot` only (loading/error render inline inside `Content`) | `components/{Feature}Content.kt` |
-| Mixed | A + B combined | `Screen`, `ScreenRoot`, plus the optional state shells that apply to the data section | `components/{Feature}Content.kt` (+ section components) |
+| Native-view host (Rule 14) | C — interop | `Screen`, `ScreenRoot` (+ optional state shells for permission/load) | `components/{Feature}Content.kt` + `components/PlatformX.kt` (`expect`) + `.android`/`.ios`/`.desktop` actuals |
+| Mixed | A + B (+ C) combined | `Screen`, `ScreenRoot`, plus the optional state shells that apply to the data section | `components/{Feature}Content.kt` (+ section components) |
 
 ## X-Components (Design System)
 

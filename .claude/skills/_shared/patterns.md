@@ -2,7 +2,7 @@
 
 All skills and agents import this file. Do not duplicate these rules elsewhere.
 
-## 13 Critical Rules
+## 14 Critical Rules
 
 1. **Interface + Impl** - DataSource and Repository always have interface + implementation pair
 2. **Either<T>** - Return `Either<T>` for fallible operations, never throw exceptions
@@ -17,6 +17,7 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 11. **Single UiModel + DTO-wrapped UiState** - `*UiModel` is the only presentation state container (no `*UiState.kt`). It holds plain UI fields + one `UiState<DTO>` slot per async operation, where DTO is the data-layer model (use `UiState<Unit>` for void ops). Repository returns `Either<DTO>`; data layer never imports from `presentation`. UI-derived display values live as sibling fields on `*UiModel`, never as mirror DTO types.
 12. **No hardcoded user-facing strings** - Every display string (text, labels, content descriptions, placeholders) comes from a string resource via `stringResource(Res.string.*)` (feature-local) or `DesignSystemResources` (shared). Feature strings live in `composeResources/values/strings.xml`; translations in `values-{lang}/strings.xml`. `*UiModel` carries `UiText`/`StringResource`, never English literals — ViewModels build `UiText`, composables resolve with `.asString()`. **Not strings**: control sentinels parsed in logic, single-glyph symbols (`$`, `₿`, `✓`, `%`), and repository-supplied data (merchant names, dates, tickers). See "Strings & Localization" below.
 13. **Single app-shell Scaffold** - The one `Scaffold` lives in the app shell (`App.kt`); `contentWindowInsets = WindowInsets(0, 0, 0, 0)` (consumes nothing). The shell pads the NavHost with the **top + horizontal** safe area (`WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)`) plus `imePadding()` — **not** the bottom. The bottom (nav-bar) inset is owned by whatever sits at the bottom of each screen: a **bottom action bar** bleeds its background to the screen edge and pads its own content with `Modifier.windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (= `max(0, navBar − ime)`: clears the nav bar when the keyboard is closed, collapses to 0 when the shell's `imePadding()` lifts the screen — plain `navigationBarsPadding()` would stack on that lift and float the CTA a nav-bar height above the keyboard); a **full-bleed scroll screen** with no bar pads its own content (e.g. `Modifier.navigationBarsPadding()` on the list). Feature screens **NEVER** nest a `Scaffold`/`XScaffold` — they use `XScreen(topBar = …, bottomBar = …) { … }` with a plain `XTopAppBar`. `XScreen` and `XTopAppBar` add **no** insets of their own. Sticky CTAs go in `XScreen`'s `bottomBar` slot. Nesting a second Scaffold reintroduces double safe-area/nav-bar padding. See "Single App-Shell Scaffold" below.
+14. **Platform capability = a DataSource; native view = expect/actual composable** - A device/native API (GPS, camera, BLE, biometrics, sensors) is hidden behind a `commonMain` interface returning `Either<T>` and implemented per-platform; ViewModel/Repository/`*UiModel` never see platform types (Rule 11 still holds). A native view (map, camera preview, WebView) embeds via an `expect @Composable` whose actuals use `AndroidView` (androidMain) / `UIKitView` (iosMain) / a graceful fallback (desktopMain). Every `expect` needs an `actual` for **all** targets — android, ios **and desktop** — or the build breaks. Sourcing precedence: multiplatform lib > expect/actual > iOS-Swift bridge (`/bridging-swift-kotlin`). See "Platform Capabilities & Native Views" below and [creating-kmp-feature/architecture/platform.md](../creating-kmp-feature/architecture/platform.md).
 
 ## Design-Aware Implementation
 
@@ -193,6 +194,25 @@ XIcon(contentDescription = stringResource(Res.string.cd_back))                //
 
 **Gradle**: feature modules already depend on `libs.compose.components.resources` and have a `composeResources/` dir — no extra config. The generated `Res` is `internal` per module (default); keep it.
 
+### Platform Capabilities & Native Views (Rule 14)
+
+When a feature uses a **device capability** (GPS, camera, BLE, biometrics, sensors) or embeds a **native view** (map, camera preview, WebView), the data still flows through Clean Architecture — the capability is just a DataSource, and the native view is an `expect/actual` composable. Full patterns, the decision tree, Gradle deltas, and the iOS-Swift handoff: [creating-kmp-feature/architecture/platform.md](../creating-kmp-feature/architecture/platform.md).
+
+**Three patterns:**
+
+1. **Capability as a DataSource** — `commonMain` interface returning `Either<DTO>`, one `actual` class per target (android/ios/**desktop**). Repository delegates and returns `Either<DTO>` unchanged (Rule 11). ViewModel can't tell GPS from HTTP.
+   ```kotlin
+   interface LocationDataSource { suspend fun current(): Either<LatLng> }   // commonMain
+   ```
+2. **DI via `expect/actual val platformModule`** — platform `actual` classes can't be bound in the common Koin module; bind them in a per-target `actual val platformModule` and include it in `{Feature}Modules.getKoinModules()`.
+3. **Native view via `expect @Composable`** (Shape C) — `PlatformX()` in `commonMain` with `AndroidView` / `UIKitView` / desktop-fallback actuals under `components/`. `{Feature}Content` stays pure Compose and passes only DTOs + callbacks.
+
+**Sourcing precedence** (the one judgment call — gate with `AskUserQuestion`): multiplatform lib (single `commonMain` dep) > `expect/actual` in the feature > iOS-Swift bridge (`/bridging-swift-kotlin`, the iOS leg only). Permissions are their own capability, not buried in the map/camera one.
+
+**Hard constraint**: targets are android + ios + `jvm("desktop")` — provide an `actual` for **all three** (desktop = graceful fallback) or the build breaks.
+
+**Who writes what** (creating-kmp-feature Phase 4): `platform-agent` writes the DataSource interface + per-platform actuals + `platformModule` (provider-only, no composables); `ui-layer-agent` writes the `expect @Composable` native-view interop; `integration-agent` adds `platformModule` to the feature's module list.
+
 ## Module Dependencies
 
 | Feature depends on | When |
@@ -257,10 +277,11 @@ The three state-shell composables (3–5) are present only when the design calls
 - One file per sub-component reachable from `{Feature}Content`, no matter how small.
 - One file per component reachable from `LoadingContent` / `FailedContent` / `EmptyContent` (rare — these usually contain only X-components).
 - A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
+- **Native-view interop (Shape C, Rule 14)**: an `expect @Composable PlatformX` plus its `.android`/`.ios`/`.desktop` actuals each live one-concept-per-file under `components/` (in their respective source sets). They are exempt from the "commonMain only" reading of this rule — by design they have per-platform siblings. `{Feature}Content` calls `PlatformX()` and otherwise stays pure Compose. See [architecture/platform.md](../creating-kmp-feature/architecture/platform.md) → "Pattern C".
 
 **Enforcement**: any top-level `@Composable fun` defined in `{Feature}Screen.kt` outside the 5-name allowlist is a violation — **except** for `@Preview`-annotated composables (see "Previews" below). The reviewer / lint check is a simple grep for `@Composable fun` at file scope in `Screen.kt` against the allowlist; `@Preview`-annotated entries are exempt.
 
-**Picking the screen shape**: see [architecture/ui.md → "Screen Shapes: Data-Fetching vs Form"](../creating-kmp-feature/architecture/ui.md). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
+**Picking the screen shape**: see [architecture/ui.md → "Screen Shapes"](../creating-kmp-feature/architecture/ui.md) — Shape A (data-fetch), Shape B (form), Shape C (native-view host, Rule 14). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
 
 ### Utility Functions (non-`@Composable`)
 

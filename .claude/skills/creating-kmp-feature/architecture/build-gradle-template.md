@@ -93,6 +93,52 @@ implementation(libs.ktor.client.resources)
 implementation(project(":core:data"))
 ```
 
+## Platform-specific dependencies (Rule 14 — platform capability / native view)
+
+Only when the feature uses a device capability or embeds a native view (Platform Profile = `platform-capability` / `native-view` / `mixed`). See [platform.md](./platform.md) for the decision tree.
+
+**Option 1 — multiplatform library** (single `commonMain` dep, no `expect/actual`):
+```kotlin
+commonMain {
+    dependencies {
+        implementation(libs.maplibre.compose)   // e.g. MapLibre Compose — cross-platform Map() composable
+    }
+}
+```
+
+**Option 2 — per-platform SDKs** (with `expect/actual`): add each SDK to its source set. The default hierarchy already provides `androidMain` / `iosMain` / `desktopMain` (intermediate `iosMain` covers all three iOS targets):
+```kotlin
+sourceSets {
+    androidMain.dependencies {
+        implementation(libs.play.services.maps)        // Android-only SDK
+        implementation(libs.androidx.activity.compose)  // if AndroidView needs Activity context
+    }
+    // iosMain / desktopMain dependencies as needed (often none — iOS uses platform frameworks)
+}
+```
+
+**iOS native frameworks** (MapLibre, MapKit-via-SPM, etc.) — required even when the Kotlin API is a `commonMain` lib. Configure on the iOS targets and export:
+```kotlin
+// Swift Package Manager
+listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach { target ->
+    target.swiftPackageConfig {
+        dependency {
+            remotePackageVersion(
+                url = URI("https://github.com/maplibre/maplibre-gl-native-distribution.git"),
+                products = { add("MapLibre", exportToKotlin = true) },
+                packageName = "maplibre-gl-native-distribution",
+                version = "<version>",
+            )
+        }
+    }
+    target.binaries.framework { baseName = xcfName; export(/* lib if it must cross the framework boundary */) }
+}
+// — or CocoaPods —
+cocoapods { pod("MapLibre", "<version>") }
+```
+
+> When a platform DataSource needs the Android `Context`, the `actual` class takes it via constructor and the `androidMain` `platformModule` binds it with `androidContext()` — no extra Gradle dep beyond what `:core:*` already provides.
+
 ## Module-level `dependencies` block (Android preview renderer)
 
 After the `kotlin { ... }` block, add a top-level `dependencies` block so Android Studio can render `@Preview` composables:
