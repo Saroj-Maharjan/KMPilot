@@ -33,6 +33,5 @@
     <!-- Failed state -->
     <string name="error_title">Something went wrong</string>
     <string name="error_message">An unexpected error occurred. Please try again.</string>
-    <string name="retry_label">Retry</string>
     <string name="return_to_dashboard">Return to Dashboard</string>
 </resources>

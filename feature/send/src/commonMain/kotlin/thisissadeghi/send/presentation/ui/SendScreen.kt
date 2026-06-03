@@ -1,7 +1,6 @@
 package thisissadeghi.send.presentation.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -40,16 +37,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kmpilot.feature.send.generated.resources.Res
 import kmpilot.feature.send.generated.resources.cd_back
-import kmpilot.feature.send.generated.resources.cd_error
 import kmpilot.feature.send.generated.resources.error_message
 import kmpilot.feature.send.generated.resources.error_title
-import kmpilot.feature.send.generated.resources.retry_label
 import kmpilot.feature.send.generated.resources.return_to_dashboard
 import kmpilot.feature.send.generated.resources.secured_by_vault
 import kmpilot.feature.send.generated.resources.send_bitcoin_button
@@ -57,11 +51,13 @@ import kmpilot.feature.send.generated.resources.send_title
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.UiState
 import thisissadeghi.designsystem.XButton
-import thisissadeghi.designsystem.XCircularProgressIndicator
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XIconButton
 import thisissadeghi.designsystem.XScreen
 import thisissadeghi.designsystem.XText
+import thisissadeghi.designsystem.XTextButton
+import thisissadeghi.designsystem.app.AppErrorState
+import thisissadeghi.designsystem.app.AppLoadingState
 import thisissadeghi.designsystem.toolbar.XTopAppBar
 import thisissadeghi.designsystem.toolbar.XTopAppBarAlignment
 import thisissadeghi.send.presentation.SendUiModel
@@ -148,7 +144,7 @@ fun SendScreenRoot(
         when (val state = uiState.state) {
             UiState.Uninitialized -> Box(modifier = Modifier.fillMaxSize())
 
-            UiState.Loading -> LoadingContent()
+            UiState.Loading -> AppLoadingState()
 
             is UiState.Success ->
                 SuccessContent(
@@ -162,24 +158,21 @@ fun SendScreenRoot(
                 )
 
             is UiState.Failed ->
-                FailedContent(
+                AppErrorState(
+                    title = stringResource(Res.string.error_title),
+                    message = stringResource(Res.string.error_message),
                     onRetry = onRetry,
-                    onReturnToDashboard = onBackClick,
+                    secondaryAction = {
+                        XTextButton(onClick = onBackClick) {
+                            XText(
+                                text = stringResource(Res.string.return_to_dashboard),
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                 )
         }
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        XCircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
-            color = MaterialTheme.colorScheme.primary,
-        )
     }
 }
 
@@ -255,91 +248,6 @@ private fun SuccessContent(
                     ),
             )
         }
-    }
-}
-
-@Composable
-private fun FailedContent(
-    onRetry: () -> Unit,
-    onReturnToDashboard: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        XIcon(
-            imageVector = Icons.Default.Warning,
-            contentDescription = stringResource(Res.string.cd_error),
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.error,
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        XText(
-            text = stringResource(Res.string.error_title),
-            style =
-                TextStyle(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = (-0.5).sp,
-                    lineHeight = 32.5.sp,
-                ),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        XText(
-            text = stringResource(Res.string.error_message),
-            style =
-                TextStyle(
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.outline,
-                ),
-            modifier = Modifier.widthIn(max = 240.dp),
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        XButton(
-            onClick = onRetry,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 200.dp)
-                    .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-        ) {
-            XText(
-                text = stringResource(Res.string.retry_label),
-                style =
-                    TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        XText(
-            text = stringResource(Res.string.return_to_dashboard),
-            style =
-                TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-            modifier =
-                Modifier
-                    .padding(vertical = 8.dp)
-                    .clickable(onClick = onReturnToDashboard),
-        )
     }
 }
 

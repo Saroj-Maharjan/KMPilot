@@ -4,10 +4,10 @@
 
 | Field | Value |
 |-------|-------|
-| Version | 1.2.1 |
+| Version | 1.2.2 |
 | Status | Active |
 | Created | 2026-05-03 |
-| Updated | 2026-06-02 |
+| Updated | 2026-06-03 |
 
 ---
 
@@ -55,6 +55,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 
 ## Last Updated
 
+- 2026-06-03 — Shared state UI: `Loading`/`Failed` now render `thisissadeghi.designsystem.app.AppLoadingState`/`AppErrorState` (design-system `app` tier). Removed the private `ReceiveLoadingContent`/`ReceiveFailedContent` and the duplicated `retry_label` (shared `AppErrorState` defaults `retryLabel` to `DesignSystemResources.string.retry_label`). `Failed` passes `error_title`/`error_message` (no secondary action). Internal refactor, no behavior change (v1.2.2)
 - 2026-06-02 — Rule 13 (single app-shell Scaffold) + IME-inset fix (v1.2.1): `ReceiveScreenRoot` migrated `XScaffold` → `XScreen` (sticky `ReceiveBottomBar` in `bottomBar` slot, Success-state only); removed `paddingValues` threading from `ReceiveLoadingContent`/`ReceiveSuccessContent`/`ReceiveFailedContent`. The app shell pads the NavHost top + horizontal + ime; `ReceiveBottomBar` owns its nav-bar inset, padding content with `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (`max(0, navBar − ime)`) so it clears the nav bar when the keyboard is closed and drops to 0 when the shell's `imePadding()` lifts the screen. Background still bleeds to the screen edge.
 - 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings (top bar, address label, network warning, bottom-bar actions, failed state) to `composeResources/values/strings.xml`, replaced with `stringResource`. Coin/network names left as data (VM-supplied). No behavior change.
 - 2026-05-17 — UI audit fixes: corrected failed-state typography (20sp/SemiBold/onSurfaceVariant title; 14sp/outline body), added Retry button to failed state, fixed loading spinner (64dp), fixed success content top padding (24dp), fixed bottom bar padding, fixed address label center alignment

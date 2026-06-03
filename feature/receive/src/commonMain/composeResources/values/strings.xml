@@ -18,5 +18,4 @@
     <!-- Failed state -->
     <string name="error_title">Failed to Load Address</string>
     <string name="error_message">Unable to retrieve your wallet address. Please try again.</string>
-    <string name="retry_label">Retry</string>
 </resources>

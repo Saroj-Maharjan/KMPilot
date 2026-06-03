@@ -32,10 +32,10 @@ class DashboardScreenTest {
                 }
             }
 
-            // LoadingContent shows XCircularProgressIndicator — no error text or dashboard content
+            // AppLoadingState shows XCircularProgressIndicator — no error text or dashboard content
             onNodeWithText("Something went wrong").assertDoesNotExist()
             onNodeWithText("Good morning,").assertDoesNotExist()
-            onNodeWithText("Retry").assertDoesNotExist()
+            onNodeWithText("Try again").assertDoesNotExist()
         }
 
     @Test
@@ -52,10 +52,10 @@ class DashboardScreenTest {
                 }
             }
 
-            // Uninitialized routes to LoadingContent — same as Loading
+            // Uninitialized routes to AppLoadingState — same as Loading
             onNodeWithText("Something went wrong").assertDoesNotExist()
             onNodeWithText("Good morning,").assertDoesNotExist()
-            onNodeWithText("Retry").assertDoesNotExist()
+            onNodeWithText("Try again").assertDoesNotExist()
         }
 
     // === SUCCESS STATE ===
@@ -198,7 +198,7 @@ class DashboardScreenTest {
             }
 
             onNodeWithText("Something went wrong").assertDoesNotExist()
-            onNodeWithText("Retry").assertDoesNotExist()
+            onNodeWithText("Try again").assertDoesNotExist()
         }
 
     // === ERROR STATE ===
@@ -254,7 +254,7 @@ class DashboardScreenTest {
                 }
             }
 
-            onNodeWithText("Retry").assertIsDisplayed()
+            onNodeWithText("Try again").assertIsDisplayed()
         }
 
     @Test
@@ -289,7 +289,7 @@ class DashboardScreenTest {
             }
 
             onNodeWithText("Something went wrong").assertIsDisplayed()
-            onNodeWithText("Retry").assertIsDisplayed()
+            onNodeWithText("Try again").assertIsDisplayed()
         }
 
     @Test
@@ -307,7 +307,7 @@ class DashboardScreenTest {
             }
 
             onNodeWithText("Something went wrong").assertIsDisplayed()
-            onNodeWithText("Retry").assertIsDisplayed()
+            onNodeWithText("Try again").assertIsDisplayed()
         }
 
     @Test
@@ -325,7 +325,7 @@ class DashboardScreenTest {
             }
 
             onNodeWithText("Something went wrong").assertIsDisplayed()
-            onNodeWithText("Retry").assertIsDisplayed()
+            onNodeWithText("Try again").assertIsDisplayed()
         }
 
     @Test
@@ -364,7 +364,7 @@ class DashboardScreenTest {
                 }
             }
 
-            onNodeWithText("Retry").performClick()
+            onNodeWithText("Try again").performClick()
             assertTrue(retryCalled)
         }
 

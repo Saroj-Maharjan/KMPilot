@@ -1,40 +1,16 @@
 package thisissadeghi.dashboard.presentation.ui
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kmpilot.feature.dashboard.generated.resources.Res
 import kmpilot.feature.dashboard.generated.resources.error_message
 import kmpilot.feature.dashboard.generated.resources.error_title
-import kmpilot.feature.dashboard.generated.resources.failed_background
-import kmpilot.feature.dashboard.generated.resources.retry_label
 import kmpilot.feature.dashboard.generated.resources.return_to_dashboard
-import kmpilot.feature.dashboard.generated.resources.warning
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.ErrorModel
 import thisissadeghi.common.UiState
@@ -51,13 +27,12 @@ import thisissadeghi.dashboard.data.model.UpcomingBill
 import thisissadeghi.dashboard.presentation.DashboardUiModel
 import thisissadeghi.dashboard.presentation.DashboardViewModel
 import thisissadeghi.dashboard.presentation.ui.components.DashboardContent
-import thisissadeghi.designsystem.XButton
-import thisissadeghi.designsystem.XCircularProgressIndicator
-import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XScreen
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTextButton
 import thisissadeghi.designsystem.XTheme
+import thisissadeghi.designsystem.app.AppErrorState
+import thisissadeghi.designsystem.app.AppLoadingState
 
 @Composable
 fun DashboardScreen(
@@ -90,13 +65,22 @@ fun DashboardScreenRoot(
     ) {
         when (val state = uiState.dashboardState) {
             UiState.Uninitialized, UiState.Loading ->
-                LoadingContent(modifier = Modifier.fillMaxSize())
+                AppLoadingState()
 
             is UiState.Failed ->
-                FailedContent(
+                AppErrorState(
+                    title = stringResource(Res.string.error_title),
+                    message = stringResource(Res.string.error_message),
                     onRetry = onRetry,
-                    onBackToDashboard = onBackToDashboard,
-                    modifier = Modifier.fillMaxSize(),
+                    secondaryAction = {
+                        XTextButton(onClick = onBackToDashboard) {
+                            XText(
+                                text = stringResource(Res.string.return_to_dashboard),
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                 )
 
             is UiState.Success ->
@@ -104,112 +88,6 @@ fun DashboardScreenRoot(
                     data = state.value,
                     onActionClick = onActionClick,
                 )
-        }
-    }
-}
-
-// ─── State Screens ────────────────────────────────────────────────────────────
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        XCircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun FailedContent(
-    onRetry: () -> Unit,
-    onBackToDashboard: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            painter = painterResource(Res.drawable.failed_background),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier =
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(265.dp)
-                    .alpha(0.2f),
-        )
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Column(
-                modifier = Modifier.padding(bottom = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier.padding(bottom = 24.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(120.dp)
-                                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), CircleShape),
-                    )
-                    XIcon(
-                        painter = painterResource(Res.drawable.warning),
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(80.dp),
-                    )
-                }
-            }
-            XText(
-                stringResource(Res.string.error_title),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = (-0.5).sp,
-                lineHeight = 32.5.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            XText(
-                stringResource(Res.string.error_message),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.outline,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).widthIn(max = 240.dp),
-            )
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                XButton(
-                    onClick = onRetry,
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 200.dp).height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                ) {
-                    XText(stringResource(Res.string.retry_label), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-                XTextButton(onClick = onBackToDashboard) {
-                    XText(
-                        stringResource(Res.string.return_to_dashboard),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
         }
     }
 }
