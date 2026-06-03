@@ -349,6 +349,43 @@ NAVHOST_EOF
     rm -f  CONTRIBUTING.md LICENSE
     rm -rf .github assets mock-api
     rm -f  iosApp/iosApp.xcodeproj/project.pbxproj.backup
+
+    # 9. Neutralize the design system's `app/` tier. `:core:designsystem` is split into
+    #    generic primitives (XButton, XText, Placeholder, AppLoadingState, AppErrorState, …)
+    #    that ship to every project, and a `designsystem.app` package + `app_strings.xml` +
+    #    brand drawables holding KMPilot's own example/domain content. Strip the latter.
+    #    AppLoadingState/AppErrorState are intentionally content-free (copy + navigation are
+    #    caller parameters), so they are KEPT as-is — downstream redesigns them via the
+    #    design pipeline. NOTE: if you promote any `app/` composite back to a generic
+    #    primitive, drop it from the 9a list below so install stops deleting it.
+    local ds="core/designsystem/src/commonMain"
+    local dsapp="$ds/kotlin/thisissadeghi/designsystem/app"
+    # 9a. Remove KMPilot example/domain composites (project content, not generic primitives).
+    rm -f "$dsapp/MoneyText.kt" \
+          "$dsapp/Country.kt" \
+          "$dsapp/ItemPickerModal.kt" \
+          "$dsapp/SearchField.kt"
+    # 9b. Remove KMPilot-specific strings (the `app` string tier) and unused brand drawables.
+    rm -f "$ds/composeResources/values/app_strings.xml"
+    rm -f "$ds/composeResources/drawable/level_bronze.png" \
+          "$ds/composeResources/drawable/level_silver.png" \
+          "$ds/composeResources/drawable/level_gold.png" \
+          "$ds/composeResources/drawable/level_diamond.png" \
+          "$ds/composeResources/drawable/logo_blue.png" \
+          "$ds/composeResources/drawable/placholder_cards.webp" \
+          "$ds/composeResources/drawable/no_avatar_placeholder.webp"
+    # 9c. Replace KMPilot's logotype (referenced by the generic XTopLogo) with a neutral mark.
+    cat > "$ds/composeResources/drawable/app_logo_type.xml" <<'LOGO_EOF'
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M12,2 A10,10 0 1 0 12,22 A10,10 0 1 0 12,2 Z" />
+</vector>
+LOGO_EOF
 }
 
 echo "→ Cloning KMPilot template (branch: $TEMPLATE_BRANCH) into $NAME/"
