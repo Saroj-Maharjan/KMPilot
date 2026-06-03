@@ -1,4 +1,4 @@
-package thisissadeghi.designsystem
+package thisissadeghi.designsystem.app
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kmpilot.core.designsystem.generated.resources.Res
 import kmpilot.core.designsystem.generated.resources.placeholder_background
+import thisissadeghi.designsystem.AsyncImage
 
 @Composable
 fun CountryRowItem(

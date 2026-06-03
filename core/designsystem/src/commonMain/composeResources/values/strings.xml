@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="discount_template">%s%% Discount</string>
-  <string name="cashback_template">%s%% Cash Back</string>
-  <string name="cashback_label">Cash Back</string>
-  <string name="discount_label">Discount</string>
-  <string name="cashback_is_label">Cash Back:</string>
-  <string name="discount_is_label">Discount:</string>
-  <string name="hicoin">HiCoin</string>
   <string name="phone_place_holder">e.g. +12223334444</string>
   <string name="mail_place_holder">e.g. example@email.com</string>
   <string name="retry_label">Try again</string>
@@ -15,12 +8,10 @@
   <string name="email">Email</string>
   <string name="phone">Phone</string>
   <string name="whatsapp">WhatsApp</string>
-  <string name="all_categories_item_label">All Categories</string>
   <string name="required_field_error_message">Fill required field!</string>
   <string name="confirmation_ok_label">Got It</string>
   <string name="confirmation_yes_label">Yes</string>
   <string name="confirmation_no_label">No</string>
   <string name="confirmation_cancel_label">No, Cancel</string>
-  <string name="balance_is">Balance</string>
   <string name="scan_barcode">Scan Barcode</string>
 </resources>

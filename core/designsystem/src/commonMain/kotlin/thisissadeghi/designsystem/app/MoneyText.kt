@@ -1,4 +1,4 @@
-package thisissadeghi.designsystem
+package thisissadeghi.designsystem.app
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text

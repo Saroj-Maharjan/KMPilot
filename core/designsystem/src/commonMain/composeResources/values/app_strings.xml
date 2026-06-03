@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Project-specific (KMPilot) strings — the `app` tier of the design system.
+  These are NOT generic design-system strings; they are example/domain content that
+  install.sh removes for downstream projects (see trim_template in install.sh).
+  Keep generic, reusable strings in strings.xml instead.
+-->
+<resources>
+  <string name="hicoin">HiCoin</string>
+  <string name="discount_template">%s%% Discount</string>
+  <string name="cashback_template">%s%% Cash Back</string>
+  <string name="cashback_label">Cash Back</string>
+  <string name="discount_label">Discount</string>
+  <string name="cashback_is_label">Cash Back:</string>
+  <string name="discount_is_label">Discount:</string>
+  <string name="all_categories_item_label">All Categories</string>
+  <string name="balance_is">Balance</string>
+</resources>
