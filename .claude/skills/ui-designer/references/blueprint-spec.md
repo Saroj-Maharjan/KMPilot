@@ -165,7 +165,7 @@ Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed he
 **Repeated patterns** (2+ occurrences with same structure) must be extracted as named components.
 
 **For decomposed blueprints**, annotate each named component with its target file based on this rule:
-- **`{Feature}Screen.kt`** — structural glue: state routing, top-level layout scaffold, state screens (Loading, Error)
+- **`{Feature}Screen.kt`** — structural glue: state routing + top-level layout scaffold. Loading/Failed route to the shared `{PKG_PREFIX}.designsystem.app.AppLoadingState`/`AppErrorState` (one per project, not per-feature); only an optional `EmptyContent` shell may live here, and only if the design needs a dedicated empty screen
 - **`components/{ComponentName}.kt`** — self-contained UI units: composables that have meaning independently of the screen, own their internal structure, or have private sub-composables/helper functions
 
 Example annotation in the blueprint component tree:

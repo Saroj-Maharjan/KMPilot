@@ -235,7 +235,7 @@ Emit blocks in the Step 5.2 format. Silence = OK.
 
 Run this subsection **only for non-success states present in the audit state list** (Step 2). Skipped states are omitted from the audit report entirely.
 
-These states are typically trivial (a spinner, an error illustration, or an empty-state placeholder). Inspect the inventory and code for each present state:
+These states are typically trivial (a spinner, an error illustration, or an empty-state placeholder). **Loading/Failed are rendered by the shared `{PKG_PREFIX}.designsystem.app.AppLoadingState`/`AppErrorState` (one per project, not per-feature)** — audit that shared component against the shared `_shared/designs/` inventory once; the feature only passes copy (`error_title`/`error_message`) + an optional secondary action. Empty is per-feature. Inspect the inventory and code for each present state:
 
 - If everything matches → write `### {State}: no mismatches.` and stop.
 - If there are mismatches → emit them as Step 5.2 blocks under a `### {State}` heading.

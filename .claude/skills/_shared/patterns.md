@@ -231,6 +231,17 @@ When a feature uses a **device capability** (GPS, camera, BLE, biometrics, senso
 
 **Features NEVER depend on other features.**
 
+### Design System Tiers (generic vs `app/`)
+
+`:core:designsystem` has two tiers in one module:
+
+- **Generic primitives** — `{PKG_PREFIX}.designsystem.*` (`XButton`, `XText`, `XScreen`, `Placeholder`, `XTheme`, …). Publish-clean; ship to every downstream project.
+- **Project `app` tier** — `{PKG_PREFIX}.designsystem.app`. The project's own composed UI: the shared **`AppLoadingState`/`AppErrorState`** state screens (content-free — copy + navigation are caller params) plus the project's example/domain composites, `composeResources/values/app_strings.xml`, and brand drawables. `install.sh` strips the example/domain content + brand strings/drawables for downstream but **keeps** the content-free `App*` state screens (each project redesigns them via the design pipeline).
+
+**Boundary rule:** dependencies flow **`app/` → generic only**. Generic (root) design-system code must **never** `import {PKG_PREFIX}.designsystem.app` — a generic file that imports the `app` tier breaks the build once that tier is stripped/neutralized. (Features may import the `app` tier — they depend on the whole module.) It's a package convention; enforce it with a boundary check (a grep for `{PKG_PREFIX}.designsystem.app` in generic files), a git hook, or your reviewer.
+
+**Shared state UI:** features render `UiState.Loading` → `AppLoadingState()` and `UiState.Failed` → `AppErrorState(title, message, onRetry, secondaryAction = …)` from `{PKG_PREFIX}.designsystem.app`. They do **not** define per-feature `LoadingContent`/`FailedContent`. Feature copy (`error_title`/`error_message`) is passed as params; the retry label defaults to `DesignSystemResources.string.retry_label`. **Empty/Uninitialized stays per-feature** (empty content varies screen to screen).
+
 ## Feature Module Structure
 
 ```
@@ -244,7 +255,7 @@ When a feature uses a **device capability** (GPS, camera, BLE, biometrics, senso
 │   ├── {Feature}ViewModel.kt
 │   ├── {Feature}UiModel.kt      # Single state container: plain fields + UiState<DTO> slots
 │   ├── ui/
-│   │   ├── {Feature}Screen.kt   # 5-slot allowlist only — see "UI File Organization"
+│   │   ├── {Feature}Screen.kt   # allowlist only — see "UI File Organization"
 │   │   ├── {Feature}Utils.kt    # Optional — formatters, validators (non-@Composable)
 │   │   └── components/          # One file per @Composable component (incl. {Feature}Content.kt)
 │   └── navigation/      # Routes + NavGraphBuilder
@@ -273,21 +284,21 @@ feature/{featurename}/src/commonMain/
 |---|------|------------|-----------|
 | 1 | `{Feature}Screen` | public | **Always** — ViewModel wrapper |
 | 2 | `{Feature}ScreenRoot` | public | **Always** — owns state routing; renders `XScreen(topBar = …, bottomBar = …)`, never a `Scaffold`/`XScaffold` (Rule 13) |
-| 3 | `LoadingContent` | private | **Optional** — only if the design specifies a dedicated loading screen |
-| 4 | `FailedContent` | private | **Optional** — only if the design specifies a dedicated failure screen |
-| 5 | `EmptyContent` | private | **Optional** — only if the design specifies a dedicated empty/uninitialized screen |
+| 3 | `EmptyContent` | private | **Optional** — only if the design specifies a dedicated empty/uninitialized screen |
 
-The three state-shell composables (3–5) are present only when the design calls for them. A screen that renders loading as a skeleton inside `{Feature}Content`, or shows errors inline, does not introduce these composables. Never add a state shell that the design does not require.
+**Loading and Failed are NOT per-feature shells.** `{Feature}ScreenRoot` routes `UiState.Loading` → `AppLoadingState()` and `UiState.Failed` → `AppErrorState(title, message, onRetry, secondaryAction = …)`, both from `{PKG_PREFIX}.designsystem.app` (the shared, one-per-project state UI — see "Design System Tiers"). Feature copy (`error_title`/`error_message`) is passed as params; the retry label defaults to `DesignSystemResources.string.retry_label`. Never define a private `LoadingContent`/`FailedContent`.
+
+The optional `EmptyContent` shell (3) is present only when the design calls for a dedicated empty/uninitialized screen — empty content is feature-specific, so it is **not** unified. A screen that renders empty inline inside `{Feature}Content` does not introduce it. Never add a state shell the design does not require.
 
 **Everything else lives under `presentation/ui/components/`, one file per component:**
 
 - `{Feature}Content.kt` — the success-state composable (Shape A) or the always-mounted form composable (Shape B). **Always its own file; never inlined into `Screen.kt`.**
 - One file per sub-component reachable from `{Feature}Content`, no matter how small.
-- One file per component reachable from `LoadingContent` / `FailedContent` / `EmptyContent` (rare — these usually contain only X-components).
+- One file per component reachable from `EmptyContent` (rare — it usually contains only X-components).
 - A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
 - **Native-view interop (Shape C, Rule 14)**: an `expect @Composable PlatformX` plus its `.android`/`.ios`/`.desktop` actuals each live one-concept-per-file under `components/` (in their respective source sets). They are exempt from the "commonMain only" reading of this rule — by design they have per-platform siblings. `{Feature}Content` calls `PlatformX()` and otherwise stays pure Compose. See [architecture/platform.md](../creating-kmp-feature/architecture/platform.md) → "Pattern C".
 
-**Enforcement**: any top-level `@Composable fun` defined in `{Feature}Screen.kt` outside the 5-name allowlist is a violation — **except** for `@Preview`-annotated composables (see "Previews" below). The reviewer / lint check is a simple grep for `@Composable fun` at file scope in `Screen.kt` against the allowlist; `@Preview`-annotated entries are exempt.
+**Enforcement**: any top-level `@Composable fun` defined in `{Feature}Screen.kt` outside the 3-name allowlist (`{Feature}Screen`, `{Feature}ScreenRoot`, optional `EmptyContent`) is a violation — **except** for `@Preview`-annotated composables (see "Previews" below). A private `LoadingContent`/`FailedContent` is itself a violation: route to the shared `AppLoadingState`/`AppErrorState` instead. The reviewer / lint check is a simple grep for `@Composable fun` at file scope in `Screen.kt` against the allowlist; `@Preview`-annotated entries are exempt.
 
 **Picking the screen shape**: see [architecture/ui.md → "Screen Shapes"](../creating-kmp-feature/architecture/ui.md) — Shape A (data-fetch), Shape B (form), Shape C (native-view host, Rule 14). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
 

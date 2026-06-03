@@ -44,8 +44,9 @@ fun FeatureScreen(viewModel: FeatureViewModel, onBackClick: () -> Unit) {
 @Composable
 fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry: () -> Unit) {
     // X-components only.
-    // Shape A: route on uiModel.{slot}State and call the optional state shells (Loading/Failed/Empty)
-    // + FeatureContent() from components/.
+    // Shape A: route on uiModel.{slot}State — Loading -> AppLoadingState(), Failed -> AppErrorState(...)
+    // (shared, from {PKG_PREFIX}.designsystem.app), Success -> FeatureContent() from components/,
+    // Uninitialized -> optional EmptyContent shell.
     // Shape B: derive isLoading/errorMessage from submitState; always call FeatureContent() from components/.
 }
 ```
@@ -58,9 +59,9 @@ The **only** top-level `@Composable fun` declarations allowed in `{Feature}Scree
 |---|------|------------|------|
 | 1 | `{Feature}Screen` | public | Always |
 | 2 | `{Feature}ScreenRoot` | public | Always |
-| 3 | `LoadingContent` | private | Only if design specifies a dedicated loading screen |
-| 4 | `FailedContent` | private | Only if design specifies a dedicated failure screen |
-| 5 | `EmptyContent` | private | Only if design specifies a dedicated empty/uninitialized screen |
+| 3 | `EmptyContent` | private | Only if design specifies a dedicated empty/uninitialized screen |
+
+**Loading/Failed are NOT shells** — route `UiState.Loading` → `AppLoadingState()` and `UiState.Failed` → `AppErrorState(title, message, onRetry, secondaryAction = …)`, imported from `{PKG_PREFIX}.designsystem.app` (shared, one per project). Pass the feature's `error_title`/`error_message`; the retry label defaults to `DesignSystemResources.string.retry_label`. Never write a private `LoadingContent`/`FailedContent`. (Empty content varies per screen, so `EmptyContent` stays per-feature.)
 
 Everything else — including `{Feature}Content` and **every** sub-component reachable from it — lives under `presentation/ui/components/`, one file per component. A component's private helpers stay in the same file as that component.
 
@@ -101,7 +102,7 @@ Generate a `@Preview` for every component you create under `components/`. Rules:
 - **Import**: `androidx.compose.ui.tooling.preview.Preview` (CMP 1.11.0+ — available from `commonMain`). Do **not** use the deprecated `org.jetbrains.compose.ui.tooling.preview.Preview`.
 - **Co-located**: each `@Preview` lives in the same file as the composable it previews, marked `private`. Naming: `{ComponentName}Preview` (or `{ComponentName}PreviewDark`, `…PreviewLoading`, etc. for variants).
 - **Wrap in `XTheme`**: previews don't inherit the app theme. Always: `XTheme { Component(...) }`.
-- **Exempt from allowlist**: `@Preview`-annotated composables are exempt from the `Screen.kt` 5-slot rule.
+- **Exempt from allowlist**: `@Preview`-annotated composables are exempt from the `Screen.kt` allowlist rule.
 
 Template:
 ```kotlin

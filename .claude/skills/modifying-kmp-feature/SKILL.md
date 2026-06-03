@@ -117,7 +117,7 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
 **Bottom-bar tab (optional)**: if the change is "add/remove bottom-bar tab", follow `@../creating-kmp-feature/architecture/integration.md` → "5. Bottom-Bar Tab (Optional)". This edits the **app module** (`App.kt`, `navigation/TopLevelDestination.kt`, app `strings.xml`) and `:core:designsystem` (chrome icon) — NOT the feature module itself; the feature stays independent. **Add**: append one `TopLevelDestination` enum entry (or scaffold the shell if this is the first tab); the tab label lives in the **app module** `composeResources/values/strings.xml` (key `tab_{featurename}`), the icon as a `:core:designsystem` chrome drawable. **Remove**: delete the enum entry (the route remains a valid pushed destination). No registry exists — orphaned entries/labels/icons must be removed by hand.
 
 **UI file layout (strict allowlist)**: when adding or moving composables, respect the rules in `@../_shared/patterns.md` ("UI File Organization"):
-- `{Feature}Screen.kt` accepts only the 5 allowlist names (`Screen`, `ScreenRoot`, and optionally `LoadingContent`/`FailedContent`/`EmptyContent`)
+- `{Feature}Screen.kt` accepts only the allowlist names (`Screen`, `ScreenRoot`, and optionally `EmptyContent`); Loading/Failed route to the shared `AppLoadingState`/`AppErrorState` (`{PKG_PREFIX}.designsystem.app`) — never private shells
 - Every other composable, including `{Feature}Content`, lives one-per-file under `presentation/ui/components/`
 - Non-composable helpers live in `presentation/ui/{Feature}Utils.kt`, never under `components/`
 

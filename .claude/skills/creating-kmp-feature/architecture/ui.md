@@ -118,9 +118,9 @@ data class FeatureUiModel(
 |---|------|------------|-----------|
 | 1 | `{Feature}Screen` | public | Always |
 | 2 | `{Feature}ScreenRoot` | public | Always |
-| 3 | `LoadingContent` | private | Optional — only if the design specifies a dedicated loading screen |
-| 4 | `FailedContent` | private | Optional — only if the design specifies a dedicated failure screen |
-| 5 | `EmptyContent` | private | Optional — only if the design specifies a dedicated empty/uninitialized screen |
+| 3 | `EmptyContent` | private | Optional — only if the design specifies a dedicated empty/uninitialized screen |
+
+**Loading and Failed are NOT per-feature shells** — `{Feature}ScreenRoot` routes `UiState.Loading` → `AppLoadingState()` and `UiState.Failed` → `AppErrorState(...)` from `{PKG_PREFIX}.designsystem.app` (shared, one per project). Never define a private `LoadingContent`/`FailedContent`. See `@../../_shared/patterns.md` → "Design System Tiers".
 
 Anything else — including `{Feature}Content` and every sub-component — lives under `presentation/ui/components/`, one file per component. See Section 5.
 
@@ -192,9 +192,13 @@ fun FeatureScreenRoot(
         // state.value is the DTO from data/model/ (Rule 11).
         when (val state = uiModel.dataState) {
             UiState.Uninitialized -> EmptyContent()                  // optional shell, design-driven
-            UiState.Loading      -> LoadingContent()                 // optional shell, design-driven
+            UiState.Loading      -> AppLoadingState()                // shared — {PKG_PREFIX}.designsystem.app
             is UiState.Success   -> FeatureContent(data = state.value) // always from components/
-            is UiState.Failed    -> FailedContent(state.error, onRetry) // optional shell, design-driven
+            is UiState.Failed    -> AppErrorState(                    // shared — {PKG_PREFIX}.designsystem.app
+                title = stringResource(Res.string.error_title),
+                message = stringResource(Res.string.error_message),
+                onRetry = onRetry,
+            )
         }
     }
 }
@@ -209,7 +213,7 @@ fun FeatureScreenRoot(
 - `{Feature}Content.kt` — the success-state composable (Shape A) or the always-mounted form composable (Shape B). It is **always** its own file.
 - Every sub-component reachable from `{Feature}Content` lives in its own file under `components/`, no matter how small.
 - A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
-- The only composables that may live in `{Feature}Screen.kt` are the 5 allowlist entries (see "Screen Composables" above): `{Feature}Screen`, `{Feature}ScreenRoot`, and the three optional state shells `LoadingContent` / `FailedContent` / `EmptyContent` (present only if the design requires them).
+- The only composables that may live in `{Feature}Screen.kt` are the allowlist entries (see "Screen Composables" above): `{Feature}Screen`, `{Feature}ScreenRoot`, and the optional `EmptyContent` shell. Loading/Failed route to the shared `AppLoadingState`/`AppErrorState` (`{PKG_PREFIX}.designsystem.app`) — never private shells.
 
 **Pattern**:
 - Simple composable functions
@@ -402,20 +406,23 @@ fun ProductDetailScreenRoot(
     XScreen(topBar = { /* XTopAppBar(...) */ }) {   // Rule 13 — XScreen, not XScaffold
         when (val state = uiModel.productState) {
             UiState.Uninitialized -> EmptyContent()                              // optional shell
-            UiState.Loading      -> LoadingContent()                             // optional shell
+            UiState.Loading      -> AppLoadingState()                            // shared — designsystem.app
             is UiState.Success   -> ProductDetailContent(product = state.value)  // from components/
-            is UiState.Failed    -> FailedContent(error = state.error, onRetry = onRetry) // optional shell
+            is UiState.Failed    -> AppErrorState(                               // shared — designsystem.app
+                title = stringResource(Res.string.error_title),
+                message = stringResource(Res.string.error_message),
+                onRetry = onRetry,
+            )
         }
     }
 }
 
-@Composable private fun LoadingContent() { /* XCircularProgressIndicator — only if design specifies a loading screen */ }
-@Composable private fun FailedContent(error: ErrorModel, onRetry: () -> Unit) { /* only if design specifies a failure screen */ }
 @Composable private fun EmptyContent() { /* only if design specifies an empty/uninitialized screen */ }
 // ProductDetailContent lives in components/ProductDetailContent.kt — always its own file.
+// Loading/Failed use the shared AppLoadingState/AppErrorState ({PKG_PREFIX}.designsystem.app) — no private shells.
 ```
 
-**State-shell composables (`LoadingContent`/`FailedContent`/`EmptyContent`) are optional** and present only when the design specifies a dedicated screen for that state. A screen that shows a skeleton inside the content composable, or that renders errors inline, does not introduce these shells.
+**Loading and Failed render the shared `AppLoadingState`/`AppErrorState`** from `{PKG_PREFIX}.designsystem.app` (copy passed as params; retry label defaults to `DesignSystemResources.string.retry_label`) — never a private shell. The only optional state-shell composable is **`EmptyContent`**, present only when the design specifies a dedicated empty/uninitialized screen (empty content is feature-specific, so it is not unified). A screen that renders empty inline inside the content composable does not introduce it.
 
 `{Feature}Content` **always** lives in `components/{Feature}Content.kt` — it is never inlined into `Screen.kt`. The same rule applies to every sub-component of `{Feature}Content`.
 
@@ -459,7 +466,7 @@ Under the file-organization rule, Shape B's `Screen.kt` contains **only** `Login
 
 ### Why form screens deviate
 
-Replacing the form with a `LoadingContent` on submit would:
+Replacing the form with a full-screen `AppLoadingState` on submit would:
 1. Tear `TextField` out of composition → lose user input across recompose
 2. Lose focus and IME state
 3. Hide the action the user just took
@@ -504,7 +511,7 @@ fun LocationPickerContent(center: LatLng, onPick: (LatLng) -> Unit) {
 - Loading/permission/error states still route through `UiState` slots on `*UiModel` exactly as Shape A. The native view replaces only the success-state *content*, not the state machine.
 - iOS `actual` needing Swift → stop and route to `/bridging-swift-kotlin` (platform.md → "iOS-Swift handoff").
 
-`Screen.kt` keeps the standard allowlist (`Screen` + `ScreenRoot` + optional state shells). The `expect/actual` composable lives in `components/`, never in `Screen.kt`.
+`Screen.kt` keeps the standard allowlist (`Screen` + `ScreenRoot` + optional `EmptyContent`; Loading/Failed via the shared `AppLoadingState`/`AppErrorState`). The `expect/actual` composable lives in `components/`, never in `Screen.kt`.
 
 ### Mixed screens
 
@@ -523,14 +530,14 @@ The reviewer uses the spec's Design Decisions to know which shape is expected. W
 
 ### Decision matrix
 
-`Screen.kt` allowlist is fixed: `Screen` + `ScreenRoot` always; `LoadingContent` / `FailedContent` / `EmptyContent` only when the **design** specifies a dedicated screen for that state. `{Feature}Content` and every other composable always live in `components/`.
+`Screen.kt` allowlist is fixed: `Screen` + `ScreenRoot` always; optional `EmptyContent` only when the **design** specifies a dedicated empty screen. Loading/Failed always route to the shared `AppLoadingState`/`AppErrorState` (`{PKG_PREFIX}.designsystem.app`) — never private shells. `{Feature}Content` and every other composable always live in `components/`.
 
 | Screen kind | Shape | Composables in `Screen.kt` | Where the content lives |
 |-------------|-------|----------------------------|--------------------------|
-| Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, and any of `LoadingContent`/`FailedContent`/`EmptyContent` that the design requires | `components/{Feature}Content.kt` |
+| Data-fetching (no persistent input) | A — separated | `Screen`, `ScreenRoot`, + optional `EmptyContent` (Loading/Failed → shared `App*`) | `components/{Feature}Content.kt` |
 | Form (persistent input) | B — single Content | `Screen`, `ScreenRoot` only (loading/error render inline inside `Content`) | `components/{Feature}Content.kt` |
-| Native-view host (Rule 14) | C — interop | `Screen`, `ScreenRoot` (+ optional state shells for permission/load) | `components/{Feature}Content.kt` + `components/PlatformX.kt` (`expect`) + `.android`/`.ios`/`.desktop` actuals |
-| Mixed | A + B (+ C) combined | `Screen`, `ScreenRoot`, plus the optional state shells that apply to the data section | `components/{Feature}Content.kt` (+ section components) |
+| Native-view host (Rule 14) | C — interop | `Screen`, `ScreenRoot` (+ optional `EmptyContent`; Loading/Failed → shared `App*`) | `components/{Feature}Content.kt` + `components/PlatformX.kt` (`expect`) + `.android`/`.ios`/`.desktop` actuals |
+| Mixed | A + B (+ C) combined | `Screen`, `ScreenRoot`, + optional `EmptyContent` for the data section | `components/{Feature}Content.kt` (+ section components) |
 
 ## X-Components (Design System)
 
