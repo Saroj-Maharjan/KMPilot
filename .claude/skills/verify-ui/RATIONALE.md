@@ -48,13 +48,17 @@ Reading the blueprint's **token data** a second time in verify-ui caused three p
 
 So the token-level audit is `HTML ↔ Code` with the catalog as a render-behaviour overlay. Any conflict between the design and the implementation is reduced to one verdict: the code disagrees with the HTML, fix the code.
 
-### The exception: Component Overrides (Step 5.4)
+### The exceptions: Component Overrides (5.4) + Typography Updates Required (5.4b)
 
-The blueprint's `Pre-Implementation Contract → Component Overrides` table is the **only** blueprint section verify-ui consults. It records concrete X-component override decisions that the blueprint generator made by reconciling the HTML inventory against `X_COMPONENTS_CATALOG.md` defaults — e.g. "this `XCard` needs `containerColor = surface` because the X default doesn't match the HTML hex."
+Two `Pre-Implementation Contract` tables are the **only** blueprint sections verify-ui consults — everything else is re-derived from the HTML.
+
+**Component Overrides (Step 5.4)** records concrete X-component override decisions the blueprint generator made by reconciling the HTML inventory against `X_COMPONENTS_CATALOG.md` defaults — e.g. "this `XCard` needs `containerColor = surface` because the X default doesn't match the HTML hex."
 
 This data is derivable in principle (HTML inventory + catalog), but the fixed 7-trap checklist in Step 5.3 deliberately does **not** walk every `X-component × every catalog property` combination — full sweeps were churn-y false-positive machines (see *Why Step 5.3 is a fixed Trap Checklist* below). The Component Overrides table is the catalog-style sweep, but pre-curated to the few rows that actually apply to **this** feature. Walking it costs ~N rows of work (typically 0–5) instead of the hundreds a full sweep generated.
 
-If the blueprint is missing or its Component Overrides table is empty, 5.4 silently skips. The token audit + 5.3 trap checklist still run as before.
+**Typography Updates Required (Step 5.4b)** records the app-global type deltas — the font swap and any per-node type-scale role override. Verify-ui consults it for the same reason: a logged `style = …copy(fontWeight = …)` override is an intentional divergence the auditor must reconcile rather than flag. The font-family check itself reads the HTML typeface vs `XFontFamily()` directly (no blueprint needed); only the override reconciliation uses the table.
+
+If the blueprint is missing or a table is empty, the corresponding step (5.4 / 5.4b) silently skips. The token audit + 5.3 trap checklist + the 5.4b font-family check still run as before.
 
 ---
 

@@ -22,10 +22,12 @@ Single markdown file at `.claude/docs/{featurename}/designs/{featurename}_bluepr
 
 ## Typography Scale
 
-| Usage | Size (sp) | Weight | Letter Spacing | Text Transform | Color Role |
-|-------|-----------|--------|----------------|----------------|------------|
-| Screen title | 24 | Bold (700) | 0 | none | onBackground |
-| Body text | 14 | Normal (400) | 0.25 | none | onSurfaceVariant |
+> Typography is app-global (see `_shared/patterns.md` → "Typography"). Each text node maps to an **M3 type-scale role** exactly as each fill maps to an M3 color role — implementation uses `style = MaterialTheme.typography.{role}`, not raw `fontSize`. The `Size`/`Weight`/`Letter Spacing` columns are the design's measured values from the token inventory; they exist to (a) pick the closest role and (b) flag a divergence that needs an override or a theme change (recorded under *Typography Updates Required*). The design typeface (e.g. `Manrope`) and how it compares to the theme's current font are captured in the contract, not here.
+
+| Usage | M3 Role | Size (sp) | Weight | Letter Spacing | Text Transform | Color Role |
+|-------|---------|-----------|--------|----------------|----------------|------------|
+| Screen title | titleLarge | 24 | Bold (700) | 0 | none | onBackground |
+| Body text | bodyMedium | 14 | Normal (400) | 0.25 | none | onSurfaceVariant |
 
 ## Spacing Grid
 
@@ -96,6 +98,24 @@ Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed he
 |------|-------------------|----------------------|-------|
 | {role} | {hex} | {hex} | {usage} |
 
+### Typography Updates Required
+
+> Captures the app-global typography deltas the implementer cannot derive elsewhere — parallel to *XTheme Updates Required* (colors). Empty when the design's typeface matches `XTypography`'s current font and every node sits on a stock M3 role. From the Step 1.16 Typography Audit.
+
+**Font swap** (emit only if the design typeface ≠ the theme's current `XFontFamily`):
+
+| Design Family | Current Theme Family | Source (css2 URL / Google Fonts family) | Weights |
+|---------------|----------------------|------------------------------------------|---------|
+| {e.g. Manrope} | {e.g. Outfit} | {css2 URL from the HTML, or family name} | {regular,medium,bold} |
+
+> Materialized by the implementation skill via `.claude/skills/_shared/download_font.py` → rewires `XFontFamily()` in `XTheme.kt`.
+
+**Type-scale role overrides** (emit a row only when a node's measured size/weight diverges from the chosen M3 role's stock value enough to need an explicit override — otherwise the stock role is used as-is):
+
+| Node | Chosen Role | Stock Role Value | Measured Value | Override |
+|------|-------------|------------------|----------------|----------|
+| {usage} | {role} | {e.g. 22sp/Normal} | {e.g. 24sp/Bold} | {e.g. `style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)`} |
+
 ### Color Audit
 
 #### Defined Roles
@@ -121,6 +141,8 @@ Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed he
 
 ## Post-Implementation Checklist
 
+- [ ] Font swap (if any) applied: `.ttf` downloaded to `core/designsystem/.../composeResources/font/` and `XFontFamily()` in `XTheme.kt` rewired; `:core:designsystem` builds
+- [ ] Every text node uses `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — no raw `fontSize`/`fontWeight` except the recorded *Type-scale role overrides*
 - [ ] All XTheme missing roles added to BOTH XLightColors and XDarkColors
 - [ ] Every component in blueprint Component Tree exists in implementation
 - [ ] Every Modifier in blueprint (border, shadow, alpha, padding, size) is present in code
@@ -175,6 +197,7 @@ Feed this prompt with:
 4. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
 5. Color Audit M3 role mappings (from Phase 1 Step 1.16)
 6. The `states` map (`{ loading, failed, empty }`) from `stitch-project.json.features[featurename]` — used to decide which state sections the blueprint emits (see rule 22 below)
+7. Typography Audit (from Phase 1 Step 1.16) + `fonts.json` (from Phase 1 Step 1.15 sub-step 6b) — the design typeface, its comparison to the theme's current font (match vs swap), and the per-node M3 type-scale role mapping. `fonts.json` records the font source (css2 URL / family) for the swap.
 
 ```
 You are a design-to-code translator. Convert this Stitch HTML export into a Compose Implementation Blueprint.
@@ -222,6 +245,7 @@ RULES:
    them into a single PaddingValues(...) call.
 3. Map HTML elements to X-components using the provided mapping table.
 4. Map all colors to M3 roles using the Color Audit. Use MaterialTheme.colorScheme.{role}, never hex.
+4b. Map all typography to M3 type-scale roles using the Typography Audit. Every text node → `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset), never raw `fontSize`. Fill the `## Typography Scale` table's `M3 Role` column for each node. Only emit a raw `fontSize`/`fontWeight` (as a `.copy(...)` override) when a node's measured size/weight diverges enough from the chosen role's stock value — and record that override in the contract's *Type-scale role overrides* table. Do not invent per-feature font families: the typeface is app-global.
 4b. **Component visual fidelity verification (MANDATORY for every component)**:
     For every component in the blueprint, verify two things — never assume X-component defaults match:
     (a) **Colors**: Use the inventory's resolved color value for every visual state of every component (bg-*, text-*, border-*, etc.). Look up the M3 role via the Color Audit, then verify that role's hex in `XTheme.kt` equals the inventory hex. If it matches → use `MaterialTheme.colorScheme.{role}`. If it diverges → write an explicit color override using the inventory's hex, annotated with the mismatch reason.
@@ -303,6 +327,10 @@ RULES:
     feature-specific tables:
     - **XTheme Updates Required**: Every M3 role from the Color Audit that is missing from XTheme.kt,
       with hex values for both active and counterpart schemes.
+    - **Typography Updates Required**: From the Typography Audit — a *Font swap* row only if the design
+      typeface differs from the theme's current `XFontFamily` (family + source + weights), and a
+      *Type-scale role overrides* table for any node whose measured size/weight diverges from its M3 role.
+      Omit a sub-table when empty.
     - **Color Audit**: Full color audit tables (Defined, Missing, Custom).
     - **Component Overrides**: One row per concrete divergence between the HTML inventory and the
       X-component default in `X_COMPONENTS_CATALOG.md`. `/verify-ui` reads this table directly and

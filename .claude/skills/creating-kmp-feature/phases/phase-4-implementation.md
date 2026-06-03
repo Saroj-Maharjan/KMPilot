@@ -68,9 +68,10 @@ Ask user for preference:
 
 If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
 
-1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles. Also read the manifests at:
+1. **Before UI agent**: Read the blueprint's **Pre-Implementation Contract** → extract XTheme missing roles **and the Typography Updates Required** (font swap + type-scale role overrides). Also read the manifests at:
    - `.claude/docs/{featurename}/designs/extracted/icons.json` (Material Symbols, from `/ui-designer` sub-step 5)
    - `.claude/docs/{featurename}/designs/extracted/images.json` (`<img>` assets, from `/ui-designer` sub-step 6)
+   - `.claude/docs/{featurename}/designs/extracted/fonts.json` (design typeface, from `/ui-designer` sub-step 6b)
 
    Every entry in both manifests has `download_status: "pending"`.
 2. **Materialize Material Symbols XML drawables** by running the shared downloader **without** `--manifest-only` so it actually downloads, applies the JetBrains-required KMP cleanup pass, extends `DesignSystemResources.kt` for any chrome additions, and inline-migrates any stale `feature/X/drawable/{ident}.xml` plus their Kotlin imports for icons that just promoted from domain to chrome:
@@ -111,6 +112,18 @@ If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
    - Idempotent: existing files are skipped via `skip-exists`.
    - The blueprint references images by `res_reference` (e.g. `Res.drawable.failed_background`); the UI agent emits `Image(painter = painterResource(...))` exactly as declared. **Do NOT emit `AsyncImage` for these — that composable is reserved for runtime data, not bundled design assets.**
 4. **XTheme update**: Add all missing M3 roles from the contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
+4b. **Typography update**: Read the blueprint's **Typography Updates Required** (and `fonts.json`). Typography is app-global — these edits land in `:core:designsystem`, like the XTheme color step.
+   - **Font swap** (only if the contract has a *Font swap* row): materialize the typeface and rewire the theme:
+     ```bash
+     python3 .claude/skills/_shared/download_font.py \
+       --project-root {repo_root} \
+       --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+       --manifest .claude/docs/{featurename}/designs/extracted/fonts.json
+     ```
+     This downloads the `.ttf` set into `core/designsystem/.../composeResources/font/` and prints the exact `Font(Res.font.*)` lines + any required imports. Replace `XFontFamily()`'s body in `XTheme.kt` with the printed `FontFamily(...)` (add `import androidx.compose.ui.text.font.FontVariation` when the route is variable). On a download failure the script prints a manual fallback — follow it. Re-run is idempotent (existing `.ttf` skipped).
+   - **Type-scale role overrides** (only if the contract lists any): these are applied per-node in the **feature** by the UI agent as `style = MaterialTheme.typography.{role}.copy(...)` — pass the override table to the UI agent in step 6. No theme edit.
+   - When neither sub-table is present, the design font matches the theme and all nodes use stock roles → **skip 4b entirely**.
+   - Verify build after a font swap: `./gradlew :core:designsystem:assembleAndroidMain`
 5. **X-Component Constraint Check**: Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
    - `defaultMinSize` constraints (e.g. `XButton` enforces `minWidth=100.dp, minHeight=44.dp`)
    - Default parameter values that differ from the blueprint's intent (e.g. `XIconButton` defaults to a visible `surface` background)
@@ -125,7 +138,7 @@ If in **design-aware mode** (Phase 1 detected an unconsumed blueprint):
    - Accept as architectural limitation: note it in the agent prompt
 
    **Pass the conflict list to the UI agent** as additional context alongside the blueprint.
-6. **Pass blueprint to UI agent**: Include the blueprint path, design screenshots, constraint conflict list, **and the now-materialized icons and images manifests** as context. The blueprint's Component Tree references icons and images by `res_reference` (e.g. `Res.drawable.qr_code_scanner`, `DesignSystemResources.drawable.arrow_back` for icons; `Res.drawable.failed_background` for images); the UI agent emits `XIcon(painter = painterResource({res_reference}))` for icons and `Image(painter = painterResource({res_reference}))` for images exactly as declared. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
+6. **Pass blueprint to UI agent**: Include the blueprint path, design screenshots, constraint conflict list, **the now-materialized icons and images manifests, and the Typography Scale `M3 Role` mapping + any *Type-scale role overrides*** as context. The UI agent emits every text node as `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — never raw `fontSize`/`fontWeight` except where an override row applies (then `…typography.{role}.copy(...)`). The font itself is already wired globally in step 4b — the agent never sets `fontFamily`. The blueprint's Component Tree references icons and images by `res_reference` (e.g. `Res.drawable.qr_code_scanner`, `DesignSystemResources.drawable.arrow_back` for icons; `Res.drawable.failed_background` for images); the UI agent emits `XIcon(painter = painterResource({res_reference}))` for icons and `Image(painter = painterResource({res_reference}))` for images exactly as declared. The blueprint's Component Tree is the primary source for UI implementation; design screenshots are visual cross-reference only.
 
 ### Option A: Sequential Execution
 

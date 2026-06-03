@@ -24,8 +24,8 @@ Design Progress:
 - [ ] Step 1.12: Iterate on feedback (if needed)
 - [ ] Step 1.13: Finalize approved success design
 - [ ] Step 1.14: Generate state designs for selected optional states only
-- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY) — includes Material Symbols icons manifest (sub-step 5) and `<img>` assets manifest (sub-step 6); both manifest-only — no XML/image downloads here
-- [ ] Step 1.16: Color Audit — reconciled against HTML inventories (MANDATORY)
+- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY) — includes Material Symbols icons manifest (sub-step 5), `<img>` assets manifest (sub-step 6), and font manifest (sub-step 6b); all manifest-only — no XML/image/font downloads here
+- [ ] Step 1.16: Color & Typography Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.17: Generate Implementation Blueprint
 - [ ] Step 1.18: Update stitch-project.json
 - [ ] Step 1.19: User final approval
@@ -765,11 +765,28 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
    - **Extension** is left as `unknown` in manifest-only mode; full-mode downloads set it from the response's `Content-Type` header (PNG / JPEG / WebP).
    - **The blueprint emits `Image(painter = painterResource({res_reference}))`**, NOT `AsyncImage`. `AsyncImage` is reserved for runtime data the implementer wires up post-hoc (user avatars, product photos, anything sourced from the API at runtime).
 
-7. **Do not delete.** The HTML, token inventories, `icons.json`, and `images.json` manifests live in `extracted/` from now on. The downloaded XMLs and image assets live under `composeResources/drawable/` in the appropriate module **after the implementation skill materializes them**. `/verify-ui` will detect and reuse all of these — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
+6b. **Generate the font manifest** for the design typeface. Stitch embeds the text font as a Google Fonts `<link href="https://fonts.googleapis.com/css2?family=…">` plus `font-family: '…'` and a tailwind `fontFamily` config — all present in the success-state HTML. `/ui-designer` is design-only: it writes only the declarative `fonts.json` manifest; the actual `.ttf` download + `XTheme.kt` rewire happen later in the implementation skill.
+
+   ```bash
+   python3 .claude/skills/_shared/download_font.py \
+     --project-root {repo_root} \
+     --html .claude/docs/{featurename}/designs/extracted/stitch_success.html \
+     --manifest .claude/docs/{featurename}/designs/extracted/fonts.json \
+     --manifest-only
+   ```
+
+   - `--manifest-only` is **mandatory** in `/ui-designer` — no source mutation, no `.ttf` download. (Unlike icons/images, it does make one **read-only** lookup to the font source — the github contents API / css2 CSS — to classify the route and predict filenames; it never writes a font file or touches source.)
+   - The script parses the css2 `<link>` out of the HTML (ignoring the `Material+Symbols` link), derives the family + weights, resolves the bundle-ready source (full variable `.ttf` from `github.com/google/fonts`, else the css2 TrueType subsets), and records `family`, `slug`, `route`, `weights`, `css_url`, predicted `files`, `res_accessors`, and the exact `font_family_lines` to wire into `XTypography`.
+   - If the design has no css2 text-font link (rare), pass `--font "{FamilyName}"` instead, reading the family from the `font-family`/tailwind `fontFamily` config.
+   - This manifest feeds the Step 1.16 Typography Audit (match vs swap) and the Step 1.17 blueprint generator.
+
+7. **Do not delete.** The HTML, token inventories, `icons.json`, `images.json`, and `fonts.json` manifests live in `extracted/` from now on. The downloaded XMLs and image assets live under `composeResources/drawable/` in the appropriate module **after the implementation skill materializes them**. `/verify-ui` will detect and reuse all of these — see [verify-ui Step 2](../../verify-ui/SKILL.md) for the reuse contract.
 
 ---
 
-## Step 1.16: Color Audit (MANDATORY)
+## Step 1.16: Color & Typography Audit (MANDATORY)
+
+This step runs two audits that map design tokens to app-global theme constructs: the **Color Audit** (colors → M3 color roles) below, then the **Typography Audit** (type → M3 type-scale roles + the font family) at the end.
 
 Audit every color used across the **selected** approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.15**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
 
@@ -830,6 +847,41 @@ Default theme for design: {light|dark}
 
 This audit is the input for Phase 2, where missing roles are added to **both** `XLightColors` and `XDarkColors` in `XTheme.kt` before any feature code is written.
 
+### Typography Audit (MANDATORY)
+
+Typography is app-global, exactly like color roles (see `_shared/patterns.md` → "Typography"). This audit does for type what the Color Audit does for fills: map every text node to an **M3 type-scale role**, and decide whether the design's typeface requires a one-time global **font swap**.
+
+#### Procedure
+
+1. **Read the design typeface** from `fonts.json` (Step 1.15 sub-step 6b) — `family`, `weights`, `route`, `font_family_lines`.
+2. **Read the theme's current font**: open `XTheme.kt`, find `XFontFamily()`, note the family the `Font(Res.font.*)` resources belong to (e.g. `outfit_*` → Outfit).
+3. **Map each text node to an M3 role**: from the token inventories' `font-size`/weight per node, pick the closest M3 type-scale role (`displayLarge`…`labelSmall`). Record size/weight divergences that would need an explicit `.copy(...)` override.
+4. **Classify the font**: `matches current` (design family == theme family) → no swap; `swap required` (differs, e.g. design=Manrope vs theme=Outfit) → record the swap with the source from `fonts.json`.
+
+#### Typography Audit Output
+
+Write into the design description file (`.claude/docs/{featurename}/designs/{featurename}.md`), delimited so re-runs replace rather than stack:
+
+```markdown
+<!-- TYPOGRAPHY_AUDIT:BEGIN -->
+## Typography Audit
+
+**Design typeface**: {family} ({route}; weights {weights})
+**Theme font**: {current family from XFontFamily} — **{matches current | swap required}**
+
+> **Font swap**: design uses {family}, theme ships {current}. Source: {css_url or family}. (Omit this line when matches.)
+
+### Text node → M3 role
+| Node (usage) | M3 Role | Measured (size/weight) | Override needed? |
+|--------------|---------|------------------------|------------------|
+| {usage} | {role} | {e.g. 24sp / 700} | {no | yes — `.copy(fontWeight = Bold)`} |
+<!-- TYPOGRAPHY_AUDIT:END -->
+```
+
+**Write procedure**: same marker-replace rule as the Color Audit — replace any existing `TYPOGRAPHY_AUDIT` block, never stack two.
+
+This audit feeds the blueprint's **Typography Updates Required** (font swap + role overrides) in Step 1.17, and is materialized by the implementation skill (`download_font.py` + `XTypography` rewire) before any feature code is written.
+
 ---
 
 ## Step 1.17: Generate Implementation Blueprint
@@ -853,6 +905,7 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - The images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Step 1.15 sub-step 6) — authoritative for every `<img>` tag in the design, resolving each to its drawable name and Compose `res_reference`. The blueprint must emit `Image(painter = painterResource({res_reference}))` using the manifest's exact `res_reference` (never `AsyncImage` for Stitch CDN URLs).
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
    - The Color Audit M3 role mappings (from Step 1.16 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
+   - The Typography Audit (from Step 1.16) + the font manifest at `.claude/docs/{featurename}/designs/extracted/fonts.json` (from Step 1.15 sub-step 6b) — authoritative for the per-node M3 type-scale role mapping and the font swap (family + source). The blueprint fills the Typography Scale `M3 Role` column and the contract's *Typography Updates Required* from these.
    - The `needsLoading`, `needsFailed`, `needsEmpty` flags so the prompt knows which sections to emit
 
 3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. The blueprint covers **only selected states**; shared scaffold is described once. Use the canonical Component-Tree entries from [blueprint-spec.md → Component Tree](../references/blueprint-spec.md#component-tree):
@@ -860,7 +913,7 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - `states.failed` true → shared-screen entry; false → "Skipped" marker.
    - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
 
-4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), Pre-Implementation Contract with Component Overrides table, Post-Implementation Checklist).
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist).
 
 ---
 

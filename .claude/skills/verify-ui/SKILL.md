@@ -139,8 +139,9 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
 - **X-components catalog**: from Step 4.1.
 - **Icons manifest**: `.claude/docs/{featurename}/designs/extracted/icons.json` — drives Step 5.7. Skipped when absent.
 - **Images manifest**: `.claude/docs/{featurename}/designs/extracted/images.json` — drives Step 5.8. Skipped when absent.
+- **Font manifest / HTML font**: `.claude/docs/{featurename}/designs/extracted/fonts.json` (or the css2 `<link>` / `font-family` in the success HTML) + `XFontFamily()` in `XTheme.kt` — drives Step 5.4b. Skipped when the design uses the system font.
 
-> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The **only** blueprint section verify-ui consults is the `Component Overrides` table inside `Pre-Implementation Contract` — that table records concrete X-component override decisions that have no other source. See Step 5.4.
+> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The blueprint sections verify-ui consults are the `Component Overrides` table (Step 5.4) and the `Typography Updates Required` table (Step 5.4b) inside `Pre-Implementation Contract` — both record concrete override decisions that have no other source.
 
 ### 5.2 Convert and compare — Success state
 
@@ -190,9 +191,9 @@ Skip a row entirely when the X-component isn't used in the feature. Do **not** w
 
 ### 5.4 Component Overrides Check — feature-specific traps from the blueprint
 
-The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.16 in the blueprint's **Component Overrides** table — that table is the only blueprint section verify-ui consults.
+The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.16 in the blueprint's **Component Overrides** table. Together with the **Typography Updates Required** table (Step 5.4b), these are the only blueprint sections verify-ui consults.
 
-1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. Do not read any other blueprint section. If the blueprint is missing, skip 5.4 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
+1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (Step 5.4b separately reads `### Typography Updates Required`). Do not read any other blueprint section. If the blueprint is missing, skip 5.4 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
 2. For each row (`Component | Property | HTML Value | X-component Default | Override Required`):
    - Locate every instance of that `Component` in the feature's `presentation/ui/` (use the instance map from Step 4.2).
    - Check the parameter named in `Property` against `Override Required`.
@@ -210,6 +211,26 @@ The fixed checklist in 5.3 catches the seven traps that have caused real bugs ac
 
 This step is **additive** to 5.3, not a replacement. The seven generic traps still run.
 
+### 5.4b Typography Audit — font family + type-scale roles
+
+Typography is app-global (see `_shared/patterns.md` → "Typography"). Two checks:
+
+1. **Font family (one-time, global).** Parse the design typeface from the success-state HTML — the `font-family: '…'` declaration / tailwind `fontFamily` config / `fonts.googleapis.com/css2?family=…` link (or read `family` from `.claude/docs/{featurename}/designs/extracted/fonts.json` if present). Read `XFontFamily()` in `XTheme.kt` and resolve the family its `Font(Res.font.*)` resources belong to. If they differ → **CRITICAL**:
+   ```markdown
+   ### CRITICAL — Theme font does not match design typeface
+   - **Where:** `core/designsystem/.../XTheme.kt` (XFontFamily)
+   - **HTML:** {design family, e.g. Manrope}
+   - **Code:** {theme family, e.g. Outfit}
+   - **Fix:** run `download_font.py` for {family} and rewire `XFontFamily()` (the design-aware font swap was skipped)
+   ```
+   Skip this check if the HTML declares no custom font (system default).
+
+2. **Type-scale role per text node.** For each text node, the code should set `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset). Resolve that role's effective `fontSize`/`fontWeight` from the M3 type scale and compare to the node's inventory `font-size`/weight:
+   - A raw `fontSize`/`fontWeight` on `XText` with **no** matching override row in the blueprint's *Typography Updates Required* → **MINOR** (typography should flow through a role), unless the value is also wrong vs the inventory → then **CRITICAL** per the size/weight rule in 5.6.
+   - The role's stock size/weight diverges from the inventory by a noticeable step (e.g. inventory 24sp/Bold but `bodyMedium` = 14sp/Normal with no override) → **CRITICAL — wrong type-scale role** (fix: pick the closer role or add the recorded `.copy(...)`).
+
+Emit blocks in the Step 5.2 format. Silence = OK.
+
 ### 5.5 Loading, Failed, and Empty states — brief checklist
 
 Run this subsection **only for non-success states present in the audit state list** (Step 2). Skipped states are omitted from the audit report entirely.
@@ -225,8 +246,8 @@ No "OK" bullets — silence means OK.
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
-| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4**, **any manifest-audit CRITICAL from 5.7 or 5.8** | Must fix |
-| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8** | Report; fix if requested |
+| **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, **wrong type-scale role or theme font ≠ design typeface (5.4b)**, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4**, **any manifest-audit CRITICAL from 5.7 or 5.8** | Must fix |
+| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, **raw `fontSize`/`fontWeight` instead of a type-scale role when the value is otherwise correct (5.4b)**, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8** | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
 This is a **reference table only**. Apply these labels inline as you produce mismatch blocks in 5.2–5.5 and 5.7–5.8. The actual save happens in 5.9 (after all audit sub-sections complete).

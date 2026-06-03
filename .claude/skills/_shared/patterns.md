@@ -194,6 +194,14 @@ XIcon(contentDescription = stringResource(Res.string.cd_back))                //
 
 **Gradle**: feature modules already depend on `libs.compose.components.resources` and have a `composeResources/` dir — no extra config. The generated `Res` is `internal` per module (default); keep it.
 
+### Typography (app-global type scale)
+
+Typography is **app-global, exactly like color roles** — never per-feature. One `FontFamily` + one M3 `Typography` (all 15 roles) live in `XTheme.kt` (`:core:designsystem`), built the canonical CMP way: a `@Composable` `FontFamily(Font(Res.font.x, FontWeight.Y), …)` from the design system's `composeResources/font/`, applied per-role via `MaterialTheme.typography.copy(role = role.copy(fontFamily = …))` and passed to `MaterialTheme(typography = XTypography())`. M3 has **no** `defaultFontFamily` — the family must be set per role.
+
+- **In features, text picks a type-scale role, not a raw size.** Use `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — e.g. `XText(text = …, style = MaterialTheme.typography.titleLarge)`. Do **not** pass raw `fontSize`/`fontWeight`/`fontFamily` on `XText` unless a design divergence is recorded as an override (mirrors the color-override rule). This is how each Stitch text node maps to an M3 role just as each fill maps to an M3 color role.
+- **The font family is one project-global value.** When a Stitch design uses a different typeface than the theme currently ships, that triggers a **one-time global font swap** (download the new `.ttf` set into the design system's `composeResources/font/`, rewire `XFontFamily()` in `XTheme.kt`) — never a per-feature font. The swap is driven by the design pipeline: `/ui-designer` detects+records the typeface (`fonts.json` + the blueprint's *Typography Updates Required*), and `/creating-kmp-feature` / `/modifying-kmp-feature` materialize it via `.claude/skills/_shared/download_font.py`. Static per-weight `.ttf` → `Font(Res.font.x, FontWeight.Y)`; a variable `[wght].ttf` → `Font(Res.font.x, FontWeight.Y, variationSettings = FontVariation.Settings(FontVariation.weight(n)))`. `/verify-ui` audits both the theme font family and each node's type-scale role.
+- **No web target** → no `preloadFont`/`ExperimentalResourceApi`. `Font(Res.font.x)` works as-is on android/ios/desktop.
+
 ### Platform Capabilities & Native Views (Rule 14)
 
 When a feature uses a **device capability** (GPS, camera, BLE, biometrics, sensors) or embeds a **native view** (map, camera preview, WebView), the data still flows through Clean Architecture — the capability is just a DataSource, and the native view is an `expect/actual` composable. Full patterns, the decision tree, Gradle deltas, and the iOS-Swift handoff: [creating-kmp-feature/architecture/platform.md](../creating-kmp-feature/architecture/platform.md).

@@ -40,6 +40,7 @@ Usage examples: @references/usage-examples.md
 4. **Navigation**: Use `XNavHost` (pre-configured animations)
 5. **ScreenRoot Pattern**: `{Feature}Screen` + `{Feature}ScreenRoot` pair required
 6. **Strings (Rule 12)**: `XText`/`XIcon` text args take `stringResource(Res.string.*)`, never literals. Shared strings via `DesignSystemResources`; ViewModel-origin via `UiText`. See `@../_shared/patterns.md` → "Strings & Localization (Rule 12)".
+7. **Typography (app-global type scale)**: text picks an M3 type-scale role — `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — never raw `fontSize`/`fontWeight`/`fontFamily`, except a blueprint-recorded override (`…typography.{role}.copy(...)`). The font family is global (wired in `XTheme.kt`), never set per-screen. See `@../_shared/patterns.md` → "Typography".
 
 ## Allowed Exceptions
 
@@ -53,6 +54,7 @@ Material3 allowed only in:
 - [ ] No Material3 component imports in feature files
 - [ ] All buttons use XButton variants
 - [ ] All text uses XText
+- [ ] Text uses `MaterialTheme.typography.{role}` / `XTextDefaults` — no raw `fontSize`/`fontWeight`/`fontFamily` except recorded overrides
 - [ ] No hardcoded display strings — `stringResource`/`UiText` only (Rule 12)
 - [ ] Screen uses `XScreen` (NOT `XScaffold`/`Scaffold`, NOT `XTheme`) — Rule 13
 - [ ] XTopAppBar from `{CORE_DESIGNSYSTEM_PKG}.toolbar`

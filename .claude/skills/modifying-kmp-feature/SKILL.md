@@ -74,7 +74,7 @@ Determine affected layers and load architecture as needed:
 - Integration changes: @../creating-kmp-feature/architecture/integration.md
 - Bottom-bar tab changes ("add/remove bottom-bar tab", "make this a tab", "show in bottom nav"): @../creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"
 
-**Design-aware branch**: If in design-aware mode, read the blueprint's **Pre-Implementation Contract** section. Plan XTheme updates first (missing M3 roles from the contract's Color Audit). Include blueprint component tree in the UI plan.
+**Design-aware branch**: If in design-aware mode, read the blueprint's **Pre-Implementation Contract** section. Plan XTheme color updates (missing M3 roles) **and Typography Updates Required** (font swap + type-scale role overrides) first — both are app-global `:core:designsystem` edits. Include the blueprint component tree + the Typography Scale `M3 Role` mapping in the UI plan.
 
 ### Step 6: Draft Spec Changes
 Propose updates using diff format:
@@ -136,6 +136,7 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
 
 **Design-aware branch**: If in design-aware mode, implement in this order:
 1. **XTheme update** — Add all missing M3 roles from the blueprint's Pre-Implementation Contract to **both** `XLightColors` and `XDarkColors` in `XTheme.kt`. Verify build: `./gradlew :core:designsystem:assembleAndroidMain`
+1b. **Typography update** — Read the blueprint's **Typography Updates Required** + `fonts.json`. Typography is app-global (lands in `:core:designsystem`). **Font swap** (only if a *Font swap* row exists): run `python3 .claude/skills/_shared/download_font.py --project-root {repo_root} --html .claude/docs/{featurename}/designs/extracted/stitch_success.html --manifest .claude/docs/{featurename}/designs/extracted/fonts.json` → downloads the `.ttf` set and prints the `Font(Res.font.*)` lines; replace `XFontFamily()`'s body in `XTheme.kt` with them (add `import androidx.compose.ui.text.font.FontVariation` for a variable route; follow the printed manual fallback on download failure). Verify build: `./gradlew :core:designsystem:assembleAndroidMain`. **Type-scale role overrides** are applied per-node in the feature (sub-step 3), not the theme. Skip 1b entirely when neither sub-table is present.
 2. **X-Component Constraint Check** — Collect the unique set of design system source files needed by the blueprint's Component Tree (one file may define many composables — e.g. `XButton.kt` defines `XButton`, `XOutlinedButton`, `XIconButton`, `XTextIconButton`, `XOutlinedIconButton`). Read each file in full and catalog **every composable defined in it**, not just the one the blueprint named. For each composable, extract:
    - `defaultMinSize` constraints (e.g. `XButton` enforces `minWidth=100.dp, minHeight=44.dp`)
    - Default parameter values that differ from what the blueprint intends (e.g. `XIconButton` defaults to a visible `surface` background)
@@ -149,9 +150,11 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
    - Override via parameter: pass explicit `colors`, `shape`, or `contentPadding` to win over the default
    - Accept as architectural limitation: note it — do not fight it with hacks
 
-3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from sub-step 2.
+3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from sub-step 2. Every text node uses `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — never raw `fontSize`/`fontWeight`, except a *Type-scale role override* row (`…typography.{role}.copy(...)`). Never set `fontFamily` (global, wired in 1b).
 4. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
    - All XTheme missing roles added to BOTH schemes
+   - Font swap (if any) applied: `XFontFamily()` rewired, `:core:designsystem` builds
+   - Every text node uses a `MaterialTheme.typography.{role}` — no raw `fontSize`/`fontWeight` except recorded overrides
    - Every component in blueprint exists in implementation
    - Every Modifier in blueprint is present in code
    - All colors use `MaterialTheme.colorScheme.{role}` — no raw `Color()` hex
