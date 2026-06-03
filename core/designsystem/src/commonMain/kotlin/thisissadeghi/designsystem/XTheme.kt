@@ -3,11 +3,19 @@ package thisissadeghi.designsystem
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kmpilot.core.designsystem.generated.resources.Res
+import kmpilot.core.designsystem.generated.resources.outfit_bold
+import kmpilot.core.designsystem.generated.resources.outfit_medium
+import kmpilot.core.designsystem.generated.resources.outfit_regular
+import org.jetbrains.compose.resources.Font
 
 object XTheme {
     object Icons
@@ -26,7 +34,7 @@ fun XTheme(content: @Composable () -> Unit) {
         content = content,
         colorScheme = XDarkColors,
         shapes = Shapes,
-        typography = MaterialTheme.typography,
+        typography = XTypography(),
     )
 }
 
@@ -77,14 +85,44 @@ internal val XDarkColors =
         onErrorContainer = Color(0xFFFFDAD6),
     )
 
-/*
+/**
+ * App-global type scale: the Material 3 [Typography] with every role re-pointed at
+ * the project [FontFamily] (Outfit). M3 has no `defaultFontFamily`, so the family is
+ * applied per-role via `.copy(fontFamily = …)`; each role keeps its M3 default
+ * size/weight/line-height and the family resolves the matching weight file.
+ *
+ * Design-driven font swap: when a Stitch design uses a different typeface, the
+ * implementation skills (`/creating-kmp-feature` / `/modifying-kmp-feature`) download
+ * the new `.ttf` set into `composeResources/font/` and rewire [XFontFamily] below.
+ */
 @Composable
-private fun XTypography() =
-    Typography(
-        defaultFontFamily =
-            FontFamily(
-                Font(Res.font.outfit_medium, FontWeight.Medium),
-                Font(Res.font.outfit_regular, FontWeight.Normal),
-                Font(Res.font.outfit_bold, FontWeight.Bold),
-            ),
-    )*/
+private fun XFontFamily(): FontFamily =
+    FontFamily(
+        Font(Res.font.outfit_regular, FontWeight.Normal),
+        Font(Res.font.outfit_medium, FontWeight.Medium),
+        Font(Res.font.outfit_bold, FontWeight.Bold),
+    )
+
+@Composable
+private fun XTypography(): Typography {
+    val fontFamily = XFontFamily()
+    return with(MaterialTheme.typography) {
+        copy(
+            displayLarge = displayLarge.copy(fontFamily = fontFamily),
+            displayMedium = displayMedium.copy(fontFamily = fontFamily),
+            displaySmall = displaySmall.copy(fontFamily = fontFamily),
+            headlineLarge = headlineLarge.copy(fontFamily = fontFamily),
+            headlineMedium = headlineMedium.copy(fontFamily = fontFamily),
+            headlineSmall = headlineSmall.copy(fontFamily = fontFamily),
+            titleLarge = titleLarge.copy(fontFamily = fontFamily),
+            titleMedium = titleMedium.copy(fontFamily = fontFamily),
+            titleSmall = titleSmall.copy(fontFamily = fontFamily),
+            bodyLarge = bodyLarge.copy(fontFamily = fontFamily),
+            bodyMedium = bodyMedium.copy(fontFamily = fontFamily),
+            bodySmall = bodySmall.copy(fontFamily = fontFamily),
+            labelLarge = labelLarge.copy(fontFamily = fontFamily),
+            labelMedium = labelMedium.copy(fontFamily = fontFamily),
+            labelSmall = labelSmall.copy(fontFamily = fontFamily),
+        )
+    }
+}
