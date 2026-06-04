@@ -488,6 +488,244 @@ def convert_class(cls, tw_config):
     return None
 
 
+# ---------------------------------------------------------------------------
+# Motion (animation) capture — see .claude/skills/_shared/motion.md
+# ---------------------------------------------------------------------------
+
+# Family of a named animation / animate-{util} utility. Drives the blueprint's
+# ## Motion table (which Compose primitive each token maps to).
+ANIMATE_FAMILY = {
+    "ping": "Attention loop",
+    "pulse": "Loading/Attention loop",
+    "spin": "Loading loop",
+    "bounce": "Attention loop",
+    "shimmer": "Loading loop",
+    "pulse-gold": "Attention loop",
+    "high-pulse": "Attention loop",
+    "pulse-dot": "Attention loop",
+    "bounce-custom": "Attention loop",
+    "bounce-slow": "Attention loop",
+    "float": "Attention loop",
+    "slide-up": "Entrance",
+    "slide-in": "Entrance",
+    "fade-in": "Entrance",
+    "bg-gradient": "Ambient bg",
+}
+
+# Family of a recognised <style>/JS animation class.
+STYLE_CLASS_FAMILY = {
+    "bg-mesh": "Ambient bg",
+    "bokeh": "Ambient bg",
+    "bokeh-canvas": "Ambient bg",
+    "shimmer-box": "Loading loop",
+    "progress-ring-circle": "Value-driven",
+    "reveal-on-scroll": "Entrance",
+    "range-track --value": "Value-driven",
+    "ripple": "interaction — DROP",
+    "interactive-card": "interaction/hover — DROP",
+    "pulse": "Attention loop",
+}
+
+
+def _animate_family(util):
+    return ANIMATE_FAMILY.get(util, "looping (family: infer from keyframes)")
+
+
+def _style_class_family(cls):
+    return STYLE_CLASS_FAMILY.get(cls, "family: infer")
+
+
+def _find_tailwind_config_text(html_content):
+    """Return the raw JS body of the tailwind.config script, or None."""
+    patterns = [
+        r'<script[^>]*id=["\']tailwind-config["\'][^>]*>(.*?)</script>',
+        r'tailwind\.config\s*=\s*(\{.*?\})\s*;?\s*</script>',
+        r'<script[^>]*>\s*tailwind\.config\s*=\s*(\{.*?\})\s*;?\s*</script>',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, html_content, re.DOTALL)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _extract_brace_block(text, key):
+    """Return the balanced-brace body following `key: {` in text, or None.
+
+    Handles nesting (animation/keyframes blocks contain nested objects).
+    """
+    m = re.search(rf"\b{re.escape(key)}\s*:\s*\{{", text)
+    if not m:
+        return None
+    start = m.end() - 1  # index of the opening '{'
+    depth = 0
+    for i in range(start, len(text)):
+        c = text[i]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start + 1:i]
+    return None
+
+
+def _iter_named_blocks(text):
+    """Yield (name, body) for each top-level `name: { ... }` in text (brace-matched).
+
+    Used to walk a tailwind `keyframes: {}` block into per-animation bodies (each
+    body holds the `0%/100%` stops). Nested stop-blocks are skipped because the
+    outer body is captured whole via brace matching.
+    """
+    pattern = re.compile(r"""['"]?([\w-]+)['"]?\s*:\s*\{""")
+    i, n = 0, len(text)
+    while i < n:
+        m = pattern.search(text, i)
+        if not m:
+            break
+        name = m.group(1)
+        start = m.end() - 1  # opening '{'
+        depth, j = 0, start
+        while j < n:
+            c = text[j]
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        yield name, text[start + 1:j]
+        i = j + 1
+
+
+def _keyframe_magnitude(body):
+    """Summarize the animated value ranges in a keyframe body into a short string.
+
+    Handles both tailwind JS keyframes (camelCase keys, e.g. `backgroundPosition`)
+    and CSS `<style>` keyframes (kebab keys, e.g. `background-position`). Returns
+    'infer' when nothing recognisable is found.
+    """
+    parts = []
+
+    def collect_seq(label, pattern, suffix=""):
+        vals = []
+        for m in re.finditer(pattern, body):
+            v = m.group(1).strip()
+            if v and v not in vals:
+                vals.append(v)
+        if vals:
+            parts.append(f"{label} {'→'.join(vals)}{suffix}")
+
+    # CSS transforms (same syntax in both flavours)
+    collect_seq("scale", r"scale\(\s*([\d.]+)")
+    collect_seq("translateY", r"translateY\(\s*(-?[\d.]+[a-z%]*)")
+    collect_seq("translateX", r"translateX\(\s*(-?[\d.]+[a-z%]*)")
+    collect_seq("rotate", r"rotate\(\s*(-?[\d.]+[a-z]*)")
+    # opacity
+    collect_seq("opacity", r"opacity\s*:\s*['\"]?([\d.]+)")
+    # background-position / backgroundPosition
+    collect_seq("bg-position", r"background-?[Pp]osition\s*:\s*['\"]?([^'\";}]+?)['\"]?\s*[;}]")
+    # stroke-dashoffset / strokeDashoffset
+    collect_seq("stroke-dashoffset", r"stroke-?[Dd]ashoffset\s*:\s*['\"]?(-?[\d.]+)")
+    # box-shadow / boxShadow — presence only (glow pulse)
+    if re.search(r"box-?[Ss]hadow", body):
+        parts.append("box-shadow pulse")
+
+    return "; ".join(parts) if parts else "infer"
+
+
+def extract_motion(html_content, style_blocks):
+    """Capture the design's animation vocabulary, bucketed by the Web-Motion
+    Policy in motion.md. Returns a dict consumed by the ## Motion Inventory
+    output section. Per-element animate-*/transition-*/active:/hover: tags are
+    emitted inline by annotate_special_class — this captures the config-level
+    sources the element walk can't see (tailwind animation config, <style>
+    @keyframes/classes, JS drivers).
+    """
+    motion = {
+        "config_animations": {},   # name -> shorthand value
+        "config_keyframes": [],    # keyframe names from tailwind config
+        "style_keyframes": [],     # @keyframes names from <style> blocks
+        "style_classes": [],       # recognised animation <style> classes
+        "js_hints": [],            # JS animation-driver hints
+        "keyframe_magnitudes": {}, # name -> animated value-range summary
+    }
+
+    # --- tailwind config: theme.extend.animation + keyframes ---
+    cfg = _find_tailwind_config_text(html_content)
+    if cfg:
+        anim_block = _extract_brace_block(cfg, "animation")
+        if anim_block:
+            for m in re.finditer(
+                r"""['"]?([\w-]+)['"]?\s*:\s*['"]([^'"]+)['"]""", anim_block
+            ):
+                motion["config_animations"][m.group(1)] = m.group(2)
+        kf_block = _extract_brace_block(cfg, "keyframes")
+        if kf_block:
+            for name, body in _iter_named_blocks(kf_block):
+                if name[0].isdigit() or "%" in name or name in ("from", "to"):
+                    continue  # a keyframe stop, not an animation name
+                if name not in motion["config_keyframes"]:
+                    motion["config_keyframes"].append(name)
+                mag = _keyframe_magnitude(body)
+                if mag != "infer":
+                    motion["keyframe_magnitudes"][name] = mag
+
+    # --- <style> blocks: @keyframes + recognised animation classes ---
+    known_classes = [
+        "bg-mesh", "shimmer-box", "progress-ring-circle", "reveal-on-scroll",
+        "ripple", "interactive-card", "bokeh-canvas",
+    ]
+    for block in style_blocks:
+        for m in re.finditer(r"@keyframes\s+([\w-]+)\s*\{", block):
+            name = m.group(1)
+            if name not in motion["style_keyframes"]:
+                motion["style_keyframes"].append(name)
+            start = m.end() - 1  # opening '{'
+            depth, j = 0, start
+            while j < len(block):
+                c = block[j]
+                if c == "{":
+                    depth += 1
+                elif c == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            mag = _keyframe_magnitude(block[start + 1:j])
+            if mag != "infer" and name not in motion["keyframe_magnitudes"]:
+                motion["keyframe_magnitudes"][name] = mag
+        for cls in known_classes:
+            if re.search(r"[.#]%s\b" % re.escape(cls), block):
+                if cls not in motion["style_classes"]:
+                    motion["style_classes"].append(cls)
+        if "--value" in block and "range-track --value" not in motion["style_classes"]:
+            motion["style_classes"].append("range-track --value")
+
+    # --- non-tailwind <script>: JS animation drivers ---
+    scripts = re.findall(r"<script[^>]*>(.*?)</script>", html_content, re.DOTALL)
+    js = "\n".join(s for s in scripts if "tailwind.config" not in s)
+    js_signs = [
+        ("IntersectionObserver", "scroll-reveal (Entrance)"),
+        ("requestAnimationFrame", "rAF loop / count-up (Value/Ambient)"),
+        ("strokeDashoffset", "progress-fill (Value-driven)"),
+        ("stroke-dashoffset", "progress-fill (Value-driven)"),
+        ("getContext('2d')", "bokeh-canvas (Ambient bg)"),
+        ('getContext("2d")', "bokeh-canvas (Ambient bg)"),
+        ("setInterval", "timed loop (Value/Ambient)"),
+        ("setTimeout", "timed step (Value/Entrance)"),
+        ("classList.toggle", "toggle/accordion/segment/tab (Value-driven)"),
+        ("style.setProperty", "slider/value fill (Value-driven)"),
+        ("innerText", "count-up number (Value-driven)"),
+    ]
+    for sign, hint in js_signs:
+        if sign in js and hint not in motion["js_hints"]:
+            motion["js_hints"].append(hint)
+
+    return motion
+
+
 def annotate_special_class(cls):
     """Some classes have non-obvious semantics worth flagging even when we
     don't convert them. Returns a hint string or None.
@@ -500,11 +738,24 @@ def annotate_special_class(cls):
         return "(50% Y translate — typically for vertical centering)"
     if cls.startswith("z-"):
         return "(z-index — Compose has no z-index; layering is order-based)"
-    if cls.startswith("transition-") or cls == "transition":
-        return "(CSS transition — no Compose equivalent at token level)"
-    if cls.startswith("hover:") or cls.startswith("focus:") or \
-       cls.startswith("active:") or cls.startswith("group-hover:"):
-        return "(state variant — handled by Compose interaction states)"
+    # --- Motion: interaction & hover (DROP — see _shared/motion.md Web-Motion Policy)
+    if cls.startswith("active:") or cls.startswith("group-active:") or \
+       cls == "ripple" or cls.startswith("ripple"):
+        return "(motion: interaction — DROP — touch press feedback)"
+    if cls.startswith("hover:") or cls.startswith("group-hover:") or \
+       cls.startswith("focus:") or cls.startswith("focus-visible:") or \
+       cls.startswith("focus-within:") or cls.startswith("cursor-"):
+        return "(motion: web-only — DROP — pointer/hover)"
+    # --- Motion: looping animate-{util} (KEEP — tagged with family)
+    m = re.match(r"^animate-(.+)$", cls)
+    if m:
+        util = m.group(1)
+        return f"(motion: looping '{util}' — {_animate_family(util)})"
+    # --- Motion: transition props (KEEP — Entrance/Value family, tag for blueprint)
+    if cls == "transition" or cls.startswith("transition-") or \
+       cls.startswith("duration-") or cls.startswith("ease-") or \
+       cls.startswith("delay-"):
+        return "(motion: transition hint — Entrance/Value family)"
     return None
 
 
@@ -611,7 +862,83 @@ class StitchHTMLParser(HTMLParser):
 # Output
 # ---------------------------------------------------------------------------
 
-def format_output(elements, tw_config, style_blocks, filename):
+def _motion_section(motion):
+    """Render the ## Motion Inventory block. Always emitted (static designs get
+    an explicit '(none)' so downstream knows motion was checked, not skipped).
+    """
+    out = []
+    has_any = (
+        motion["config_animations"] or motion["config_keyframes"]
+        or motion["style_keyframes"] or motion["style_classes"]
+        or motion["js_hints"]
+    )
+    out.append("## Motion Inventory")
+    out.append("")
+    if not has_any:
+        out.append("_(no motion detected — static design)_")
+        out.append("")
+        return out
+
+    out.append("Captured animation vocabulary. Bucket each token via the "
+               "Web-Motion Policy in `.claude/skills/_shared/motion.md`: **KEEP** "
+               "the 4 non-interaction families (Ambient bg, Loading/Attention "
+               "loop, Entrance, Value-driven) + honor reduced-motion; **DROP** all "
+               "touch press (`active:*`, ripple) and pointer/hover (`hover:*`, "
+               "`group-hover:*`) feedback. Per-element `animate-*` / `transition-*` "
+               "/ `active:` / `hover:` tags are annotated inline in the Elements "
+               "section below.")
+    out.append("")
+
+    if motion["config_animations"]:
+        out.append("### Motion Config (tailwind theme.extend.animation)")
+        out.append("")
+        for name, val in motion["config_animations"].items():
+            out.append(f"- **{name}**: `{val}` → {_animate_family(name)}")
+        out.append("")
+
+    if motion["config_keyframes"]:
+        out.append("### @keyframes (tailwind config)")
+        out.append("")
+        out.append("- " + ", ".join(motion["config_keyframes"]))
+        out.append("")
+
+    if motion["style_keyframes"]:
+        out.append("### @keyframes (<style> blocks)")
+        out.append("")
+        out.append("- " + ", ".join(motion["style_keyframes"]))
+        out.append("")
+
+    if motion["keyframe_magnitudes"]:
+        out.append("### Keyframe magnitudes")
+        out.append("")
+        out.append("Animated value ranges (the delta each animation moves through). "
+                   "Pin these in the blueprint's `## Motion` **Magnitude** column — "
+                   "they are the only source for scale/translate/opacity/offset "
+                   "amounts (duration/easing come from the shorthand above; the "
+                   "implementer must not invent magnitudes).")
+        out.append("")
+        for name, mag in motion["keyframe_magnitudes"].items():
+            out.append(f"- **{name}**: {mag}")
+        out.append("")
+
+    if motion["style_classes"]:
+        out.append("### Animation <style> classes")
+        out.append("")
+        for cls in motion["style_classes"]:
+            out.append(f"- `{cls}` → {_style_class_family(cls)}")
+        out.append("")
+
+    if motion["js_hints"]:
+        out.append("### JS animation drivers")
+        out.append("")
+        for hint in motion["js_hints"]:
+            out.append(f"- {hint}")
+        out.append("")
+
+    return out
+
+
+def format_output(elements, tw_config, style_blocks, motion, filename):
     out = []
     out.append(f"# Token Inventory: {filename}")
     out.append("")
@@ -644,6 +971,9 @@ def format_output(elements, tw_config, style_blocks, filename):
                 out.append(stripped)
         out.append("```")
         out.append("")
+
+    # --- Motion inventory ---
+    out.extend(_motion_section(motion))
 
     # --- Elements ---
     out.append("## Elements")
@@ -693,7 +1023,13 @@ def format_output(elements, tw_config, style_blocks, filename):
             (cls, convert_class(cls, tw_config), annotate_special_class(cls))
             for cls in class_list
         ]
-        has_visual = any(conv for _, conv, _ in conversions) or bool(inline)
+        # Promote to a full block when any class converts, has inline style, or
+        # carries a KEEP looping-animation hint (so its motion family renders
+        # inline even on an otherwise layout-only element).
+        has_motion = any(
+            h and h.startswith("(motion: looping") for _, _, h in conversions
+        )
+        has_visual = any(conv for _, conv, _ in conversions) or bool(inline) or has_motion
 
         text_preview = text[:60]
         if len(text) > 60:
@@ -767,8 +1103,12 @@ def main():
     parser = StitchHTMLParser()
     parser.feed(html)
 
+    motion = extract_motion(html, parser.style_blocks)
+
     filename = sys.argv[1].rsplit("/", 1)[-1] if "/" in sys.argv[1] else sys.argv[1]
-    print(format_output(parser.elements, tw_config, parser.style_blocks, filename))
+    print(format_output(
+        parser.elements, tw_config, parser.style_blocks, motion, filename
+    ))
 
 
 if __name__ == "__main__":
