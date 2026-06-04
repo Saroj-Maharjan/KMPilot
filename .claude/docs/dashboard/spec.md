@@ -149,7 +149,7 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 | RecentTransactions | Section wrapper for transaction items |
 | TransactionItem | Each transaction its OWN card (no dividers); CircleShape icon circles |
 | DashboardRoute | Navigation route (@Serializable data object) |
-| DashboardModules | DI configuration (BaseFeature object) |
+| dashboardModule | DI configuration (top-level Koin `val`) |
 
 ### 4.3 Data Models
 
@@ -235,7 +235,7 @@ feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/
 │   └── navigation/
 │       └── DashboardNavigation.kt      # @Serializable route + extension
 └── di/
-    └── DashboardModules.kt             # BaseFeature object with Koin modules
+    └── DashboardModules.kt             # top-level val dashboardModule (Koin module)
 ```
 
 ### 4.5 UI Design

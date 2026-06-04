@@ -50,7 +50,7 @@ The send flow is a core action in the crypto wallet app. This first iteration sh
 | Repository | `SendRepository` interface + `SendRepositoryImpl` wraps the data source. Returns `Either<SendData>`. |
 | Presentation | `SendViewModel` calls repository directly (no UseCases). Drives `SendUiState` through `Uninitialized → Loading → Success/Failed`. |
 | UI | `SendScreen` (ViewModel wrapper) + `SendScreenRoot` (testable composable). State-routed via `when(uiState.state)`. |
-| DI | `SendModules` object extends `BaseFeature`. Registered via `FeatureRegistry`. |
+| DI | `val sendModule` (top-level Koin module). Listed in `initKoin`'s `modules(...)`. |
 | Navigation | `SendRoute` (`@Serializable object`). `NavGraphBuilder.send(onBackClick)` extension function. |
 
 ### Data Model
@@ -115,7 +115,7 @@ data class NetworkInfo(val name: String, val description: String)
 ### DI
 | File | Description |
 |------|-------------|
-| `di/SendModules.kt` | `object SendModules : BaseFeature(...)` — registers DataSource, Repository, ViewModel |
+| `di/SendModules.kt` | `val sendModule = module { … }` — registers DataSource, Repository, ViewModel |
 
 ### Design System Extension
 | File | Change |
@@ -201,7 +201,7 @@ All from Stitch design (KMPilot Gold theme) — approved 2026-05-11.
 |---|-------|------|------------|
 | 1 | Gradle Include | `/Users/ali/KMPProjects/KMPilot/settings.gradle.kts` | `include(":feature:send")` |
 | 2 | Gradle Dependency | `/Users/ali/KMPProjects/KMPilot/composeApp/build.gradle.kts` | `implementation(project(":feature:send"))` |
-| 3 | DI Initialization | `/Users/ali/KMPProjects/KMPilot/composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/initKoin.kt` | `SendModules.initialize()` |
+| 3 | DI Initialization | `/Users/ali/KMPProjects/KMPilot/composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/initKoin.kt` | `sendModule` added to `modules(...)` |
 | 4 | Navigation Wiring | `/Users/ali/KMPProjects/KMPilot/composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/BaseAppNavHost.kt` | `send(onBackClick = { navController.popBackStack() })` |
 
 ---
@@ -268,7 +268,7 @@ navController.navigate(SendRoute)
 
 | Module | When |
 |--------|------|
-| `:core:common` | Always (Either, UiState, setState, ErrorModel, BaseFeature) |
+| `:core:common` | Always (Either, UiState, setState, ErrorModel) |
 | `:core:designsystem` | Always (X-components, XTheme) |
 
 ---

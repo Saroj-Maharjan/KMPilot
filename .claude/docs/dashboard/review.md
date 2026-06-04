@@ -68,8 +68,8 @@ This section specifically addresses the Compose Multiplatform preview additions.
 **Findings**: All packages follow `thisissadeghi.dashboard.*` lowercase pattern. No violations.
 
 ### PASS  Rule 8: DI Binding
-**Files**: `di/DashboardModules.kt:24-25`
-**Findings**: `singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()` and `singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()` present. `DashboardModules` extends `BaseFeature`. `viewModelOf(::DashboardViewModel)` registered.
+**Files**: `di/DashboardModules.kt`
+**Findings**: `singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()` and `singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()` present in top-level `val dashboardModule`. `viewModelOf(::DashboardViewModel)` registered.
 
 ### PASS  Rule 9: No UseCases
 **Files**: All files scanned
@@ -108,7 +108,7 @@ This section specifically addresses the Compose Multiplatform preview additions.
 **Found**: YES — `composeApp/build.gradle.kts:48`
 
 ### PASS  Point 3: DI Init
-**Found**: YES — `initKoin.kt:27` — `DashboardModules.initialize()`
+**Found**: YES — `initKoin.kt` — `dashboardModule` listed in `modules(...)`
 
 ### PASS  Point 4: Navigation
 **Found**: YES — `BaseAppNavHost.kt:26` — `dashboard(...)` extension
