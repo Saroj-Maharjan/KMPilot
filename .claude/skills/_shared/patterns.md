@@ -11,7 +11,7 @@ All skills and agents import this file. Do not duplicate these rules elsewhere.
 5. **X-components** - Use `:core:designsystem` components, NO Material3
 6. **ImmutableList** - Use `.toImmutableList()` for state collections
 7. **Lowercase packages** - `{PKG_PREFIX}.featurename` (no hyphens/camelCase/underscores)
-8. **DI Pattern** - `singleOf(::Impl).bind<Interface>()` + extend `BaseFeature`
+8. **DI Pattern** - feature exposes a top-level `val {featurename}Module = module { singleOf(::Impl).bind<Interface>() … }`; list it in `initKoin`'s `modules(...)`. No base class, no registry, no `initialize()`.
 9. **No UseCases** - ViewModels invoke repositories directly
 10. **Callback params** - Screens take callbacks (`onBackClick`), not `navController`
 11. **Single UiModel + DTO-wrapped UiState** - `*UiModel` is the only presentation state container (no `*UiState.kt`). It holds plain UI fields + one `UiState<DTO>` slot per async operation, where DTO is the data-layer model (use `UiState<Unit>` for void ops). Repository returns `Either<DTO>`; data layer never imports from `presentation`. UI-derived display values live as sibling fields on `*UiModel`, never as mirror DTO types.
@@ -38,7 +38,7 @@ Every feature requires exactly these 4 integrations:
 |---|-------|------|---------|
 | 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
 | 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
-| 3 | DI Init | `{INIT_KOIN_PATH}` | `{Feature}Modules.initialize()` |
+| 3 | DI Init | `{INIT_KOIN_PATH}` | add `{featurename}Module` to `startKoin { modules(...) }` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 
 **Optional 5th point — Bottom-Bar Tab**: only for features that are top-level (bottom-bar) destinations, not pushed screens. It registers the feature as a tab via a `TopLevelDestination` enum entry in the app module + an `XNavigationBar` in `App.kt`. This is **not** a rule and not required — most features skip it. Full playbook + canonical code: [creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"](../creating-kmp-feature/architecture/integration.md).
@@ -54,7 +54,7 @@ Every feature requires exactly these 4 integrations:
 | Screen | `{Feature}Screen` + `{Feature}ScreenRoot` | `ProductDetailScreen` |
 | Route | `{Feature}Route` | `ProductDetailRoute` |
 | Nav Extension | `{featurename}` (lowercase) | `fun NavGraphBuilder.productdetail()` |
-| DI Module | `{Feature}Modules` | `ProductDetailModules` |
+| DI Module val | `{featurename}Module` | `productdetailModule` |
 
 ## Key Patterns
 
@@ -137,18 +137,43 @@ Scaffold(
 - `XScaffold` still exists but is **app-shell only**; feature screens never call it.
 
 ### DI Module (Rule 8)
+
+A feature exposes one top-level `val {featurename}Module: Module` (idiomatic Koin — no base class, no registry, no `initialize()`). `initKoin` lists it in `modules(...)`.
+
 ```kotlin
-object FeatureModules : BaseFeature(FeatureModules::class.simpleName.toString()) {
-    override fun getKoinModules(): List<Module> = listOf(
-        module {
-            singleOf(::RemoteDataSourceImpl).bind<RemoteDataSource>()
-            singleOf(::RepositoryImpl).bind<Repository>()
-            viewModelOf(::FeatureViewModel)
-        }
+// feature/{featurename}/di/{Feature}Modules.kt
+val featureModule: Module =
+    module {
+        singleOf(::RemoteDataSourceImpl).bind<RemoteDataSource>()
+        singleOf(::RepositoryImpl).bind<Repository>()
+        viewModelOf(::FeatureViewModel)
+    }
+```
+
+```kotlin
+// composeApp initKoin.kt — single integration point
+startKoin {
+    appDeclaration()
+    modules(
+        appModule,
+        commonModule,
+        dataModule,
+        featureModule,   // ← add the new feature module here
     )
-    override fun initialize() { FeatureModules }
 }
 ```
+
+A module that aggregates several sub-modules (or a `platformModule`, Rule 14) composes them with Koin's `includes()`:
+
+```kotlin
+val featureModule = module {
+    includes(platformModule)               // internal leaf (Rule 14) — pulled in here
+    singleOf(::RepositoryImpl).bind<Repository>()
+    viewModelOf(::FeatureViewModel)
+}
+```
+
+**Visibility convention:** the aggregate (`{featurename}Module`, `commonModule`, `dataModule`) is **public** — it's the only module that crosses the module boundary. Leaf/sub-modules composed in via `includes()` (a `platformModule`, or `:core` leaves like `localeModule`/`binder`) are **`internal`** (incl. `internal expect`/`internal actual`). Encapsulation is the documented benefit of `includes()`; only expose the root.
 
 ### Strings & Localization (Rule 12)
 
@@ -212,7 +237,7 @@ When a feature uses a **device capability** (GPS, camera, BLE, biometrics, senso
    ```kotlin
    interface LocationDataSource { suspend fun current(): Either<LatLng> }   // commonMain
    ```
-2. **DI via `expect/actual val platformModule`** — platform `actual` classes can't be bound in the common Koin module; bind them in a per-target `actual val platformModule` and include it in `{Feature}Modules.getKoinModules()`.
+2. **DI via `internal expect/actual val platformModule`** — platform `actual` classes can't be bound in the common Koin module; bind them in a per-target `internal actual val platformModule` and pull it into the feature's module with `includes(platformModule)` inside `{featurename}Module` (the `platformModule` stays `internal` — only `{featurename}Module` is public).
 3. **Native view via `expect @Composable`** (Shape C) — `PlatformX()` in `commonMain` with `AndroidView` / `UIKitView` / desktop-fallback actuals under `components/`. `{Feature}Content` stays pure Compose and passes only DTOs + callbacks.
 
 **Sourcing precedence** (the one judgment call — gate with `AskUserQuestion`): multiplatform lib (single `commonMain` dep) > `expect/actual` in the feature > iOS-Swift bridge (`/bridging-swift-kotlin`, the iOS leg only). Permissions are their own capability, not buried in the map/camera one.

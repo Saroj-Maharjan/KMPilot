@@ -35,7 +35,7 @@ Read the PRD's **Platform Profile & Capabilities** section (set in Phase 2, Step
 **Division of labor on the platform path** (no overlap):
 - **platform-agent** (provider-only): `commonMain` DataSource interface + per-platform `actual` classes (android/ios/**desktop**) + `expect/actual val platformModule`. Writes **no** `@Composable`.
 - **ui-layer-agent**: the `expect @Composable PlatformX` + `AndroidView`/`UIKitView`/desktop-fallback actuals under `components/`, plus the normal ViewModel/UiModel/Screen. Loads [architecture/platform.md](../architecture/platform.md) → "Pattern C".
-- **integration-agent**: adds `platformModule` to `{Feature}Modules.getKoinModules()` and any `androidContext()` the Android actual needs.
+- **integration-agent**: pulls `platformModule` into `{featurename}Module` via `includes(platformModule)`, lists `{featurename}Module` in `initKoin`'s `modules(...)`, and wires any `androidContext()` the Android actual needs.
 
 **Module-scaffold owner (CRITICAL — build breaks if no one does it)**: `feature/{featurename}/build.gradle.kts` + the module dir structure are normally created by `data-layer-agent`. When `data-layer-agent` is **skipped** (pure `platform-capability` / `native-view`), the **first agent in the set** scaffolds the module instead, from [build-gradle-template.md](../architecture/build-gradle-template.md):
 
@@ -203,7 +203,7 @@ Invoke integration-agent with:
   - CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG
   - INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5)
-- Platform module (Rule 14, tag ≠ `network`): add `platformModule` (expect/actual) to `{Feature}Modules.getKoinModules()` and provide `androidContext()` if an Android actual needs it
+- Platform module (Rule 14, tag ≠ `network`): pull `platformModule` (expect/actual) into `{featurename}Module` via `includes(platformModule)` and provide `androidContext()` if an Android actual needs it
 - Expected: integration points 1–4 (+ point 5 if a tab) + full build + ktlint + spec.md
 ```
 
@@ -255,7 +255,7 @@ Invoke integration-agent with:
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
   NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen
-- Platform module (Rule 14, tag ≠ `network`): add `platformModule` to `{Feature}Modules.getKoinModules()`; provide `androidContext()` if needed
+- Platform module (Rule 14, tag ≠ `network`): pull `platformModule` into `{featurename}Module` via `includes(platformModule)`; provide `androidContext()` if needed
 - Integrates data, platform, and UI layers
 - Completes integration points 1–4 (+ point 5 if a tab)
 - Final validation + formatting

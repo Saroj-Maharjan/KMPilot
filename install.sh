@@ -76,14 +76,14 @@ trim_template() {
     sedi '/"kover"(project(":feature:send"))/d'      build.gradle.kts
     sedi '/"kover"(project(":feature:receive"))/d'   build.gradle.kts
 
-    # 3. Drop feature DI init
+    # 3. Drop feature DI: the import line and the modules(...) entry per feature
     local koin="composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/initKoin.kt"
     sedi '/import thisissadeghi\.dashboard\./d' "$koin"
     sedi '/import thisissadeghi\.send\./d'      "$koin"
     sedi '/import thisissadeghi\.receive\./d'   "$koin"
-    sedi '/DashboardModules\.initialize()/d'    "$koin"
-    sedi '/SendModules\.initialize()/d'         "$koin"
-    sedi '/ReceiveModules\.initialize()/d'      "$koin"
+    sedi '/^[[:space:]]*dashboardModule,/d'     "$koin"
+    sedi '/^[[:space:]]*sendModule,/d'          "$koin"
+    sedi '/^[[:space:]]*receiveModule,/d'       "$koin"
 
     # 3a. Replace the mock-API BASE_URL with a neutral placeholder. The template
     #     ships KMPilot's own mock API URL, which rename.sh would otherwise

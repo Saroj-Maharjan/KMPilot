@@ -119,7 +119,7 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 |-------|------------|
 | Data | Models (DTOs), Ktor Resources, DataSource, Repository (returns `Either<DTO>`) |
 | Presentation | ViewModel, single `*UiModel` (plain fields + `UiState<DTO>` slots), Screens |
-| DI | {Feature}Modules (BaseFeature) |
+| DI | `{featurename}Module` (top-level Koin `val`) |
 | Navigation | {Feature}Route, NavGraphBuilder extension |
 
 ### Dependencies
@@ -158,7 +158,7 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 - Navigation (routes + extension)
 
 **Group 3: Integration** (integration-agent)
-- DI module ({Feature}Modules)
+- DI module (`val {featurename}Module`)
 - 4 integration points
 - Final build validation
 - spec.md generation
@@ -212,7 +212,7 @@ API → Ktor Resources → DataSource → Repository → ViewModel → UI
 |------|-------------|-------------|
 | settings.gradle.kts | MODIFIED | Add `include(":feature:{featurename}")` |
 | composeApp/build.gradle.kts | MODIFIED | Add feature dependency |
-| initKoin.kt | MODIFIED | Add `{Feature}Modules.initialize()` |
+| initKoin.kt | MODIFIED | Add `{featurename}Module` to `modules(...)` |
 | BaseAppNavHost.kt | MODIFIED | Add `{featurename}(...)` navigation |
 ```
 

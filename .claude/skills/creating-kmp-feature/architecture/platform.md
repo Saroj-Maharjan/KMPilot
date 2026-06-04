@@ -100,33 +100,32 @@ Platform `actual` classes can't be bound in the `commonMain` Koin module (the im
 
 ```
 di/
-├── commonMain/.../di/PlatformModule.kt          # expect val platformModule: Module
+├── commonMain/.../di/PlatformModule.kt          # internal expect val platformModule: Module
 ├── androidMain/.../di/PlatformModule.android.kt  # actual
 ├── iosMain/.../di/PlatformModule.ios.kt          # actual
 └── desktopMain/.../di/PlatformModule.desktop.kt  # actual
 ```
 
 ```kotlin
-// commonMain
-expect val platformModule: Module
+// commonMain — internal: only {featurename}Module (which includes it) is public
+internal expect val platformModule: Module
 
 // androidMain
-actual val platformModule = module {
+internal actual val platformModule = module {
     singleOf(::LocationDataSourceAndroid).bind<LocationDataSource>()
 }
 // iosMain → binds ::LocationDataSourceIos ; desktopMain → binds ::LocationDataSourceDesktop
 ```
 
-`{Feature}Modules.getKoinModules()` includes `platformModule` alongside the common module (integration-agent adds this line):
+`{featurename}Module` pulls in `platformModule` via `includes(...)` (integration-agent adds this line):
 
 ```kotlin
-override fun getKoinModules(): List<Module> = listOf(
-    platformModule,                                   // expect/actual — platform DataSource binding
+val {featurename}Module: Module =
     module {
+        includes(platformModule)                          // expect/actual — platform DataSource binding
         singleOf(::{Feature}RepositoryImpl).bind<{Feature}Repository>()
         viewModelOf(::{Feature}ViewModel)
-    },
-)
+    }
 ```
 
 ---
@@ -230,7 +229,7 @@ Platform `actual` classes are **not** unit-tested in `commonTest` (no MockEngine
 
 - [ ] Capability behind a `commonMain` interface returning `Either<DTO>` (Rule 14, Rule 2)
 - [ ] `actual` for **every** target: android, ios, **desktop** (fallback)
-- [ ] DI via `expect/actual val platformModule`; `{Feature}Modules` includes it
+- [ ] DI via `expect/actual val platformModule`; `{featurename}Module` pulls it in with `includes(platformModule)`
 - [ ] Native view isolated in an `expect @Composable`; `{Feature}Content` stays pure Compose (Shape C)
 - [ ] ViewModel/Repository/`*UiModel` import **no** platform types (Rule 11 self-check)
 - [ ] iOS Swift needed? → `iosMain` interface + stub + `/bridging-swift-kotlin` follow-up emitted

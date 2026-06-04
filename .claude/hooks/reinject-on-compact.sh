@@ -17,7 +17,7 @@ cat <<'RULES'
 5. X-components from :core:designsystem - NO Material3
 6. ImmutableList with .toImmutableList()
 7. Lowercase packages only
-8. DI: singleOf(::Impl).bind<Interface>() + BaseFeature
+8. DI: top-level val {featurename}Module = module { singleOf(::Impl).bind<Interface>() } - no BaseFeature/registry
 9. No UseCases - ViewModels call repositories directly
 10. Callback params (onBackClick) - not navController
 11. Single *UiModel + DTO-wrapped UiState<T> - NO *UiState.kt; data/ never imports presentation/
@@ -25,7 +25,7 @@ cat <<'RULES'
 **4 Integration Points (all required):**
 1. settings.gradle.kts - include(":feature:{name}")
 2. composeApp/build.gradle.kts - implementation(project(":feature:{name}"))
-3. initKoin.kt - {Feature}Modules.initialize()
+3. initKoin.kt - add {featurename}Module to modules(...)
 4. BaseAppNavHost.kt - {featurename}(onBackClick = {...})
 
 **Mandatory Workflow:** NEVER edit feature/ files directly. Use /creating-kmp-feature or /modifying-kmp-feature.

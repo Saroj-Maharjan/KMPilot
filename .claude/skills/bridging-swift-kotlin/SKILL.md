@@ -79,7 +79,7 @@ struct ComposeView: UIViewControllerRepresentable {
 ### 5. Register Provider (`iosMain`)
 ```kotlin
 // <module>/src/iosMain/kotlin/{PKG_PREFIX}/<feature>/di/Module.ios.kt
-actual val platformModule = module {
+internal actual val platformModule = module {
     singleOf(::IOS<Feature>Provider).bind<<Feature>Provider>()
 }
 ```

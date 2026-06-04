@@ -49,7 +49,7 @@ Before PRD is deleted during cleanup, the integration agent MUST copy these sect
 ## Critical Rules (Integration)
 
 1. **Lowercase Packages**: `{PKG_PREFIX}.featurename` (never `feature-name`, `featureName`, or `feature_name`)
-2. **DI Pattern**: Extend `BaseFeature`, use `singleOf(::Impl).bind<Interface>()` + `viewModelOf(::ViewModel)`
+2. **DI Pattern**: top-level `val {featurename}Module = module { singleOf(::Impl).bind<Interface>() + viewModelOf(::ViewModel) }`; listed in `initKoin`'s `modules(...)`
 3. **Navigation Callbacks**: Features receive callbacks, navigation logic stays in navigation host file
 
 ## 1. Gradle Include (Module Registration)
@@ -102,38 +102,36 @@ sourceSets {
 **File**: `{INIT_KOIN_PATH}` (auto-detected via Context Discovery)
 
 **Pattern**:
-1. Import feature's `{Feature}Modules` object
-2. Call `{Feature}Modules.initialize()` in appropriate function
+1. Import feature's `{featurename}Module` val
+2. Add `{featurename}Module` to `startKoin { modules(...) }`
 
 **Example** (using detected `{PKG_PREFIX}`):
 ```kotlin
-import {PKG_PREFIX}.productdetail.di.ProductDetailModules
+import {PKG_PREFIX}.productdetail.di.productdetailModule
 
-private fun initializeFeatures() {
-    // ... existing CommonModules / DataModules / FeatureModules initialize() calls
-    ProductDetailModules.initialize()
-}
-
-fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication {
-    initializeFeatures()
-
-    return startKoin {
+fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication =
+    startKoin {
         appDeclaration()
-        modules(getAllModules())
+        modules(
+            appModule,
+            commonModule,
+            dataModule,
+            // ... existing feature modules
+            productdetailModule,   // ← add the new feature module
+        )
     }
-}
 ```
 
 **Key Points**:
-- Add the new `initialize()` call inside the existing `initializeFeatures()` private function (don't invent a new structure — match what's already in `initKoin.kt`).
+- Add the `{featurename}Module` on its **own line** in the `modules(...)` call (one module per line — keeps the template's `install.sh` strip exact).
 - Import must use correct package name (lowercase).
 - Order doesn't matter (features are independent).
 - Runtime crash if missing (Koin will fail to resolve the ViewModel/Repository).
 
 **Typical initKoin.kt structure**:
-- `private fun initializeFeatures()` listing every `{Feature}Modules.initialize()` call
-- `fun initKoin(appDeclaration: KoinAppDeclaration = {})` that calls `initializeFeatures()` then `startKoin`
-- `getAllModules()` aggregates `FeatureRegistry.getAllKoinModules()` plus the app-level module
+- `private val appModule = module { … }` (app-shell bindings)
+- `fun initKoin(appDeclaration: KoinAppDeclaration = {})` that calls `startKoin { appDeclaration(); modules(appModule, commonModule, dataModule, …featureModules) }`
+- No registry, no `initializeFeatures()` — every module is listed directly in `modules(...)`.
 
 ## 4. Navigation Wiring (Route Registration)
 
@@ -308,53 +306,44 @@ Delete the feature's `TopLevelDestination` entry. The route stays a valid destin
 
 ## DI Pattern (feature/di/{Feature}Modules.kt)
 
-**Purpose**: Define feature's dependency injection modules
+**Purpose**: Define feature's dependency injection module
 
 **Pattern**:
-- Object that extends `BaseFeature`
-- Overrides `getKoinModules()` to return list of Koin modules
-- Overrides `initialize()` to trigger auto-registration
+- One top-level `val {featurename}Module: Module` (idiomatic Koin — no base class, no registry, no `initialize()`)
 - Uses `singleOf` + `bind` for interface/impl pairs
 - Uses `viewModelOf` for ViewModels
+- `includes(...)` to compose a `platformModule` (Rule 14) or sub-modules
+- Listed in `initKoin`'s `modules(...)` (integration point 3)
 
 **Structure**:
 ```kotlin
 package {PKG_PREFIX}.{featurename}.di
 
-import {PKG_PREFIX}.common.di.base.BaseFeature
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-object {Feature}Modules : BaseFeature({Feature}Modules::class.simpleName.toString()) {
-    override fun getKoinModules(): List<Module> = listOf(
-        module {
-            // DataSource (if exists)
-            singleOf(::{Feature}RemoteDataSourceImpl).bind<{Feature}RemoteDataSource>()
+val {featurename}Module: Module =
+    module {
+        // DataSource (if exists)
+        singleOf(::{Feature}RemoteDataSourceImpl).bind<{Feature}RemoteDataSource>()
 
-            // Repository
-            singleOf(::{Feature}RepositoryImpl).bind<{Feature}Repository>()
+        // Repository
+        singleOf(::{Feature}RepositoryImpl).bind<{Feature}Repository>()
 
-            // ViewModel
-            viewModelOf(::{Feature}ViewModel)
-        }
-    )
-
-    override fun initialize() {
-        {Feature}Modules
+        // ViewModel
+        viewModelOf(::{Feature}ViewModel)
     }
-}
 ```
 
 **Key Points**:
-- Object name: `{Feature}Modules` (matches class name, PascalCase)
-- Extends `BaseFeature` with feature name as parameter
+- Symbol name: `{featurename}Module` (camelCase, lowercase feature segment) — matches `dataModule`/`commonModule`
+- No base class / no `FeatureRegistry` / no `initialize()` — registration is a single line in `initKoin`'s `modules(...)`
 - `singleOf(::Impl).bind<Interface>()` creates singleton with interface binding
 - `viewModelOf(::ViewModel)` registers ViewModel
-- `initialize()` returns the object itself (triggers BaseFeature registration)
-- Order matters: DataSource before Repository, Repository before ViewModel
+- A `platformModule` (Rule 14) is pulled in via `includes(platformModule)` inside this module
 
 ## Navigation Pattern (feature/presentation/navigation/)
 
@@ -456,7 +445,7 @@ fun NavGraphBuilder.feature(
 
 **3. Missing DI Initialization**:
 - Error: Runtime crash "No definition found for type {ViewModel/Repository}"
-- Fix: Add `{Feature}Modules.initialize()` to initKoin.kt
+- Fix: Add `{featurename}Module` to `startKoin { modules(...) }` in initKoin.kt
 
 **4. Missing Navigation Wiring**:
 - Error: Navigation doesn't work, screen not found

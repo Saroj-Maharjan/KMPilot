@@ -22,18 +22,25 @@ dependencies {
 }
 ```
 
-## DI Module Not Initialized
+## DI Module Not Registered
 
 **Error:** `No definition found for class` (at runtime)
 
-**Fix:** Initialize in `initKoin.kt`:
+**Fix:** List the feature module in `initKoin.kt`'s `modules(...)`:
 ```kotlin
-import {PKG_PREFIX}.featurename.di.FeatureModules
+import {PKG_PREFIX}.featurename.di.featurenameModule
 
-private fun initializeFeatures() {
-    // ... existing features
-    FeatureModules.initialize()
-}
+fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication =
+    startKoin {
+        appDeclaration()
+        modules(
+            appModule,
+            commonModule,
+            dataModule,
+            // ... existing feature modules
+            featurenameModule,   // ← add it on its own line
+        )
+    }
 ```
 
 ## Navigation Extension Not Found
@@ -56,11 +63,11 @@ import {PKG_PREFIX}.featurename.presentation.navigation.FeatureRoute
 // Right: singleOf(::UserRepositoryImpl).bind<UserRepository>()
 ```
 
-## BaseFeature Not Extended
+## DI Module Wrong Shape
 
-**Error:** DI module doesn't auto-register
+**Error:** Feature module not found / not loadable from `initKoin`
 
-**Fix:** Ensure module extends BaseFeature:
+**Fix:** Expose a single top-level `val` module (no object, no base class, no `initialize()`):
 ```kotlin
 // Wrong:
 object ProfileModules {
@@ -68,11 +75,14 @@ object ProfileModules {
 }
 
 // Right:
-object ProfileModules : BaseFeature(ProfileModules::class.simpleName.toString()) {
-    override fun getKoinModules(): List<Module> = listOf(...)
-    override fun initialize() { ProfileModules }
-}
+val profileModule: Module =
+    module {
+        singleOf(::ProfileRepositoryImpl).bind<ProfileRepository>()
+        viewModelOf(::ProfileViewModel)
+        // includes(platformModule)   // only if Rule 14 platform bindings exist
+    }
 ```
+Then add `profileModule` to `initKoin`'s `modules(...)`.
 
 ## Navigation Route Not Found
 

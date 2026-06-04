@@ -26,7 +26,7 @@ Implements the **capability/provider half** of a platform feature: a device/nati
    - `commonMain` interface `{Capability}DataSource` — `suspend fun(): Either<DTO>` (DTO from `data/model/`). (Rule 1, Rule 2)
    - `actual` class per target: **androidMain + iosMain + desktopMain**. Desktop = graceful `Either.Failure` fallback. (Missing a target's actual breaks the build.)
    - Create the platform source-set dirs if absent.
-4. **DI** — Pattern B: `expect val platformModule: Module` (commonMain) + an `actual` per target binding the impl with `singleOf(::Impl).bind<Interface>()`. Do NOT bind platform impls in the common module.
+4. **DI** — Pattern B: `internal expect val platformModule: Module` (commonMain) + an `internal actual` per target binding the impl with `singleOf(::Impl).bind<Interface>()`. `internal` because only `{featurename}Module` (which `includes(platformModule)`) is public. Do NOT bind platform impls in the common module.
 5. **Option 3 / iOS needs Swift** — write the `iosMain` interface + provider stub (bridge pattern), do NOT write Swift, and flag a `/bridging-swift-kotlin` follow-up in the output report.
 6. Self-check (Rule 11): `grep` your files for `import .*\.presentation\.` → zero. The DataSource/provider never imports UI types.
 7. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain` (android) — and note in the report that desktop/iOS actuals must compile in the integration build.
@@ -34,7 +34,7 @@ Implements the **capability/provider half** of a platform feature: a device/nati
 ## Hands off to
 
 - **ui-layer-agent**: gets the DataSource interface name + DTO so its ViewModel/Repository wiring and the `expect @Composable` (if any native view) line up.
-- **integration-agent**: must add `platformModule` to `{Feature}Modules.getKoinModules()` and (Android) provide any `androidContext()` the actual needs.
+- **integration-agent**: must pull `platformModule` into `{featurename}Module` via `includes(platformModule)` and (Android) provide any `androidContext()` the actual needs.
 
 ## Output Report
 
@@ -49,7 +49,7 @@ Implements the **capability/provider half** of a platform feature: a device/nati
 - data/datasource/{Capability}DataSourceAndroid.kt     (androidMain — actual)
 - data/datasource/{Capability}DataSourceIos.kt         (iosMain — actual)
 - data/datasource/{Capability}DataSourceDesktop.kt     (desktopMain — fallback)
-- di/PlatformModule.kt + .android/.ios/.desktop         (expect/actual val platformModule)
+- di/PlatformModule.kt + .android/.ios/.desktop         (internal expect/actual val platformModule)
 
 ### Targets covered
 ✅ android  ✅ ios  ✅ desktop (fallback)
@@ -63,5 +63,5 @@ Implements the **capability/provider half** of a platform feature: a device/nati
 
 ### Follow-ups
 {- iOS actual needs Swift → user must run /bridging-swift-kotlin for {Feature}Bridge | none}
-{- integration-agent: add platformModule to {Feature}Modules + androidContext() if needed}
+{- integration-agent: includes(platformModule) inside {featurename}Module + androidContext() if needed}
 ```

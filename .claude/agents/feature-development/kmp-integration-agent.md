@@ -22,13 +22,13 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 |---|-------|------|---------|
 | 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
 | 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
-| 3 | DI Init | `{INIT_KOIN_PATH}` | `{Feature}Modules.initialize()` |
+| 3 | DI Init | `{INIT_KOIN_PATH}` | add `{featurename}Module` to `startKoin { modules(...) }` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 | 5 *(optional)* | Bottom-bar tab | `App.kt` + `navigation/TopLevelDestination.kt` | `TopLevelDestination` enum entry — **only** if the feature is a top-level tab |
 
 ## Workflow
 
-1. Create DI module (`di/{Feature}Modules.kt`)
+1. Create DI module (`di/{Feature}Modules.kt` exposing `val {featurename}Module`)
 2. Integration Point 1: Gradle Include
 3. Integration Point 2: Gradle Dependency
 4. Integration Point 3: DI Initialization
@@ -42,12 +42,14 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 
 **Gate**: only when `platform-agent` actually ran and produced an `expect/actual val platformModule` (profiles `platform-capability` / `mixed`, and `native-view` *with* a backing capability). A **pure `native-view` with no provider** has no `platformModule` — skip this step. When it exists, `platform-agent` has already written the `platformModule` + the per-platform DataSource actuals; your job is to **register it**:
 
-1. Add `platformModule` to `{Feature}Modules.getKoinModules()` alongside the common module:
+1. Pull `platformModule` into `{featurename}Module` with `includes(platformModule)`:
    ```kotlin
-   override fun getKoinModules(): List<Module> = listOf(
-       platformModule,                 // expect/actual — platform DataSource binding
-       module { /* repository, viewModel */ },
-   )
+   val {featurename}Module: Module =
+       module {
+           includes(platformModule)                  // expect/actual — platform DataSource binding
+           singleOf(::{Feature}RepositoryImpl).bind<{Feature}Repository>()
+           viewModelOf(::{Feature}ViewModel)
+       }
    ```
 2. If an Android `actual` needs the `Context`, ensure the `androidMain` `platformModule` resolves it via `androidContext()` (Koin's Android context is initialized at app start — no per-feature wiring beyond passing it through the actual's constructor).
 3. **Do NOT** duplicate the Swift-bridge touchpoints (`MainViewController`, `ContentView`, framework `export`) — those are owned by `/bridging-swift-kotlin`. If the platform agent flagged an iOS-Swift dependency, carry the *"Run /bridging-swift-kotlin"* note into the completion report; the Android + desktop builds pass without it.
