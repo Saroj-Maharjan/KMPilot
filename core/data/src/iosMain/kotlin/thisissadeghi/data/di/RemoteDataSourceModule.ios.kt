@@ -9,7 +9,7 @@ import org.koin.dsl.module
  * Created by Ali Sadeghi
  * on 17,Apr,2025
  */
-actual val platformRemoteDataSourceModule: Module =
+internal actual val platformRemoteDataSourceModule: Module =
     module {
         single<HttpClientEngine> {
             Darwin.create()

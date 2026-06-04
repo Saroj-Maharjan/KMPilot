@@ -31,11 +31,11 @@ import thisissadeghi.data.remote.network.ktor.TokenHeaderPlugin
  * on 17,Apr,2025
  */
 
-expect val platformRemoteDataSourceModule: Module
+internal expect val platformRemoteDataSourceModule: Module
 
 const val TIME_OUT = 20_000L
 
-val RemoteDataSourceModule =
+internal val RemoteDataSourceModule =
     module {
         single<ApiClient> {
             ApiClient(get())

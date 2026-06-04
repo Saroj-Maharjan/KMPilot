@@ -9,7 +9,7 @@ import thisissadeghi.common.locale.LanguagePreferenceStore
 import thisissadeghi.common.util.DesktopLinkHandler
 import thisissadeghi.common.util.LinkHandler
 
-actual val commonPlatformModule: Module =
+internal actual val commonPlatformModule: Module =
     module {
         singleOf(::DesktopLinkHandler).bind<LinkHandler>()
         singleOf(::DesktopLanguagePreferenceStore).bind<LanguagePreferenceStore>()

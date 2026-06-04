@@ -14,7 +14,7 @@ import thisissadeghi.common.util.LinkHandler
  * Created by Ali Sadeghi
  * on 07,May,2025
  */
-actual val commonPlatformModule: Module =
+internal actual val commonPlatformModule: Module =
     module {
         singleOf(::AndroidLinkHandler).bind<LinkHandler>()
         single<LanguagePreferenceStore> { AndroidLanguagePreferenceStore(androidContext()) }

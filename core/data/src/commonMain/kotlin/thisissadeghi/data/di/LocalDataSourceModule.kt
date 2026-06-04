@@ -23,9 +23,9 @@ object DataStorePathStringQualifier : Qualifier {
         get() = DataStorePathStringQualifier::class.simpleName.toString()
 }
 
-expect val platformLocalDataSourceModule: Module
+internal expect val platformLocalDataSourceModule: Module
 
-val localDataSourceModule =
+internal val localDataSourceModule =
     module {
         single { PreferencesManager(get()) }
 

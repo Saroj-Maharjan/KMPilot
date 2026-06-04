@@ -9,7 +9,7 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 
-actual val platformLocalDataSourceModule: Module =
+internal actual val platformLocalDataSourceModule: Module =
     module {
         single<String>(qualifier = DataStorePathStringQualifier) {
             val directory =

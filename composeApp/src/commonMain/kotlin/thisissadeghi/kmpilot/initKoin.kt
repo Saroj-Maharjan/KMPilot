@@ -2,45 +2,31 @@ package thisissadeghi.kmpilot
 
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
-import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import thisissadeghi.common.di.CommonModules
-import thisissadeghi.common.di.base.FeatureRegistry
-import thisissadeghi.dashboard.di.DashboardModules
+import thisissadeghi.common.di.commonModule
+import thisissadeghi.dashboard.di.dashboardModule
 import thisissadeghi.data.config.BuildOptionProvider
-import thisissadeghi.data.di.DataModules
-import thisissadeghi.receive.di.ReceiveModules
-import thisissadeghi.send.di.SendModules
+import thisissadeghi.data.di.dataModule
+import thisissadeghi.receive.di.receiveModule
+import thisissadeghi.send.di.sendModule
 
 private val appModule =
     module {
         singleOf(::BuildOptionProviderImpl).bind<BuildOptionProvider>()
     }
 
-private fun initializeFeatures() {
-    // Initialize each feature
-    CommonModules.initialize()
-    DataModules.initialize()
-    DashboardModules.initialize()
-    SendModules.initialize()
-    ReceiveModules.initialize()
-}
-
-fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication {
-    initializeFeatures()
-
-    return startKoin {
+fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication =
+    startKoin {
         appDeclaration()
-        modules(getAllModules())
+        modules(
+            appModule,
+            commonModule,
+            dataModule,
+            dashboardModule,
+            sendModule,
+            receiveModule,
+        )
     }
-}
-
-private fun getAllModules(): List<Module> {
-    val modulesList = mutableListOf<Module>()
-    modulesList.add(appModule)
-    modulesList.addAll(FeatureRegistry.getAllKoinModules())
-    return modulesList
-}

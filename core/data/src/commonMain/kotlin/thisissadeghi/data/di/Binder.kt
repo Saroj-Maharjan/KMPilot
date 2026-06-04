@@ -12,7 +12,7 @@ import thisissadeghi.data.repository.user.UserRepositoryImpl
 /**
  * Data layer dependency injection bindings
  */
-val binder =
+internal val binder =
     module {
         // JSON serializer
         single {

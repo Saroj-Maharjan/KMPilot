@@ -14,7 +14,7 @@ import thisissadeghi.common.util.LinkHandler
  * on 07,May,2025
  */
 
-actual val commonPlatformModule: Module =
+internal actual val commonPlatformModule: Module =
     module {
         singleOf(::IOSLinkHandler).bind<LinkHandler>()
         singleOf(::IosLanguagePreferenceStore).bind<LanguagePreferenceStore>()
