@@ -25,7 +25,7 @@ Design Progress:
 - [ ] Step 1.13: Finalize approved success design
 - [ ] Step 1.14: Generate state designs for selected optional states only
 - [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY) — includes Material Symbols icons manifest (sub-step 5), `<img>` assets manifest (sub-step 6), and font manifest (sub-step 6b); all manifest-only — no XML/image/font downloads here
-- [ ] Step 1.16: Color & Typography Audit — reconciled against HTML inventories (MANDATORY)
+- [ ] Step 1.16: Color, Typography & Motion Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.17: Generate Implementation Blueprint
 - [ ] Step 1.18: Update stitch-project.json
 - [ ] Step 1.19: User final approval
@@ -784,9 +784,9 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
 
 ---
 
-## Step 1.16: Color & Typography Audit (MANDATORY)
+## Step 1.16: Color, Typography & Motion Audit (MANDATORY)
 
-This step runs two audits that map design tokens to app-global theme constructs: the **Color Audit** (colors → M3 color roles) below, then the **Typography Audit** (type → M3 type-scale roles + the font family) at the end.
+This step runs three audits that map design tokens to app-global constructs: the **Color Audit** (colors → M3 color roles) below, then the **Typography Audit** (type → M3 type-scale roles + the font family), then the **Motion Audit** (animation → the 4 kept families + Compose primitives) at the end.
 
 Audit every color used across the **selected** approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.15**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
 
@@ -882,6 +882,44 @@ Write into the design description file (`.claude/docs/{featurename}/designs/{fea
 
 This audit feeds the blueprint's **Typography Updates Required** (font swap + role overrides) in Step 1.17, and is materialized by the implementation skill (`download_font.py` + `XTypography` rewire) before any feature code is written.
 
+### Motion Audit (MANDATORY)
+
+`/ui-designer` is **capture-only** for motion — no prompt injection, no intensity question. This audit reads the animation the design already contains and maps it to Compose. Do **not** restate the policy or the family→primitive mapping — they live in [`_shared/motion.md`](../../_shared/motion.md); cite it.
+
+#### Procedure
+
+1. **Read the captured motion**: the `## Motion Inventory` section in each selected state's `tokens_{state}.md` (Step 1.15), plus the raw HTML's `<style>` / tailwind `animation` config / `<script>` if a token needs disambiguation.
+2. **Bucket every token via the Web-Motion Policy** (`_shared/motion.md`): **DROP** touch press (`active:*`, `ripple`) and pointer/hover (`hover:*`, `group-hover:*`, `.interactive-card:hover/:active`, `focus:`, `cursor-*`); **KEEP** the 4 families (Ambient bg, Loading/Attention loop, Entrance, Value-driven) + the `prefers-reduced-motion` honor.
+3. **Map each KEEP token** to a concrete Compose primitive + params (dur/easing/repeat/trigger) + **magnitude** (copied verbatim from the inventory's `### Keyframe magnitudes` — the only source for scale/translate/opacity/offset amounts; never invent) + target file (generic, reusable → DS `motion/`; one-off, feature-specific → feature `motion/{Feature}Motion.kt`), using motion.md's mapping + easing map. Durations/easings reference `XMotion` tokens.
+4. **End with the explicit Dropped line** listing every dropped class/element for transparency.
+
+#### Motion Audit Output
+
+Write into the design description file (`.claude/docs/{featurename}/designs/{featurename}.md`), delimited so re-runs replace rather than stack (same marker-replace rule as Color/Typography):
+
+```markdown
+<!-- MOTION_AUDIT:BEGIN -->
+## Motion Audit
+
+**Motion present**: {yes | no — static design}
+
+> If no motion: write the line above and the Dropped line (empty), nothing else.
+
+### Kept motion → Compose
+| Element | Family | Compose primitive | Params (dur/easing/repeat/trigger) | Magnitude | Target file |
+|---------|--------|-------------------|------------------------------------|-----------|-------------|
+| {element} | {family} | {primitive} | {params} | {value range from inventory} | {DS motion/ | feature motion/} |
+
+**Reduced motion**: all kept rows gated by `rememberReducedMotion()` (DS `XMotion.kt` — `expect/actual`, reads OS setting). Durations/easings via `XMotion` tokens, not ad-hoc `tween(<literal>)`.
+
+**Dropped (interaction + web-only)**: {comma-separated classes/elements, or "none"}
+<!-- MOTION_AUDIT:END -->
+```
+
+**Write procedure**: replace any existing `MOTION_AUDIT` block; never stack two.
+
+This audit feeds the blueprint's **`## Motion`** table in Step 1.17. Motion needs **no** asset download (unlike fonts/icons) — it materializes as pure Compose code in `motion/` files at implementation time.
+
 ---
 
 ## Step 1.17: Generate Implementation Blueprint
@@ -906,6 +944,7 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
    - The Color Audit M3 role mappings (from Step 1.16 output in `.claude/docs/{featurename}/designs/{featurename}.md`)
    - The Typography Audit (from Step 1.16) + the font manifest at `.claude/docs/{featurename}/designs/extracted/fonts.json` (from Step 1.15 sub-step 6b) — authoritative for the per-node M3 type-scale role mapping and the font swap (family + source). The blueprint fills the Typography Scale `M3 Role` column and the contract's *Typography Updates Required* from these.
+   - The Motion Audit (from Step 1.16, the `MOTION_AUDIT` block in `.claude/docs/{featurename}/designs/{featurename}.md`) + the `## Motion Inventory` in each `tokens_{state}.md` — authoritative for the blueprint's `## Motion` table (kept families → primitive + target file) and its Dropped note. Omit the `## Motion` section when no motion is present.
    - The `needsLoading`, `needsFailed`, `needsEmpty` flags so the prompt knows which sections to emit
 
 3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`. The blueprint covers **only selected states**; shared scaffold is described once. Use the canonical Component-Tree entries from [blueprint-spec.md → Component Tree](../references/blueprint-spec.md#component-tree):
@@ -913,7 +952,7 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - `states.failed` true → shared-screen entry; false → "Skipped" marker.
    - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
 
-4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist).
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), **`## Motion` table when the Motion Audit found motion** (kept families + target-file column + Dropped note; omitted for a static design), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist).
 
 ---
 

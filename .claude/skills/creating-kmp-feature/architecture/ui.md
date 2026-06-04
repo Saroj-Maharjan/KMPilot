@@ -13,7 +13,9 @@ Principles for implementing the UI/presentation layer in KMP features using Comp
 ├── ui/
 │   ├── {Feature}Screen.kt     # Main screen composable
 │   ├── {Secondary}Screen.kt   # Additional screens
-│   └── components/            # Feature-specific reusable components
+│   ├── components/            # Feature-specific reusable components
+│   └── motion/               # Feature-specific animation (only if the design has motion)
+│       └── {Feature}Motion.kt # one-off animated composables + specs; generic primitives live in DS motion/
 └── navigation/
     └── {Feature}Navigation.kt # @Serializable routes + NavGraphBuilder extension
 ```
@@ -611,6 +613,15 @@ when (val result = repository.getProduct()) {
 ```
 
 ## Common Patterns
+
+### Motion (dedicated files)
+
+When the design contains animation, motion logic lives in **dedicated `motion/` files — never inline** in `{Feature}Screen.kt` or component files (keeps them lean + token-cheap for agents):
+
+- **Generic, reusable primitives → `core/designsystem/.../motion/`** (DS tier; `install.sh` keeps it, like `XTheme`): `XMotion.kt` (durations + easings + `expect/actual rememberReducedMotion()`), `Modifier.shimmer()`, `PulseDot`, `AmbientMeshBackground`, `BokehCanvas`, `Modifier.pulseGlow()`, `RevealOnAppear`. **These ship with the template DS** — the implementation skill verifies they're present and reuses them (passing each design's magnitude as a parameter), never recreates them.
+- **Feature-specific wiring → `presentation/ui/motion/{Feature}Motion.kt`**: the screen's one-off animated composables (count-up, this chart's bar-grow, this tab indicator).
+
+Press/hover feedback is **dropped** (android + ios); the 4 kept families + reduced-motion are implemented. Animation imports (`androidx.compose.animation.*`, `animation.core.*`, `foundation.interaction.*`) are **not** Material3 — not a Rule-5 violation. Catalog, family→primitive mapping, easing map: [`_shared/motion.md`](../../_shared/motion.md). Motion helpers are exempt from the `Screen.kt` allowlist by living under `motion/`, exactly as components live under `components/`.
 
 ### Initial Data Load Pattern
 ```kotlin

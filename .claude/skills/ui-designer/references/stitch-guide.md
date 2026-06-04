@@ -210,6 +210,14 @@ When translating designs to code, use this mapping:
 
 ---
 
+## Motion
+
+`/ui-designer` is **capture-only** for animation: it never injects a motion directive into a Stitch prompt. The user controls motion through their own design prompts; the pipeline implements whatever motion the design's HTML contains. The extractor (`extract_tokens.py`) emits a `## Motion Inventory` per state, the Step 1.16 Motion Audit buckets it, the blueprint's `## Motion` table carries it to implementation, and `/verify-ui` Step 5.10 audits its presence.
+
+Press/hover feedback (touch `active:*`, `ripple`; pointer `hover:*`/`group-hover:*`) is **dropped** (android + ios targets). The 4 kept families (Ambient bg, Loading/Attention loop, Entrance, Value-driven) + reduced-motion map to dedicated Compose motion files. Full policy, family→primitive mapping, easing map, and file layout: **[`_shared/motion.md`](../../_shared/motion.md)**.
+
+---
+
 ## Known Issues (Google Stitch API)
 
 ### Screens Not Visible After Generation

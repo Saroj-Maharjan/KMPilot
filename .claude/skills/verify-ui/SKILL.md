@@ -19,7 +19,7 @@ Verify a feature's UI implementation matches the Stitch design at the token leve
 ## Workflow
 
 ```
-[USER INVOKES] → Preflight → Acquire HTML (reuse or download) → Token Extraction → Catalog → Token Audit → Trap Checklist → Component Overrides Check → X-Components Check → Present Results → Handle Mismatches → Cleanup → DONE
+[USER INVOKES] → Preflight → Acquire HTML (reuse or download) → Token Extraction → Catalog → Token Audit → Trap Checklist → Component Overrides Check → Motion Audit → X-Components Check → Present Results → Handle Mismatches → Cleanup → DONE
 ```
 
 ---
@@ -141,7 +141,7 @@ Also note any `ButtonDefaults`, `OutlinedTextFieldDefaults`, etc. passed as para
 - **Images manifest**: `.claude/docs/{featurename}/designs/extracted/images.json` — drives Step 5.8. Skipped when absent.
 - **Font manifest / HTML font**: `.claude/docs/{featurename}/designs/extracted/fonts.json` (or the css2 `<link>` / `font-family` in the success HTML) + `XFontFamily()` in `XTheme.kt` — drives Step 5.4b. Skipped when the design uses the system font.
 
-> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The blueprint sections verify-ui consults are the `Component Overrides` table (Step 5.4) and the `Typography Updates Required` table (Step 5.4b) inside `Pre-Implementation Contract` — both record concrete override decisions that have no other source.
+> **Blueprint usage is scoped.** The implementation blueprint already drove the code, so the audit's design ground truth is the HTML — re-reading the blueprint's Design Tokens / Typography / Spacing / Component Tree is redundant and was removed (see `RATIONALE.md`). The blueprint sections verify-ui consults are the `Component Overrides` table (Step 5.4) and the `Typography Updates Required` table (Step 5.4b) inside `Pre-Implementation Contract`, plus the `## Motion` table (Step 5.10) — all record concrete decisions that have no other source (motion intent can't be re-derived from static code).
 
 ### 5.2 Convert and compare — Success state
 
@@ -247,7 +247,7 @@ No "OK" bullets — silence means OK.
 | Severity | Criteria | Action |
 |----------|----------|--------|
 | **Critical** | Spacing ≥4dp off, wrong color role, missing component, wrong font size/weight, **wrong type-scale role or theme font ≠ design typeface (5.4b)**, wrong corner radius, wrong icon size, wrong border, **any catalog trap caught in 5.3**, **any missing override caught in 5.4**, **any manifest-audit CRITICAL from 5.7 or 5.8** | Must fix |
-| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, **raw `fontSize`/`fontWeight` instead of a type-scale role when the value is otherwise correct (5.4b)**, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8** | Report; fix if requested |
+| **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, **raw `fontSize`/`fontWeight` instead of a type-scale role when the value is otherwise correct (5.4b)**, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8**, **any Motion Audit finding from 5.10** (presence-only — missing row, family mismatch, inline placement, missing reduced-motion gate) | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
 This is a **reference table only**. Apply these labels inline as you produce mismatch blocks in 5.2–5.5 and 5.7–5.8. The actual save happens in 5.9 (after all audit sub-sections complete).
@@ -350,9 +350,43 @@ For each entry in `icons.json.icons`:
 
 5. **Orphan image files** — list every `*.png|*.jpg|*.jpeg|*.webp` under the feature and design-system drawable dirs. Cross-reference against the union of all `images.json` manifests. Files whose ident is in NONE of the manifests AND **not actively referenced** by any `.kt` (same safety rule as 5.7) → MINOR "Orphan image".
 
+### 5.10 Motion Audit — presence check per blueprint motion row
+
+**Purpose**: Confirm each **kept** animation the blueprint declares is implemented with the declared primitive in a dedicated `motion/` file. Static code can't prove runtime feel — this is a **presence** check only (all findings **MINOR**). Policy + family→primitive mapping: `.claude/skills/_shared/motion.md`.
+
+**Skip condition**: If `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` is missing OR has no `## Motion` table, skip with: `### Motion Audit: skipped — no ## Motion table (static design).`
+
+**Inputs**:
+- The blueprint's `## Motion` table (and its trailing **Dropped** note) — the **only** blueprint section this step reads. Each row: `Element | Family | Compose primitive | Params | Target file`.
+- Feature Kotlin sources, especially `feature/{featurename}/.../presentation/ui/motion/*.kt` and `core/designsystem/.../motion/*.kt`.
+
+**Per-row checks** (all MINOR):
+
+1. **Primitive present** — for each KEEP row, grep the feature + DS sources for the declared primitive token (`shimmer`, `rememberInfiniteTransition`, `AnimatedVisibility`, `animateContentSize`, `animate*AsState`, `pulseGlow`, `AmbientMeshBackground`, `PulseDot`, `revealOnAppear`, etc.). Zero matches → MINOR "Motion row not implemented":
+   ```markdown
+   ### MINOR — Motion not implemented: {Element} ({Family})
+   - **HTML/Blueprint:** {primitive} expected ({params})
+   - **Code:** no `{primitive}` reference found in feature or DS motion/ sources
+   - **Fix:** implement the row in {Target file} per _shared/motion.md, gated by rememberReducedMotion().
+   - **Source:** Blueprint ## Motion
+   ```
+2. **Right family** — if a different-family primitive is used where the row declares another (e.g. an entrance row implemented as an infinite loop), → MINOR "Motion family mismatch".
+3. **In a `motion/` file (not inline)** — if the primitive is found only inside `{Feature}Screen.kt` or a `components/*.kt` file (not under `motion/`), → MINOR "Motion implemented inline, should be in motion/".
+4. **Reduced-motion gate** — if a kept row's primitive is present but no `rememberReducedMotion()` reference exists in the same motion file, → MINOR "Motion not gated by rememberReducedMotion()". Also confirm `rememberReducedMotion` is an `expect/actual` (a `XMotion.kt` `expect` + `.android`/`.ios`/`.desktop` actuals exist under `core/designsystem/.../motion/`); a plain commonMain stub → MINOR "rememberReducedMotion is a stub, not expect/actual (does not honor OS setting)".
+5. **`XMotion` token usage** — grep the feature + DS motion files for ad-hoc duration/easing literals: `tween(<number>)` or a raw `CubicBezierEasing(` not routed through an `XMotion.*` token. Any hit → MINOR "Ad-hoc motion param, use XMotion token":
+   ```markdown
+   ### MINOR — Ad-hoc motion param: {File.kt:LINE}
+   - **Code:** `tween(1730)` / raw `CubicBezierEasing(...)`
+   - **Fix:** reference an `XMotion.*` duration/easing token (motion.md — durations/easings are app-global, like M3 color roles).
+   ```
+
+> **Magnitude is recorded, not auto-asserted.** The blueprint's **Magnitude** column pins the value range so the implementer doesn't guess, but static code can't reliably prove a runtime magnitude — do **not** emit a finding for a magnitude mismatch. (Presence + family + placement + gate + token are the checkable parts.)
+
+**Never expected in code** — rows are KEEP-only by construction, so the blueprint's **Dropped** entries (touch press `active:*`/`ripple`, pointer `hover:*`/`group-hover:*`) must **not** be flagged as missing. Do not invent findings for dropped interaction/hover motion.
+
 ### 5.9 Save the audit report
 
-After all of 5.2–5.8 complete, write the full report (all mismatch blocks from 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8, classification per 5.6) to:
+After all of 5.2–5.10 complete, write the full report (all mismatch blocks from 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8 / 5.10, classification per 5.6) to:
 
 ```
 .claude/docs/{featurename}/designs/{featurename}_audit.md
@@ -372,6 +406,8 @@ import coil3.compose.AsyncImage       // use AsyncImage from :core:designsystem
 ```
 
 `MaterialTheme.colorScheme` and `MaterialTheme.typography` are **allowed** — `XTheme` wraps `MaterialTheme`. Only component imports are forbidden.
+
+**Animation imports are allowed** — `androidx.compose.animation.*`, `androidx.compose.animation.core.*`, and `androidx.compose.foundation.interaction.*` are **not** Material3 and are required for motion (Step 5.10). Do **not** flag them as violations.
 
 ### 6.2 Compliance report
 
@@ -428,10 +464,14 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 - Manifest entries: {N} (or "skipped — no manifest")
 - Missing files: {N} | Wrong-scope refs: {N} | Stitch-CDN AsyncImage misuse: {N} | Orphans: {N}
 
+### Motion Audit (Step 5.10)
+- Motion rows: {N} (or "skipped — no ## Motion table")
+- Not implemented: {N} | Family mismatch: {N} | Inline (not in motion/): {N} | Ungated: {N} (all MINOR)
+
 ### X-Components Compliance
 - Material3 violations: {N} ({PASS if 0, FAIL otherwise})
 
-{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8 — only the blocks, no OK rows.}
+{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8 / 5.10 — only the blocks, no OK rows.}
 
 {Compliance violations table (if any).}
 ```
@@ -505,6 +545,7 @@ This skill does not invoke `/modifying-kmp-feature` — the user controls the pi
 |----------|----------|-------|--------|
 | Icons (5.7)  | {N} | {N} | {PASS/FAIL or SKIPPED} |
 | Images (5.8) | {N} | {N} | {PASS/FAIL or SKIPPED} |
+| Motion (5.10) | — | {N} | {PASS/FAIL or SKIPPED} |
 
 ### X-Components Compliance
 | Check | Violations | Status |

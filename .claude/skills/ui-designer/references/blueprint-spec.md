@@ -83,6 +83,24 @@ Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 
 Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed here — they come from `DesignSystemResources`.
 
+## Motion
+
+> Every **kept** animation in the design → one row. Built from the Step 1.16 **Motion Audit** + the token inventory's `## Motion Inventory`. Buckets and the family→primitive mapping live in [`_shared/motion.md`](../../_shared/motion.md) — do **not** restate them; this table just records *which* element gets *which* primitive in *which* file. Omit the whole section when the design has no motion (static design).
+>
+> **KEEP rows only** (the 4 families: Ambient bg, Loading/Attention loop, Entrance, Value-driven). Touch press (`active:*`, `ripple`) and pointer/hover (`hover:*`, `group-hover:*`) feedback is **dropped** — never a row. List dropped sources once in the trailing note for transparency. Every kept row is gated by `rememberReducedMotion()` (state once below the table, not per row).
+
+| Element | Family | Compose primitive | Params (dur / easing / repeat / trigger) | Magnitude | Target file |
+|---------|--------|-------------------|------------------------------------------|-----------|-------------|
+| {e.g. skeleton blocks} | Loading loop | `Modifier.shimmer()` | 2s / linear / infinite / on-screen | bg-position −200%→200% | DS `motion/` (`Modifier.shimmer`) |
+| {e.g. each section} | Entrance | `AnimatedVisibility(fadeIn()+slideInVertically())` | 0.8s / ease-out-expo / once / first compose | translateY 30px→0; opacity 0→1 | feature `motion/{Feature}Motion.kt` |
+| {e.g. balance counter} | Value-driven | `animateIntAsState` | spring / — / on value change | 0→target | feature `motion/{Feature}Motion.kt` |
+
+> **Magnitude** = the animated value range (scale / translate / opacity / offset). Copy it verbatim from the token inventory's `### Keyframe magnitudes` — it is the **only** source for these amounts; do **not** invent them. Use `infer` only when the inventory marked it so.
+
+**Reduced motion**: all rows gated by `rememberReducedMotion()` (DS `XMotion.kt`, an `expect/actual` reading the OS setting) — reduced ⇒ skip to end/target state. Durations/easings come from `XMotion` tokens, never ad-hoc `tween(<literal>)`.
+
+**Dropped (interaction + web-only)**: {comma-separated classes/elements, e.g. `active:scale-95`, `.ripple`, `hover:bg-*`, `group-hover:*`} — no Compose output (per `_shared/motion.md` Web-Motion Policy).
+
 ## Pre-Implementation Contract
 
 > Architecture rules, color rules, and X-component defaults are project-wide and live in their canonical sources — do not restate them here:
@@ -149,6 +167,7 @@ Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed he
 - [ ] All colors use MaterialTheme.colorScheme.{role} — no raw Color() hex
 - [ ] Component override sizes/colors from Pre-Implementation Contract applied
 - [ ] Every String Inventory key exists in `composeResources/values/strings.xml` and is referenced via `stringResource` — no hardcoded display literals (Rule 12)
+- [ ] Every `## Motion` row implemented in a `motion/` file with the declared primitive (generic → DS `motion/`, feature-specific → `presentation/ui/motion/{Feature}Motion.kt`) — never inline in `Screen.kt`/components; durations/easings match; loops use `rememberInfiniteTransition`; all gated by `rememberReducedMotion()`; no interaction/hover motion present (omit if no `## Motion` section)
 - [ ] Build passes: `./gradlew :feature:{featurename}:assembleAndroidMain`
 - [ ] Code formatted: `./gradlew :feature:{featurename}:ktlintFormat`
 ```
@@ -316,10 +335,12 @@ RULES:
     different values that must be translated separately.
 18. **No silent omissions**: The mapping table above is not exhaustive. For ANY Tailwind
     class not listed, look up its CSS value and translate to the equivalent Compose modifier.
-    Never silently skip a class. If a class has no Compose equivalent (e.g., `cursor-pointer`,
-    `transition-all`), note it as `[omitted: {class} — no Compose equivalent]` in a comment.
-    Every visual property in the HTML must appear in the blueprint — either as a Compose value
-    or as an explicit omission note.
+    Never silently skip a class. If a non-motion class has no Compose equivalent (e.g.,
+    `cursor-pointer`), note it as `[omitted: {class} — no Compose equivalent]` in a comment.
+    **Motion/animation classes are not "no Compose equivalent" omissions** — route them per
+    rule 23 below (kept families → the `## Motion` table; interaction/hover → the Dropped note).
+    Every visual property in the HTML must appear in the blueprint — either as a Compose value,
+    an explicit omission note, or a `## Motion` row / Dropped entry.
 19. **Pre-Implementation Contract**: After the Component Tree, emit a `## Pre-Implementation Contract`
     section. **Do not restate** project-wide architecture rules, color rules, or X-component defaults —
     they live in `_shared/patterns.md`, `m3-colors.md`, and `_shared/X_COMPONENTS_CATALOG.md`. Open the
@@ -350,6 +371,22 @@ RULES:
     - `states.failed == false` → emit the "Skipped" form of the Failed State section.
     - `states.empty == false` → **omit the Empty State section entirely** (empty is a content variant, not a Rule-4 UI state).
     Only consume HTML/token inputs for states that are selected; do not invent content for skipped states.
+23. **Motion**: Build the `## Motion` table from the token inventory's `## Motion Inventory` + the
+    Motion Audit. Bucket every token via the Web-Motion Policy in [`_shared/motion.md`](../../_shared/motion.md)
+    (do **not** restate the policy or the family→primitive mapping — link it):
+    - **DROP** touch press (`active:*`, `ripple`) and pointer/hover (`hover:*`, `group-hover:*`,
+      `.interactive-card:hover/:active`, `focus:`, `cursor-*`) — never a row; list them once in the
+      table's trailing **Dropped** note for transparency.
+    - **KEEP** the 4 families (Ambient bg, Loading/Attention loop, Entrance, Value-driven) — one row each:
+      `Element | Family | Compose primitive | Params | Magnitude | Target file`. Pick the primitive from
+      motion.md's mapping; pick the target file per the code-layout rule (generic, reusable → DS `motion/`;
+      one-off, feature-specific → `presentation/ui/motion/{Feature}Motion.kt`).
+    - **Magnitude** column: copy the animated value range (scale/translate/opacity/offset) **verbatim** from
+      the inventory's `### Keyframe magnitudes`. This is the only source for these amounts — never invent them.
+    - **Params** durations/easings come from `XMotion` tokens (motion.md), never ad-hoc `tween(<literal>)`.
+    - Every kept row is gated by `rememberReducedMotion()` — an `expect/actual` reading the OS setting
+      (state once below the table).
+    - Omit the entire `## Motion` section when the inventory shows no motion (static design).
 
 X-COMPONENT MAPPING TABLE:
 {paste from stitch-guide.md}
@@ -378,7 +415,7 @@ HTML CONTENT:
 |-------------|--------------------------|
 | `<svg>`/`<canvas>` (icon-like) | `XIcon` with descriptive name |
 | `<svg>`/`<canvas>` (decorative) | `[Canvas/Path decoration]` with description |
-| CSS transitions/animations | `animate{Type}AsState` with target values |
+| CSS transitions/animations (`transition-*`, `animate-*`, `@keyframes`, tailwind `animation` config) | A `## Motion` row in the kept family + primitive from [`_shared/motion.md`](../../_shared/motion.md) (see rule 23). Touch press / pointer-hover variants are **dropped** to the Motion table's trailing note, not given a row. Never `[omitted — no Compose equivalent]`. |
 | CSS gradients | `Brush.linearGradient(...)` with direction based on CSS angle |
 | `<svg><circle>` with `stroke-dasharray`/`stroke-dashoffset` | `XCircularProgressIndicator(progress = { 1 - (dashoffset / dasharray) })` in a `Box` with text overlay |
 | `<img>` tags (Stitch CDN `lh3.googleusercontent.com/aida-public/*`) | `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop, modifier = ...)` — look up `{res_reference}` in `extracted/images.json`. Stitch CDN URLs are **design assets** to bundle, NOT runtime data. **Never emit `AsyncImage` for these.** `AsyncImage` is reserved for app-runtime data (user avatars, product photos from API) that the developer wires up post-hoc by editing the generated code. |

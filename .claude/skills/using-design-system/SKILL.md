@@ -48,6 +48,11 @@ Material3 allowed only in:
 - `:core:designsystem` module (for creating wrappers)
 - `MaterialTheme.colorScheme/typography` (accessing theme values)
 - Compose Foundation (Row, Column, Box, Spacer)
+- **Animation APIs** (`androidx.compose.animation.*`, `animation.core.*`, `foundation.interaction.*`) — **not** Material3, required for motion. Not a violation.
+
+## Motion
+
+Animation = captured from the Stitch design, in **dedicated `motion/` files** (never inline in `Screen.kt`/components). The generic motion primitives **ship in `:core:designsystem` `motion/`** — `Modifier.shimmer()`, `PulseDot`, `AmbientMeshBackground`, `BokehCanvas`, `Modifier.pulseGlow()`, `RevealOnAppear`, `rememberReducedMotion()`. Reuse them (pass the design's magnitude as a parameter); write only feature-specific one-offs in `feature/.../presentation/ui/motion/{Feature}Motion.kt`. Press/hover feedback is dropped (android+ios). Full policy: `@../_shared/motion.md`.
 
 ## Validation Checklist
 

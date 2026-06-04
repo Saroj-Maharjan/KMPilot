@@ -246,6 +246,10 @@ When a feature uses a **device capability** (GPS, camera, BLE, biometrics, senso
 
 **Who writes what** (creating-kmp-feature Phase 4): `platform-agent` writes the DataSource interface + per-platform actuals + `platformModule` (provider-only, no composables); `ui-layer-agent` writes the `expect @Composable` native-view interop; `integration-agent` adds `platformModule` to the feature's module list.
 
+### Motion (animation)
+
+Animation is **captured from the Stitch design**, never injected. Press/hover feedback (touch `active:*`, `ripple`, and pointer `hover:*`/`group-hover:*`) is **dropped** — primary targets are android + ios. The 4 non-interaction families (Ambient bg, Loading/Attention loop, Entrance, Value-driven) plus `prefers-reduced-motion` are kept and implemented in **dedicated motion files** — generic primitives in `core/designsystem/.../motion/`, feature-specific wiring in `feature/{name}/.../presentation/ui/motion/{Feature}Motion.kt` — never inline in `Screen.kt`/components. Three discipline rules mirror the color-role rule: **durations/easings** flow through `XMotion` tokens (no ad-hoc `tween(<literal>)`); **magnitudes** (scale/translate/opacity ranges) are copied from the design's captured keyframes, never invented; **`rememberReducedMotion()`** is an `expect/actual` reading the OS setting (not a stub). Animation imports (`androidx.compose.animation.*`, `animation.core.*`, `foundation.interaction.*`) are **not** Material3 (not a Rule-5 violation). Full policy, family→Compose mapping, easing map, reduced-motion gate, and file layout: [`_shared/motion.md`](motion.md).
+
 ## Module Dependencies
 
 | Feature depends on | When |

@@ -26,6 +26,7 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 6. Implement Screen + ScreenRoot (BOTH required) — `ScreenRoot` takes `uiModel: {Feature}UiModel` only
 7. Handle all 4 UI states (Uninitialized/Loading/Success/Failed) per async slot
 8. Implement Navigation with callbacks
+8b. **Motion (design-aware)**: if the blueprint has a `## Motion` table, implement each row in a `motion/` file — feature-specific rows → `presentation/ui/motion/{Feature}Motion.kt`; generic rows → call the DS `core/designsystem/.../motion/` primitives (already created by the skill). Gate every kept row with `rememberReducedMotion()`; never inline motion in `Screen.kt`/components; never implement interaction/hover motion. See the Motion section below + `@../../skills/_shared/motion.md`.
 9. Self-check (Rule 11): grep `import .*\.presentation\.` is zero in any file you generated under `data/`; no `{Feature}UiState.kt` file exists
 10. Self-check (Rule 12): grep your composables for `text = "`, `contentDescription = "`, `label = "` followed by a literal — every hit must be `stringResource(...)` (allowed exceptions: control sentinels, single-glyph symbols, repository data). `composeResources/values/strings.xml` exists and every referenced key is present.
 11. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
@@ -90,6 +91,19 @@ When the Platform Profile tag is `native-view` or `mixed`, the feature embeds a 
 **Boundary**: you do **NOT** write the device-capability provider (the `LocationDataSource` etc.) — that's `platform-agent`. Consume its DataSource interface through the ViewModel/Repository as usual. If the iOS actual of the native view itself needs a Swift class, leave a stub and flag a `/bridging-swift-kotlin` follow-up in your report.
 
 **Module-scaffold ownership**: normally `data-layer-agent` (or `platform-agent`) creates `feature/{featurename}/build.gradle.kts`. For a **pure `native-view` feature with no capability/provider** — where neither runs — Phase 4 tags **you** the module-scaffold owner: create `build.gradle.kts` from the [Gradle Template](../../skills/creating-kmp-feature/architecture/build-gradle-template.md) **first** (incl. any native-view platform deps), before writing UI. Otherwise the module already exists — only add the `@Preview` deps if missing.
+
+## Motion (design-aware, Rule-5 exempt)
+
+When the blueprint carries a `## Motion` table, implement the kept animation — **always in dedicated `motion/` files, never inline** in `Screen.kt`/components.
+
+- **Feature-specific rows** → `presentation/ui/motion/{Feature}Motion.kt` (one-off animated composables: count-up, chart bar-grow, tab/segment indicator).
+- **Generic rows** (family-level, reusable) → call the DS primitives that **already ship** in `core/designsystem/.../motion/` (`Modifier.shimmer()`, `PulseDot`, `AmbientMeshBackground`, `BokehCanvas`, `Modifier.pulseGlow()`, `RevealOnAppear`, `rememberReducedMotion()`). They exist in the template — **do not** recreate them; pass each row's **Magnitude** as a parameter (e.g. `PulseDot(scaleTo = 1.2f, minAlpha = 0.5f)`, `Modifier.shimmer(sweepFraction = …)`). If a row genuinely needs a primitive the shipped set lacks, flag it in your report rather than inlining the animation.
+- **Gate every kept row** with `rememberReducedMotion()` (the DS `expect/actual`, reads OS setting — reduced ⇒ skip to end/target state).
+- **Durations/easings** via `XMotion` tokens — never ad-hoc `tween(<literal>)` or raw `CubicBezierEasing`.
+- **Magnitudes** (scale/translate/opacity ranges) copied verbatim from the blueprint's `## Motion` **Magnitude** column — never invented.
+- **Never** implement interaction/hover motion (touch `active:*`, `ripple`, pointer `hover:*`/`group-hover:*`) — dropped per policy.
+
+Animation imports (`androidx.compose.animation.*`, `animation.core.*`, `foundation.interaction.*`) are **not** Material3 → not a Rule-5 violation. Motion needs no asset download. Full policy + family→primitive mapping + easing map: `@../../skills/_shared/motion.md`.
 
 ## Utility Functions (non-`@Composable`)
 
@@ -163,5 +177,6 @@ data class FeatureUiModel(
 ✅ Single {Feature}UiModel.kt — no {Feature}UiState.kt (Rule 11)
 ✅ UiState<> slots wrap DTOs from data/model/ — no presentation-layer mirrors (Rule 11)
 ✅ All display text via stringResource/UiText — composeResources/values/strings.xml created (Rule 12)
+✅ Motion (if blueprint had ## Motion): each row in a motion/ file (feature → presentation/ui/motion/, generic → DS motion/), reduced-motion gated, no inline/interaction/hover motion — or "n/a (no motion)"
 ✅ Build successful
 ```
