@@ -357,6 +357,10 @@ NAVHOST_EOF
     #    AppLoadingState/AppErrorState are intentionally content-free (copy + navigation are
     #    caller parameters), so they are KEPT as-is — downstream redesigns them via the
     #    design pipeline.
+    #    The generic `designsystem/motion/` package (XMotion + rememberReducedMotion expect/actual,
+    #    Modifier.shimmer, PulseDot, AmbientMeshBackground, BokehCanvas, Modifier.pulseGlow,
+    #    RevealOnAppear) is brand-neutral generic-tier and is KEPT (not stripped) — the motion
+    #    pipeline reuses it; per-feature motion is generated on demand.
     local ds="core/designsystem/src/commonMain"
     # 9a. Replace KMPilot's logotype (referenced by the generic XTopLogo) with a neutral mark.
     cat > "$ds/composeResources/drawable/app_logo_type.xml" <<'LOGO_EOF'
