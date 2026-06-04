@@ -33,7 +33,7 @@ recaptcha = "18.9.1"
 kotlinx-coroutines-test = "1.11.0"
 turbine = "1.2.1"
 kover = "0.9.8"
-mokkery = "3.3.0"
+mokkery = "3.4.0"
 
 [libraries]
 coreKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
