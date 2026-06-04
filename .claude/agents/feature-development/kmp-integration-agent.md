@@ -106,7 +106,7 @@ Use the canonical code A/B/C from the integration.md section. Validate with the 
 - composeApp/build.gradle.kts (modified)
 - {INIT_KOIN_PATH} (modified)
 - {NAV_HOST_PATH} (modified)
-{- navigation/TopLevelDestination.kt (created/modified), App.kt (modified), app strings.xml + DesignSystemResources.kt (modified) — only if bottom-bar tab}
+{- navigation/TopLevelDestination.kt (created/modified), App.kt (modified), app-module strings.xml (tab label) + DesignSystemResources.kt (tab icon) — only if bottom-bar tab}
 
 ### Integration Points
 ✅ 1. Gradle Include

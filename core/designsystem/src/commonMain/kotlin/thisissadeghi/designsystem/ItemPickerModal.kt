@@ -1,4 +1,4 @@
-package thisissadeghi.designsystem.app
+package thisissadeghi.designsystem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,10 +30,6 @@ import kmpilot.core.designsystem.generated.resources.retry_label
 import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.common.UiState
-import thisissadeghi.designsystem.Placeholder
-import thisissadeghi.designsystem.XButton
-import thisissadeghi.designsystem.XDialog
-import thisissadeghi.designsystem.asString
 import thisissadeghi.designsystem.toolbar.XModalTopAppBar
 
 @Composable
