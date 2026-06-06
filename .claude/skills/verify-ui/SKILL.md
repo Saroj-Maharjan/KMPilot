@@ -293,7 +293,7 @@ For each entry in `icons.json.icons`:
    - **Source:** icons.json
    ```
 
-> **Bottom-bar tab icons are app-shell chrome.** A bottom navigation bar is rendered in `App.kt` (not in any feature), so its tab icons resolve via `DesignSystemResources.drawable.{ident}` and its labels via the app module's `Res` — this is correct and expected, not a "wrong scope" finding. Do not flag the app-shell bottom bar as a missing/mis-scoped feature element. Auditing the bar itself (tab count, order, labels) is out of scope for the per-feature UI audit.
+> **Bottom-bar tab icons are app-shell chrome.** A bottom navigation bar is rendered in `App.kt` (not in any feature), so its tab icons and labels both resolve via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res` (drawables and strings in `composeApp/composeResources/`) — this is correct and expected, not a "wrong scope" finding. Do not flag the app-shell bottom bar as a missing/mis-scoped feature element. Auditing the bar itself (tab count, order, labels) is out of scope for the per-feature UI audit.
 
 4. **Forbidden legacy imports** — grep all feature Kotlin for `import androidx.compose.material.icons.`. Any match is CRITICAL (the pinned `material-icons-extended` library is deprecated; every icon usage in a design-aware feature must go through `XIcon(painter = painterResource(...))`):
    ```markdown

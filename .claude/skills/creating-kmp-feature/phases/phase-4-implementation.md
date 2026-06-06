@@ -206,7 +206,7 @@ Invoke integration-agent with:
   - PKG_PREFIX, PKG_PATH, PROJECT_NAMESPACE
   - CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG
   - INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES
-- Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5)
+- Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5). **Contradiction check**: if the design blueprint Component Tree contains a tab nav bar note (`[App-shell chrome — Integration Point 5...]`) BUT the PRD says "pushed screen", STOP — do not proceed. Fix the PRD Navigation section to say "top-level tab" first. The design is authoritative; a pushed-screen default in the PRD is the error.
 - Platform module (Rule 14, tag ≠ `network`): pull `platformModule` (expect/actual) into `{featurename}Module` via `includes(platformModule)` and provide `androidContext()` if an Android actual needs it
 - Expected: integration points 1–4 (+ point 5 if a tab) + full build + ktlint + spec.md
 ```
@@ -259,7 +259,7 @@ Invoke integration-agent with:
 - Project context: PKG_PREFIX, PKG_PATH, PROJECT_NAMESPACE, CORE_COMMON_PKG,
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
   NAV_HOST_PATH, CORE_MODULES
-- Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen
+- Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen. **Contradiction check**: if the design blueprint Component Tree contains a tab nav bar note (`[App-shell chrome — Integration Point 5...]`) BUT the PRD says "pushed screen", STOP — fix the PRD first. Design is authoritative.
 - Platform module (Rule 14, tag ≠ `network`): pull `platformModule` into `{featurename}Module` via `includes(platformModule)`; provide `androidContext()` if needed
 - Integrates data, platform, and UI layers
 - Completes integration points 1–4 (+ point 5 if a tab)

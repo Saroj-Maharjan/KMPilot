@@ -148,7 +148,7 @@ Extract the following per feature:
 | Element | What to capture |
 |---------|-----------------|
 | **Top app bar** | Presence (yes/no), height (dp), background color (hex + M3 role), title alignment (start/center), title typography (size/weight), leading icon (back arrow / menu / none), trailing icons (count + style) |
-| **Bottom navigation** | Presence (yes/no). If present: height (dp), background color (hex + M3 role), item count, item style (icon-only / icon+label), selected/unselected color treatment |
+| **Bottom navigation** | Presence (yes/no). If present: height (dp), background color (hex + M3 role), item count, item style (icon-only / icon+label), selected/unselected color treatment. **CRITICAL**: A multi-tab nav bar (≥2 persistent tabs) is **app-shell chrome**, NOT per-screen inherited chrome — record its tokens for Point 5 wiring but do NOT include it in the Shared Conventions block (Step 1.5). A single sticky CTA button is NOT a tab nav bar. |
 | **Screen background** | Color (hex + M3 role) or surface treatment |
 
 ### Pattern Divergence Detection (MANDATORY before picking a reference)
@@ -184,15 +184,16 @@ Example:
 ```
 Shared conventions inherited from existing project screens (reference: {reference_feature}):
 - Top app bar: present, 56dp height, background #1C1910 (M3 surface), title start-aligned in onSurface, leading back arrow icon, no trailing icons.
-- Bottom navigation: present, 80dp height, background #1C1910 (M3 surface), 4 items, icon+label, selected item in primary, unselected in onSurfaceVariant.
 - Screen background: #0F0D09 (M3 background).
 These elements MUST match the existing screens exactly. Do not introduce variations in height, color, alignment, or iconography.
 ```
 
-If the user overrode an element, replace its line with an explicit instruction. Example for "no bottom nav":
+> **Tab nav bar is NOT a per-screen convention.** Never include a multi-tab bottom navigation bar in the Shared Conventions block. Its presence signals a top-level tab feature (Integration Point 5, app-shell) — that is captured in the PRD, not here. Only per-screen sticky CTAs belong in the conventions block.
+
+If the user overrode an element, replace its line with an explicit instruction. Example for "no top bar":
 
 ```
-- Bottom navigation: NONE for this screen (explicit override by user).
+- Top app bar: NONE for this screen (explicit override by user).
 ```
 
 ---
@@ -738,6 +739,7 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
    - **No source mutation**: the script never writes to `feature/*/composeResources/drawable/`, never edits `DesignSystemResources.kt`, never rewrites any `.kt` import. Those happen later in `/creating-kmp-feature` (or `/modifying-kmp-feature`) when the marker is active.
    - **Manifest fields** for each icon: `name`, `style`, `filled`, `scope`, `drawable_name`, predicted `drawable_path`, predicted `res_reference`, `source_url`, `download_status: "pending"`, `usage_count`, `users`, `occurrences`. Step 1.17 feeds this manifest to the blueprint generator so icon references resolve correctly.
    - Non-outlined styles (rounded, sharp) emit a warning — Stitch defaults to outlined, so divergence usually signals a design intent worth noting.
+   - **Completeness check (MANDATORY after running)**: count all `<span class="material-symbols-*">` occurrences in each selected-state HTML file and compare against the icons generated in `icons.json`. If any span is absent from the manifest (script missed it due to HTML format variance — e.g. icon name as text content instead of `data-icon` attribute), add it manually to `icons.json` with `download_status: "pending"`. An icon absent from `icons.json` WILL produce a blueprint with `Icons.Default.*` fallback — that is always wrong.
 
    **Materialization happens later, in the implementation skill.** When the user runs `/creating-kmp-feature {featurename}` or `/modifying-kmp-feature {featurename}` in design-aware mode, it invokes the same script **without** `--manifest-only`. That run downloads each XML to its declared path, applies the JetBrains-required KMP cleanup pass (strip `android:tint`, `android:autoMirrored`, replace `@android:color/white` with `#000000`), extends `DesignSystemResources.kt` for any chrome additions, and inline-migrates any stale `feature/X/drawable/{ident}.xml` copies plus their Kotlin imports for icons whose scope flipped.
 
@@ -936,7 +938,13 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - Failed — `.claude/docs/_shared/designs/extracted/stitch_failed.html` + `tokens_failed.md` (only if `needsFailed`)
    - Empty — `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` + `tokens_empty.md` (only if `needsEmpty`)
 
-2. **Generate the blueprint**: Feed the selected state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
+2. **Tab-nav-bar detection (MANDATORY before generating)**: Scan the success-state HTML for a multi-tab bottom navigation bar (a persistent row of ≥2 selectable tab items). If found:
+   - **Do NOT map it to `XScreen(bottomBar = { NavBar() })`** — that violates `blueprint-spec.md:47` and `patterns.md Rule 13`.
+   - Classify the feature as a **top-level tab** destination. If the PRD Navigation section says "pushed screen", STOP and fix the PRD first — the design overrides the default. Update the PRD Navigation section to read "top-level tab" and capture label, icon, and tab order.
+   - In the blueprint Component Tree, emit the nav bar under a note: `[App-shell chrome — Integration Point 5. Do NOT add to XScreen.bottomBar. Wire via TopLevelDestination in App.kt.]`. Tab icons go in `composeApp/composeResources/drawable/` (NOT `icons.json` / `core:designsystem`); tab labels go in `composeApp/composeResources/values/strings.xml`. Both are app-module resources referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res`.
+   - A single sticky CTA (e.g. "Send", "Confirm") is NOT a tab nav bar — it goes in `XScreen.bottomBar` normally.
+
+3. **Generate the blueprint**: Feed the selected state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
    - HTML file contents for selected states (labeled by state)
    - Token inventories for selected states (labeled by state) — authoritative for already-converted classes
    - The icons manifest at `.claude/docs/{featurename}/designs/extracted/icons.json` (from Step 1.15 sub-step 5) — authoritative for every Material Symbols `<span>` in the design, resolving each to its drawable name and Compose `res_reference`. The blueprint must use the exact `res_reference` from the manifest (no manual `Icons.Default.*` fallback).
@@ -952,7 +960,9 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - `states.failed` true → shared-screen entry; false → "Skipped" marker.
    - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
 
-4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), **`## Motion` table when the Motion Audit found motion** (kept families + target-file column + Dropped note; omitted for a static design), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist).
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), **`## Motion` table when the Motion Audit found motion** (kept families + target-file column + Dropped note; omitted for a static design), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist). **Also verify**:
+   - Component Tree must NOT assign a tab nav bar to `XScreen(bottomBar = { ... })`. Any multi-tab nav bar must appear only as an app-shell Point-5 note (see sub-step 2 above). If found in `XScreen.bottomBar`, regenerate.
+   - Blueprint must NOT contain `Icons.Default.{Name}`, `androidx.compose.material.icons`, or the phrase "No XML download needed for font glyphs" / "use `Icons.Default.*`". Every Material Symbol must reference its `res_reference` from `icons.json`. If found, the manifest is incomplete — add missing icons to `icons.json` and regenerate.
 
 ---
 

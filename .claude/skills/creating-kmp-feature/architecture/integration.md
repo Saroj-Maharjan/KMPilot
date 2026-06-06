@@ -183,6 +183,8 @@ fun BaseAppNavHost(navController: NavHostController) {
 
 **When to apply**: ONLY if the feature's PRD/spec Navigation section marks it as a top-level tab. Skip for pushed screens (the common case). A bottom bar holds 3–5 tabs (Material guidance) — do not add more.
 
+**First-tab scenario (sibling screens not yet implemented)**: When the first tab feature is being built but its sibling tabs (e.g. Orders, Profile) do not exist yet — wire Point 5 NOW. Add placeholder `TopLevelDestination` entries for future tabs (icon = a generic placeholder drawable, route = a `@Serializable data object PlaceholderRoute` in the app module, label = TBD string). Do NOT place the nav bar inside the feature's `XScreen.bottomBar` as a temporary measure. A feature-owned nav bar cannot navigate between features (it has no `navController`), making it decorative-only and a design violation. Placeholder entries in `TopLevelDestination` are explicitly supported and carry no runtime cost until their routes are registered.
+
 **Where it lives**: the app shell, NOT the feature. The bottom bar is rendered in `App.kt` (`{NAV_HOST_PATH}`'s sibling) and the tab list is a single enum in the app module. This is consistent with point 4 — `{NAV_HOST_PATH}` already imports every feature's `Route`. The feature module stays independent (it never imports another feature); the app module composes the tabs.
 
 ### Design (official Compose Navigation best practices)
@@ -197,8 +199,8 @@ fun BaseAppNavHost(navController: NavHostController) {
 
 The bar renders in the app module, and each feature's generated `Res` is `internal` per module (Rule 12) — so the app module **cannot** import a feature's `Res`. Therefore:
 
-- **Tab label → app-module strings**: `composeApp/src/commonMain/composeResources/values/strings.xml` (create the file if absent — typically only `drawable/` exists). Key `tab_{featurename}`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.string.tab_{featurename}`.
-- **Tab icon + selectedIcon → `:core:designsystem` chrome**: drawable XMLs in `core/designsystem/.../composeResources/drawable/` + a line each in `DesignSystemResources.kt` `object drawable`. This reuses the existing chrome-promotion path (`download_assets.py` / `/ui-designer`). The feature contributes only the enum entry referencing these.
+- **Tab label → app-module strings**: `composeApp/src/commonMain/composeResources/values/strings.xml` (create if absent). Key `tab_{featurename}`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.string.tab_{featurename}`.
+- **Tab icon → app-module drawables**: vector XML in `composeApp/src/commonMain/composeResources/drawable/`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.drawable.{icon_name}`. Co-located with strings — both are app-specific chrome, neither belongs in `:core:designsystem` (which ships generic primitives to all downstream projects).
 
 ### First tab vs. append
 
@@ -215,18 +217,17 @@ package {PKG_PREFIX}.{PROJECT_NAMESPACE}.navigation
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import {PKG_PREFIX}.{featurename}.presentation.navigation.{Feature}Route
-import {CORE_DESIGNSYSTEM_PKG}.DesignSystemResources
 import {PROJECT_NAMESPACE}.composeapp.generated.resources.Res
+import {PROJECT_NAMESPACE}.composeapp.generated.resources.ic_tab_{featurename}
 import {PROJECT_NAMESPACE}.composeapp.generated.resources.tab_{featurename}
 
 /** App bottom-bar destinations. Each tab feature appends ONE entry. route = the feature's @Serializable nav route. */
 enum class TopLevelDestination(
     val route: Any,
     val icon: DrawableResource,
-    val selectedIcon: DrawableResource,
     val label: StringResource,
 ) {
-    {FEATURE}({Feature}Route, DesignSystemResources.drawable.{featurename}, DesignSystemResources.drawable.{featurename}_fill, Res.string.tab_{featurename}),
+    {FEATURE}({Feature}Route, Res.drawable.ic_tab_{featurename}, Res.string.tab_{featurename}),
     // append new tab features here
 }
 ```
@@ -263,7 +264,7 @@ Scaffold(
                         },
                         icon = {
                             XIcon(
-                                painter = painterResource(if (selected) dest.selectedIcon else dest.icon),
+                                painter = painterResource(dest.icon),
                                 contentDescription = stringResource(dest.label),
                             )
                         },
