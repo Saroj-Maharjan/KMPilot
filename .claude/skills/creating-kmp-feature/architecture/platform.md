@@ -37,7 +37,7 @@ Record the chosen option in the PRD's **Platform Profile & Capabilities** sectio
 
 ## Target reality — actuals for ALL targets (incl. desktop)
 
-Feature targets are **android + iosX64/iosArm64/iosSimulatorArm64 + jvm("desktop")** (see `build-gradle-template.md`). Every `expect` therefore needs actuals for **android / ios / desktop**, or the build breaks.
+Feature targets are **android + iosArm64/iosSimulatorArm64 + jvm("desktop")** (see `build-gradle-template.md`). Every `expect` therefore needs actuals for **android / ios / desktop**, or the build breaks.
 
 **Desktop is the easy one to forget.** Give it a graceful fallback:
 - capability provider → returns `Either.Failure(ErrorModel...)` ("unavailable on this platform"),

@@ -35,7 +35,6 @@ kotlin {
 
     val xcfName = "{featurename}"
 
-    iosX64 { binaries.framework { baseName = xcfName } }
     iosArm64 { binaries.framework { baseName = xcfName } }
     iosSimulatorArm64 { binaries.framework { baseName = xcfName } }
 
@@ -120,7 +119,7 @@ sourceSets {
 **iOS native frameworks** (MapLibre, MapKit-via-SPM, etc.) — required even when the Kotlin API is a `commonMain` lib. Configure on the iOS targets and export:
 ```kotlin
 // Swift Package Manager
-listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach { target ->
+listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
     target.swiftPackageConfig {
         dependency {
             remotePackageVersion(
