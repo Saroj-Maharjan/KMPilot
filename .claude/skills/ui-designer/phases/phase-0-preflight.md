@@ -147,7 +147,7 @@ This is the **only place** feature ↔ screen identity is established. Never ass
      Use `AskUserQuestion` with these options.
      If Regenerate: set `features[featurename].successScreenId = null` and `features[featurename].emptyScreenId = null` in `stitch-project.json`. Write the file. Continue as new-feature flow (step 3 below).
      If Cancel: stop.
-   - If valid: set mode to **resume**. Load `successScreenId`, `emptyScreenId` (may be null) into working context.
+   - If valid: set **StitchMode** to **stitch-resume**. Load `successScreenId`, `emptyScreenId` (may be null) into working context.
 
 3. If entry **does not exist**:
    - Create a new entry in `stitch-project.json.features`:
@@ -170,7 +170,7 @@ This is the **only place** feature ↔ screen identity is established. Never ass
      }
      ```
    - Update `stitch-project.json.updatedAt`. Write the file.
-   - Mode: **new feature**.
+   - **StitchMode**: **stitch-new**.
 
 ---
 
@@ -192,8 +192,8 @@ After preflight completes, the following context is available for Phase 1:
 ```
 Model ID: GEMINI_3_FLASH
 Feature: {featurename}
-Feature Exists: {yes|no}
-Mode: {new|resume}
+Feature Exists: {yes|no}          ← Kotlin source files found? Drives which implementation skill to recommend at completion.
+StitchMode: {stitch-new|stitch-resume}   ← Stitch design session state only. NOT a proxy for code existence.
 Stitch Project ID: {projectId} (shared project)
 Design System ID: {designSystemAssetId}
 Docs Path: .claude/docs/{featurename}/

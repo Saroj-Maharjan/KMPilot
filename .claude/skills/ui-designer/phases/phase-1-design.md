@@ -1014,7 +1014,9 @@ Project config: .claude/docs/_project/stitch-project.json
 blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 ```
 
-Show completion report from SKILL.md and stop. The user controls the next step — they can invoke an implementation skill if they want to proceed with code.
+Show completion report from SKILL.md and stop. The completion report's "Next step" must use **`Feature Exists`** from Phase 0 — not `StitchMode` — to recommend the correct implementation skill:
+- `Feature Exists: no` → recommend `/creating-kmp-feature {featurename}`
+- `Feature Exists: yes` → recommend `/modifying-kmp-feature {featurename}`
 
 ---
 

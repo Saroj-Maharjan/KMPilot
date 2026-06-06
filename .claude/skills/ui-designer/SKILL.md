@@ -14,7 +14,7 @@ Design UI screens in Google Stitch and produce a Compose Implementation Blueprin
 
 `ui-designer` is a **design-only** skill. It handles all Stitch MCP design work and produces a Compose Implementation Blueprint plus persisted HTML + token inventories under `.claude/docs/{featurename}/designs/extracted/`. The blueprint references project-wide rules (`patterns.md`, `m3-colors.md`, `X_COMPONENTS_CATALOG.md`) rather than restating them. It does NOT implement code or invoke other skills.
 
-After `ui-designer` completes, the user can invoke `/modifying-kmp-feature` or `/creating-kmp-feature` to implement the design. Those skills auto-detect the blueprint and enter design-aware mode.
+After `ui-designer` completes, the user can invoke `/creating-kmp-feature` (new feature, no Kotlin source yet) or `/modifying-kmp-feature` (existing feature, Kotlin source already exists) to implement the design. Those skills auto-detect the blueprint and enter design-aware mode.
 
 **Invocation modes:**
 - `/ui-designer` (no args) — explicitly run Project Init for the repo
@@ -150,5 +150,9 @@ blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 
 ---
 
-> **Next step —** run `/clear` to free the context window, then `/creating-kmp-feature {featurename}` (new feature) or `/modifying-kmp-feature {featurename}` (existing feature) to implement this design.
+> **Next step —** run `/clear` to free the context window, then pick the implementation skill based on **`Feature Exists`** from Phase 0:
+> - **`Feature Exists: no`** → `/creating-kmp-feature {featurename}` — no Kotlin source files exist; create the feature from scratch
+> - **`Feature Exists: yes`** → `/modifying-kmp-feature {featurename}` — Kotlin source files already exist; add the design to the existing feature
+>
+> **Do not use `StitchMode` (stitch-new / stitch-resume) to make this decision** — that tracks Stitch design session state, not Kotlin code existence.
 ```
