@@ -349,7 +349,8 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
       "tokensPath": "string — path to tokens .md",
       "dimensions": { "width": "number", "height": "number" },
       "generatedAt": "string — ISO timestamp",
-      "designSystemApplied": "boolean"
+      "designSystemApplied": "boolean",
+      "codeImplemented": "boolean — false until an implementation skill rewrites AppLoadingState.kt to match this design; true after. Reset to false if the design is updated in Stitch."
     },
     "failed": {
       "screenId": "string — Stitch screen ID",
@@ -359,7 +360,8 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
       "tokensPath": "string — path to tokens .md",
       "dimensions": { "width": "number", "height": "number" },
       "generatedAt": "string — ISO timestamp",
-      "designSystemApplied": "boolean"
+      "designSystemApplied": "boolean",
+      "codeImplemented": "boolean — false until an implementation skill rewrites AppErrorState.kt to match this design; true after. Reset to false if the design is updated in Stitch."
     }
   },
   "features": {

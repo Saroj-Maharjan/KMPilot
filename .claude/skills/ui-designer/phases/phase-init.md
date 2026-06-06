@@ -492,7 +492,8 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
      "tokensPath": null,
      "dimensions": { "width": {width}, "height": {height} },
      "generatedAt": "{ISO timestamp}",
-     "designSystemApplied": false
+     "designSystemApplied": false,
+     "codeImplemented": false
    }
    ```
 
@@ -600,7 +601,8 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
      "tokensPath": null,
      "dimensions": { "width": {width}, "height": {height} },
      "generatedAt": "{ISO timestamp}",
-     "designSystemApplied": false
+     "designSystemApplied": false,
+     "codeImplemented": false
    }
    ```
 
@@ -653,7 +655,8 @@ Created at Init-2, progressively filled through Init-5. The authoritative schema
       "tokensPath": "string — path to tokens.md",
       "dimensions": { "width": "number", "height": "number" },
       "generatedAt": "string — ISO timestamp",
-      "designSystemApplied": "boolean"
+      "designSystemApplied": "boolean",
+      "codeImplemented": "boolean — false until an implementation skill rewrites AppLoadingState.kt to match this design; true after. Reset to false if the design is updated in Stitch."
     },
     "failed": {
       "screenId": "string",
@@ -663,7 +666,8 @@ Created at Init-2, progressively filled through Init-5. The authoritative schema
       "tokensPath": "string — path to tokens.md",
       "dimensions": { "width": "number", "height": "number" },
       "generatedAt": "string — ISO timestamp",
-      "designSystemApplied": "boolean"
+      "designSystemApplied": "boolean",
+      "codeImplemented": "boolean — false until an implementation skill rewrites AppErrorState.kt to match this design; true after. Reset to false if the design is updated in Stitch."
     }
   },
   "features": {
