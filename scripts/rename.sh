@@ -94,9 +94,16 @@ echo "→ Renaming text references..."
 # its generated `Res` class package from rootProject.name.lowercase(), so any
 # `import kmpilot.<module>.generated.resources.*` must be rewritten.
 while IFS= read -r -d '' file; do
-    sedi "s|${OLD_APP_ID}|${NEW_PKG}|g" "$file"
-    sedi "s|${OLD_APP_NS}|${NEW_PKG}|g" "$file"
-    sedi "s|${OLD_PKG}|${NEW_PKG}|g" "$file"
+    # Package identifiers via sentinels: two-phase OLD→sentinel→NEW so a NEW_PKG
+    # that contains OLD_PKG as a substring (e.g. new "thisissadeghi.kickoff"
+    # over old "thisissadeghi") is not re-matched by a later pass and doubled
+    # into "thisissadeghi.kickoff.kickoff". Most specific first.
+    sedi "s|${OLD_APP_ID}|@@KMPILOT_APPID@@|g" "$file"
+    sedi "s|${OLD_APP_NS}|@@KMPILOT_APPNS@@|g" "$file"
+    sedi "s|${OLD_PKG}|@@KMPILOT_PKG@@|g" "$file"
+    sedi "s|@@KMPILOT_APPID@@|${NEW_PKG}|g" "$file"
+    sedi "s|@@KMPILOT_APPNS@@|${NEW_PKG}|g" "$file"
+    sedi "s|@@KMPILOT_PKG@@|${NEW_PKG}|g" "$file"
     sedi "s|${OLD_NAME}|${NEW_NAME}|g" "$file"
     sedi "s|${OLD_NAME_LOWER}\\.|${NEW_NAME_LOWER}.|g" "$file"
 done < <(find . -type f \
@@ -120,8 +127,15 @@ while IFS= read -r -d '' dir; do
         echo "  skip (exists): $new_dir"
         continue
     fi
+    # Move via a temp sibling first. Guards the case where NEW_PKG_PATH nests
+    # under OLD_PKG_PATH (new prefix starts with old, e.g.
+    # thisissadeghi → thisissadeghi/kickoff): a direct mv "$dir" "$new_dir"
+    # would target a subdir of itself and fail with "Invalid argument".
+    tmp="$(mktemp -d "${parent}/.kmpilot-rename.XXXXXX")"
+    mv "$dir" "${tmp}/pkg"
     mkdir -p "$(dirname "$new_dir")"
-    mv "$dir" "$new_dir"
+    mv "${tmp}/pkg" "$new_dir"
+    rmdir "$tmp"
     echo "  ${dir#./} → ${new_dir#./}"
 done < <(find . -type d -name "${OLD_PKG_PATH}" -path "*/kotlin/${OLD_PKG_PATH}" -print0)
 
