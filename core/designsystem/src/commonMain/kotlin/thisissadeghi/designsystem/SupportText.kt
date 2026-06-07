@@ -33,7 +33,7 @@ fun SupportText(
             color =
                 when (type) {
                     SupportType.Error -> MaterialTheme.colorScheme.error
-                    SupportType.Success -> XTheme.Colors.Green
+                    SupportType.Success -> XTheme.Colors.Success
                     SupportType.Info -> Color.Unspecified
                 },
             fontSize = 11.sp,
