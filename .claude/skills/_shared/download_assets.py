@@ -24,7 +24,8 @@ ASSET TYPES
   - Parses <span class="material-symbols-{outlined|rounded|sharp}" data-icon="name">
   - Downloads XML vector drawables from google/material-design-icons
   - Applies KMP cleanup pass (strip android:tint, android:autoMirrored;
-    replace @android:color/white with #000000)
+    translate EVERY @android:color/* ref — any color attribute — to literal
+    ARGB hex, since the @android:color namespace crashes non-Android targets)
   - Filename: snake_case from data-icon (e.g. "arrow_back", "bolt_fill")
   - Manifest: icons.json
 
@@ -543,14 +544,52 @@ def build_icon_url(hit, size_px: int = ICON_DEFAULT_SIZE_PX) -> str:
 
 _XML_TINT_RE = re.compile(r'\s+android:tint="[^"]*"')
 _XML_AUTOMIRRORED_RE = re.compile(r'\s+android:autoMirrored="[^"]*"')
-_XML_ANDROID_COLOR_WHITE_RE = re.compile(r'android:fillColor="@android:color/white"')
+# Any "@android:color/<name>" used as an attribute value, in ANY color attribute
+# (android:fillColor, android:strokeColor, app:tint, …). The @android:color
+# namespace is Android-only and is NOT resolved by the Compose Multiplatform
+# resource pipeline — leaving it in crashes at runtime on non-Android targets.
+_XML_ANDROID_COLOR_REF_RE = re.compile(r'"@android:color/([A-Za-z0-9_]+)"')
+
+# Literal ARGB hex for the public android.R.color.* platform colors
+# (frameworks/base .../res/values/colors.xml). Used to translate any leftover
+# "@android:color/<name>" reference to a value the KMP pipeline can parse.
+# Unmapped names fall back to opaque black (visible default; icons are tinted
+# by XIcon at render time, so the literal value is cosmetic for Material Symbols).
+_ANDROID_PLATFORM_COLORS = {
+    "white": "#FFFFFFFF",
+    "black": "#FF000000",
+    "transparent": "#00000000",
+    "background_light": "#FFFFFFFF",
+    "background_dark": "#FF000000",
+    "darker_gray": "#FFAAAAAA",
+    "primary_text_dark": "#FFFFFFFF",
+    "primary_text_light": "#FF000000",
+    "secondary_text_dark": "#FFBEBEBE",
+    "secondary_text_light": "#FF323232",
+    "holo_blue_light": "#FF33B5E5",
+    "holo_blue_dark": "#FF0099CC",
+    "holo_green_light": "#FF99CC00",
+    "holo_green_dark": "#FF669900",
+    "holo_red_light": "#FFFF4444",
+    "holo_red_dark": "#FFCC0000",
+    "holo_orange_light": "#FFFFBB33",
+    "holo_orange_dark": "#FFFF8800",
+    "holo_purple": "#FFAA66CC",
+}
+_ANDROID_COLOR_FALLBACK = "#FF000000"
+
+
+def _resolve_android_color(match: "re.Match[str]") -> str:
+    name = match.group(1)
+    return '"' + _ANDROID_PLATFORM_COLORS.get(name, _ANDROID_COLOR_FALLBACK) + '"'
 
 
 def clean_icon_xml_for_kmp(raw: bytes) -> bytes:
     text = raw.decode("utf-8")
     text = _XML_TINT_RE.sub("", text)
     text = _XML_AUTOMIRRORED_RE.sub("", text)
-    text = _XML_ANDROID_COLOR_WHITE_RE.sub('android:fillColor="#000000"', text)
+    # Translate EVERY @android:color/* ref (any color attribute) to literal hex.
+    text = _XML_ANDROID_COLOR_REF_RE.sub(_resolve_android_color, text)
     return text.encode("utf-8")
 
 

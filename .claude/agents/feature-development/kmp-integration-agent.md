@@ -93,7 +93,7 @@ When the feature IS a tab:
    - **Yes → append**: add ONE `TopLevelDestination` entry; ensure the route is a top-level `composable` in `{NAV_HOST_PATH}`.
 2. **Resources**:
    - Label → app-module `composeApp/src/commonMain/composeResources/values/strings.xml` (create file if absent), key `tab_{featurename}`.
-   - Icon + selectedIcon → `:core:designsystem` chrome drawables + `DesignSystemResources.kt` `object drawable` entries (reuse the chrome-promotion path).
+   - Icon + selectedIcon → `:core:designsystem` chrome drawables + `DesignSystemResources.kt` `object drawable` entries (reuse the chrome-promotion path). **Any tab-icon XML you place by hand must contain NO `@android:color/*` reference** — that namespace crashes the KMP pipeline on iOS/desktop; use literal ARGB hex (`white` → `#FFFFFFFF`, `black` → `#FF000000`). See `_shared/X_COMPONENTS_CATALOG.md` → "Drawable XML authoring".
 3. **Tab metadata** (label text, icon name, order/position) comes from the PRD/spec — do not invent it.
 
 Use the canonical code A/B/C from the integration.md section. Validate with the standard `./gradlew assembleDebug && ./gradlew ktlintFormat`.

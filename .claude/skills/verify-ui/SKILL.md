@@ -314,6 +314,15 @@ For each entry in `icons.json.icons`:
 
    The "not actively referenced" rule alone is sufficient — pre-existing project assets (the design system's logos, placeholders, level icons, etc.) survive because their Kotlin call-sites still reference them. No hardcoded allowlist needed.
 
+6. **Forbidden `@android:color/*` in drawable XML** — grep the **content** of every `*.xml` under all three drawable dirs (`feature/{featurename}/.../composeResources/drawable/`, `core/designsystem/.../composeResources/drawable/`, **and** `composeApp/.../composeResources/drawable/` — the last holds hand-added tab icons not in any manifest) for `@android:color`. Any match is CRITICAL (the `@android:color` namespace is Android-only, unresolved by the KMP resource pipeline → **runtime crash on iOS/desktop**). This catches XML that `download_assets.py` did not clean (hand-added icons, third-party icon packs, brand drawables):
+   ```markdown
+   ### CRITICAL — Forbidden @android:color in drawable XML: {ident}.xml
+   - **Where:** `{drawable_dir}/{ident}.xml:LINE`
+   - **Code:** `android:fillColor="@android:color/{name}"` (or strokeColor/other color attr)
+   - **Fix:** Replace with the literal ARGB hex (`white` → `#FFFFFFFF`, `black` → `#FF000000`, `transparent` → `#00000000`; look up others in Android's `colors.xml`). For Material Symbols, re-run `download_assets.py` (full mode) which cleans this automatically.
+   - **Source:** project-wide rule (KMP resource pipeline) — see `_shared/X_COMPONENTS_CATALOG.md` → "Drawable XML authoring"
+   ```
+
 ### 5.8 Images Manifest Audit
 
 **Purpose**: Verify the implementation matches the images manifest produced by `/ui-designer` Step 1.15 sub-step 6 and materialized by `/creating-kmp-feature` / `/modifying-kmp-feature`.

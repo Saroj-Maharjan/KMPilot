@@ -201,6 +201,12 @@
   - Promotion from domain → chrome is automatic and idempotent; the implementing skill rewrites affected features' imports and the doc-artifact promotion (other features' manifests) already happened during `/ui-designer`'s manifest-only run. Demotion is not performed.
 - Filled-variant icons (Stitch HTML `data-weight="fill"`) get a `_fill` filename and resource suffix (e.g. `bolt_fill.xml` → `Res.drawable.bolt_fill`).
 
+#### Drawable XML authoring — NEVER `@android:color/*` (all drawable dirs)
+
+> **Hard rule, applies to EVERY XML vector drawable under any `composeResources/drawable/` — feature, `composeApp`, and `:core:designsystem` alike (not only the script-downloaded Material Symbols).** Never leave an `@android:color/<name>` reference in a drawable's color attribute (`android:fillColor`, `android:strokeColor`, …). The `@android:color` namespace is Android-only; the Compose Multiplatform resource pipeline does not resolve it, so it **crashes at runtime on non-Android targets** (iOS/desktop).
+>
+> At download/author/commit time, replace every `@android:color/<name>` with its literal ARGB hex (`#RRGGBB` or `#AARRGGBB`). Look up the value in the Android platform `colors.xml` (e.g. `white` → `#FFFFFFFF`, `black` → `#FF000000`, `transparent` → `#00000000`); it is always a plain hex string. This covers downloaded Material Symbols, hand-added `composeApp` bottom-bar tab icons, brand drawables in the design system, and any third-party icon-pack XML. `download_assets.py`'s `clean_icon_xml_for_kmp` does this automatically for icons it materializes; **anything added by hand must be cleaned the same way** — grep `composeResources/drawable/` for `@android:color` before committing.
+
 ### `XText` *(wraps M3 `Text`)*
 - No additional internal constraints — pure pass-through to M3 Text with all M3 defaults.
 - `XTextDefaults` provides preset `TextStyle`s (titleStyle, bodyStyle, labelStyle, errorStyle) — opt-in only.

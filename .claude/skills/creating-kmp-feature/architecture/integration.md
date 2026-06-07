@@ -238,7 +238,7 @@ grep -rn "WelcomeRoute" composeApp/src/commonMain/kotlin && echo "❌ WelcomeRou
 The bar renders in the app module, and each feature's generated `Res` is `internal` per module (Rule 12) — so the app module **cannot** import a feature's `Res`. Therefore:
 
 - **Tab label → app-module strings**: `composeApp/src/commonMain/composeResources/values/strings.xml` (create if absent). Key `tab_{featurename}`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.string.tab_{featurename}`.
-- **Tab icon → app-module drawables**: vector XML in `composeApp/src/commonMain/composeResources/drawable/`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.drawable.{icon_name}`. Co-located with strings — both are app-specific chrome, neither belongs in `:core:designsystem` (which ships generic primitives to all downstream projects).
+- **Tab icon → app-module drawables**: vector XML in `composeApp/src/commonMain/composeResources/drawable/`. Referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res.drawable.{icon_name}`. Co-located with strings — both are app-specific chrome, neither belongs in `:core:designsystem` (which ships generic primitives to all downstream projects). **These tab icons are added by hand (not via `download_assets.py`), so apply the drawable-XML rule yourself: no `@android:color/*` references — translate each to its literal ARGB hex (`white` → `#FFFFFFFF`, etc.) or the app crashes on iOS/desktop. See "Drawable XML authoring" in `_shared/X_COMPONENTS_CATALOG.md`.**
 
 ### First tab vs. append
 
