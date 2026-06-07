@@ -88,7 +88,7 @@ When the feature IS a tab:
 1. **Detect the shell** — does `App.kt` already contain `XNavigationBar`?
    - **No → first tab**: scaffold the shell once (mirrors the Welcome handoff above):
      - Create `App.kt`'s sibling `navigation/TopLevelDestination.kt` (enum) with this feature as the first entry.
-     - Keep `App.kt`'s single M3 `Scaffold` (the one app-shell Scaffold, Rule 13), lift `navController` into `App.kt`, add the `bottomBar` block. Do **not** add a `topBar`/`ToolbarRenderer` (feature screens render their own `XTopAppBar` via `XScreen`). Ensure `contentWindowInsets = WindowInsets.systemBars` and no `consumeWindowInsets` on the NavHost.
+     - Keep `App.kt`'s single M3 `Scaffold` (the one app-shell Scaffold, Rule 13), lift `navController` into `App.kt`, add the `bottomBar` block. Do **not** add a `topBar`/`ToolbarRenderer` (feature screens render their own `XTopAppBar` via `XScreen`). Set `contentWindowInsets = WindowInsets(0, 0, 0, 0)` (consume nothing), capture the content lambda's `innerPadding`, and pad the NavHost with `.padding(innerPadding)` (reserves the bottom nav-bar height) + the top/horizontal safe area + `imePadding()` — exactly per canonical Code B. Let `XNavigationBar` keep its default `windowInsets = NavigationBarDefaults.windowInsets` (do NOT pass `WindowInsets(0)` + a manual `windowInsetsPadding(navigationBars…)` on its modifier, or the bar's background clips short of the screen edge).
      - Change `{NAV_HOST_PATH}` to accept `navController: NavHostController` instead of creating it.
    - **Yes → append**: add ONE `TopLevelDestination` entry; ensure the route is a top-level `composable` in `{NAV_HOST_PATH}`.
 2. **Resources**:

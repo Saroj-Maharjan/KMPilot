@@ -41,7 +41,7 @@ Every feature requires exactly these 4 integrations:
 | 3 | DI Init | `{INIT_KOIN_PATH}` | add `{featurename}Module` to `startKoin { modules(...) }` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 
-**Optional 5th point — Bottom-Bar Tab**: only for features that are top-level (bottom-bar) destinations, not pushed screens. It registers the feature as a tab via a `TopLevelDestination` enum entry in the app module + an `XNavigationBar` in `App.kt`. This is **not** a rule and not required — most features skip it. Full playbook + canonical code: [creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"](../creating-kmp-feature/architecture/integration.md).
+**Optional 5th point — Bottom-Bar Tab**: only for features that are top-level (bottom-bar) destinations, not pushed screens. It registers the feature as a tab via a `TopLevelDestination` enum entry in the app module + an `XNavigationBar` in `App.kt`. This is **not** a rule and not required — most features skip it. **Adding the nav bar changes the shell's bottom-inset wiring** (see "Single App-Shell Scaffold" below): the Scaffold content lambda switches from `{ _ ->` to `{ innerPadding ->` and pads the NavHost with `.padding(bottom = innerPadding.calculateBottomPadding())` so scroll content doesn't bleed under the bar; and `XNavigationBar` takes `windowInsets = NavigationBarDefaults.windowInsets` (never `WindowInsets(0)` + a manual `windowInsetsPadding(navigationBars…)` on its modifier) so its `containerColor` fills behind the system nav-bar strip. Full playbook + canonical code: [creating-kmp-feature/architecture/integration.md → "5. Bottom-Bar Tab (Optional)"](../creating-kmp-feature/architecture/integration.md).
 
 ## Naming Conventions
 
@@ -111,15 +111,19 @@ fun FeatureScreenRoot(uiModel: FeatureUiModel, onBackClick: () -> Unit, onRetry:
 
 There is exactly **one** `Scaffold` in the whole app, in `App.kt`. Feature screens use `XScreen` — a plain `Column { topBar(); Box(weight 1f){ content() }; bottomBar() }` that **touches no window insets**.
 
+The shell's bottom-inset wiring has **two cases**, gated on whether the app has a bottom nav bar (an `XNavigationBar` in the Scaffold's `bottomBar` — the Optional 5th integration point).
+
+**Case A — no bottom nav bar (`bottomBar = {}`), the default.** Keep `{ _ ->`; the bottom inset is owned per-screen.
+
 ```kotlin
-// App.kt — the ONE Scaffold (shell)
+// App.kt — the ONE Scaffold (shell), NO bottom nav bar
 Scaffold(
     snackbarHost = {
         SnackbarHost(snackbarHostState, modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
     },
-    bottomBar = { /* XNavigationBar tabs when used; empty otherwise */ },
+    bottomBar = { /* empty */ },
     contentWindowInsets = WindowInsets(0, 0, 0, 0),   // consume nothing
-) { _ ->
+) { _ ->                                              // innerPadding ignored — bottom owned per-screen
     BaseAppNavHost(
         modifier = Modifier
             .fillMaxSize()
@@ -131,8 +135,39 @@ Scaffold(
 }
 ```
 
-- **Bottom inset is NOT applied at the shell.** A bottom action bar (`XScreen`'s `bottomBar`) draws its background full-bleed to the screen edge and pads its own content with `Modifier.windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` — so the bg sits behind the nav bar while the buttons clear it, and the nav-bar pad collapses to 0 when the shell's `imePadding()` lifts the screen for the keyboard. (Plain `navigationBarsPadding()` here would stack on top of that lift and float the CTA a nav-bar height above the keyboard.) A scroll screen with no bottom bar pads its own content (`Modifier.navigationBarsPadding()` on the list). This is the standard edge-to-edge pattern; centralising the bottom inset at the shell pushes bottom bars up off the edge and looks wrong.
-- **Why not `contentWindowInsets = systemBars` + `padding(innerPadding)`?** With an empty `bottomBar`, Scaffold does not reliably push the bottom (nav-bar) inset into `innerPadding`. Applying the top/horizontal safe area directly on the NavHost is version-independent.
+**Case B — with a bottom nav bar (`XNavigationBar` as `bottomBar`).** The shell owns the bottom (nav-bar) inset so scroll content can't slide under the bar. Switch to `{ innerPadding ->`, pad the NavHost bottom by `innerPadding.calculateBottomPadding()`, and let `XNavigationBar` draw its own system-nav-bar inset so its background reaches the screen edge.
+
+```kotlin
+// App.kt — shell WITH a bottom nav bar (Optional 5th point)
+Scaffold(
+    snackbarHost = {
+        SnackbarHost(snackbarHostState, modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
+    },
+    bottomBar = {
+        XNavigationBar(
+            modifier = Modifier.fillMaxWidth(),       // NO manual windowInsetsPadding(navigationBars…) here
+            containerColor = MaterialTheme.colorScheme.surface,
+            // Let XNavigationBar handle the system nav-bar inset internally so its containerColor
+            // fills behind the gesture / button strip (edge-to-edge). NOT WindowInsets(0).
+            windowInsets = NavigationBarDefaults.windowInsets,
+        ) { /* XNavigationBarItem per TopLevelDestination */ }
+    },
+    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+) { innerPadding ->                                   // capture it — nav-bar height lives here
+    BaseAppNavHost(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .imePadding()
+            // Push content above the bottom nav bar so it isn't covered.
+            .padding(bottom = innerPadding.calculateBottomPadding()),
+    )
+}
+```
+
+- **Case A: bottom inset is NOT applied at the shell.** A bottom action bar (`XScreen`'s `bottomBar`) draws its background full-bleed to the screen edge and pads its own content with `Modifier.windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` — so the bg sits behind the nav bar while the buttons clear it, and the nav-bar pad collapses to 0 when the shell's `imePadding()` lifts the screen for the keyboard. (Plain `navigationBarsPadding()` here would stack on top of that lift and float the CTA a nav-bar height above the keyboard.) A scroll screen with no bottom bar pads its own content (`Modifier.navigationBarsPadding()` on the list). This is the standard edge-to-edge pattern; centralising the bottom inset at the shell pushes bottom bars up off the edge and looks wrong.
+- **Case B: the shell DOES pad the NavHost bottom.** Two bugs this prevents: **(1) scroll content bleeding under the `XNavigationBar`** — fixed by `{ innerPadding ->` + `.padding(bottom = innerPadding.calculateBottomPadding())` on the NavHost; using `{ _ ->` here leaves the bar floating over content. **(2) the system nav-bar strip showing a different color than the bar** — fixed by `windowInsets = NavigationBarDefaults.windowInsets` so `XNavigationBar` extends its `containerColor` behind the strip natively. Do **not** pass `WindowInsets(0)` + a manual `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` on the bar's modifier — that clips the background short of the screen edge.
+- **Why not `contentWindowInsets = systemBars` + `padding(innerPadding)`?** With an empty `bottomBar` (Case A), Scaffold does not reliably push the bottom (nav-bar) inset into `innerPadding`. Applying the top/horizontal safe area directly on the NavHost is version-independent.
 - Nesting a second `Scaffold`/`XScaffold` inside a feature reintroduces double safe-area / nav-bar padding. Don't.
 - `XScaffold` still exists but is **app-shell only**; feature screens never call it.
 

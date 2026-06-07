@@ -288,6 +288,10 @@ Scaffold(
     contentWindowInsets = WindowInsets(0, 0, 0, 0),   // consume nothing; apply insets explicitly (Rule 13)
     bottomBar = {
         if (onTopLevel) {
+            // Keep the default windowInsets = NavigationBarDefaults.windowInsets so the bar's
+            // containerColor fills behind the system nav-bar strip. Do NOT pass windowInsets =
+            // WindowInsets(0) + a manual windowInsetsPadding(navigationBars…) on the modifier —
+            // that clips the background short of the screen edge (mismatched strip color).
             XNavigationBar {
                 TopLevelDestination.entries.forEach { dest ->
                     val selected = entry?.destination?.hierarchy?.any { it.hasRoute(dest.route::class) } == true
