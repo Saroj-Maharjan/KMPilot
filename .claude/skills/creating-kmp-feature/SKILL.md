@@ -72,7 +72,7 @@ See: @phases/phase-4-implementation.md
 | `data-layer-agent` | Models, DataSource, Repository, Ktor | First (or parallel) — `network`/`mixed` only |
 | `platform-agent` | Platform capability: `commonMain` DataSource + per-platform actuals + `platformModule` (Rule 14) | First (or parallel) — `platform-capability`/`native-view`/`mixed` only |
 | `ui-layer-agent` | UiModel, ViewModel, Screens, Navigation (+ `expect/actual` native view for Rule 14) | Second (or parallel) |
-| `integration-agent` | DI, 4 integration points, spec.md | Last |
+| `integration-agent` | DI, 4 integration points (+ first-feature Welcome handoff), spec.md | Last |
 
 > The agent set is selected by the feature's **Platform Profile** tag (Phase 2, Step 2.1b). A plain `network` feature runs the original three (no `platform-agent`). See [phases/phase-4-implementation.md → "Agent Set by Platform Profile"](phases/phase-4-implementation.md).
 

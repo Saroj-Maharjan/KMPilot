@@ -54,9 +54,9 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 2. If an Android `actual` needs the `Context`, ensure the `androidMain` `platformModule` resolves it via `androidContext()` (Koin's Android context is initialized at app start — no per-feature wiring beyond passing it through the actual's constructor).
 3. **Do NOT** duplicate the Swift-bridge touchpoints (`MainViewController`, `ContentView`, framework `export`) — those are owned by `/bridging-swift-kotlin`. If the platform agent flagged an iOS-Swift dependency, carry the *"Run /bridging-swift-kotlin"* note into the completion report; the Android + desktop builds pass without it.
 
-## First-feature Handoff
+## First-feature Handoff (MANDATORY — part of Integration Point 4)
 
-Fresh KMPilot projects (cloned via `install.sh`) ship with a `WelcomeScreen.kt` placeholder next to the nav host. Before wiring navigation, check **both** markers:
+Fresh KMPilot projects (cloned via `install.sh`) ship with a `WelcomeScreen.kt` placeholder next to the nav host, and the nav host starts at `WelcomeRoute`. The first feature **must** replace it — this is not optional. The build still compiles with a leftover Welcome, so skipping it silently leaves the app launching to the placeholder with the new feature unreachable as start destination. Before wiring navigation, check **both** markers:
 
 1. `composeApp/src/commonMain/kotlin/**/WelcomeScreen.kt` exists (use Glob)
 2. `{NAV_HOST_PATH}` contains `startDestination = WelcomeRoute`
@@ -65,9 +65,17 @@ If **both** present, this is the first feature — perform the handoff:
 
 - Replace `startDestination = WelcomeRoute` with `startDestination = {Feature}Route`
 - Remove the `composable<WelcomeRoute> { WelcomeScreen() }` line (the new feature's `{featurename}(...)` extension takes its place)
+- Remove the dead `WelcomeRoute`/`WelcomeScreen` imports from `{NAV_HOST_PATH}`
 - Delete the WelcomeScreen file: `rm -f <matched path from Glob>`
+- **Verify** both return nothing afterward (the compiler won't catch a leftover):
+  ```bash
+  find composeApp/src/commonMain/kotlin -name 'WelcomeScreen.kt'   # → empty
+  grep -rn "WelcomeRoute" composeApp/src/commonMain/kotlin          # → empty
+  ```
 
-If **either** marker is missing, wire navigation normally: add `{featurename}(...)` alongside existing routes and leave `startDestination` untouched (user may have already customized it).
+If **either** marker is missing, wire navigation normally: add `{featurename}(...)` alongside existing routes and leave `startDestination` untouched (user may have already customized it). Do not recreate or re-delete the placeholder.
+
+Canonical reference: @../../skills/creating-kmp-feature/architecture/integration.md → "4a. First-feature (Welcome) Handoff".
 
 ## Bottom-Bar Tab Handoff (Integration Point 5 — conditional)
 
@@ -108,6 +116,7 @@ Use the canonical code A/B/C from the integration.md section. Validate with the 
 - composeApp/build.gradle.kts (modified)
 - {INIT_KOIN_PATH} (modified)
 - {NAV_HOST_PATH} (modified)
+{- WelcomeScreen.kt (deleted) — only on the first feature (Welcome handoff)}
 {- navigation/TopLevelDestination.kt (created/modified), App.kt (modified), app-module strings.xml (tab label) + DesignSystemResources.kt (tab icon) — only if bottom-bar tab}
 
 ### Integration Points
@@ -115,6 +124,7 @@ Use the canonical code A/B/C from the integration.md section. Validate with the 
 ✅ 2. Gradle Dependency
 ✅ 3. DI Initialization
 ✅ 4. Navigation Wiring
+{✅ 4a. First-feature Welcome handoff (startDestination repointed, WelcomeScreen.kt deleted) | N/A (not the first feature)}
 {✅ 5. Bottom-bar tab | N/A (pushed screen)}
 
 ### Validation

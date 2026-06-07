@@ -98,6 +98,32 @@ data object ProfileRoute
 import {PKG_PREFIX}.profile.presentation.navigation.ProfileRoute
 ```
 
+## App Still Launches to Welcome Screen (First Feature)
+
+**Symptom:** Build passes, but the app opens the `install.sh` placeholder instead of the new feature; the feature is unreachable as start destination.
+
+**Cause:** The first-feature Welcome handoff (Integration Point 4a) was skipped. The build compiles fine with a leftover Welcome, so nothing fails loudly.
+
+**Fix:** Complete the handoff in `{NAV_HOST_PATH}` (`BaseAppNavHost.kt`):
+```kotlin
+// Before
+XNavHost(..., startDestination = WelcomeRoute) {
+    composable<WelcomeRoute> { WelcomeScreen() }
+}
+// After
+XNavHost(..., startDestination = {Feature}Route) {
+    {featurename}(onBackClick = { navController.navigateUp() })
+}
+```
+Then drop the dead `WelcomeRoute`/`WelcomeScreen` imports and delete the file:
+```bash
+rm -f composeApp/src/commonMain/kotlin/**/WelcomeScreen.kt
+# verify clean — both must return nothing:
+find composeApp/src/commonMain/kotlin -name 'WelcomeScreen.kt'
+grep -rn "WelcomeRoute" composeApp/src/commonMain/kotlin
+```
+See architecture/integration.md → "4a. First-feature (Welcome) Handoff".
+
 ## Build Commands
 
 ```bash
@@ -121,6 +147,7 @@ If build fails, verify all 4 integration points:
 2. ✅ `composeApp/build.gradle.kts` has dependency
 3. ✅ `initKoin.kt` initializes modules
 4. ✅ `BaseAppNavHost.kt` wires navigation
+4a. ✅ First feature only: Welcome handoff done — `startDestination` repointed, `WelcomeScreen.kt` deleted, no `WelcomeRoute` left
 
 ## General Strategy
 

@@ -11,7 +11,7 @@
 ```
 Cleanup Progress:
 - [ ] Step 5.1: Verify spec.md exists
-- [ ] Step 5.2: Rule 11 guardrail (grep gate)
+- [ ] Step 5.2: Guardrails (grep gate): Rule 11 + first-feature Welcome handoff
 - [ ] Step 5.3: Remove ephemeral artifacts
 - [ ] Step 5.4: Generate final report
 ```
@@ -48,9 +48,17 @@ find feature/{featurename}/src/commonMain/kotlin -name '*UiState.kt' \
 grep -rn "@Preview" feature/{featurename}/src/commonMain/kotlin \
   | grep -v "^Binary" | grep . \
   || echo "⚠️ No @Preview composables found in feature/{featurename}. Add previews per patterns.md § Previews."
+
+# (d) First-feature Welcome handoff completed (Integration Point 4a).
+#     The install.sh placeholder must be gone once the FIRST feature is wired.
+#     The build still compiles with a leftover Welcome, so this gate catches it.
+find composeApp/src/commonMain/kotlin -name 'WelcomeScreen.kt' | grep . \
+  && echo "❌ Welcome handoff incomplete: WelcomeScreen.kt still present — delete it and repoint startDestination (see architecture/integration.md § 4a)" && exit 1
+grep -rn "WelcomeRoute" composeApp/src/commonMain/kotlin | grep . \
+  && echo "❌ Welcome handoff incomplete: WelcomeRoute still referenced in the nav host — set startDestination = {Feature}Route and drop the WelcomeRoute composable" && exit 1
 ```
 
-**If (a) or (b) fails**: Stop. Surface the violation to the user. Do NOT proceed to artifact cleanup.
+**If (a), (b), or (d) fails**: Stop. Surface the violation to the user. Do NOT proceed to artifact cleanup. For (d), re-run the integration agent's first-feature handoff (architecture/integration.md § 4a).
 
 **If (c) finds no previews**: Surface the warning but do NOT block cleanup — previews are required but a missing preview does not break the build or architecture. The user may choose to add them via `/modifying-kmp-feature`.
 

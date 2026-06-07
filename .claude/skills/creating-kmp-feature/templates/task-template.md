@@ -79,7 +79,7 @@ Every UI task verification checklist must include:
 |-------|-------|---------------|
 | Data | data-layer-agent | Models (DTOs), Resources, DataSource, Repository (`Either<DTO>`) |
 | UI | ui-layer-agent | Single `{Feature}UiModel`, ViewModel, Screens (ScreenRoot takes `uiModel`), Navigation |
-| Integration | integration-agent | DI module, 4 integration points |
+| Integration | integration-agent | DI module, 4 integration points (+ first-feature Welcome handoff) |
 
 ### Status Flow
 

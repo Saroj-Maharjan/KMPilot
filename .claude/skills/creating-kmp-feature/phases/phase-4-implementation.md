@@ -216,8 +216,9 @@ Invoke integration-agent with:
   - CORE_COMMON_PKG, CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG
   - INIT_KOIN_PATH, NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if the feature is a top-level tab, pass its label/icon/order (Integration Point 5); otherwise it is a pushed screen (skip point 5). **Contradiction check**: if the design blueprint Component Tree contains a tab nav bar note (`[App-shell chrome — Integration Point 5...]`) BUT the PRD says "pushed screen", STOP — do not proceed. Fix the PRD Navigation section to say "top-level tab" first. The design is authoritative; a pushed-screen default in the PRD is the error.
+- **First-feature (Welcome) handoff (MANDATORY for the first feature)**: as part of Integration Point 4, check both markers — `WelcomeScreen.kt` exists under `composeApp/src/commonMain/kotlin/**` AND `{NAV_HOST_PATH}` has `startDestination = WelcomeRoute`. If both, replace `startDestination` with `{Feature}Route`, drop the `composable<WelcomeRoute> { WelcomeScreen() }` line + its imports, and `rm -f` the `WelcomeScreen.kt` file. See architecture/integration.md → "4a. First-feature (Welcome) Handoff".
 - Platform module (Rule 14, tag ≠ `network`): pull `platformModule` (expect/actual) into `{featurename}Module` via `includes(platformModule)` and provide `androidContext()` if an Android actual needs it
-- Expected: integration points 1–4 (+ point 5 if a tab) + full build + ktlint + spec.md
+- Expected: integration points 1–4 (+ point 5 if a tab) + first-feature Welcome handoff (if applicable) + full build + ktlint + spec.md
 ```
 
 **Wait for completion** → Verify success
@@ -269,9 +270,10 @@ Invoke integration-agent with:
   CORE_DATA_PKG, CORE_DESIGNSYSTEM_PKG, INIT_KOIN_PATH,
   NAV_HOST_PATH, CORE_MODULES
 - Bottom-bar tab: read the PRD Navigation section — if a top-level tab, pass label/icon/order (point 5); else pushed screen. **Contradiction check**: if the design blueprint Component Tree contains a tab nav bar note (`[App-shell chrome — Integration Point 5...]`) BUT the PRD says "pushed screen", STOP — fix the PRD first. Design is authoritative.
+- **First-feature (Welcome) handoff (MANDATORY for the first feature)**: part of Integration Point 4 — if `WelcomeScreen.kt` exists AND `{NAV_HOST_PATH}` has `startDestination = WelcomeRoute`, switch `startDestination` to `{Feature}Route`, drop the `composable<WelcomeRoute> { WelcomeScreen() }` line + imports, and `rm -f` `WelcomeScreen.kt`. See architecture/integration.md → "4a. First-feature (Welcome) Handoff".
 - Platform module (Rule 14, tag ≠ `network`): pull `platformModule` into `{featurename}Module` via `includes(platformModule)`; provide `androidContext()` if needed
 - Integrates data, platform, and UI layers
-- Completes integration points 1–4 (+ point 5 if a tab)
+- Completes integration points 1–4 (+ point 5 if a tab) + first-feature Welcome handoff (if applicable)
 - Final validation + formatting
 - Generates spec.md
 ```
@@ -356,7 +358,7 @@ When invoking each agent, include the full project context from Phase 0:
 After all agents complete:
 - Data layer implemented and validated
 - UI layer implemented and validated
-- Integration complete (4 points)
+- Integration complete (4 points + first-feature Welcome handoff if applicable)
 - Build passing + ktlint formatted
 - spec.md generated
 - (Design-aware) blueprintConsumed set to true in stitch-project.json

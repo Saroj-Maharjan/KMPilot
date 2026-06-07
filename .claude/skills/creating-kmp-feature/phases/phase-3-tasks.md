@@ -61,7 +61,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 | Data | `data-layer-agent` | Module structure, models, DataSource, Repository, Ktor Resources |
 | Platform *(Rule 14, tag ≠ `network`)* | `platform-agent` | Capability DataSource interface + per-platform actuals (android/ios/desktop) + `expect/actual val platformModule` |
 | UI | `ui-layer-agent` | UiModel, ViewModel, Screen composables, Navigation (+ `expect/actual` native view for `native-view`/`mixed`) |
-| Integration | `integration-agent` | DI module, 4 integration points (+ `platformModule` registration for Rule 14) |
+| Integration | `integration-agent` | DI module, 4 integration points (+ first-feature Welcome handoff; + `platformModule` registration for Rule 14) |
 
 **Platform Profile (Rule 14)**: if the PRD's Platform Profile is `platform-capability` / `native-view` / `mixed`, add a **Platform** group with `platform-agent` tasks. The **module-structure** task ("Foundation") moves to whichever agent owns the scaffold (see Phase 4, Step 4.0): `data-layer-agent` for `network`/`mixed`, else `platform-agent`, else `ui-layer-agent`. A `network` feature keeps the original three groups unchanged.
 
@@ -94,7 +94,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 
 ### Group 3: Integration
 - **Agent**: `integration-agent`
-- **Tasks**: DI module, 4 integration points
+- **Tasks**: DI module, 4 integration points, first-feature Welcome handoff (delete `WelcomeScreen.kt` + repoint `startDestination` when this is the first feature)
 - **Validate after**:
   ```bash
   ./gradlew assembleDebug

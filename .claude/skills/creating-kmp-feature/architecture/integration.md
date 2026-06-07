@@ -171,11 +171,49 @@ fun BaseAppNavHost(navController: NavHostController) {
 - Callbacks handle all navigation (features don't have navController)
 - Each callback uses navController to navigate or pop
 - Navigation logic centralized in BaseAppNavHost.kt
+- **First feature in a fresh project**: also perform the Welcome handoff — see "4a. First-feature (Welcome) Handoff" below (mandatory, not optional)
 
 **Common callback patterns**:
 - `onBackClick = { navController.navigateUp() }` - Go back
 - `onNavigateTo{Feature} = { navController.navigate({Feature}Route) }` - Navigate to another screen
 - `onNavigateTo{Feature} = { id -> navController.navigate({Feature}Route(id)) }` - Navigate with parameters
+
+### 4a. First-feature (Welcome) Handoff — MANDATORY when wiring the FIRST feature
+
+Fresh KMPilot projects (cloned via `install.sh`) ship a placeholder `WelcomeScreen.kt` next to the nav host, and the nav host starts at `WelcomeRoute`. The **first** feature must replace it — the Welcome screen is a temporary shell, not a real destination. This handoff is **part of Integration Point 4 and is not optional**; if you skip it the app keeps launching to the Welcome screen and the new feature is unreachable as the start destination.
+
+**Detect the first-feature condition** — check **both** markers:
+
+1. `composeApp/src/commonMain/kotlin/**/WelcomeScreen.kt` exists (Glob)
+2. `{NAV_HOST_PATH}` contains `startDestination = WelcomeRoute`
+
+**If BOTH present → this is the first feature. Perform the handoff:**
+
+```kotlin
+// {NAV_HOST_PATH} — BEFORE (install.sh shell)
+XNavHost(modifier = modifier, navController = navController, startDestination = WelcomeRoute) {
+    composable<WelcomeRoute> { WelcomeScreen() }
+}
+
+// {NAV_HOST_PATH} — AFTER (first feature wired in)
+XNavHost(modifier = modifier, navController = navController, startDestination = {Feature}Route) {
+    {featurename}(onBackClick = { navController.navigateUp() })
+}
+```
+
+1. Change `startDestination = WelcomeRoute` → `startDestination = {Feature}Route`.
+2. Remove the `composable<WelcomeRoute> { WelcomeScreen() }` line (the feature's `{featurename}(...)` extension replaces it).
+3. Remove the now-dead `WelcomeRoute`/`WelcomeScreen` imports from `{NAV_HOST_PATH}`.
+4. Delete the placeholder file: `rm -f <path matched by Glob>` (`WelcomeScreen.kt`). It is the only thing that references `WelcomeRoute`/`WelcomeScreen` — nothing else imports it.
+
+**If EITHER marker is missing → not the first feature.** Wire navigation normally: add `{featurename}(...)` alongside existing routes and leave `startDestination` untouched (the user may have already customized it). Do **not** recreate or re-delete `WelcomeScreen.kt`.
+
+**Verify after handoff** (the build won't catch a leftover Welcome — it still compiles):
+```bash
+# Both must return nothing once the first feature is wired:
+find composeApp/src/commonMain/kotlin -name 'WelcomeScreen.kt' && echo "❌ WelcomeScreen.kt still present"
+grep -rn "WelcomeRoute" composeApp/src/commonMain/kotlin && echo "❌ WelcomeRoute still referenced"
+```
 
 ## 5. Bottom-Bar Tab (Optional)
 
