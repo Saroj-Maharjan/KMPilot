@@ -39,7 +39,8 @@
       "tokensPath": ".claude/docs/_shared/designs/extracted/tokens_loading.md",
       "dimensions": { "width": 780, "height": 1768 },
       "generatedAt": "2026-05-04T00:06:00Z",
-      "designSystemApplied": true
+      "designSystemApplied": true,
+      "codeImplemented": false
     },
     "failed": {
       "screenId": "a891196ccecf4ce89f86cb378096d89a",
@@ -49,7 +50,8 @@
       "tokensPath": ".claude/docs/_shared/designs/extracted/tokens_failed.md",
       "dimensions": { "width": 780, "height": 1768 },
       "generatedAt": "2026-05-04T00:06:00Z",
-      "designSystemApplied": true
+      "designSystemApplied": true,
+      "codeImplemented": false
     }
   },
   "features": {
