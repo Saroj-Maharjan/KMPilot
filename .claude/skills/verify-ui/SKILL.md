@@ -333,7 +333,9 @@ For each entry in `icons.json.icons`:
 - `.claude/docs/{featurename}/designs/extracted/images.json`
 - Feature Kotlin sources
 
-**Per-entry checks** — identical structure to 5.7 with raster-asset specifics:
+**Per-entry checks** — branch on each entry's `delivery` field (`bundled` = static design asset rendered via `painterResource`; `remote` = dynamic content rendered via `AsyncImage(url = <data field>)`).
+
+**For `delivery: "bundled"` entries:**
 
 1. **File presence** — confirm a file exists at `entry.drawable_path` (extension included). If `entry.extension == "unknown"`, glob for `{drawable_name}.{png,jpg,jpeg,webp}` in the predicted directory. Missing → CRITICAL.
 
@@ -341,23 +343,34 @@ For each entry in `icons.json.icons`:
 
 3. **Wrong scope reference** — same chrome/domain rule as icons (5.7 check 3).
 
-4. **Forbidden Stitch CDN `AsyncImage`** — grep for the Stitch CDN URL prefix in any `AsyncImage(...)` call in feature Kotlin:
+4. **Wrong renderer (bundled rendered as AsyncImage)** — if `{entry.drawable_name}`/`{entry.res_reference}` is never used with `painterResource` but the design clearly bundles it, and instead an `AsyncImage` stands in its place → MINOR "Bundled image rendered as AsyncImage" (a static design asset should be `Image(painterResource(...))`).
+
+**For `delivery: "remote"` entries:**
+
+5. **No bundled file expected** — there should be **no** `{drawable_name}.{png,jpg,jpeg,webp}` under the feature/DS drawable dirs and **no** `DesignSystemResources` entry for it. If a stale file exists (e.g. left over from a prior `bundled` run) → MINOR "Stale bundled file for remote image — delete; it ships as AsyncImage".
+
+6. **Rendered via AsyncImage** — the feature should render dynamic images through the design-system `AsyncImage(url = …)`. If the feature has remote-delivery entries but **no** `AsyncImage(` call at all in its sources → MINOR "Remote image not wired to AsyncImage" (suggest binding `url` to the manifest's `data_binding` field). Do **not** hard-assert the exact field name (the data layer chooses it).
+
+7. **Remote rendered as painterResource** — if `painterResource(...{drawable_name})` is used for a `remote` entry → MAJOR "Remote image bundled instead of AsyncImage" (the Stitch CDN image is an ephemeral placeholder, not a shippable asset).
+
+**For ALL entries:**
+
+8. **Forbidden Stitch CDN URL in `AsyncImage`** — the Stitch CDN URL must never reach runtime in any `AsyncImage` call (it is ephemeral). Grep both wrapper params (`url=` for the design-system wrapper, `model=` for raw coil3):
    ```bash
-   grep -rnE 'AsyncImage\([^)]*model\s*=\s*"https://lh3\.googleusercontent\.com/aida-public/' \
+   grep -rnE 'AsyncImage\([^)]*(url|model)\s*=\s*"https://lh3\.googleusercontent\.com/aida-public/' \
      feature/{featurename}/src/commonMain/
    ```
    Any match → CRITICAL "Stitch CDN URL used with AsyncImage":
    ```markdown
    ### CRITICAL — Stitch CDN URL used with AsyncImage: {ident}
    - **Where:** `{File.kt:LINE}`
-   - **Code:** `AsyncImage(model = "https://lh3.googleusercontent.com/aida-public/...")`
-   - **Fix:** Stitch CDN URLs are bundled design assets, not runtime data. Replace with `Image(painter = painterResource({entry.res_reference}), contentDescription = …)`. AsyncImage is reserved for runtime URLs from the app's API.
+   - **Code:** `AsyncImage(url = "https://lh3.googleusercontent.com/aida-public/...")`
+   - **Fix:** The Stitch CDN URL is an ephemeral placeholder. For a `bundled` image use `Image(painter = painterResource({entry.res_reference}), …)`; for a `remote` image bind `url` to a data-layer field (`AsyncImage(url = uiModel.{field}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder)`), never the literal CDN URL.
    - **Source:** images.json + project-wide rule
    ```
+   This check intentionally does NOT flag `AsyncImage(url = uiModel.{field})` / `AsyncImage(model = uiModel.{field})` — runtime-data binding via ViewModel state is the legitimate `AsyncImage` use case.
 
-   This check intentionally does NOT flag `AsyncImage(model = uiModel.{field})` — runtime-data binding via ViewModel state is the legitimate `AsyncImage` use case.
-
-5. **Orphan image files** — list every `*.png|*.jpg|*.jpeg|*.webp` under the feature and design-system drawable dirs. Cross-reference against the union of all `images.json` manifests. Files whose ident is in NONE of the manifests AND **not actively referenced** by any `.kt` (same safety rule as 5.7) → MINOR "Orphan image".
+9. **Orphan image files** — list every `*.png|*.jpg|*.jpeg|*.webp` under the feature and design-system drawable dirs. Cross-reference against the union of all `images.json` manifests' **bundled** entries. Files whose ident is in NONE of the manifests (or belongs only to a now-`remote` entry) AND **not actively referenced** by any `.kt` (same safety rule as 5.7) → MINOR "Orphan image".
 
 ### 5.10 Motion Audit — presence check per blueprint motion row
 

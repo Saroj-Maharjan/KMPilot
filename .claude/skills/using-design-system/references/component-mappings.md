@@ -148,9 +148,11 @@ XScreen(
 
 | Library Import | X-Component | Use Case |
 |----------------|------------------|----------|
-| `coil3.compose.AsyncImage` | `{CORE_DESIGNSYSTEM_PKG}.AsyncImage` | Async image with loading/error states |
+| `coil3.compose.AsyncImage` | `{CORE_DESIGNSYSTEM_PKG}.AsyncImage` | **Dynamic content** image (avatar, flag, thumbnail, product photo) — runtime URL from data, with loading/error states |
 
-**IMPORTANT**: Always use `{CORE_DESIGNSYSTEM_PKG}.AsyncImage`, not `coil3.compose.AsyncImage`
+**IMPORTANT**: Always use `{CORE_DESIGNSYSTEM_PKG}.AsyncImage`, not `coil3.compose.AsyncImage`. The wrapper's first parameter is **`url`** (a `String`), not `model`.
+
+**Dynamic vs static**: use `AsyncImage(url = …)` only for images whose source is **runtime data** (a URL from the repository/API). A **static design asset** (hero, decorative background, logo bundled by `download_assets.py`) is rendered with `Image(painter = painterResource(...))`, never AsyncImage. This mirrors the images-manifest `delivery` split (`remote` → AsyncImage; `bundled` → painterResource).
 
 **Import**: `import {CORE_DESIGNSYSTEM_PKG}.AsyncImage`
 
@@ -163,8 +165,9 @@ import coil3.compose.AsyncImage
 import {CORE_DESIGNSYSTEM_PKG}.AsyncImage
 
 AsyncImage(
-    model = imageUrl,
-    contentDescription = "Product"
+    url = uiModel.avatarUrl,                                   // runtime data, not a Stitch CDN URL
+    loadingResId = DesignSystemResources.drawable.ds_image_placeholder,
+    contentDescription = "Avatar",
 )
 ```
 

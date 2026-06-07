@@ -239,6 +239,14 @@
 ### `XWebView`
 - (Not catalogued — no visual constraints relevant to design audits.)
 
+### `AsyncImage` *(design-system wrapper over coil3)*
+- **For dynamic/content images only** — a runtime URL from data (avatar, flag, thumbnail, product photo). Static design assets (hero, decorative background, logo bundled by `download_assets.py`) use `Image(painter = painterResource(...))`, never AsyncImage. Mirrors the `images.json` `delivery` split (`remote` → AsyncImage; `bundled` → painterResource).
+- **First param is `url: String`** (NOT `model`). Always use `{CORE_DESIGNSYSTEM_PKG}.AsyncImage`, never `coil3.compose.AsyncImage`.
+- **Default `contentScale = ContentScale.Fit`** (M3/coil default is Fit) — pass `ContentScale.Crop` for cover-style fills (`object-cover` in HTML).
+- **`loadingResId: DrawableResource? = null`** — drawable shown during Loading **and** Error. Pass `DesignSystemResources.drawable.ds_image_placeholder` (generic) unless the design specifies a bespoke placeholder; when `null`, an empty `Box` fills the slot.
+- Fills its measured bounds (`SubcomposeAsyncImageContent` with `Modifier.fillMaxSize()`); the caller sizes it via `modifier`.
+- **Never bind `url` to a Stitch CDN URL** (`lh3.googleusercontent.com/aida-public/*`) — those are ephemeral placeholders; bind to a data-layer field.
+
 ---
 
 ## XTheme Reference (consumed by every X-component)

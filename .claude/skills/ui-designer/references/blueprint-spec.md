@@ -164,6 +164,7 @@ Shared strings (Retry / Yes / No / Cancel / common errors) are **not** listed he
 - [ ] All XTheme missing roles added to BOTH XLightColors and XDarkColors
 - [ ] Every component in blueprint Component Tree exists in implementation
 - [ ] Every Modifier in blueprint (border, shadow, alpha, padding, size) is present in code
+- [ ] Every image rendered per `images.json` `delivery`: `bundled` → `Image(painterResource(res_reference))`; `remote` → `AsyncImage(url = <data field>, loadingResId = DesignSystemResources.drawable.ds_image_placeholder)` with each `data_binding` wired on the DTO/`*UiModel` — no Stitch CDN URL in code (one sub-item per `remote` image)
 - [ ] All colors use MaterialTheme.colorScheme.{role} — no raw Color() hex
 - [ ] Component override sizes/colors from Pre-Implementation Contract applied
 - [ ] Every String Inventory key exists in `composeResources/values/strings.xml` and is referenced via `stringResource` — no hardcoded display literals (Rule 12)
@@ -212,7 +213,9 @@ Feed this prompt with:
    - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared — only if `states.failed == true`)**
    - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (only if `states.empty == true`)
 3. Icons manifest at `.claude/docs/{featurename}/designs/extracted/icons.json` (from Phase 1 Step 1.15 sub-step 5, written in manifest-only mode by `/ui-designer`) — authoritative for every Material Symbols `<span>` in the design; resolves each to its predicted drawable path and the exact Compose `res_reference` the blueprint must emit. Every entry's `download_status` is `pending` at design time; implementation skills will flip it to `downloaded` when they materialize the file.
-3b. Images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Phase 1 Step 1.15 sub-step 6, also manifest-only) — authoritative for every `<img>` tag. Same structure as icons.json. The blueprint emits `Image(painter = painterResource({res_reference}))` referencing this manifest. Stitch CDN images are bundled design assets, not runtime data.
+3b. Images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Phase 1 Step 1.15 sub-step 6, also manifest-only) — authoritative for every `<img>` tag. Each entry carries a **`delivery`** field that decides how the blueprint renders it:
+   - **`delivery: "bundled"`** (static design asset — hero, decorative background, logo) → `Image(painter = painterResource({res_reference}))`. The raster is downloaded + bundled by the implementation skill.
+   - **`delivery: "remote"`** (dynamic content — avatar, flag, thumbnail, repeated list image) → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, …)` using the **design-system `AsyncImage`** (`url=` param). The Stitch CDN URL is an ephemeral placeholder and is **never** bundled or shipped; the runtime URL comes from the data layer (the `data_binding` field is a suggested DTO/UiModel field name). Each remote image adds a Post-Implementation Checklist item to wire that field.
 4. X-component mapping table (from [stitch-guide.md](stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
 5. Color Audit M3 role mappings (from Phase 1 Step 1.16)
 6. The `states` map (`{ loading, failed, empty }`) from `stitch-project.json.features[featurename]` — used to decide which state sections the blueprint emits (see rule 22 below)
@@ -296,11 +299,11 @@ RULES:
     When the HTML has a top padding like `pt-6` (24dp) or `pt-12` (48dp) on the outermost container,
     that value INCLUDES the status bar area. In Compose, subtract the system inset since the shell
     already handles it. Typically use `8.dp` top padding for the first content element.
-13. **Image mapping**: Stitch HTML `<img>` tags are **bundled design assets** — always emit
-    `Image(painter = painterResource({res_reference}))` using the `res_reference` from the
-    images manifest (rule 21b below). **Never** emit `AsyncImage` for Stitch CDN URLs
-    (`lh3.googleusercontent.com/aida-public/*`); `AsyncImage` is reserved for runtime data
-    (user avatars, product photos from API) the developer wires up by editing the generated code.
+13. **Image mapping**: how a Stitch HTML `<img>` is rendered depends on the images-manifest
+    `delivery` field (rule 21b below) — the Stitch CDN URL (`lh3.googleusercontent.com/aida-public/*`)
+    is **never** emitted in code either way (it is an ephemeral placeholder).
+    - **`delivery: "bundled"`** (static design asset) → `Image(painter = painterResource({res_reference}))`.
+    - **`delivery: "remote"`** (dynamic content) → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, …)` (design-system `AsyncImage`, `url=` param), bound to a data-layer field — never to the Stitch URL. Add a Post-Implementation Checklist item to wire `{data_binding}`.
     In the blueprint, note the image dimensions from the HTML
     (`w-full h-[200px]` → `Modifier.fillMaxWidth().height(200.dp)`),
     shape (`rounded-full` → `Modifier.clip(CircleShape)`, `rounded-lg` →
@@ -358,7 +361,9 @@ RULES:
       treats each missing override as a CRITICAL — keep it accurate and minimal.
 20. **Post-Implementation Checklist**: After the Pre-Implementation Contract, emit a
     `## Post-Implementation Checklist` with verification items: XTheme updates, component completeness,
-    modifier fidelity, color fidelity, component override application, string-key coverage, build validation, ktlint format.
+    modifier fidelity, color fidelity, component override application, image delivery (bundled
+    `painterResource` / remote `AsyncImage` with each `data_binding` wired — one sub-item per remote
+    image), string-key coverage, build validation, ktlint format.
 20a. **String Inventory (Rule 12)**: After the Component Tree (before the Pre-Implementation Contract), emit a
     `## String Inventory` table — one row per user-facing text node in the HTML, mapping it to a proposed
     `{area}_{purpose}` string-resource key + the default English value. Exclude repository data, single-glyph
@@ -367,7 +372,11 @@ RULES:
 21. **Material Symbols icons**: For every `<span class="material-symbols-*" data-icon="...">` in the HTML, look up the icon in the `icons.json` manifest and emit `XIcon(painter = painterResource({res_reference}))` using the manifest's exact `res_reference` value (e.g. `DesignSystemResources.drawable.arrow_back` for chrome icons, `Res.drawable.qr_code_scanner` for domain icons). The manifest already encodes the fill-variant naming (`_fill` suffix when `data-weight="fill"`) and the chrome/domain split — do not re-derive these from the HTML. **Never** emit `Icons.Default.{Name}` or any reference to `androidx.compose.material.icons.*` — that library is pinned/deprecated and produces a different glyph family from the Material Symbols Stitch renders.
 
    > **"Font glyph" is a Stitch HTML rendering detail, not a Compose implementation instruction.** Stitch renders Material Symbols as `<span>` font glyphs in HTML — that is how the web preview works. In Compose, every Material Symbol is a vector XML file downloaded via `download_assets.py` and referenced via `painterResource(res_reference)`. The blueprint must NEVER say "No XML download needed for font glyphs" or "use `Icons.Default.*`" — those statements are always wrong regardless of how the icon is rendered in the HTML. If an icon appears in the HTML as a `<span>` but is absent from `icons.json`, the manifest is incomplete (Step 1.15 missed it) — STOP and add it to `icons.json` manually before generating the blueprint.
-21b. **`<img>` raster assets**: For every `<img src="https://lh3.googleusercontent.com/aida-public/...">` in the HTML, look up the entry in the `images.json` manifest (keyed by `url`) and emit `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop)` using the manifest's exact `res_reference`. Pass the manifest's `alt` field as `contentDescription` (truncate to a reasonable length if very long). Apply CSS-derived modifiers from the HTML (size, shape, opacity) as Compose `Modifier` chains. **Never** emit `AsyncImage` for Stitch CDN URLs — `AsyncImage` is for runtime data the developer wires up separately by editing the generated code.
+21b. **`<img>` raster assets**: For every `<img src="https://lh3.googleusercontent.com/aida-public/...">` in the HTML, look up the entry in the `images.json` manifest (keyed by `url`) and branch on its **`delivery`**:
+   - **`delivery: "bundled"`** → `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop)` using the manifest's exact `res_reference`.
+   - **`delivery: "remote"`** → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, contentDescription = "{alt}", contentScale = ContentScale.Crop)` using the design-system `AsyncImage` (`import {CORE_DESIGNSYSTEM_PKG}.AsyncImage`; `url=` param, **not** `coil3 model=`). Bind `url` to the manifest's suggested `data_binding` field (a data-layer field), **never** to the Stitch CDN URL, and add a Post-Implementation Checklist item to wire it.
+
+   For both: pass the manifest's `alt` as `contentDescription` (truncate if very long) and apply CSS-derived modifiers from the HTML (size, shape, opacity) as Compose `Modifier` chains. The Stitch CDN URL itself is **never** emitted in code.
 22. **Optional states**: The `states` map controls which sections appear in the Component Tree:
     - `states.loading == false` → emit the "Skipped" form of the Loading State section (see template).
     - `states.failed == false` → emit the "Skipped" form of the Failed State section.
@@ -420,7 +429,7 @@ HTML CONTENT:
 | CSS transitions/animations (`transition-*`, `animate-*`, `@keyframes`, tailwind `animation` config) | A `## Motion` row in the kept family + primitive from [`_shared/motion.md`](../../_shared/motion.md) (see rule 23). Touch press / pointer-hover variants are **dropped** to the Motion table's trailing note, not given a row. Never `[omitted — no Compose equivalent]`. |
 | CSS gradients | `Brush.linearGradient(...)` with direction based on CSS angle |
 | `<svg><circle>` with `stroke-dasharray`/`stroke-dashoffset` | `XCircularProgressIndicator(progress = { 1 - (dashoffset / dasharray) })` in a `Box` with text overlay |
-| `<img>` tags (Stitch CDN `lh3.googleusercontent.com/aida-public/*`) | `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop, modifier = ...)` — look up `{res_reference}` in `extracted/images.json`. Stitch CDN URLs are **design assets** to bundle, NOT runtime data. **Never emit `AsyncImage` for these.** `AsyncImage` is reserved for app-runtime data (user avatars, product photos from API) that the developer wires up post-hoc by editing the generated code. |
+| `<img>` tags (Stitch CDN `lh3.googleusercontent.com/aida-public/*`) | Branch on the `extracted/images.json` `delivery` field. **`bundled`** → `Image(painter = painterResource({res_reference}), contentDescription = "{alt}", contentScale = ContentScale.Crop, modifier = ...)` (static design asset to bundle). **`remote`** → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, contentDescription = "{alt}", contentScale = ContentScale.Crop, modifier = ...)` (dynamic content; `url` bound to a data-layer field, **never** the Stitch URL; design-system `AsyncImage`, `url=` param). The Stitch CDN URL is never emitted in code either way. |
 | Material Symbols `<span class="material-symbols-*" data-icon="{name}">` | `XIcon(painter = painterResource({res_reference}))` — look up `{res_reference}` in `extracted/icons.json` (chrome icons → `DesignSystemResources.drawable.{name}`; domain icons → `Res.drawable.{name}`). The manifest is authoritative. Chrome vs domain is decided declaratively by cross-feature usage count; the XML files themselves are materialized by `/creating-kmp-feature` or `/modifying-kmp-feature` in design-aware mode (not by `/ui-designer`). Filled variants (HTML has `data-weight="fill"`) get a `_fill` suffix in the resource name. **Never fall back to `Icons.Default.*` from the deprecated `material-icons-extended` library.** |
 | `position: fixed` bottom | `XScreen` `bottomBar` slot (Rule 13 — never a Scaffold bottomBar in a feature) |
 | CSS `box-shadow` | `Modifier.shadow(elevation, shape)` |

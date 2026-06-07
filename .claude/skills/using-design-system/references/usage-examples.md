@@ -188,7 +188,8 @@ fun ProductCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AsyncImage(
-                model = product.imageUrl,
+                url = product.imageUrl,
+                loadingResId = DesignSystemResources.drawable.ds_image_placeholder,
                 contentDescription = product.name,
                 modifier = Modifier.size(80.dp)
             )

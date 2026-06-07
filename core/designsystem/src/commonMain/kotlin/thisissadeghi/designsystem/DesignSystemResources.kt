@@ -1,6 +1,7 @@
 package thisissadeghi.designsystem
 
 import kmpilot.core.designsystem.generated.resources.Res
+import kmpilot.core.designsystem.generated.resources.ds_image_placeholder
 import kmpilot.core.designsystem.generated.resources.retry_label
 
 /**
@@ -8,7 +9,10 @@ import kmpilot.core.designsystem.generated.resources.retry_label
  * on 28,Apr,2025
  */
 object DesignSystemResources {
-    object drawable
+    object drawable {
+        // Generic loading/error fallback for remote images rendered via AsyncImage.
+        val ds_image_placeholder = Res.drawable.ds_image_placeholder
+    }
 
     object string {
         val retry_label = Res.string.retry_label

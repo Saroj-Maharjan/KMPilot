@@ -31,11 +31,30 @@ ASSET TYPES
 
 --type images:
   - Parses <img src="..." class="...">
-  - Downloads raster from the src URL (Stitch CDN expected)
-  - Detects extension from Content-Type (PNG / JPEG / WebP)
+  - Classifies each image's DELIVERY (see below): "bundled" or "remote".
+  - "bundled" (static design asset: hero, decorative background, logo):
+    downloads raster from the src URL (Stitch CDN), detects extension from
+    Content-Type (PNG / JPEG / WebP), placed like icons (chrome/domain),
+    rendered via painterResource. No KMP cleanup needed (raster format).
+  - "remote" (dynamic content: avatar, flag, thumbnail, repeated list image):
+    NOT downloaded, NOT bundled, no DesignSystemResources entry. Rendered at
+    runtime via the design-system AsyncImage(url = <data field>) — the Stitch
+    CDN URL is an ephemeral placeholder and must never ship. The manifest
+    records a suggested `data_binding` field name + a generic placeholder ref.
   - Filename: {state}_{role}[_idx] from CSS heuristics
   - Manifest: images.json
-  - No KMP cleanup needed (raster format)
+
+DELIVERY CLASSIFICATION (images only)
+-------------------------------------
+Heuristic, per image (see _classify_image_delivery):
+  - remote  if role in {avatar, thumbnail}, OR the image repeats >=2x with the
+            same CSS class signature (data-bound collection), OR its alt text
+            looks like an entity name (low confidence).
+  - bundled if role in {background, hero} and not repeated.
+  - else    bundled, low confidence (ambiguous — /ui-designer asks the user).
+A user override is persisted with `delivery_locked: true` (set by /ui-designer
+after the AskUserQuestion confirm); subsequent runs reuse the locked decision
+verbatim instead of re-deriving it.
 
 MODES (apply equally to both --type values)
 -------------------------------------------
@@ -53,7 +72,9 @@ default (full, used by /creating-kmp-feature and pre-UI-agent /modifying-):
 
 SHARED ALGORITHM
 ----------------
-Both asset types share the same usage-based placement:
+Icons and BUNDLED images share the same usage-based placement (remote-delivery
+images bypass it entirely — they are never downloaded or placed; see DELIVERY
+CLASSIFICATION above):
   users = {features in any matching manifest declaring this asset} U {current}
   scope = "chrome" if len(users) >= 2 else "domain"
   - chrome → core/designsystem/.../composeResources/drawable/
@@ -527,6 +548,101 @@ def image_ident(hit, used: set, *, state: str):
 
 
 # ---------------------------------------------------------------------------
+# Image delivery classification (bundled = drawable; remote = AsyncImage)
+# ---------------------------------------------------------------------------
+
+# Generic placeholder used as AsyncImage's loadingResId for every remote image.
+# Authored once in the design system (literal-hex vector, no @android:color).
+REMOTE_PLACEHOLDER_REF = "DesignSystemResources.drawable.ds_image_placeholder"
+
+# Words that mark an alt as a scene/description (static asset), not an entity name.
+_ALT_SCENE_WORDS = {
+    "background", "texture", "pattern", "gradient", "abstract", "scene",
+    "illustration", "banner", "backdrop", "at", "night", "day", "sunset",
+    "sunrise", "blurred", "decorative",
+}
+
+# alt keyword -> suggested data-binding field name (singular, runtime URL).
+_ALT_BINDING_KEYWORDS = (
+    "flag", "logo", "avatar", "photo", "picture", "banner", "cover", "icon",
+    "poster", "thumbnail",
+)
+
+
+def _img_signature(hit) -> str:
+    """Normalized class signature used to detect repeated (data-bound) images.
+
+    Flags/avatars in a list share an identical <img class="..."> even though
+    each has a distinct src URL — collapsing whitespace + lowercasing groups
+    them so a >=2 count signals a runtime collection."""
+    return re.sub(r"\s+", " ", (hit.get("img_classes") or "").strip()).lower()
+
+
+def _looks_like_entity_name(alt: str) -> bool:
+    """True when alt reads like a short proper noun (e.g. 'Brazil Flag',
+    'Korea Republic') rather than a scene description ('stadium at night')."""
+    a = (alt or "").strip()
+    if not a:
+        return False
+    words = a.split()
+    if len(words) > 3:
+        return False
+    low_words = a.lower().split()
+    if any(w in _ALT_SCENE_WORDS for w in low_words):
+        return False
+    return any(w[:1].isupper() for w in words)
+
+
+def _classify_image_delivery(role: str, alt: str, repeat_count: int):
+    """Return (delivery, confidence, reason). delivery in {'bundled','remote'}."""
+    if role in ("avatar", "thumbnail"):
+        return "remote", "high", f"role={role} (runtime content)"
+    if repeat_count >= 2:
+        return "remote", "high", f"repeated x{repeat_count} (data-bound collection)"
+    if role in ("background", "hero"):
+        return "bundled", "high", f"role={role} (static design asset)"
+    if _looks_like_entity_name(alt):
+        return "remote", "low", f"alt looks like an entity name: {alt!r}"
+    return "bundled", "low", "ambiguous — defaulted to bundled (confirm in /ui-designer)"
+
+
+def _suggest_data_binding(role: str, alt: str) -> str:
+    """Suggested *UiModel/DTO field name for a remote image's runtime URL.
+    A specific alt keyword (e.g. 'Brazil Flag' -> flagUrl) wins over the
+    role-derived default (avatar -> avatarUrl)."""
+    low = (alt or "").lower()
+    for kw in _ALT_BINDING_KEYWORDS:
+        if kw in low:
+            return f"{kw}Url"
+    if role == "avatar":
+        return "avatarUrl"
+    if role == "thumbnail":
+        return "thumbnailUrl"
+    return "imageUrl"
+
+
+def read_locked_deliveries(manifest_path: Path, asset_type: AssetType) -> dict:
+    """Return {source_url: {delivery, data_binding}} for prior-manifest entries
+    flagged `delivery_locked: true` (a user-confirmed choice from /ui-designer).
+    Lets full-mode re-runs honor the user's bundle/remote decision instead of
+    re-deriving it from the HTML. Read-only; images only."""
+    out: dict = {}
+    if asset_type.name != "images" or not manifest_path.is_file():
+        return out
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return out
+    for e in data.get("images", []):
+        if not e.get("delivery_locked"):
+            continue
+        url = e.get("source_url") or e.get("url")
+        if url and e.get("delivery") in ("bundled", "remote"):
+            out[url] = {"delivery": e["delivery"], "data_binding": e.get("data_binding")}
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Per-type URL builder (icons only — images use their src directly)
 # ---------------------------------------------------------------------------
 
@@ -785,9 +901,12 @@ def cleanup_feature_orphans(
         print(f"error: {asset_type.manifest_filename} is not valid JSON: {e}", file=sys.stderr)
         return actions
 
+    # Remote-delivery images declare no on-disk drawable, so they must NOT
+    # protect a file: flipping an image bundled -> remote leaves its old raster
+    # as an orphan to be reclaimed here (subject to the still-referenced guard).
     declared_idents = {
         e.get("drawable_name") for e in manifest.get(asset_type.manifest_array_key, [])
-        if e.get("drawable_name")
+        if e.get("drawable_name") and e.get("delivery") != "remote"
     }
     kt_root = feature_kotlin_root(project_root, featurename)
 
@@ -924,6 +1043,19 @@ def main(argv):
 
     cross_feature_usage = scan_existing_manifests(project_root, args.feature, asset_type)
 
+    # Resolve the manifest path up front so we can honor user-locked delivery
+    # choices from a prior /ui-designer run (images only; read-only).
+    manifest_path = args.manifest or (args.html[0].parent / asset_type.manifest_filename)
+    locked_deliveries = read_locked_deliveries(manifest_path, asset_type)
+
+    # Count how many distinct images share each CSS class signature — a >=2
+    # group is a data-bound collection (flags/avatars in a list) -> remote.
+    repeat_counts: dict = {}
+    if asset_type.name == "images":
+        for inf in current.values():
+            sig = _img_signature(inf["hit"])
+            repeat_counts[sig] = repeat_counts.get(sig, 0) + 1
+
     entries = []
     any_failed = False
     chrome_idents_added = []
@@ -933,6 +1065,9 @@ def main(argv):
     mode_label = "manifest-only" if args.manifest_only else "full"
 
     for key, info in sorted(current.items()):
+        delivery = None  # icons are always bundled; only images carry a delivery
+        delivery_conf = delivery_reason = data_binding = None
+        locked = None
         if asset_type.name == "icons":
             name, style, filled = key
             hit = {"name": name, "style": style, "filled": filled}
@@ -955,8 +1090,52 @@ def main(argv):
             type_specific = {"role": role, "state": state, "alt": hit["alt"]}
             occurrences = info["occurrences"]
             label_role = f" ({role:10s})"
+            locked = locked_deliveries.get(url)
+            if locked:
+                delivery = locked["delivery"]
+                delivery_conf = "high"
+                delivery_reason = "locked (user-confirmed in /ui-designer)"
+                data_binding = locked.get("data_binding")
+            else:
+                delivery, delivery_conf, delivery_reason = _classify_image_delivery(
+                    role, hit["alt"], repeat_counts.get(_img_signature(hit), 1)
+                )
+            if delivery == "remote" and not data_binding:
+                data_binding = _suggest_data_binding(role, hit["alt"])
 
         used_idents.add(ident)
+
+        # --- Remote images: no download, no scope / promotion / DSR entry. ---
+        # Rendered at runtime via AsyncImage(url = <data field>); the Stitch CDN
+        # URL is an ephemeral placeholder and is never bundled or shipped.
+        if delivery == "remote":
+            entries.append({
+                **type_specific,
+                "delivery": "remote",
+                "delivery_confidence": delivery_conf,
+                "delivery_reason": delivery_reason,
+                "delivery_locked": bool(locked),
+                "data_binding": data_binding,
+                "compose_hint": "AsyncImage",
+                "placeholder_ref": REMOTE_PLACEHOLDER_REF,
+                "scope": "remote",
+                "drawable_name": ident,
+                "extension": "n/a",
+                "drawable_path": None,
+                "res_reference": None,
+                "source_url": url,
+                "download_status": "remote",
+                "usage_count": 1,
+                "users": [args.feature],
+                "occurrences": occurrences,
+            })
+            print(
+                f"  [remote] {ident:30s}{label_role} -> AsyncImage(url = {data_binding})  "
+                f"[skip-download]  ({delivery_reason})"
+            )
+            continue
+
+        # --- Bundled (all icons + bundled images): download + place + DSR. ---
         users = set(cross_feature_usage.get(key, set()))
         users.add(args.feature)
         scope = "chrome" if len(users) >= 2 else "domain"
@@ -1005,7 +1184,7 @@ def main(argv):
             else str(dest_no_ext.relative_to(project_root))
         )
 
-        entries.append({
+        entry = {
             **type_specific,
             "scope": scope,
             "drawable_name": ident,
@@ -1017,7 +1196,15 @@ def main(argv):
             "usage_count": len(users),
             "users": sorted(users),
             "occurrences": occurrences,
-        })
+        }
+        if asset_type.name == "images":
+            entry.update({
+                "delivery": "bundled",
+                "delivery_confidence": delivery_conf,
+                "delivery_reason": delivery_reason,
+                "delivery_locked": bool(locked),
+            })
+        entries.append(entry)
 
         print(
             f"  [{scope:6s}] {ident:30s}{label_role} -> {drawable_path_str}  "
@@ -1040,7 +1227,6 @@ def main(argv):
         for path, action in source_migration_actions:
             print(f"  [{action}] {path.relative_to(project_root)}")
 
-    manifest_path = args.manifest or (args.html[0].parent / asset_type.manifest_filename)
     if not args.dry_run:
         write_manifest(manifest_path, args.feature, entries, asset_type)
         try:
@@ -1051,10 +1237,13 @@ def main(argv):
         print(f"\n(dry-run) manifest would be: {manifest_path}")
 
     label = "icon(s)" if asset_type.name == "icons" else "image(s)"
+    remote_n = sum(1 for e in entries if e.get("delivery") == "remote")
+    remote_suffix = f", {remote_n} remote (AsyncImage)" if remote_n else ""
     print(
         f"\nsummary [{mode_label} --type {args.type}]: {len(entries)} {label} total, "
         f"{sum(1 for e in entries if e['scope'] == 'chrome')} chrome, "
         f"{sum(1 for e in entries if e['scope'] == 'domain')} domain"
+        f"{remote_suffix}"
     )
     return 1 if any_failed else 0
 

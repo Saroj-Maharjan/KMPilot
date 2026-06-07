@@ -161,6 +161,7 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
    - Accept as architectural limitation: note it — do not fight it with hacks
 
 3. **Component implementation** — Implement UI from the blueprint's Component Tree. Use the blueprint as the primary source, design screenshots as visual cross-reference only. Apply constraint resolutions from sub-step 2. Every text node uses `style = MaterialTheme.typography.{role}` (or an `XTextDefaults` preset) — never raw `fontSize`/`fontWeight`, except a *Type-scale role override* row (`…typography.{role}.copy(...)`). Never set `fontFamily` (global, wired in 1b). **Motion** (if the blueprint has a `## Motion` table): write feature-specific rows into `presentation/ui/motion/{Feature}Motion.kt`, call the DS `motion/` primitives (from 1c) for generic rows, gate each with `rememberReducedMotion()` — never inline, never interaction/hover motion.
+   - **Images** follow each `images.json` entry's `delivery`: `bundled` → `Image(painter = painterResource({res_reference}))` (materialize the raster first if absent: run `python3 .claude/skills/_shared/download_assets.py --type images --feature {featurename} --project-root {repo_root} --html …` **without** `--manifest-only` — it downloads `bundled` only and skips `remote`); `remote` → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, …)` (design-system `AsyncImage`, `url=`) bound to a data-layer field, **never** the Stitch CDN URL — add/wire that field on the DTO/`*UiModel` and keep its Post-Implementation Checklist item.
 4. **Post-Implementation Checklist** — Verify every item in the blueprint's Post-Implementation Checklist:
    - All XTheme missing roles added to BOTH schemes
    - Font swap (if any) applied: `XFontFamily()` rewired, `:core:designsystem` builds
@@ -169,6 +170,7 @@ For UI changes: Load @../using-design-system/references/component-mappings.md
    - Every Modifier in blueprint is present in code
    - All colors use `MaterialTheme.colorScheme.{role}` — no raw `Color()` hex
    - Component override sizes/colors applied
+   - Every `images.json` `bundled` image rendered via `painterResource`; every `remote` image rendered via `AsyncImage(url = data field)` with its `data_binding` wired on the DTO/`*UiModel` (no Stitch CDN URL in code)
    - Every `## Motion` row implemented in a `motion/` file (feature → `presentation/ui/motion/`, generic → DS `motion/`), reduced-motion gated, no inline/interaction/hover motion (n/a if no `## Motion` table)
 
 ### Step 9: Validate Build
