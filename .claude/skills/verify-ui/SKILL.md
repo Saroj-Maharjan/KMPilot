@@ -513,7 +513,7 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 
    ---
 
-   > **Next step —** run `/clear` to free the context window, then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
+   > **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
    ```
 
 This skill does not invoke `/modifying-kmp-feature` — the user controls the pipeline.
@@ -580,5 +580,5 @@ Audit report: .claude/docs/{featurename}/designs/{featurename}_audit.md
 
 ---
 
-> **Next step —** run `/clear` to free the context window, then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
+> **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
 ```

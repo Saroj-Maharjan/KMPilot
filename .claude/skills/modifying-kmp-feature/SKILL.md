@@ -212,4 +212,4 @@ Emit this blockquote as the very last line of output:
 
 ---
 
-> **Next step —** run `/clear` to free the context window, then `/feature-review {featurename}` to validate the changes — or `/verify-ui {featurename}` if you applied a design.
+> **Next step —** run `/clear` to free the context window (the spec + design blueprint are durable artifacts — the next skill re-reads them fresh, so clearing loses nothing), then `/feature-review {featurename}` to validate the changes — or `/verify-ui {featurename}` if you applied a design.

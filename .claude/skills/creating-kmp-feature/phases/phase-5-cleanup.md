@@ -135,7 +135,7 @@ rm -f .claude/docs/{featurename}/task-*.md
 
 ---
 
-> **Next step —** run `/feature-review {featurename}` to validate against Clean Architecture guidelines.
+> **Next step —** run `/clear` to free the context window (the spec at `.claude/docs/{featurename}/spec.md` and the design blueprint are durable artifacts — the next skill re-reads them fresh, so clearing loses nothing), then `/feature-review {featurename}` to validate against Clean Architecture guidelines{, or `/verify-ui {featurename}` to audit against the Stitch design if this feature was built design-aware}.
 ```
 
 ---

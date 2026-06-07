@@ -109,5 +109,5 @@ On build failure, load troubleshooting:
 
 ---
 
-> **Next step —** run `/clear` to free the context window, then `/feature-review {featurename}` to validate against Clean Architecture guidelines.
+> **Next step —** run `/clear` to free the context window (the spec + design blueprint are durable artifacts — the next skill re-reads them fresh, so clearing loses nothing), then `/feature-review {featurename}` to validate against Clean Architecture guidelines — or `/verify-ui {featurename}` to audit against the Stitch design if this feature was built design-aware.
 ```

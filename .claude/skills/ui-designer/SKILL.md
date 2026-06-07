@@ -150,7 +150,7 @@ blueprintConsumed: false (set in stitch-project.json.features[{featurename}])
 
 ---
 
-> **Next step —** run `/clear` to free the context window, then pick the implementation skill based on **`Feature Exists`** from Phase 0:
+> **Next step —** run `/clear` to free the context window (the blueprint + `stitch-project.json` are durable artifacts — the implementation skill auto-detects and re-reads them fresh, so clearing loses nothing and frees the large Stitch/HTML context), then pick the implementation skill based on **`Feature Exists`** from Phase 0:
 > - **`Feature Exists: no`** → `/creating-kmp-feature {featurename}` — no Kotlin source files exist; create the feature from scratch
 > - **`Feature Exists: yes`** → `/modifying-kmp-feature {featurename}` — Kotlin source files already exist; add the design to the existing feature
 >
