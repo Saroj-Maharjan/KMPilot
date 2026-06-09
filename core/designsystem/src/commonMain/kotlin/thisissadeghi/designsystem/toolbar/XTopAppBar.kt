@@ -42,7 +42,7 @@ fun XTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = contentColorFor(backgroundColor),
-    alignment: XTopAppBarAlignment = XTopAppBarAlignment.Center,
+    alignment: XTopAppBarAlignment = XTopAppBarAlignment.Start,
 ) {
     val titleSlut = @Composable {
         // because of Material3's component has its own contentColor or textStyle and colors and the app is
