@@ -111,6 +111,7 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 | Error | Action |
 |-------|--------|
 | Stitch MCP not available | Run the Guided Setup in [phase-init.md → Init-1](phases/phase-init.md#guided-setup). Full reference: [stitch-setup.md](references/stitch-setup.md). Stop after instructing the user — they must restart Claude Code before the skill can continue. |
+| Stitch MCP shows Connected but tools return "No such tool available" | HTTP transport timed out mid-session — tools dropped from the session registry. `claude mcp list` may still show "✔ Connected" (cached state). Fix: open `/mcp` dialog → reconnect Stitch. If tools still absent after reconnect, restart Claude Code. MCP tools only reload at session start; mid-session reconnect via `/mcp` dialog is sufficient in most cases. |
 | Stitch generation times out / connection reset | **Do NOT retry the generation call** (known Google Stitch bug — the generation often succeeded server-side and a retry creates a duplicate). Ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger sync. Wait for confirmation, then call `list_screens` to locate the new screen. |
 | Stitch generation fails with a non-timeout error | Retry with refined prompt. Max 3 attempts |
 | Stitch project not found | Create new project automatically |
