@@ -293,7 +293,22 @@ For each entry in `icons.json.icons`:
    - **Source:** icons.json
    ```
 
-> **Bottom-bar tab icons are app-shell chrome.** A bottom navigation bar is rendered in `App.kt` (not in any feature), so its tab icons and labels both resolve via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res` (drawables and strings in `composeApp/composeResources/`) — this is correct and expected, not a "wrong scope" finding. Do not flag the app-shell bottom bar as a missing/mis-scoped feature element. Auditing the bar itself (tab count, order, labels) is out of scope for the per-feature UI audit.
+> **Bottom-bar tab icons are app-shell chrome.** A bottom navigation bar is rendered in `App.kt` (not in any feature), so its tab icons and labels both resolve via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res` (drawables and strings in `composeApp/composeResources/`) — this is correct and expected, not a "wrong scope" finding.
+
+**Bottom-bar nav audit** (runs only when the feature owns Integration Point 5 — i.e. it introduced `XNavigationBar` in `App.kt`):
+
+When the feature wires a bottom nav bar, also scan `App.kt` for `XNavigationBar`/`XNavigationBarItem`. For every row in the feature's blueprint `### Component Overrides` table referencing those components, verify the override is present in `App.kt` — **CRITICAL** if missing, same format as Step 5.4 feature components:
+
+```markdown
+### CRITICAL — Missing nav-bar component override: {Component}.{Property}
+- **Where:** `App.kt:{LINE}` (or "absent — no {param} param on {Component}")
+- **HTML:** {HTML Value from blueprint Component Overrides row}
+- **Code:** {actual rendered value — typically the M3 default}
+- **Fix:** {Override Required from blueprint}
+- **Source:** Blueprint Component Overrides (app-shell chrome at Integration Point 5)
+```
+
+This is **not** a hardcoded property list — it is driven entirely by what `/ui-designer` recorded in the blueprint's Component Overrides table. Tab count, order, labels, and app-shell icons remain out of scope.
 
 4. **Forbidden legacy imports** — grep all feature Kotlin for `import androidx.compose.material.icons.`. Any match is CRITICAL (the pinned `material-icons-extended` library is deprecated; every icon usage in a design-aware feature must go through `XIcon(painter = painterResource(...))`):
    ```markdown

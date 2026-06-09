@@ -270,6 +270,12 @@ enum class TopLevelDestination(
 }
 ```
 
+### Blueprint Component Overrides for the nav bar
+
+Before writing the `XNavigationBar`/`XNavigationBarItem` call in `App.kt`, read the feature's blueprint `### Component Overrides` table for any rows referencing `XNavigationBar` or `XNavigationBarItem` (e.g. `shape`, `containerColor`, `colors`, `modifier`, `elevation`). Apply every such override in the generated `App.kt` code — they cover app-shell chrome wired at Point 5, not only feature-internal components. This is not a hardcoded property list; it is driven by what `/ui-designer` recorded.
+
+A bare `XNavigationBar` with no overrides inherits M3 defaults. The defaults are only visually correct when (a) the theme explicitly defines all underlying roles with the design's values, and (b) no Component Override row in the blueprint calls for a different value. Missing overrides produce visual drift that a later `/verify-ui` audit flags as CRITICAL — catch them here instead.
+
 ### Code B — `App.kt` `AppContent` (the single app-shell Scaffold, lift `navController`)
 
 This is the **one** `Scaffold` in the app (Rule 13). It owns shared chrome (snackbar, bottom-bar tabs); `contentWindowInsets = WindowInsets(0, 0, 0, 0)` (consumes nothing). There is **no** `topBar` here: feature screens render their own `XTopAppBar` via `XScreen`. The NavHost is padded by the **top + horizontal** safe area + `imePadding()`; the **bottom** is owned per-screen (a bottom action bar bleeds to the edge and self-applies `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` so its nav-bar pad collapses when the keyboard lifts the screen; a no-bar scroll screen self-insets its content with `navigationBarsPadding()`). When a tab nav bar is shown (`onTopLevel`), `padding(innerPadding)` reserves its height and `XNavigationBar` self-insets the nav bar. Lift `navController` out of `{NAV_HOST_PATH}` into `App.kt` so the bar and the NavHost share it.
@@ -292,7 +298,13 @@ Scaffold(
             // containerColor fills behind the system nav-bar strip. Do NOT pass windowInsets =
             // WindowInsets(0) + a manual windowInsetsPadding(navigationBars…) on the modifier —
             // that clips the background short of the screen edge (mismatched strip color).
-            XNavigationBar {
+            //
+            // Always set containerColor + XNavigationBarItem colors explicitly — bare M3 defaults
+            // use secondaryContainer (indicator) and secondary (selected icon), which leak M3
+            // baseline purple/grey if those roles are absent from XTheme.kt.
+            XNavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,   // match page background
+            ) {
                 TopLevelDestination.entries.forEach { dest ->
                     val selected = entry?.destination?.hierarchy?.any { it.hasRoute(dest.route::class) } == true
                     XNavigationBarItem(
@@ -304,6 +316,13 @@ Scaffold(
                                 restoreState = true
                             }
                         },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
                         icon = {
                             XIcon(
                                 painter = painterResource(dest.icon),
@@ -330,7 +349,7 @@ Scaffold(
 }
 ```
 
-Imports to add in `App.kt`: `androidx.navigation.compose.rememberNavController`, `androidx.navigation.compose.currentBackStackEntryAsState`, `androidx.navigation.NavDestination.Companion.hierarchy`, `androidx.navigation.NavDestination.Companion.hasRoute`, `androidx.navigation.NavGraph.Companion.findStartDestination`, `org.jetbrains.compose.resources.painterResource`, `org.jetbrains.compose.resources.stringResource`, and the `XNavigationBar`/`XNavigationBarItem`/`XIcon`/`XText` X-components. Also the inset helpers `androidx.compose.foundation.layout.{WindowInsets, WindowInsetsSides, safeDrawing, only, windowInsetsPadding, imePadding}`. The shell uses M3 `Scaffold` + `SnackbarHost` directly (`androidx.compose.material3.*`) — this is the **one** place a real `Scaffold` is correct (Rule 13); do **not** add `topBar`/`ToolbarRenderer`.
+Imports to add in `App.kt`: `androidx.navigation.compose.rememberNavController`, `androidx.navigation.compose.currentBackStackEntryAsState`, `androidx.navigation.NavDestination.Companion.hierarchy`, `androidx.navigation.NavDestination.Companion.hasRoute`, `androidx.navigation.NavGraph.Companion.findStartDestination`, `org.jetbrains.compose.resources.painterResource`, `org.jetbrains.compose.resources.stringResource`, and the `XNavigationBar`/`XNavigationBarItem`/`XIcon`/`XText` X-components. Also `androidx.compose.material3.NavigationBarItemDefaults` (for the explicit item colors), `androidx.compose.material3.MaterialTheme`, and the inset helpers `androidx.compose.foundation.layout.{WindowInsets, WindowInsetsSides, safeDrawing, only, windowInsetsPadding, imePadding}`. The shell uses M3 `Scaffold` + `SnackbarHost` directly (`androidx.compose.material3.*`) — this is the **one** place a real `Scaffold` is correct (Rule 13); do **not** add `topBar`/`ToolbarRenderer`.
 
 ### Code C — `{NAV_HOST_PATH}` (accept `navController` instead of creating it)
 
