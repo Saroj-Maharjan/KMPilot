@@ -366,6 +366,8 @@ The optional `EmptyContent` shell (3) is present only when the design calls for 
 
 **Picking the screen shape**: see [architecture/ui.md → "Screen Shapes"](../creating-kmp-feature/architecture/ui.md) — Shape A (data-fetch), Shape B (form), Shape C (native-view host, Rule 14). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
 
+**Fragment-composable rule**: a component that emits ≥2 top-level siblings MUST own its enclosing `Column`/`Row` — never emit bare siblings and rely on the caller's layout. A `Box` caller z-stacks all children; a fragment composable passed to a `Box` merges all rows into one. Apply `modifier` to the wrapping `Column`, not to the first child. Full rule + grep hint: [architecture/ui.md → "Fragment-composable rule"](../creating-kmp-feature/architecture/ui.md). A composable emitting ≥2 top-level siblings must own its enclosing `Column`/`Row` (Box z-stacks — never use Box as a multi-child container wrapper).
+
 ### Utility Functions (non-`@Composable`)
 
 Pure helpers like formatters, validators, and mappers are **not composables** and do not go under `components/`. They live at the same level as `Screen.kt`:

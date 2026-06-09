@@ -166,6 +166,17 @@ For every visual element in the inventory, convert each Tailwind class to its dp
 
 When `N = 0`, write `**No mismatches.**` and stop. Do not produce a table.
 
+**Cumulative top/bottom offset check**: After the per-element audit, run this structural check once per state:
+1. Sum `XScreen` `topBar` height (from its token inventory row or grep the code for `height(N.dp)`) + the first scroll container's `contentPadding.top` (grep `contentPadding = PaddingValues(top = …)`) + any leading explicit `Spacer(Modifier.height(…))` before first content.
+2. Compare to the design's first-element top offset (the inventory's first content element y-offset after the header).
+3. If the sum ≠ design offset by ≥4dp → **CRITICAL — Cumulative top-offset mismatch**: "topBar height N + contentPadding.top M = sum Xdp; design first-element offset = Ydp. Fix: set contentPadding.top = Y − topBarHeight (or 8dp if the Stitch pt-N was header clearance)." This catches topBar + contentPadding double-counting, where each value looks individually correct but the sum is wrong.
+
+Apply the same check for bottom: scroll container `contentPadding.bottom` + any trailing Spacer vs. design last-element offset from the bottom of the content area.
+
+**Fix guardrail**: When emitting a fix recommendation, classify the fix type:
+- **Token fix** (one-line param change: color, dp value, fontWeight) → emit as normal fix.
+- **STRUCTURAL** (reparents the composable tree: wrapping/unwrapping a container, changing `Box` ↔ `Column`/`Row`, moving a composable to a different parent) → tag the Fix line with `STRUCTURAL — verify render` and always prefer `Column` for multi-child container wraps. Structural fixes must be manually verified in the running app because static token audit cannot observe layout effects.
+
 **Verdicts** (used as the "{Severity}" tag in the block heading):
 - **CRITICAL** — see Step 5.6.
 - **MINOR** — see Step 5.6.
@@ -516,6 +527,8 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 ---
 
 ## Step 8: Handle Mismatches
+
+**Fix scope rule**: Token fixes (color, size, spacing, letter-spacing) stay one-liners. Any fix that reparents the composable tree — wrap/unwrap a container, change `Box` to `Column`/`Row`, extract or inline a composable — is tagged **`STRUCTURAL — verify render after applying`**. For container wraps, always prefer `Column` (sequential stacking) over `Box` (z-stacking). Never recommend a `Box` wrapper for multi-child content.
 
 ### Critical issues (token mismatches OR Material3 violations)
 

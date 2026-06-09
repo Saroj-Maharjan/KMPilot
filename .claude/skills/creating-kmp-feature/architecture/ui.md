@@ -229,6 +229,40 @@ fun FeatureScreenRoot(
 - No ViewModels in components (data/callbacks passed down)
 - Prefer stateless composables (state hoisted to parent)
 
+### 5z. Fragment-composable rule (mandatory)
+
+A **fragment composable** is a `@Composable` function that emits ≥2 top-level siblings without wrapping them in its own layout container (`Column`, `Row`, etc.). Fragment composables are **forbidden**: they rely on the caller's layout context and break silently when the caller is a `Box` (which z-stacks all children on top of each other instead of stacking them vertically).
+
+**Rule**: every component emitting ≥2 top-level siblings **must** own its enclosing `Column` (or `Row`). The incoming `modifier` is applied to that Column, not to the first child Row. The component is then layout-safe regardless of its call-site container.
+
+```kotlin
+// WRONG — fragment composable (relies on caller being a Column)
+@Composable
+fun StandingsTable(rows: List<Row>, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth()) { /* header */ }   // modifier on child, not wrapper
+    XHorizontalDivider()
+    rows.forEach { Row { /* data */ } }
+}
+
+// CORRECT — self-contained; layout-safe in any caller
+@Composable
+fun StandingsTable(rows: List<Row>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {                              // modifier on wrapper Column
+        Row(modifier = Modifier.fillMaxWidth()) { /* header */ }
+        XHorizontalDivider()
+        rows.forEach { Row { /* data */ } }
+    }
+}
+```
+
+**Reviewer grep** (catches fragment composables in a PR diff):
+```bash
+# Flag composable functions that use the incoming modifier on a non-Column/Row first line
+# (heuristic: modifier applied to a Row/Box at the top level, while more content follows)
+grep -n "modifier = modifier\." feature/{name}/src/*/kotlin/**/components/*.kt
+```
+Manually confirm each hit: if the function emits only a single top-level composable (a wrapper), it is fine. If it emits ≥2 siblings with the modifier on the first one, it is a fragment — wrap in `Column(modifier = modifier)`.
+
 ### 5a. Utility Functions (non-`@Composable`)
 
 Pure helpers (formatters, validators, mappers) are **not composables** and **do not go under `components/`**. Place them in `presentation/ui/{Feature}Utils.kt` at the same level as `Screen.kt`. `components/` contains only `@Composable` declarations.
