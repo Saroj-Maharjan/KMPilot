@@ -1,0 +1,91 @@
+{
+  "feature": "swap",
+  "type": "images",
+  "images": [
+    {
+      "role": "avatar",
+      "state": "success",
+      "alt": "BTC",
+      "delivery": "remote",
+      "delivery_confidence": "high",
+      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_locked": true,
+      "data_binding": "avatarUrl",
+      "compose_hint": "AsyncImage",
+      "placeholder_ref": "DesignSystemResources.drawable.ds_image_placeholder",
+      "scope": "remote",
+      "drawable_name": "success_avatar",
+      "extension": "n/a",
+      "drawable_path": null,
+      "res_reference": null,
+      "source_url": "https://lh3.googleusercontent.com/aida-public/AB6AXuBpHT28Fs4C0tG05J2CuuCE6GQCSiKmkrV6IzsdFXgP6oYIteEbk_T70nFunJ33x_MkMlVu9o3Tb7rBhJNO6VxJjsiZSirb9TxL_tpo2B4K4hfeVqgUB6KWBD-sOfho6WkY8H6HKbfpZXc_BFLm1k8PvCli2Cr4wWHv8igKIslADh_v9WuOv-5rfaGYVHc1bxpmYGsejrFXPN0AoFsSSqYu13xJEa7N2jSHIS6O8qQQvF1Qy5W80ZBaefai5fKbPRvLJ_LI8zwkCXfw",
+      "download_status": "remote",
+      "usage_count": 1,
+      "users": [
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success"
+        }
+      ]
+    },
+    {
+      "role": "background",
+      "state": "failed",
+      "alt": "A highly detailed abstract background featuring flowing liquid gold veins moving gracefully through deep obsidian space. The aesthetic is digital luxury with soft amber lighting illuminating subtle textures in the dark background. The scene conveys a sense of high-end financial technology with a warm, premium color palette of deep blacks and shimmering champagne golds.",
+      "scope": "chrome",
+      "drawable_name": "failed_background",
+      "extension": "png",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/failed_background.png",
+      "res_reference": "DesignSystemResources.drawable.failed_background",
+      "source_url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDOPBCTc1KqSMTvXY-rUSs_JJbdzt8SK0rjoBPPn4xev7AHKxg-kENzs3lwyv6P2ArJCX6SbUWiwH3TEAqCEnLS76iJ7C-IE-SgQoZhvdk072-z6TzILeGrLDepK18Uj8gT2dei12oxW4LBBEx0XlHycVzuOR-bgjz3gMzO3pOmOitejnHJiBoqz8QUo49IxPxkJbYPozKS7QlZdIdL2TKoU6Bta5_nmbGucGfALNVNDzaU1YqiWBOr5baeiu5fGfJUzbSZaKmtw16N",
+      "download_status": "skip-exists",
+      "usage_count": 3,
+      "users": [
+        "assetdetail",
+        "dashboard",
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "failed"
+        }
+      ],
+      "delivery": "bundled",
+      "delivery_confidence": "high",
+      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_locked": true
+    },
+    {
+      "role": "avatar",
+      "state": "success",
+      "alt": "ETH",
+      "delivery": "remote",
+      "delivery_confidence": "high",
+      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_locked": true,
+      "data_binding": "avatarUrl",
+      "compose_hint": "AsyncImage",
+      "placeholder_ref": "DesignSystemResources.drawable.ds_image_placeholder",
+      "scope": "remote",
+      "drawable_name": "success_avatar_1",
+      "extension": "n/a",
+      "drawable_path": null,
+      "res_reference": null,
+      "source_url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDWNlb5SAhLn5Lhv0veM6p7wv1oHG6Ugg1koHMhHQW0NZumQozHIz06njFMJK2wYFQneahd3-pqxKSWfJ94Wb21FuFmgVNu6Eazjy8-lRRSzJoXLGwfSX2q9fcjX5UYlaa5BFrOkSal2UFOmrKNOLMuFghRB2vVfWxSJfqhura-0l63mVz7tj86ZyPhW1mU94PnT9PvwGhyRLIaZALBobf8LJZfDUBPtP1jZKfpW5PdTxoTZlkG0Dd1piXzdlDCfa_ANWpzNcz9GvAH",
+      "download_status": "remote",
+      "usage_count": 1,
+      "users": [
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success"
+        }
+      ]
+    }
+  ],
+  "generator": "download_assets.py",
+  "version": 1
+}

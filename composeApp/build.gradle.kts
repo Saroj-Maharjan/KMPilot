@@ -48,6 +48,8 @@ kotlin {
             implementation(project(":feature:dashboard"))
             implementation(project(":feature:send"))
             implementation(project(":feature:receive"))
+            implementation(project(":feature:assetdetail"))
+            implementation(project(":feature:swap"))
         }
     }
 }

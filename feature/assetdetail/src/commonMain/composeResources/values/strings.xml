@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="asset_detail_title">Asset Detail</string>
+    <string name="cd_back">Back</string>
+    <string name="error_title">Something went wrong</string>
+    <string name="error_message">An unexpected error occurred. Please try again.</string>
+    <string name="section_recent_activity">Recent Activity</string>
+    <string name="section_stats">Stats</string>
+    <string name="section_top_holders">Top Holders Community</string>
+    <string name="action_see_all">See all</string>
+    <string name="action_join_group">Join Group</string>
+    <string name="action_sell">Sell</string>
+    <string name="action_buy">Buy</string>
+    <string name="label_market_cap">Market Cap</string>
+    <string name="label_volume_24h">24h Volume</string>
+    <string name="label_circ_supply">Circ. Supply</string>
+    <string name="label_your_holdings">Your Holdings</string>
+    <string name="buy_sheet_title">Buy %1$s</string>
+    <string name="buy_sheet_subtitle">BTC / USD</string>
+    <string name="buy_currency_prefix">$</string>
+    <string name="label_pay_with">Pay with</string>
+    <string name="label_wallet">Main Wallet</string>
+    <string name="action_confirm_purchase">Confirm Purchase</string>
+    <string name="chip_1d">1D</string>
+    <string name="chip_1w">1W</string>
+    <string name="chip_1m">1M</string>
+    <string name="chip_1y">1Y</string>
+    <string name="chip_all">All</string>
+    <string name="chip_25">25%</string>
+    <string name="chip_50">50%</string>
+    <string name="chip_75">75%</string>
+    <string name="chip_max">Max</string>
+    <string name="cd_chart">Price chart</string>
+    <string name="chart_unavailable">Chart unavailable</string>
+    <string name="cd_coin_icon">Coin icon</string>
+    <string name="label_approx_btc">≈ %1$s BTC</string>
+    <string name="status_change_positive">+%1$s%%</string>
+    <string name="status_change_negative">%1$s%%</string>
+    <string name="activity_unavailable">Activity unavailable</string>
+    <string name="holders_unavailable">Holders unavailable</string>
+</resources>

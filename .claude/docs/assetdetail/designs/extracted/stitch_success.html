@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bitcoin Asset Detail - KMPilot Gold</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F0D09',
+                        surface: '#1C1910',
+                        'surface-variant': '#302B1C',
+                        'on-surface': '#EDE8D5',
+                        'on-surface-variant': '#C4BA94',
+                        outline: '#726A48',
+                        'outline-variant': '#3F3822',
+                        primary: '#F5D76E',
+                        'on-primary': '#2C1900',
+                        'primary-container': '#4A3200',
+                        'on-primary-container': '#FFF0C0',
+                        error: '#FFB4AB',
+                        'on-error': '#690005',
+                        'error-container': '#93000A',
+                        'on-error-container': '#FFDAD6',
+                        success: '#4ADE80',
+                        danger: '#FF6B6B',
+                    },
+                    borderRadius: {
+                        'DEFAULT': '0.5rem',
+                        'lg': '1rem',
+                        'xl': '1.5rem',
+                        'full': '9999px'
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif'],
+                        label: ['Manrope', 'sans-serif']
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F0D09;
+            color: #EDE8D5;
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chart-glow {
+            filter: drop-shadow(0 0 8px rgba(245, 215, 110, 0.3));
+        }
+        .avatar-stack {
+            display: flex;
+            align-items: center;
+        }
+        .avatar-stack > div {
+            margin-right: -12px;
+            border: 2px solid #0F0D09;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased pb-32">
+<!-- Top AppBar (JSON Source: TopAppBar) -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-transparent flex justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="p-2 -ml-2 text-primary hover:bg-surface-variant transition-colors rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined" style="font-size: 28px;">arrow_back</span>
+</button>
+<h1 class="font-headline text-headline-lg font-bold text-on-surface">Bitcoin</h1>
+</div>
+</header>
+<!-- Section 1: Hero Section -->
+<section class="relative pt-24 pb-8 flex flex-col items-center justify-center overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-primary-container to-background opacity-60 h-[240px]"></div>
+<div class="relative z-10 flex flex-col items-center text-center px-6">
+<!-- Bitcoin Logo -->
+<div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg mb-4">
+<span class="material-symbols-outlined text-on-primary text-4xl" style="font-variation-settings: 'FILL' 1;">currency_bitcoin</span>
+</div>
+<h2 class="text-on-surface-variant text-lg font-bold mb-1">Bitcoin (BTC)</h2>
+<div class="text-on-surface text-4xl font-extrabold tracking-tight mb-3">$67,420.50</div>
+<div class="bg-success/10 text-success px-3 py-1 rounded-full flex items-center gap-1 text-sm font-bold border border-success/20">
+<span class="material-symbols-outlined text-base">arrow_upward</span>
+                2.34%
+            </div>
+</div>
+</section>
+<!-- Section 2: Chart Section -->
+<section class="px-6 mb-8">
+<div class="relative h-[180px] w-full mt-4">
+<!-- Y-Axis Labels -->
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-on-surface-variant font-medium">
+<span>$68k</span>
+<span>$67k</span>
+<span>$66k</span>
+<span>$65k</span>
+</div>
+<!-- The Chart -->
+<div class="ml-10 h-full relative">
+<svg class="w-full h-full preserve-3d overflow-visible" viewbox="0 0 400 180">
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#F5D76E" stop-opacity="0.18"></stop>
+<stop offset="100%" stop-color="#F5D76E" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Area Fill -->
+<path d="M0,150 Q50,130 100,140 T200,100 T300,60 T400,30 V180 H0 Z" fill="url(#chartGradient)"></path>
+<!-- Line -->
+<path class="chart-glow" d="M0,150 Q50,130 100,140 T200,100 T300,60 T400,30" fill="none" stroke="#F5D76E" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+</div>
+<!-- X-Axis Labels -->
+<div class="ml-10 mt-2 flex justify-between text-[10px] text-on-surface-variant font-medium">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+</div>
+</div>
+</section>
+<!-- Section 3: Time Selector -->
+<section class="px-6 mb-10 flex gap-2 overflow-x-auto no-scrollbar">
+<button class="bg-primary text-on-primary px-5 py-2 rounded-full text-sm font-bold transition-all active:scale-95">1D</button>
+<button class="bg-transparent border border-outline-variant text-on-surface-variant px-5 py-2 rounded-full text-sm font-bold hover:bg-surface-variant transition-all">1W</button>
+<button class="bg-transparent border border-outline-variant text-on-surface-variant px-5 py-2 rounded-full text-sm font-bold hover:bg-surface-variant transition-all">1M</button>
+<button class="bg-transparent border border-outline-variant text-on-surface-variant px-5 py-2 rounded-full text-sm font-bold hover:bg-surface-variant transition-all">1Y</button>
+<button class="bg-transparent border border-outline-variant text-on-surface-variant px-5 py-2 rounded-full text-sm font-bold hover:bg-surface-variant transition-all">All</button>
+</section>
+<!-- Section 4: Stats Grid -->
+<section class="px-6 mb-10">
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface border border-outline-variant p-5 rounded-xl shadow-sm">
+<p class="text-on-surface-variant text-xs font-medium mb-1">Market Cap</p>
+<p class="text-on-surface text-lg font-bold">$1.32T</p>
+</div>
+<div class="bg-surface border border-outline-variant p-5 rounded-xl shadow-sm">
+<p class="text-on-surface-variant text-xs font-medium mb-1">24h Vol</p>
+<p class="text-on-surface text-lg font-bold">$38.4B</p>
+</div>
+<div class="bg-surface border border-outline-variant p-5 rounded-xl shadow-sm">
+<p class="text-on-surface-variant text-xs font-medium mb-1">Circ Supply</p>
+<p class="text-on-surface text-lg font-bold">19.7M BTC</p>
+</div>
+<div class="bg-surface border border-primary/20 p-5 rounded-xl shadow-md ring-1 ring-primary/10">
+<p class="text-primary text-xs font-bold mb-1">Your Holdings</p>
+<p class="text-on-surface text-lg font-bold">0.0842 BTC</p>
+<p class="text-on-surface-variant text-[10px]">~$5,679.42</p>
+</div>
+</div>
+</section>
+<!-- Section 5: Activity -->
+<section class="px-6 mb-10">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-on-surface text-xl font-bold tracking-tight">Recent Activity</h3>
+<button class="text-primary text-sm font-bold">See all</button>
+</div>
+<div class="space-y-4">
+<!-- Row 1 -->
+<div class="flex items-center justify-between bg-surface/50 p-4 rounded-xl border border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+<span class="material-symbols-outlined">call_received</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Received</p>
+<p class="text-on-surface-variant text-xs">Today, 10:42 AM</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-success font-bold text-sm">+0.0120 BTC</p>
+<p class="text-on-surface-variant text-xs">$809.04</p>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between bg-surface/50 p-4 rounded-xl border border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center text-danger">
+<span class="material-symbols-outlined">call_made</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Sent</p>
+<p class="text-on-surface-variant text-xs">Yesterday, 4:15 PM</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-danger font-bold text-sm">-0.0050 BTC</p>
+<p class="text-on-surface-variant text-xs">$337.10</p>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between bg-surface/50 p-4 rounded-xl border border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<p class="text-on-surface font-bold text-sm">Staked</p>
+<p class="text-on-surface-variant text-xs">Sep 12, 09:00 AM</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-success font-bold text-sm">+0.0004 BTC</p>
+<p class="text-on-surface-variant text-xs">$26.97</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 6: Top Holders -->
+<section class="px-6 mb-12">
+<h3 class="text-on-surface text-lg font-bold mb-4">Top Holders Community</h3>
+<div class="flex items-center justify-between">
+<div class="avatar-stack">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary text-xs font-bold">AK</div>
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary text-xs font-bold">MW</div>
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary text-xs font-bold">PR</div>
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary text-xs font-bold">JL</div>
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary text-xs font-bold">ST</div>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary text-xs font-bold border-2 border-background">+42</div>
+</div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="text-sm font-bold">Join Group</span>
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Sticky Footer -->
+<footer class="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-outline-variant px-6 pt-4 pb-10 flex gap-4">
+<button class="w-1/2 h-14 border-2 border-primary text-primary font-bold rounded-xl active:scale-95 transition-all">Sell</button>
+<button class="w-1/2 h-14 bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-all">Buy</button>
+</footer>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.classList.add('scale-95');
+            });
+            button.addEventListener('touchend', function() {
+                this.classList.remove('scale-95');
+            });
+        });
+    </script>
+<div class="fixed inset-0 z-50 bg-[#0F0D09]/60"></div><div class="fixed bottom-0 left-0 right-0 z-[60] bg-[#1C1910] rounded-t-[24px] flex flex-col pb-10"><div class="w-10 h-1 rounded-full bg-[#3F3822] mx-auto mt-3 mb-4"></div><div class="px-5 mb-6"><h3 class="text-[18px] font-bold text-[#EDE8D5]">Buy Bitcoin</h3><p class="text-[13px] text-[#C4BA94]">BTC / USD</p></div><div class="px-5 mb-6"><div class="h-14 bg-[#302B1C] border-[1.5px] border-[#F5D76E] rounded-xl flex items-center px-4 justify-between"><div class="flex items-center gap-2"><span class="text-base text-[#C4BA94]">$</span><span class="text-xl font-bold text-[#EDE8D5]">500.00</span></div><span class="text-xs text-[#C4BA94]">≈ 0.0074 BTC</span></div></div><div class="px-5 mb-8"><div class="relative h-1 w-full bg-[#3F3822] rounded-full mb-6"><div class="absolute left-0 top-0 h-full w-[35%] bg-[#F5D76E] rounded-full"></div><div class="absolute left-[35%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-[#F5D76E] rounded-full flex items-center justify-center"><div class="w-1.5 h-1.5 bg-white rounded-full"></div></div></div><div class="flex justify-between gap-3"><button class="flex-1 py-2 bg-[#302B1C] text-[#C4BA94] text-xs font-bold rounded-lg">25%</button><button class="flex-1 py-2 bg-[#F5D76E] text-[#2C1900] text-xs font-bold rounded-lg">50%</button><button class="flex-1 py-2 bg-[#302B1C] text-[#C4BA94] text-xs font-bold rounded-lg">75%</button><button class="flex-1 py-2 bg-[#302B1C] text-[#C4BA94] text-xs font-bold rounded-lg">Max</button></div></div><div class="px-5 mb-8"><p class="text-[13px] text-[#C4BA94] mb-2">Pay with</p><div class="h-[52px] bg-[#302B1C] border border-[#3F3822] rounded-xl flex items-center px-4 justify-between"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[#F5D76E]">account_balance_wallet</span><span class="text-sm text-[#EDE8D5]">Main Wallet · $12,450.00</span></div><span class="material-symbols-outlined text-[#C4BA94]">expand_more</span></div></div><div class="px-5"><button class="w-full h-14 bg-[#F5D76E] text-[#2C1900] text-base font-bold rounded-xl">Confirm Purchase</button></div></div></body></html>

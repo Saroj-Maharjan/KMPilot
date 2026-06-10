@@ -1,0 +1,26 @@
+{
+  "family": "Manrope",
+  "slug": "manrope",
+  "route": "github-variable",
+  "weights": [
+    400,
+    500,
+    700
+  ],
+  "css_url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800",
+  "font_dir": "core/designsystem/src/commonMain/composeResources/font",
+  "files": [
+    "manrope_variable.ttf"
+  ],
+  "res_accessors": [
+    "manrope_variable"
+  ],
+  "font_family_lines": [
+    "Font(Res.font.manrope_variable, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),",
+    "Font(Res.font.manrope_variable, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),",
+    "Font(Res.font.manrope_variable, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),"
+  ],
+  "download_status": "downloaded",
+  "generator": "download_font.py",
+  "version": 1
+}

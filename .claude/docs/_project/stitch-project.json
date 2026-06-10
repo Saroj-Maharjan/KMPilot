@@ -132,6 +132,40 @@
         "criticalIssues": 4,
         "attempts": 1
       }
+    },
+    "assetdetail": {
+      "successScreenId": "532ef65069c941f88084039e55672d71",
+      "successScreenName": "projects/11569217269690169371/screens/532ef65069c941f88084039e55672d71",
+      "emptyScreenId": null,
+      "states": { "loading": true, "failed": true, "empty": false },
+      "screenshot": "designs/assetdetail.png",
+      "htmlPath": "designs/extracted/stitch_success.html",
+      "tokensPath": "designs/extracted/tokens_success.md",
+      "dimensions": { "width": 780, "height": 2962 },
+      "designFile": "designs/assetdetail.md",
+      "blueprintFile": "designs/assetdetail_blueprint.md",
+      "blueprintConsumed": true,
+      "approved": true,
+      "approvedAt": "2026-06-10",
+      "createdAt": "2026-06-10T00:00:00Z",
+      "updatedAt": "2026-06-10T00:00:00Z"
+    },
+    "swap": {
+      "successScreenId": "ce04a875165b49f399d8c0bc73c28fe1",
+      "successScreenName": "projects/11569217269690169371/screens/ce04a875165b49f399d8c0bc73c28fe1",
+      "emptyScreenId": null,
+      "states": { "loading": true, "failed": true, "empty": false },
+      "screenshot": "designs/swap.png",
+      "htmlPath": "designs/extracted/stitch_success.html",
+      "tokensPath": "designs/extracted/tokens_success.md",
+      "dimensions": { "width": 780, "height": 1768 },
+      "designFile": "designs/swap.md",
+      "blueprintFile": "designs/swap_blueprint.md",
+      "blueprintConsumed": true,
+      "approved": true,
+      "approvedAt": "2026-06-10",
+      "createdAt": "2026-06-10T00:00:00Z",
+      "updatedAt": "2026-06-10T13:00:00Z"
     }
   },
   "initState": {

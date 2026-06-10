@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KMPilot Gold - Swap</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F0D09',
+                        surface: '#1C1910',
+                        'surface-variant': '#302B1C',
+                        'on-surface': '#EDE8D5',
+                        'on-surface-variant': '#C4BA94',
+                        outline: '#726A48',
+                        'outline-variant': '#3F3822',
+                        primary: '#F5D76E',
+                        'on-primary': '#2C1900',
+                        'primary-container': '#4A3200',
+                        'on-primary-container': '#FFF0C0',
+                        error: '#FFB4AB',
+                        'on-error': '#690005',
+                        'error-container': '#93000A',
+                        'on-error-container': '#FFDAD6',
+                    },
+                    borderRadius: {
+                        'DEFAULT': '0.5rem',
+                        'lg': '1rem',
+                        'xl': '1.5rem',
+                        '2xl': '20px',
+                        'full': '9999px'
+                    },
+                    fontFamily: {
+                        headline: ['Manrope', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        body: ['Manrope', 'sans-serif'],
+                        label: ['Manrope', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'gold-glow': '0 0 20px rgba(245, 215, 110, 0.25)',
+                        'gold-intense': '0 0 30px rgba(245, 215, 110, 0.4)'
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F0D09;
+            color: #EDE8D5;
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .shimmer-glow {
+            animation: shimmer 3s infinite linear;
+            background: linear-gradient(90deg, #EDE8D5 0%, #F5D76E 50%, #EDE8D5 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+        .glass-footer {
+            background: rgba(15, 13, 9, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-40">
+<!-- Top App Bar -->
+<!-- Managed by JSON logic: TopAppBar type small, sticky, transparent bg-background as per JSON shell layout -->
+<header class="sticky top-0 z-50 w-full h-16 flex items-center px-6 bg-background/80 backdrop-blur-sm">
+<div class="flex items-center gap-4 w-full">
+<button class="w-10 h-10 flex items-center justify-center transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline text-lg font-bold text-on-surface tracking-tight ml-2">Swap</h1>
+</div>
+</header>
+<main class="px-4 mt-4 max-w-lg mx-auto space-y-4">
+<!-- From Asset Card -->
+<section class="bg-surface border border-outline-variant rounded-2xl p-6 transition-all hover:border-outline/50">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center border border-outline-variant">
+<img alt="BTC" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpHT28Fs4C0tG05J2CuuCE6GQCSiKmkrV6IzsdFXgP6oYIteEbk_T70nFunJ33x_MkMlVu9o3Tb7rBhJNO6VxJjsiZSirb9TxL_tpo2B4K4hfeVqgUB6KWBD-sOfho6WkY8H6HKbfpZXc_BFLm1k8PvCli2Cr4wWHv8igKIslADh_v9WuOv-5rfaGYVHc1bxpmYGsejrFXPN0AoFsSSqYu13xJEa7N2jSHIS6O8qQQvF1Qy5W80ZBaefai5fKbPRvLJ_LI8zwkCXfw"/>
+</div>
+<div class="flex flex-col">
+<span class="font-bold text-lg text-on-surface">Bitcoin</span>
+<span class="font-label text-xs text-on-surface-variant uppercase tracking-wider">BTC</span>
+</div>
+</div>
+<button class="bg-surface-variant px-3 py-1.5 rounded-lg font-bold text-xs text-primary hover:brightness-110 transition-all active:scale-95">
+                    MAX
+                </button>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-on-surface-variant text-sm font-medium">Balance: 0.4821 BTC</span>
+<div class="relative mt-2">
+<input class="w-full bg-transparent border-none p-0 text-4xl font-extrabold text-on-surface focus:ring-0 placeholder-on-surface-variant/30" placeholder="0.00" type="text" value="0.00"/>
+</div>
+</div>
+</section>
+<!-- Swap Interaction -->
+<div class="relative h-4 z-10 flex justify-center items-center">
+<button class="w-12 h-12 rounded-full bg-surface-variant border border-outline-variant flex items-center justify-center shadow-lg hover:border-primary/50 transition-all active:rotate-180 duration-500">
+<span class="material-symbols-outlined text-primary text-2xl">swap_vert</span>
+</button>
+</div>
+<!-- To Asset Card -->
+<section class="bg-surface border border-outline-variant rounded-2xl p-6 transition-all hover:border-outline/50">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-variant flex items-center justify-center border border-outline-variant">
+<img alt="ETH" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWNlb5SAhLn5Lhv0veM6p7wv1oHG6Ugg1koHMhHQW0NZumQozHIz06njFMJK2wYFQneahd3-pqxKSWfJ94Wb21FuFmgVNu6Eazjy8-lRRSzJoXLGwfSX2q9fcjX5UYlaa5BFrOkSal2UFOmrKNOLMuFghRB2vVfWxSJfqhura-0l63mVz7tj86ZyPhW1mU94PnT9PvwGhyRLIaZALBobf8LJZfDUBPtP1jZKfpW5PdTxoTZlkG0Dd1piXzdlDCfa_ANWpzNcz9GvAH"/>
+</div>
+<div class="flex flex-col">
+<span class="font-bold text-lg text-on-surface">Ethereum</span>
+<span class="font-label text-xs text-on-surface-variant uppercase tracking-wider">ETH</span>
+</div>
+</div>
+<span class="text-on-surface-variant text-sm font-medium">You receive</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="text-4xl font-extrabold shimmer-glow">8.5994</div>
+</div>
+</section>
+<!-- Rate Row -->
+<div class="flex items-center justify-center gap-2 py-2">
+<span class="text-on-surface-variant text-sm font-medium">1 BTC ≈ 17.84 ETH</span>
+<span class="material-symbols-outlined text-primary text-sm animate-spin" style="animation-duration: 4s;">sync</span>
+</div>
+<!-- Details Card -->
+<section class="bg-surface border border-outline-variant rounded-2xl p-6 space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-sm">Network Fee</span>
+<span class="text-on-surface text-sm font-medium">$7.20</span>
+</div>
+<div class="h-px bg-outline-variant w-full"></div>
+<div class="flex justify-between items-center group cursor-pointer">
+<span class="text-on-surface-variant text-sm">Slippage Tolerance</span>
+<div class="flex items-center gap-1">
+<span class="text-on-surface text-sm font-medium">0.5%</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="h-px bg-outline-variant w-full"></div>
+<div class="flex justify-between items-center pt-1">
+<span class="text-on-surface-variant text-sm">Estimated Total</span>
+<span class="text-on-surface font-bold text-lg">0.4821 BTC</span>
+</div>
+</section>
+</main>
+<!-- Review Footer -->
+<footer class="fixed bottom-0 left-0 w-full glass-footer p-6 z-50">
+<div class="max-w-lg mx-auto">
+<button class="w-full h-14 bg-primary text-on-primary font-bold text-lg rounded-3xl shadow-gold-glow hover:shadow-gold-intense active:scale-[0.98] transition-all duration-300">
+                Review Swap
+            </button>
+</div>
+</footer>
+<!-- Bottom Navigation Bar (Contextual Suppression Logic Applied) -->
+<!-- Navigation hidden for transactional focused screen "Review Swap" as per JSON/UX mandates -->
+<script>
+        // Simple micro-interaction for input field
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', (e) => {
+                e.target.closest('section').classList.add('border-primary/50');
+            });
+            input.addEventListener('blur', (e) => {
+                e.target.closest('section').classList.remove('border-primary/50');
+            });
+        });
+
+        // Add subtle animation for the "To" amount glow on click
+        const shimmerEl = document.querySelector('.shimmer-glow');
+        shimmerEl.addEventListener('click', () => {
+            shimmerEl.style.animation = 'none';
+            setTimeout(() => {
+                shimmerEl.style.animation = 'shimmer 1.5s infinite linear';
+            }, 10);
+        });
+    </script>
+</body></html>

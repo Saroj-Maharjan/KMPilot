@@ -1,0 +1,230 @@
+{
+  "feature": "assetdetail",
+  "type": "icons",
+  "icons": [
+    {
+      "name": "account_balance_wallet",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "account_balance_wallet",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/account_balance_wallet.xml",
+      "res_reference": "Res.drawable.account_balance_wallet",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/account_balance_wallet/materialsymbolsoutlined/account_balance_wallet_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "arrow_back",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "arrow_back",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/arrow_back.xml",
+      "res_reference": "DesignSystemResources.drawable.arrow_back",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/arrow_back/materialsymbolsoutlined/arrow_back_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "arrow_upward",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "arrow_upward",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/arrow_upward.xml",
+      "res_reference": "Res.drawable.arrow_upward",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/arrow_upward/materialsymbolsoutlined/arrow_upward_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "bolt",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "bolt",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/bolt.xml",
+      "res_reference": "DesignSystemResources.drawable.bolt",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/bolt/materialsymbolsoutlined/bolt_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 2,
+      "users": [
+        "assetdetail",
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "call_made",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "call_made",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/call_made.xml",
+      "res_reference": "Res.drawable.call_made",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/call_made/materialsymbolsoutlined/call_made_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "call_received",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "call_received",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/call_received.xml",
+      "res_reference": "Res.drawable.call_received",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/call_received/materialsymbolsoutlined/call_received_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "chevron_right",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "chevron_right",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/chevron_right.xml",
+      "res_reference": "DesignSystemResources.drawable.chevron_right",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/chevron_right/materialsymbolsoutlined/chevron_right_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "currency_bitcoin",
+      "style": "outlined",
+      "filled": true,
+      "scope": "domain",
+      "drawable_name": "currency_bitcoin_fill",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/currency_bitcoin_fill.xml",
+      "res_reference": "Res.drawable.currency_bitcoin_fill",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/currency_bitcoin/materialsymbolsoutlined/currency_bitcoin_fill1_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "expand_more",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "expand_more",
+      "extension": "xml",
+      "drawable_path": "feature/assetdetail/src/commonMain/composeResources/drawable/expand_more.xml",
+      "res_reference": "Res.drawable.expand_more",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/expand_more/materialsymbolsoutlined/expand_more_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "assetdetail"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "warning",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "warning",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/warning.xml",
+      "res_reference": "DesignSystemResources.drawable.warning",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/warning/materialsymbolsoutlined/warning_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 2,
+      "users": [
+        "assetdetail",
+        "dashboard"
+      ],
+      "occurrences": [
+        {
+          "state": "failed",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "generator": "download_assets.py",
+  "version": 1
+}

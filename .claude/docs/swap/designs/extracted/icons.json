@@ -1,0 +1,122 @@
+{
+  "feature": "swap",
+  "type": "icons",
+  "icons": [
+    {
+      "name": "arrow_back",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "arrow_back",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/arrow_back.xml",
+      "res_reference": "DesignSystemResources.drawable.arrow_back",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/arrow_back/materialsymbolsoutlined/arrow_back_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 2,
+      "users": [
+        "assetdetail",
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "chevron_right",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "chevron_right",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/chevron_right.xml",
+      "res_reference": "DesignSystemResources.drawable.chevron_right",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/chevron_right/materialsymbolsoutlined/chevron_right_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 2,
+      "users": [
+        "assetdetail",
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "swap_vert",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "swap_vert",
+      "extension": "xml",
+      "drawable_path": "feature/swap/src/commonMain/composeResources/drawable/swap_vert.xml",
+      "res_reference": "Res.drawable.swap_vert",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/swap_vert/materialsymbolsoutlined/swap_vert_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "sync",
+      "style": "outlined",
+      "filled": false,
+      "scope": "domain",
+      "drawable_name": "sync",
+      "extension": "xml",
+      "drawable_path": "feature/swap/src/commonMain/composeResources/drawable/sync.xml",
+      "res_reference": "Res.drawable.sync",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/sync/materialsymbolsoutlined/sync_24px.xml",
+      "download_status": "downloaded",
+      "usage_count": 1,
+      "users": [
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "warning",
+      "style": "outlined",
+      "filled": false,
+      "scope": "chrome",
+      "drawable_name": "warning",
+      "extension": "xml",
+      "drawable_path": "core/designsystem/src/commonMain/composeResources/drawable/warning.xml",
+      "res_reference": "DesignSystemResources.drawable.warning",
+      "source_url": "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/warning/materialsymbolsoutlined/warning_24px.xml",
+      "download_status": "skip-exists",
+      "usage_count": 3,
+      "users": [
+        "assetdetail",
+        "dashboard",
+        "swap"
+      ],
+      "occurrences": [
+        {
+          "state": "failed",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "generator": "download_assets.py",
+  "version": 1
+}

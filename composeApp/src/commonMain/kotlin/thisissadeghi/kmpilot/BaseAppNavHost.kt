@@ -3,6 +3,8 @@ package thisissadeghi.kmpilot
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import thisissadeghi.assetdetail.presentation.navigation.AssetDetailRoute
+import thisissadeghi.assetdetail.presentation.navigation.assetdetail
 import thisissadeghi.dashboard.presentation.navigation.DashboardRoute
 import thisissadeghi.dashboard.presentation.navigation.dashboard
 import thisissadeghi.designsystem.XNavHost
@@ -10,6 +12,8 @@ import thisissadeghi.receive.presentation.navigation.ReceiveRoute
 import thisissadeghi.receive.presentation.navigation.receive
 import thisissadeghi.send.presentation.navigation.SendRoute
 import thisissadeghi.send.presentation.navigation.send
+import thisissadeghi.swap.presentation.navigation.SwapRoute
+import thisissadeghi.swap.presentation.navigation.swap
 
 /**
  * Main app navigation host
@@ -31,13 +35,21 @@ fun BaseAppNavHost(modifier: Modifier) {
                 if (actionId == "receive") {
                     navController.navigate(ReceiveRoute)
                 }
-                // Handle action — navigation or action handling to be wired later
+                if (actionId == "swap") {
+                    navController.navigate(SwapRoute)
+                }
             },
             onBackToDashboard = {
                 navController.popBackStack(DashboardRoute, inclusive = false)
             },
+            onAssetClick = { assetId -> navController.navigate(AssetDetailRoute(assetId)) },
         )
         send(onBackClick = { navController.popBackStack() })
         receive(onBackClick = { navController.popBackStack() })
+        assetdetail(onBackClick = { navController.popBackStack() })
+        swap(
+            onBackClick = { navController.popBackStack() },
+            onSwapComplete = { navController.popBackStack(DashboardRoute, inclusive = false) },
+        )
     }
 }

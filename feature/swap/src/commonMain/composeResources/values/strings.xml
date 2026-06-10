@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="swap_title">Swap</string>
+    <string name="swap_max_label">MAX</string>
+    <string name="swap_balance_template">Balance: %1$s</string>
+    <string name="swap_amount_placeholder">0.00</string>
+    <string name="swap_you_receive">You receive</string>
+    <string name="swap_rate_template">%1$s</string>
+    <string name="swap_network_fee_label">Network Fee</string>
+    <string name="swap_slippage_label">Slippage Tolerance</string>
+    <string name="swap_estimated_total_label">Estimated Total</string>
+    <string name="swap_review_cta">Review Swap</string>
+    <string name="swap_error_title">Something went wrong</string>
+    <string name="swap_error_message">An unexpected error occurred. Please try again or check your connection.</string>
+    <string name="cd_swap_direction">Swap direction</string>
+</resources>
