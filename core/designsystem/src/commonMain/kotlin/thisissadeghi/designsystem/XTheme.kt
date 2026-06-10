@@ -9,12 +9,11 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kmpilot.core.designsystem.generated.resources.Res
-import kmpilot.core.designsystem.generated.resources.outfit_bold
-import kmpilot.core.designsystem.generated.resources.outfit_medium
-import kmpilot.core.designsystem.generated.resources.outfit_regular
+import kmpilot.core.designsystem.generated.resources.manrope_variable
 import org.jetbrains.compose.resources.Font
 
 object XTheme {
@@ -105,20 +104,18 @@ internal val XDarkColors =
 
 /**
  * App-global type scale: the Material 3 [Typography] with every role re-pointed at
- * the project [FontFamily] (Outfit). M3 has no `defaultFontFamily`, so the family is
- * applied per-role via `.copy(fontFamily = …)`; each role keeps its M3 default
- * size/weight/line-height and the family resolves the matching weight file.
- *
- * Design-driven font swap: when a Stitch design uses a different typeface, the
- * implementation skills (`/creating-kmp-feature` / `/modifying-kmp-feature`) download
- * the new `.ttf` set into `composeResources/font/` and rewire [XFontFamily] below.
+ * the project [FontFamily] (Manrope variable). M3 has no `defaultFontFamily`, so the
+ * family is applied per-role via `.copy(fontFamily = …)`; each role keeps its M3 default
+ * size/weight/line-height and the family resolves the matching weight via variation settings.
  */
 @Composable
 private fun XFontFamily(): FontFamily =
     FontFamily(
-        Font(Res.font.outfit_regular, FontWeight.Normal),
-        Font(Res.font.outfit_medium, FontWeight.Medium),
-        Font(Res.font.outfit_bold, FontWeight.Bold),
+        Font(Res.font.manrope_variable, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+        Font(Res.font.manrope_variable, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+        Font(Res.font.manrope_variable, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+        Font(Res.font.manrope_variable, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+        Font(Res.font.manrope_variable, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
     )
 
 @Composable
