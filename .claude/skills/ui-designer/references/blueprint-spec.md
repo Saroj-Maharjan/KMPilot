@@ -4,6 +4,12 @@ The Stitch HTML export is parsed into a structured blueprint that provides exact
 
 **Condition**: Always generated after design approval. Used as the handoff artifact for implementation skills (paired with the persisted HTML + token inventories in `extracted/`).
 
+## Contents
+- **Blueprint Format** — the full blueprint markdown template (Design Tokens, Typography Scale, Spacing Grid, Component Tree, String Inventory, Motion, Pre-Implementation Contract, Post-Implementation Checklist)
+- **Decomposition Rules** — flat vs decomposed; component → target-file annotation
+- **Extraction Prompt Template** — the design-to-Compose conversion prompt and its numbered rules (incl. image-delivery rules 13 / 21b — canonical here)
+- **Edge Case Handling** — per-HTML-element blueprint-representation table
+
 ---
 
 ## Blueprint Format

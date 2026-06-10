@@ -2,6 +2,19 @@
 
 Quick reference for using Google Stitch MCP tools effectively within the UI Designer skill.
 
+## Contents
+- **Available Tools** — the Stitch MCP tool table
+- **Get Screen Call Pattern** — the 3-param construction for `get_screen`
+- **Prompt Engineering for Stitch** — prompt structure + good/bad examples
+- **M3 Color Roles Reference** — pointer to m3-colors.md
+- **Design Iteration Patterns** — refine colors / layout / components; variants
+- **Mapping Stitch Designs to KMP X-Components** — visual-element → X-component table
+- **Motion** — capture-only policy (pointer to `_shared/motion.md`)
+- **Known Issues (Google Stitch API)** — the screen-sync workaround + canonical no-blind-retry rationale
+- **Screenshot Workflow** — download + naming conventions
+- **Compose Implementation Blueprint** — pointer to blueprint-spec.md
+- **Config File Architecture → Project-Wide Config** — the authoritative `stitch-project.json` schema (single source of truth)
+
 ---
 
 ## Available Tools
@@ -368,7 +381,12 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
     "{featurename}": {
       "successScreenId": "string — Stitch screen ID for success state",
       "successScreenName": "string — Full resource name",
-      "emptyScreenId": "string or null — Stitch screen ID for empty state (list screens only)",
+      "emptyScreenId": "string or null — Stitch screen ID for empty state (only when states.empty == true)",
+      "states": {
+        "loading": "boolean — true if this feature opts in to the shared loading screen",
+        "failed":  "boolean — true if this feature opts in to the shared failed screen",
+        "empty":   "boolean — true if this feature has a per-feature empty design"
+      },
       "screenshot": "string — path to success .png",
       "htmlPath": "string — path to success .html",
       "tokensPath": "string — path to success tokens .md",
@@ -380,6 +398,8 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
       "approvedAt": "string — ISO date",
       "createdAt": "string — ISO timestamp",
       "updatedAt": "string — ISO timestamp",
+      "legacyProject": "boolean — optional, true if migrated from legacy per-feature project",
+      "legacyProjectId": "string — optional, old per-feature projectId",
       "verification": {
         "verified": "boolean — Token-level verification completed",
         "verifiedAt": "string — ISO date",
