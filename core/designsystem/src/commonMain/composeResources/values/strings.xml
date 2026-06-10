@@ -2,4 +2,5 @@
 <resources>
   <!-- The single shared/common string file for the app; surfaced via DesignSystemResources. -->
   <string name="retry_label">Try again</string>
+  <string name="cd_back">Back</string>
 </resources>

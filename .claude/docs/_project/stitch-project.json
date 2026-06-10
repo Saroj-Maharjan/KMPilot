@@ -40,7 +40,7 @@
       "dimensions": { "width": 780, "height": 1768 },
       "generatedAt": "2026-05-04T00:06:00Z",
       "designSystemApplied": true,
-      "codeImplemented": false
+      "codeImplemented": true
     },
     "failed": {
       "screenId": "a891196ccecf4ce89f86cb378096d89a",
@@ -51,7 +51,7 @@
       "dimensions": { "width": 780, "height": 1768 },
       "generatedAt": "2026-05-04T00:06:00Z",
       "designSystemApplied": true,
-      "codeImplemented": false
+      "codeImplemented": true
     }
   },
   "features": {
