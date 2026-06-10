@@ -17,6 +17,7 @@ import kmpilot.feature.assetdetail.generated.resources.label_volume_24h
 import kmpilot.feature.assetdetail.generated.resources.label_your_holdings
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.assetdetail.data.model.AssetDetailResponse
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.XTheme
 
 @Composable
@@ -58,9 +59,9 @@ fun StatsGrid(
             )
             StatsCard(
                 label = stringResource(Res.string.label_your_holdings),
-                value = "%.4f ${detail.symbol}".format(detail.holdingAmount),
+                value = "${detail.holdingAmount.formatDecimals(4)} ${detail.symbol}",
                 isHighlighted = true,
-                subValue = stringResource(Res.string.label_approx_btc, "$%.2f".format(detail.holdingFiatValue)),
+                subValue = stringResource(Res.string.label_approx_btc, "$${detail.holdingFiatValue.formatDecimals(2)}"),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -69,11 +70,11 @@ fun StatsGrid(
 
 private fun formatLargeNumber(value: Double): String =
     when {
-        value >= 1_000_000_000_000 -> "$%.2fT".format(value / 1_000_000_000_000)
-        value >= 1_000_000_000 -> "$%.2fB".format(value / 1_000_000_000)
-        value >= 1_000_000 -> "$%.2fM".format(value / 1_000_000)
-        value >= 1_000 -> "$%.2fK".format(value / 1_000)
-        else -> "$%.2f".format(value)
+        value >= 1_000_000_000_000 -> "$${(value / 1_000_000_000_000).formatDecimals(2)}T"
+        value >= 1_000_000_000 -> "$${(value / 1_000_000_000).formatDecimals(2)}B"
+        value >= 1_000_000 -> "$${(value / 1_000_000).formatDecimals(2)}M"
+        value >= 1_000 -> "$${(value / 1_000).formatDecimals(2)}K"
+        else -> "$${value.formatDecimals(2)}"
     }
 
 @Preview

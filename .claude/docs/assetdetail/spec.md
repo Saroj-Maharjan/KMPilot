@@ -3,7 +3,7 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Status | Active |
 | Created | 2026-06-10 |
 | Updated | 2026-06-10 |
@@ -48,6 +48,7 @@ The Dashboard already surfaces a portfolio card per asset. Users tapping an asse
 
 ## Last Updated
 - 2026-06-10 — Generated from implementation
+- 2026-06-10 — Fix iOS build: `kotlin.text.String.format` ("%.Nf" patterns, JVM-only, unresolved on Kotlin/Native) replaced with `:core:common` `Double.formatDecimals(decimals: Int)` / `Float.formatDecimals(decimals: Int)` extensions (`thisissadeghi.common.ext`) at all 14 call sites: PriceChart.kt, AssetDetailViewModel.kt, HeroSection.kt (x2, incl. new `Float` overload for `displayPrice`), ActivitySection.kt (x2), StatsGrid.kt (x6), BuyBottomSheet.kt. Same fix as swap (1.0.0→1.0.1).
 
 ## Requirements
 

@@ -38,6 +38,7 @@ import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.assetdetail.data.model.AssetDetailResponse
 import thisissadeghi.assetdetail.presentation.ui.motion.animatedBadgeColor
 import thisissadeghi.assetdetail.presentation.ui.motion.animatedPrice
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -118,7 +119,7 @@ fun HeroSection(
 
             // Price (animated)
             XText(
-                text = "$%.2f".format(displayPrice),
+                text = "$${displayPrice.formatDecimals(2)}",
                 style =
                     MaterialTheme.typography.displaySmall.copy(
                         fontWeight = FontWeight.ExtraBold,
@@ -161,7 +162,7 @@ fun HeroSection(
                     tint = badgeColor,
                     modifier = Modifier.size(16.dp),
                 )
-                val changeFormatted = "%.2f".format(kotlin.math.abs(detail.changePercent24h))
+                val changeFormatted = kotlin.math.abs(detail.changePercent24h).formatDecimals(2)
                 XText(
                     text =
                         if (isPositive) {

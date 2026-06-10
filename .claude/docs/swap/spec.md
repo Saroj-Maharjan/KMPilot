@@ -3,7 +3,7 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Status | Active |
 | Created | 2026-06-10 |
 | Updated | 2026-06-10 |
@@ -47,6 +47,7 @@ The Stitch design blueprint (`.claude/docs/swap/designs/swap_blueprint.md`) was 
 
 ## Last Updated
 - 2026-06-10 - Generated from existing implementation
+- 2026-06-10 - Fix iOS build: `kotlin.text.String.format` ("%.4f".format / "%.4f %s".format, JVM-only, unresolved on Kotlin/Native) replaced with new `:core:common` `Double.formatDecimals(decimals: Int)` extension (`thisissadeghi.common.ext`) at all 5 call sites (SwapViewModel.kt x4, SwapContent.kt x1). Note: `feature/assetdetail` has the same `String.format` pattern at 8 call sites — same fix needed there as a follow-up for iOS build to fully succeed.
 
 ## Requirements
 
@@ -213,9 +214,9 @@ data class SwapUiModel(
 
 ### State Transitions
 - On init: `loadQuote()` runs, `quoteState`: Uninitialized → Loading → Success | Failed
-- On `Success`, `toAmount` is initialized to `"%.4f".format(toAsset.balance)`
+- On `Success`, `toAmount` is initialized to `toAsset.balance.formatDecimals(4)`
 - `onFromAmountChange(value)`: updates `fromAmount`; recomputes `toAmount = fromAmount * exchangeRate` (formatted), or falls back to `toAsset.balance` if the input is non-numeric
-- `onMaxClick()`: delegates to `onFromAmountChange("%.4f".format(fromAsset.balance))`
+- `onMaxClick()`: delegates to `onFromAmountChange(fromAsset.balance.formatDecimals(4))`
 - `onSwapDirectionClick()`: re-invokes `loadQuote(fromAssetId = toAsset.id, toAssetId = fromAsset.id)` — `quoteState` cycles Loading → Success | Failed again with the swapped pair
 - `onReviewSwapClick()`: `executeState` Uninitialized → Loading → Success | Failed; on `Success`, `SwapScreenRoot`'s `LaunchedEffect(uiModel.executeState)` calls `onSwapComplete()`
 - `retry()`: resets `quoteState` to `Uninitialized` and calls `loadQuote()`

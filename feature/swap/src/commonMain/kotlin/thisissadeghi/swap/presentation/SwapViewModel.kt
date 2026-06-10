@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import thisissadeghi.common.Either
 import thisissadeghi.common.UiState
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.common.setState
 import thisissadeghi.swap.data.model.SwapExecuteRequest
 import thisissadeghi.swap.data.repository.SwapRepository
@@ -32,7 +33,9 @@ class SwapViewModel(
                     _uiModel.setState {
                         copy(
                             quoteState = UiState.Success(result.data),
-                            toAmount = "%.4f".format(result.data.toAsset.balance),
+                            toAmount =
+                                result.data.toAsset.balance
+                                    .formatDecimals(4),
                         )
                     }
                 is Either.Failure -> _uiModel.setState { copy(quoteState = UiState.Failed(result.error)) }
@@ -48,9 +51,9 @@ class SwapViewModel(
                 fromAmount = value,
                 toAmount =
                     if (amount != null) {
-                        "%.4f".format(amount * quote.exchangeRate)
+                        (amount * quote.exchangeRate).formatDecimals(4)
                     } else {
-                        "%.4f".format(quote.toAsset.balance)
+                        quote.toAsset.balance.formatDecimals(4)
                     },
             )
         }
@@ -58,7 +61,7 @@ class SwapViewModel(
 
     fun onMaxClick() {
         val quote = (_uiModel.value.quoteState as? UiState.Success)?.value ?: return
-        onFromAmountChange("%.4f".format(quote.fromAsset.balance))
+        onFromAmountChange(quote.fromAsset.balance.formatDecimals(4))
     }
 
     fun onSwapDirectionClick() {

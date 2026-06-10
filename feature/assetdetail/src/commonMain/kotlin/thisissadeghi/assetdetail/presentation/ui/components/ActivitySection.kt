@@ -30,6 +30,7 @@ import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.assetdetail.data.model.ActivityResponse
 import thisissadeghi.assetdetail.data.model.AssetTransaction
 import thisissadeghi.common.UiState
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.DesignSystemResources
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTextButton
@@ -159,9 +160,9 @@ fun ActivitySection(
                             iconBgColor = iconBgColor,
                             title = transaction.title,
                             timestamp = transaction.timestamp,
-                            amount = "$amountPrefix%.4f ${transaction.currency}".format(transaction.amount),
+                            amount = "$amountPrefix${transaction.amount.formatDecimals(4)} ${transaction.currency}",
                             amountColor = amountColor,
-                            fiatEquiv = "$%.2f".format(transaction.fiatValue),
+                            fiatEquiv = "$${transaction.fiatValue.formatDecimals(2)}",
                         )
                     }
                 }

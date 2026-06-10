@@ -32,6 +32,7 @@ import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.assetdetail.data.model.PriceHistoryResponse
 import thisissadeghi.assetdetail.data.model.PricePoint
 import thisissadeghi.common.UiState
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
 import thisissadeghi.designsystem.motion.rememberReducedMotion
@@ -151,7 +152,7 @@ fun PriceChart(
                             for (i in 3 downTo 0) {
                                 val labelPrice = minPrice + i * step
                                 XText(
-                                    text = "$%.0fk".format(labelPrice / 1000),
+                                    text = "$${(labelPrice / 1000).formatDecimals(0)}k",
                                     style =
                                         MaterialTheme.typography.labelSmall.copy(
                                             fontSize = 10.sp,

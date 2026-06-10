@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import kmpilot.feature.swap.generated.resources.Res
 import kmpilot.feature.swap.generated.resources.swap_rate_template
 import org.jetbrains.compose.resources.stringResource
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.XTheme
 import thisissadeghi.swap.data.model.SwapAsset
 import thisissadeghi.swap.data.model.SwapQuoteResponse
@@ -41,7 +42,7 @@ fun SwapContent(
             avatarUrl = quote.fromAsset.avatarUrl,
             coinName = quote.fromAsset.name,
             coinTicker = quote.fromAsset.symbol,
-            balanceLabel = "%.4f %s".format(quote.fromAsset.balance, quote.fromAsset.symbol),
+            balanceLabel = "${quote.fromAsset.balance.formatDecimals(4)} ${quote.fromAsset.symbol}",
             amount = fromAmount,
             onAmountChange = onFromAmountChange,
             onMaxClick = onMaxClick,

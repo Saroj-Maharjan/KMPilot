@@ -41,6 +41,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.assetdetail.data.model.AssetDetailResponse
 import thisissadeghi.assetdetail.presentation.AssetDetailUiModel
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.designsystem.XButton
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XModalBottomSheet
@@ -155,7 +156,7 @@ fun BuyBottomSheet(
                     (uiModel.buyAmountInput.toDoubleOrNull() ?: 0.0) /
                         assetDetail.price
                 XText(
-                    text = stringResource(Res.string.label_approx_btc, "%.4f".format(approxBtc)),
+                    text = stringResource(Res.string.label_approx_btc, approxBtc.formatDecimals(4)),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Normal),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -9,6 +9,7 @@ import thisissadeghi.assetdetail.data.model.BuyOrderRequest
 import thisissadeghi.assetdetail.data.repository.AssetDetailRepository
 import thisissadeghi.common.Either
 import thisissadeghi.common.UiState
+import thisissadeghi.common.ext.formatDecimals
 import thisissadeghi.common.setState
 
 class AssetDetailViewModel(
@@ -78,7 +79,7 @@ class AssetDetailViewModel(
         _uiModel.setState {
             copy(
                 buySliderValue = value,
-                buyAmountInput = "%.2f".format(amount),
+                buyAmountInput = amount.formatDecimals(2),
             )
         }
     }

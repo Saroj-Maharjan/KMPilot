@@ -20,3 +20,5 @@ fun Double.formatDecimals(decimals: Int): String {
         "$sign$whole"
     }
 }
+
+fun Float.formatDecimals(decimals: Int): String = toDouble().formatDecimals(decimals)
