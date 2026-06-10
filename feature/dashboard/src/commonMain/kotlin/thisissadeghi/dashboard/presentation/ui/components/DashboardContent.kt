@@ -30,6 +30,7 @@ import thisissadeghi.designsystem.XTheme
 internal fun DashboardContent(
     data: DashboardData,
     onActionClick: (String) -> Unit,
+    onAssetClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -50,13 +51,14 @@ internal fun DashboardContent(
                     onReceiveClick = { onActionClick("receive") },
                     onPayClick = { onActionClick("pay") },
                     onTopUpClick = { onActionClick("topup") },
+                    onSwapClick = { onActionClick("swap") },
                 )
                 InsightBanner(data.spendingInsight)
                 MonthlySummary(data.monthlySummary)
                 MonthlyBudgets(data.budgetCategories)
                 SavingsGoals(data.savingsGoals)
                 UpcomingBills(data.upcomingBills)
-                Portfolio(data.portfolioAssets)
+                Portfolio(data.portfolioAssets, onAssetClick = onAssetClick)
                 RecentTransactions(data.recentTransactions)
             }
         }

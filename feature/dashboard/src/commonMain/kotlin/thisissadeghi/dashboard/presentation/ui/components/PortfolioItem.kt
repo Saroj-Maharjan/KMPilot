@@ -2,6 +2,7 @@ package thisissadeghi.dashboard.presentation.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import thisissadeghi.designsystem.XTheme
 @Composable
 internal fun PortfolioItem(
     asset: PortfolioAsset,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isPositive = asset.changePercent >= 0
@@ -48,6 +50,7 @@ internal fun PortfolioItem(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+                .clickable { onClick() }
                 .padding(16.dp),
     ) {
         Column(
@@ -105,6 +108,7 @@ private fun PortfolioItemPreview() {
                     changePercent = 3.4,
                     currency = "$",
                 ),
+            onClick = {},
         )
     }
 }

@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kmpilot.feature.dashboard.generated.resources.Res
-import kmpilot.feature.dashboard.generated.resources.bolt
 import kmpilot.feature.dashboard.generated.resources.payments
 import kmpilot.feature.dashboard.generated.resources.status_overdue
 import kmpilot.feature.dashboard.generated.resources.subscriptions
@@ -28,6 +27,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import thisissadeghi.dashboard.data.model.UpcomingBill
 import thisissadeghi.dashboard.presentation.ui.formatMoney
+import thisissadeghi.designsystem.DesignSystemResources
 import thisissadeghi.designsystem.XIcon
 import thisissadeghi.designsystem.XText
 import thisissadeghi.designsystem.XTheme
@@ -109,7 +109,7 @@ private fun billIcon(name: String): DrawableResource =
         name.contains("internet", ignoreCase = true) ||
             name.contains("wifi", ignoreCase = true) -> Res.drawable.wifi
         name.contains("electric", ignoreCase = true) ||
-            name.contains("electricity", ignoreCase = true) -> Res.drawable.bolt
+            name.contains("electricity", ignoreCase = true) -> DesignSystemResources.drawable.bolt
         else -> Res.drawable.payments
     }
 

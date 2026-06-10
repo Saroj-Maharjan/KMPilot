@@ -21,6 +21,7 @@ import thisissadeghi.designsystem.XTheme
 @Composable
 internal fun Portfolio(
     assets: List<PortfolioAsset>,
+    onAssetClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -34,7 +35,13 @@ internal fun Portfolio(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            assets.forEach { asset -> PortfolioItem(asset, Modifier.weight(1f)) }
+            assets.forEach { asset ->
+                PortfolioItem(
+                    asset = asset,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAssetClick(asset.id) },
+                )
+            }
         }
     }
 }
@@ -74,6 +81,7 @@ private fun PortfolioPreview() {
                         currency = "$",
                     ),
                 ),
+            onAssetClick = {},
         )
     }
 }

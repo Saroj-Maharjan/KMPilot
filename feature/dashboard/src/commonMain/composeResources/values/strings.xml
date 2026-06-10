@@ -13,6 +13,7 @@
     <string name="quick_action_receive">Receive</string>
     <string name="quick_action_pay">Pay</string>
     <string name="quick_action_top_up">Top Up</string>
+    <string name="quick_action_swap">Swap</string>
 
     <!-- Insight -->
     <string name="smart_insight">Smart Insight</string>

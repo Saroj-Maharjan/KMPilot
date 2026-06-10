@@ -25,8 +25,10 @@ import kmpilot.feature.dashboard.generated.resources.payments
 import kmpilot.feature.dashboard.generated.resources.quick_action_pay
 import kmpilot.feature.dashboard.generated.resources.quick_action_receive
 import kmpilot.feature.dashboard.generated.resources.quick_action_send
+import kmpilot.feature.dashboard.generated.resources.quick_action_swap
 import kmpilot.feature.dashboard.generated.resources.quick_action_top_up
 import kmpilot.feature.dashboard.generated.resources.send
+import kmpilot.feature.dashboard.generated.resources.swap_horiz
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -40,6 +42,7 @@ internal fun QuickActions(
     onReceiveClick: () -> Unit,
     onPayClick: () -> Unit,
     onTopUpClick: () -> Unit,
+    onSwapClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -50,6 +53,7 @@ internal fun QuickActions(
         QuickActionButton(Res.drawable.download, stringResource(Res.string.quick_action_receive), onReceiveClick, Modifier.weight(1f))
         QuickActionButton(Res.drawable.payments, stringResource(Res.string.quick_action_pay), onPayClick, Modifier.weight(1f))
         QuickActionButton(Res.drawable.add_circle, stringResource(Res.string.quick_action_top_up), onTopUpClick, Modifier.weight(1f))
+        QuickActionButton(Res.drawable.swap_horiz, stringResource(Res.string.quick_action_swap), onSwapClick, Modifier.weight(1f))
     }
 }
 
@@ -100,6 +104,7 @@ private fun QuickActionsPreview() {
             onReceiveClick = {},
             onPayClick = {},
             onTopUpClick = {},
+            onSwapClick = {},
         )
     }
 }

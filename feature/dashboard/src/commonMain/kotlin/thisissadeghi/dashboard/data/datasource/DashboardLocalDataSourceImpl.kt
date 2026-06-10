@@ -54,6 +54,7 @@ class DashboardLocalDataSourceImpl : DashboardLocalDataSource {
                     QuickAction("receive", "Receive", "receive"),
                     QuickAction("pay", "Pay", "pay"),
                     QuickAction("topup", "Top Up", "topup"),
+                    QuickAction("swap", "Swap", "swap"),
                 ),
             upcomingBills =
                 listOf(

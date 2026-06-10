@@ -12,12 +12,14 @@ data object DashboardRoute
 fun NavGraphBuilder.dashboard(
     onActionClick: (String) -> Unit,
     onBackToDashboard: () -> Unit,
+    onAssetClick: (String) -> Unit,
 ) {
     composable<DashboardRoute> {
         DashboardScreen(
             viewModel = koinViewModel(),
             onActionClick = onActionClick,
             onBackToDashboard = onBackToDashboard,
+            onAssetClick = onAssetClick,
         )
     }
 }
