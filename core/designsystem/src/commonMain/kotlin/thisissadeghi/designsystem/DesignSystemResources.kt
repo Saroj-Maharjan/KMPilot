@@ -8,8 +8,8 @@ import kmpilot.core.designsystem.generated.resources.chevron_right
 import kmpilot.core.designsystem.generated.resources.ds_image_placeholder
 import kmpilot.core.designsystem.generated.resources.failed_background
 import kmpilot.core.designsystem.generated.resources.retry_label
-
 import kmpilot.core.designsystem.generated.resources.warning
+
 /**
  * Created by Ali Sadeghi
  * on 28,Apr,2025
@@ -23,7 +23,6 @@ object DesignSystemResources {
         val ds_image_placeholder = Res.drawable.ds_image_placeholder
         val failed_background = Res.drawable.failed_background
         val warning = Res.drawable.warning
-
     }
 
     object string {

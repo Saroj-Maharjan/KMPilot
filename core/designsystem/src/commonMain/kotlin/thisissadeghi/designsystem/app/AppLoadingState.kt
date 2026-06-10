@@ -41,22 +41,24 @@ fun AppLoadingState(modifier: Modifier = Modifier) {
     ) {
         // Atmospheric radial gradient — subtle depth
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.2f)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(surfaceVariant.copy(alpha = 0.2f), background, background),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .alpha(0.2f)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(surfaceVariant.copy(alpha = 0.2f), background, background),
+                        ),
                     ),
-                ),
         )
 
         // Spinner + center dot
         Box(contentAlignment = Alignment.Center) {
             Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .border(4.dp, surfaceVariant, CircleShape),
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .border(4.dp, surfaceVariant, CircleShape),
             )
             XCircularProgressIndicator(
                 modifier = Modifier.size(64.dp),
@@ -64,29 +66,32 @@ fun AppLoadingState(modifier: Modifier = Modifier) {
                 strokeWidth = 4.dp,
             )
             Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(primary, CircleShape),
+                modifier =
+                    Modifier
+                        .size(8.dp)
+                        .background(primary, CircleShape),
             )
         }
 
         // Bottom branding accent
         Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp)
-                .alpha(0.1f),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 48.dp)
+                    .alpha(0.1f),
         ) {
             Box(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(4.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Color.Transparent, primary, Color.Transparent),
+                modifier =
+                    Modifier
+                        .width(48.dp)
+                        .height(4.dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color.Transparent, primary, Color.Transparent),
+                            ),
+                            CircleShape,
                         ),
-                        CircleShape,
-                    ),
             )
         }
     }

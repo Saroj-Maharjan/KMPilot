@@ -68,11 +68,12 @@ fun AppErrorState(
     ) {
         // Decorative bottom image — abstract premium texture
         Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(265.dp)
-                .alpha(0.2f),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(265.dp)
+                    .alpha(0.2f),
         ) {
             Image(
                 painter = painterResource(DesignSystemResources.drawable.failed_background),
@@ -84,9 +85,10 @@ fun AppErrorState(
 
         // Main content
         Column(
-            modifier = Modifier
-                .widthIn(max = 448.dp)
-                .padding(horizontal = 32.dp),
+            modifier =
+                Modifier
+                    .widthIn(max = 448.dp)
+                    .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
@@ -96,9 +98,10 @@ fun AppErrorState(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .background(error.copy(alpha = 0.1f), CircleShape),
+                    modifier =
+                        Modifier
+                            .size(96.dp)
+                            .background(error.copy(alpha = 0.1f), CircleShape),
                 )
                 XIcon(
                     painter = painterResource(DesignSystemResources.drawable.warning),
@@ -111,11 +114,12 @@ fun AppErrorState(
             // Title
             XText(
                 text = title,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.5).sp,
-                ),
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.5).sp,
+                    ),
                 color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp),
@@ -138,15 +142,17 @@ fun AppErrorState(
             ) {
                 XButton(
                     onClick = onRetry,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .widthIn(max = 200.dp)
-                        .height(56.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = 200.dp)
+                            .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primary,
-                        contentColor = onPrimary,
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = primary,
+                            contentColor = onPrimary,
+                        ),
                 ) {
                     XText(
                         text = retryLabel,
