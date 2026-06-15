@@ -769,6 +769,16 @@ class StitchHTMLParser(HTMLParser):
     """
 
     SKIP_TAGS = {"script", "link", "meta", "head", "title"}
+    # HTML void elements never receive a closing tag. Some Stitch exports omit
+    # the self-closing "/>" (e.g. "<meta charset=\"utf-8\">"), in which case
+    # the parser only calls handle_starttag (never handle_startendtag). Without
+    # this set, SKIP_TAGS entries like <meta>/<link> would permanently bump
+    # _skip_depth (no matching end tag to decrement it), and non-skip void tags
+    # like <img> would stay on _stack forever, corrupting every later path.
+    VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
 
     def __init__(self):
         super().__init__()
@@ -792,9 +802,14 @@ class StitchHTMLParser(HTMLParser):
             self.style_blocks.append("")
             return
         if tag in self.SKIP_TAGS:
-            self._skip_depth += 1
+            if tag not in self.VOID_TAGS:
+                self._skip_depth += 1
             return
         if self._skip_depth:
+            return
+
+        if tag in self.VOID_TAGS:
+            self.handle_startendtag(tag, attrs)
             return
 
         self._stack.append(tag)
