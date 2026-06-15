@@ -1,4 +1,4 @@
-package thisissadeghi.common.locale
+package thisissadeghi.designsystem.locale
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable

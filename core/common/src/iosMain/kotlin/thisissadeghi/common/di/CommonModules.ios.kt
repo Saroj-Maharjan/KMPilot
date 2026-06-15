@@ -4,8 +4,6 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import thisissadeghi.common.locale.IosLanguagePreferenceStore
-import thisissadeghi.common.locale.LanguagePreferenceStore
 import thisissadeghi.common.util.IOSLinkHandler
 import thisissadeghi.common.util.LinkHandler
 
@@ -17,5 +15,4 @@ import thisissadeghi.common.util.LinkHandler
 internal actual val commonPlatformModule: Module =
     module {
         singleOf(::IOSLinkHandler).bind<LinkHandler>()
-        singleOf(::IosLanguagePreferenceStore).bind<LanguagePreferenceStore>()
     }
