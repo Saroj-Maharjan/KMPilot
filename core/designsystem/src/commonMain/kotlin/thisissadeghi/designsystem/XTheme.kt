@@ -1,5 +1,6 @@
 package thisissadeghi.designsystem
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -28,10 +29,13 @@ object XTheme {
 }
 
 @Composable
-fun XTheme(content: @Composable () -> Unit) {
+fun XTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
         content = content,
-        colorScheme = XDarkColors,
+        colorScheme = if (darkTheme) XDarkColors else XLightColors,
         shapes = Shapes,
         typography = XTypography(),
     )
