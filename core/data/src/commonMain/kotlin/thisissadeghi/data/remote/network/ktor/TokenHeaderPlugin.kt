@@ -6,28 +6,28 @@ import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.plugin
 import io.ktor.util.AttributeKey
 import kotlinx.coroutines.runBlocking
-import thisissadeghi.data.token.TokenManager
+import thisissadeghi.data.repository.token.TokenRepository
 
 /**
  * Ktor plugin that automatically adds authentication headers to requests
  * based on RequestConfig settings
  */
 class TokenHeaderPlugin private constructor(
-    private val tokenManager: TokenManager,
+    private val tokenRepository: TokenRepository,
 ) {
     companion object Plugin : HttpClientPlugin<Plugin.Config, TokenHeaderPlugin> {
         override val key = AttributeKey<TokenHeaderPlugin>("TokenHeaderPlugin")
 
         class Config {
-            var tokenManager: TokenManager? = null
+            var tokenRepository: TokenRepository? = null
         }
 
         override fun prepare(block: Config.() -> Unit): TokenHeaderPlugin {
             val config = Config().apply(block)
             return TokenHeaderPlugin(
-                tokenManager =
-                    config.tokenManager
-                        ?: error("TokenManager must be provided to TokenHeaderPlugin"),
+                tokenRepository =
+                    config.tokenRepository
+                        ?: error("TokenRepository must be provided to TokenHeaderPlugin"),
             )
         }
 
@@ -41,7 +41,7 @@ class TokenHeaderPlugin private constructor(
                 // Add user auth token if required
                 if (configs?.isUserAuthRequired() == true) {
                     runBlocking {
-                        plugin.tokenManager.getAccessToken()?.let { token ->
+                        plugin.tokenRepository.getAccessToken()?.let { token ->
                             if (token.isNotEmpty()) {
                                 request.headers.append("Authorization", "Bearer $token")
                             }

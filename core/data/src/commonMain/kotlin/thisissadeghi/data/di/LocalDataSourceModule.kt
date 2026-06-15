@@ -10,11 +10,19 @@ import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.QualifierValue
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import thisissadeghi.data.datasource.local.locale.LanguageLocalDataSource
+import thisissadeghi.data.datasource.local.locale.LanguageLocalDataSourceImpl
+import thisissadeghi.data.datasource.local.theme.ThemeLocalDataSource
+import thisissadeghi.data.datasource.local.theme.ThemeLocalDataSourceImpl
+import thisissadeghi.data.datasource.local.token.TokenLocalDataSource
+import thisissadeghi.data.datasource.local.token.TokenLocalDataSourceImpl
 import thisissadeghi.data.local.pref.PreferencesManager
-import thisissadeghi.data.token.TokenManager
-import thisissadeghi.data.token.TokenManagerImpl
-import thisissadeghi.data.voucher.VoucherManager
-import thisissadeghi.data.voucher.VoucherManagerImpl
+import thisissadeghi.data.repository.locale.LanguageRepository
+import thisissadeghi.data.repository.locale.LanguageRepositoryImpl
+import thisissadeghi.data.repository.theme.ThemeRepository
+import thisissadeghi.data.repository.theme.ThemeRepositoryImpl
+import thisissadeghi.data.repository.token.TokenRepository
+import thisissadeghi.data.repository.token.TokenRepositoryImpl
 
 internal const val DATA_STORE_FILE_NAME = "prefs.preferences_pb"
 
@@ -35,11 +43,17 @@ internal val localDataSourceModule =
             )
         }
 
-        // Token Manager
-        singleOf(::TokenManagerImpl).bind<TokenManager>()
+        // Token
+        singleOf(::TokenLocalDataSourceImpl).bind<TokenLocalDataSource>()
+        singleOf(::TokenRepositoryImpl).bind<TokenRepository>()
 
-        // Voucher Manager
-        singleOf(::VoucherManagerImpl).bind<VoucherManager>()
+        // Theme
+        singleOf(::ThemeLocalDataSourceImpl).bind<ThemeLocalDataSource>()
+        singleOf(::ThemeRepositoryImpl).bind<ThemeRepository>()
+
+        // Locale
+        singleOf(::LanguageLocalDataSourceImpl).bind<LanguageLocalDataSource>()
+        singleOf(::LanguageRepositoryImpl).bind<LanguageRepository>()
     }
 
 /*

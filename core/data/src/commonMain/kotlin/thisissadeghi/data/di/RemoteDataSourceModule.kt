@@ -20,7 +20,6 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import thisissadeghi.data.config.BuildOptionProvider
 import thisissadeghi.data.remote.network.adapters.ColorHexJsonAdapter
-import thisissadeghi.data.remote.network.adapters.DescriptionsJsonAdapter
 import thisissadeghi.data.remote.network.adapters.InstantSerializer
 import thisissadeghi.data.remote.network.adapters.PhoneJsonAdapter
 import thisissadeghi.data.remote.network.ktor.ApiClient
@@ -57,7 +56,6 @@ internal val RemoteDataSourceModule =
                     SerializersModule {
                         contextual(ColorHexJsonAdapter)
                         contextual(PhoneJsonAdapter)
-                        contextual(DescriptionsJsonAdapter)
                         contextual(InstantSerializer)
                     }
 
@@ -81,7 +79,7 @@ internal val RemoteDataSourceModule =
                 install(Resources)
 
                 install(TokenHeaderPlugin) {
-                    tokenManager = get()
+                    tokenRepository = get()
                 }
 
                 defaultRequest {
