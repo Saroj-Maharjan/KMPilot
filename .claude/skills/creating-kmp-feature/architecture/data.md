@@ -1,6 +1,9 @@
 # Data Layer Architecture Principles
 
-Principles for implementing the data layer in KMP features following Clean Architecture.
+Principles for implementing the **remote** data layer in KMP features following Clean Architecture
+(Ktor/`ApiClient`, `Either<T>`). For **on-device persistence** (theme, locale, token, cached data
+via DataStore/Room) see [local-data.md](local-data.md) — local datasources/repositories do **not**
+use `Either` and are core infra in `:core:data`, not per-feature.
 
 **Note**: Uses `{PKG_PREFIX}` placeholder for package prefix (resolved via Context Discovery).
 
@@ -69,7 +72,10 @@ class {Feature}Resources {
 - Path parameters go in class constructor (e.g., `GetProduct(val productId: Int, ...)`)
 - Query parameters also go in constructor (e.g., `val page: Int? = null`)
 
-### 3. DataSource (data/datasource/)
+### 3. Remote DataSource (data/datasource/)
+
+> For **local** datasources (DataStore/Room persistence), see [local-data.md](local-data.md). They
+> return value-or-null/`Flow`, never `Either`, and live in `:core:data` as core infra.
 
 **Purpose**: Handle direct API communication using ApiClient and Ktor Resources
 

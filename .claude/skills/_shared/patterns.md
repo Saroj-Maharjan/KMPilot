@@ -250,7 +250,7 @@ XIcon(contentDescription = stringResource(Res.string.cd_back))                //
 
 **Not strings** (leave as literals): control sentinels parsed in logic (e.g. `label == "MAX"`), single-glyph symbols (`$`, `₿`, `✓`, `%`), and repository-supplied data (merchant names, dates, tickers, coin names). Currency-symbol formatting is a data concern, not UI i18n.
 
-**Adding a language**: drop a `values-{lang}/strings.xml` into each module that owns strings (same keys, translated values). The locale mechanism lives in `:core:common` (`{PKG_PREFIX}.common.locale`): drive selection at runtime via `LanguageController.setLanguage(tag)`; the app root feeds the tag to `LocalAppLocale` and recomposes. `null` tag = follow system locale. The picker UI is app-specific — each app builds its own.
+**Adding a language**: drop a `values-{lang}/strings.xml` into each module that owns strings (same keys, translated values). The locale mechanism spans three modules: the `LocalAppLocale` CompositionLocal (+ android/ios/desktop actuals) lives in **`:core:designsystem`** (`{PKG_PREFIX}.designsystem.locale`) next to `XTheme`; the selected tag is persisted by **`LanguageRepository`** in **`:core:data`** (see [local-data.md](../creating-kmp-feature/architecture/local-data.md)); and the app shell glue **`ProvideAppLocale`** (in `composeApp`) feeds that tag into `LocalAppLocale` and recomposes. Drive selection at runtime via `LanguageRepository`; `null` tag = follow system locale. The picker UI is app-specific — each app builds its own.
 
 **Gradle**: feature modules already depend on `libs.compose.components.resources` and have a `composeResources/` dir — no extra config. The generated `Res` is `internal` per module (default); keep it.
 
@@ -294,6 +294,18 @@ Animation is **captured from the Stitch design**, never injected. Press/hover fe
 | `:core:data` | Only if using ApiClient |
 
 **Features NEVER depend on other features.**
+
+### Module Roles (app-global state)
+
+Persisted app-state and the app-global UI runtime context are split across modules by role. Keep
+each module to its role — do not re-introduce state holders into `:core:common`.
+
+| Module | Role |
+|--------|------|
+| `:core:common` | **Primitives only** — Either, UiState, UiText, ext, util, LinkHandler. **No** state holders or platform stores. |
+| `:core:designsystem` | UI primitives + app-global UI runtime context: `XTheme(darkTheme: Boolean)` and the `LocalAppLocale` CompositionLocal (+ per-platform actuals). |
+| `composeApp` | App-shell glue: maps `ThemeRepository.themeMode` → `darkTheme`; `ProvideAppLocale` feeds `LanguageRepository`'s tag into `LocalAppLocale`. |
+| `:core:data` | Owns all persisted state — per-concern `Repository` + `LocalDataSource` over a shared backend. See [local-data.md](../creating-kmp-feature/architecture/local-data.md). |
 
 ### Design System Tiers (generic vs `app/`)
 

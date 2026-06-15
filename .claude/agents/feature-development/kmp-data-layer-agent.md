@@ -13,6 +13,7 @@ Implements the data layer for Kotlin Multiplatform features.
 **Base Instructions:** @../_base/common.md
 **Architecture:** @../../skills/_shared/patterns.md (load on demand)
 **Data Patterns:** @../../skills/creating-kmp-feature/architecture/data.md (load on demand)
+**Local Persistence:** @../../skills/creating-kmp-feature/architecture/local-data.md — **reference only**. You implement **remote** feature data layers. On-device persistence (theme/locale/token, DataStore/Room) is core infra in `:core:data`, hand-authored — do NOT generate it. If a feature genuinely owns persisted state, follow this doc's pattern (no `Either`; `*LocalDataSource` + `*Repository` over a shared backend).
 **Gradle Template:** @../../skills/creating-kmp-feature/architecture/build-gradle-template.md (use when scaffolding `feature/{featurename}/build.gradle.kts`)
 
 ## Workflow
