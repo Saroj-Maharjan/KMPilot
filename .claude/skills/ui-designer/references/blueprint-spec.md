@@ -207,6 +207,8 @@ Example annotation in the blueprint component tree:
 
 ## Extraction Prompt Template
 
+> **Execution discipline (token efficiency — does not change the output):** read **all** input files listed below in **one batched response** (parallel `Read` calls); produce the blueprint with **exactly one `Write`**; apply every later correction (verification failure, manifest gap, user tweak) with `Edit` on the affected section — never rewrite the whole file.
+
 Feed this prompt with:
 1. Raw HTML content for **selected states only** (labeled by state) — read `features[featurename].states` to know which states are selected:
    - success: `.claude/docs/{featurename}/designs/extracted/stitch_success.html` (always)

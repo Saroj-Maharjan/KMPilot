@@ -8,7 +8,7 @@ allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), B
 
 Design UI screens in Google Stitch and produce a Compose Implementation Blueprint with HTML + token inventories persisted for downstream skills.
 
-**Architecture Reference:** @../_shared/patterns.md
+**Architecture Reference:** [`_shared/patterns.md`](../_shared/patterns.md) — do **not** preload this file. Read only the specific section a step explicitly cites (e.g. "Typography" in Step 1.16, Rule 13 in Step 1.17), at the moment that step runs. Every rule this skill depends on is either restated inline in the phase files or cited with its exact section name.
 
 ## Purpose
 
@@ -71,6 +71,8 @@ Do not retry or work around the failure — wait for the user to install Python 
                                                                           (auto-runs; one-time per repo)
 ```
 
+> **Token efficiency (every phase):** issue independent tool calls (multiple `Read`s, independent `python3` runs, parallel file checks) **batched in a single response** — one round-trip, not one per call. Exceptions stay sequential where a step says so (e.g. Stitch HTML downloads in Step 1.15 sub-step 3 — single-use URLs race).
+
 ### Project Init (One-Time Per Repo)
 Run when `.claude/docs/_project/stitch-project.json` does not exist or `initState.completedAt` is null. Creates the shared Stitch project and design system. **Shared Loading/Failed screens are NOT generated at init time** — they are designed lazily by the first feature that opts in (Phase 1 Step 1.8).
 See: [Project Init](phases/phase-init.md)
@@ -81,7 +83,7 @@ See: [Phase 0: Preflight](phases/phase-0-preflight.md)
 
 ### Phase 1: Design in Stitch
 Generate screens, iterate with user, export approved designs as screenshots. Generate Implementation Blueprint.
-See: [Phase 1: Design](phases/phase-1-design.md)
+See: [Phase 1: Design](phases/phase-1-design.md) — staged: Step 1.14 continues in [phase-1-states.md](phases/phase-1-states.md), Steps 1.15–1.19 in [phase-1-finalize.md](phases/phase-1-finalize.md); read each stage file only when the workflow reaches it.
 
 ## Critical Rules
 

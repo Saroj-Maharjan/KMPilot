@@ -203,4 +203,4 @@ Default Theme: {defaultTheme}
 Primary Color: {primaryHex}
 ```
 
-Proceed to **Phase 1: Design in Stitch**.
+Proceed to **Phase 1: Design in Stitch**. If `StitchMode` is `stitch-resume` with a non-null `successScreenId` and `approved == false`, Phase 1's **Resume fast-path** (top of `phase-1-design.md`) skips Steps 1.1–1.13 and continues at Step 1.14.

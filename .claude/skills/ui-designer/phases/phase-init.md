@@ -112,7 +112,7 @@ If **Keep existing**:
 
 1. **Check completeness** — verify both `XLightColors` and `XDarkColors` define all of these M3 roles: `primary`, `onPrimary`, `primaryContainer`, `onPrimaryContainer`, `background`, `surface`, `onBackground`, `onSurface`, `onSurfaceVariant`, `surfaceVariant`, `outline`, `outlineVariant`, `error`, `onError`, `errorContainer`, `onErrorContainer`.
 
-2. **If complete**: read the current primary color and default theme choice from `XTheme.kt` (infer default from which scheme `XTheme()` composable passes to `MaterialTheme`). Store in context and skip to **Output**.
+2. **If complete**: read the current primary color from `XTheme.kt`. `XTheme()` now selects the scheme at runtime from its `darkTheme` param (both schemes always present), so the default theme is **not** inferable from its body — read it from `designSystem.themeSnapshot` (or the `darkTheme` default arg). Store in context and skip to **Output**.
 
 3. **If NOT complete**: extract the `primary` hex value from the existing scheme (prefer `XLightColors`; fall back to `XDarkColors` if light is absent). Set this value as `primaryHex` and proceed with **Ask Default Theme** → **Generate Both Color Palettes** → **Update XTheme.kt Structure** — exactly as if the user had selected **Reconfigure**.
 
@@ -198,26 +198,20 @@ Edit the file at `{XTHEME_PATH}`:
 
 1. If the old private val was named `XColors`, rename it to `XLightColors`.
 2. Add `XDarkColors` using `darkColorScheme(...)` with the generated dark palette.
-3. Update the `XTheme()` composable to always use the scheme matching `defaultTheme`:
+3. Update the `XTheme()` composable to take a `darkTheme: Boolean` param and select the scheme at
+   **runtime** — it always supports both schemes; the app drives `darkTheme` (mapped from
+   `ThemeRepository.themeMode` in `composeApp`). `defaultTheme` no longer hardcodes the body; it only
+   seeds the app's initial mode. The default arg follows the system setting:
 
 ```kotlin
-// defaultTheme = light
 @Composable
-fun XTheme(content: @Composable () -> Unit) {
+fun XTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
         content = content,
-        colorScheme = XLightColors,
-        shapes = Shapes,
-        typography = MaterialTheme.typography,
-    )
-}
-
-// defaultTheme = dark
-@Composable
-fun XTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        content = content,
-        colorScheme = XDarkColors,
+        colorScheme = if (darkTheme) XDarkColors else XLightColors,
         shapes = Shapes,
         typography = MaterialTheme.typography,
     )
