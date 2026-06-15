@@ -412,10 +412,12 @@ def _add_design_system_drawable_entry(source: str, ident: str, *, packages: Proj
 
 
 class _IconSpanFinder(HTMLParser):
-    """<span class="material-symbols-{style}" data-icon="..." [data-weight="fill"]>.
+    """<* class="material-symbols-{style}" data-icon="..." [data-weight="fill"]>.
 
-    Supports two Stitch HTML variants:
-      - data-icon attribute:  <span class="material-symbols-outlined" data-icon="home">
+    Supports two Stitch HTML variants, on any element (Stitch emits the
+    material-symbols class on <span> for nav/label icons but also directly on
+    <button> for tappable icon-buttons):
+      - data-icon attribute:  <button class="material-symbols-outlined" data-icon="home">
       - text content:         <span class="material-symbols-outlined">home</span>
     Filled detection: data-weight="fill" attribute OR font-variation-settings 'FILL' 1 inline style.
     """
@@ -426,11 +428,9 @@ class _IconSpanFinder(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.hits = []
-        self._pending = None  # set when inside a material-symbols span awaiting text content
+        self._pending = None  # set when inside a material-symbols element awaiting text content
 
     def handle_starttag(self, tag, attrs):
-        if tag != "span":
-            return
         attr_map = {k: (v or "") for k, v in attrs}
         m = self._CLASS_RE.search(attr_map.get("class", ""))
         if not m:
@@ -446,18 +446,18 @@ class _IconSpanFinder(HTMLParser):
             self.hits.append({"name": name, "style": style, "filled": filled})
         else:
             # text-content variant — wait for handle_data
-            self._pending = {"style": style, "filled": filled}
+            self._pending = {"style": style, "filled": filled, "tag": tag}
 
     def handle_data(self, data):
         if self._pending is None:
             return
         name = data.strip()
         if name:
-            self.hits.append({"name": name, **self._pending})
+            self.hits.append({k: v for k, v in self._pending.items() if k != "tag"} | {"name": name})
         self._pending = None
 
     def handle_endtag(self, tag):
-        if tag == "span":
+        if self._pending is not None and self._pending.get("tag") == tag:
             self._pending = None
 
 
