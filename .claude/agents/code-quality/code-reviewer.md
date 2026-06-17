@@ -49,7 +49,7 @@ If blueprint missing: Skip the Design-Aware section in Phase 6.
 
 | Rule | Check Pattern |
 |------|---------------|
-| 1. Interface + Impl | Glob `datasource/*.kt` → expect 2+ files |
+| 1. Interface + Impl | Glob `datasource/*.kt` → expect 2+ files (interface + impl). **Exception:** a feature consuming a **shared `data.app` datasource** (cross-feature remote — see `architecture/data.md` → "Shared remote data") owns **no** per-feature datasource; an empty/absent `datasource/` is correct there — confirm its `RepositoryImpl` injects a `{PKG_PREFIX}.data.app.*` datasource and do **not** flag the absence. |
 | 2. Either<T> | Grep `suspend fun.*:.*Either<` |
 | 3. setState | Grep `_uiModel\.value\s*=` and `_uiState\.value\s*=` → expect 0; Grep `setState\s*\{` → expect 1+ |
 | 4. 4 UI States | Read Screen, verify: Uninitialized, Loading, Success, Failed |

@@ -302,19 +302,35 @@ each module to its role — do not re-introduce state holders into `:core:common
 
 | Module | Role |
 |--------|------|
-| `:core:common` | **Primitives only** — Either, UiState, UiText, ext, util, LinkHandler. **No** state holders or platform stores. |
-| `:core:designsystem` | UI primitives + app-global UI runtime context: `XTheme(darkTheme: Boolean)` and the `LocalAppLocale` CompositionLocal (+ per-platform actuals). |
+| `:core:common` | **Primitives only** — Either, UiState, UiText, ext, util, LinkHandler. **No** state holders or platform stores. Project/example value types live in the `common.app` tier (empty in a baseline project). |
+| `:core:designsystem` | UI primitives + app-global UI runtime context: `XTheme(darkTheme: Boolean)` and the `LocalAppLocale` CompositionLocal (+ per-platform actuals). Project composites/state screens live in the `designsystem.app` tier. |
 | `composeApp` | App-shell glue: maps `ThemeRepository.themeMode` → `darkTheme`; `ProvideAppLocale` feeds `LanguageRepository`'s tag into `LocalAppLocale`. |
-| `:core:data` | Owns all persisted state — per-concern `Repository` + `LocalDataSource` over a shared backend. See [local-data.md](../creating-kmp-feature/architecture/local-data.md). |
+| `:core:data` | Owns all persisted state — per-concern `Repository` + `LocalDataSource` over a shared backend. Universal app-state (theme/locale/token) is generic; project/domain state lives in the `data.app` tier. See [local-data.md](../creating-kmp-feature/architecture/local-data.md). |
 
-### Design System Tiers (generic vs `app/`)
+### Core Module Tiers (generic vs `app/`)
 
-`:core:designsystem` has two tiers in one module:
+The same **generic vs `app/`** two-tier split applies to **every core library module** that holds
+project-specific content — `:core:designsystem`, `:core:data`, and `:core:common`. One package
+convention, one boundary rule (generic never imports `.app`), one strip seam per module:
+
+| Module | Generic tier | `app/` tier (stripped) |
+|--------|--------------|------------------------|
+| `:core:designsystem` | `X*` primitives, `XTheme` | `designsystem.app` — `App*` state screens (content-free, kept), project composites + brand drawables (stripped) |
+| `:core:data` | backends/network infra + theme/locale/token | `data.app` — **all** project/domain data: persisted state **and shared remote** (cross-feature endpoints/wire models + `{Shared}RemoteDataSource`); strip seam = `appDataModule` include in `DataModules.kt` |
+| `:core:common` | Either/UiState/UiText/ext/util primitives | `common.app` — project/example value types; empty in a baseline project |
+
+**DRY corollary (`:core:data`):** a remote endpoint or wire model used by **≥2 features** is shared
+app data → it lives **once** in `data.app` (canonical superset DTO + one `{Shared}RemoteDataSource`),
+never duplicated per feature. Features inject the shared datasource and keep only their own
+wire-DTO→presentation-DTO mapping. Single-feature remote stays in the feature. See
+[data.md → "Shared remote data"](../creating-kmp-feature/architecture/data.md).
+
+`:core:designsystem` is the reference implementation:
 
 - **Generic primitives** — `{PKG_PREFIX}.designsystem.*` (`XButton`, `XText`, `XScreen`, `Placeholder`, `XTheme`, …). Publish-clean; ship to every downstream project.
 - **Project `app` tier** — `{PKG_PREFIX}.designsystem.app`. The project's own composed UI: the shared **`AppLoadingState`/`AppErrorState`** state screens (content-free — copy + navigation are caller params) plus the project's example/domain composites and brand drawables. `install.sh` strips the example/domain content + brand drawables for downstream but **keeps** the content-free `App*` state screens (each project redesigns them via the design pipeline). All shared strings (including project-specific, cross-feature) live in the single DS `strings.xml` via `DesignSystemResources` — there is no separate string tier.
 
-**Boundary rule:** dependencies flow **`app/` → generic only**. Generic (root) design-system code must **never** `import {PKG_PREFIX}.designsystem.app` — a generic file that imports the `app` tier breaks the build once that tier is stripped/neutralized. (Features may import the `app` tier — they depend on the whole module.) It's a package convention; enforce it with a boundary check (a grep for `{PKG_PREFIX}.designsystem.app` in generic files), a git hook, or your reviewer.
+**Boundary rule (all three modules):** dependencies flow **`app/` → generic only**. Generic (root) code must **never** import its module's `.app` tier — `{PKG_PREFIX}.designsystem.app`, `{PKG_PREFIX}.data.app`, or `{PKG_PREFIX}.common.app` — because a generic file that imports the `app` tier breaks the build once that tier is stripped/neutralized. (Features may import any `app` tier — they depend on the whole module.) It's a package convention; enforce it with a boundary check (grep for `{PKG_PREFIX}.{designsystem,data,common}.app` in generic files), a git hook, or your reviewer. **One sanctioned exception:** the `:core:data` aggregate `DataModules.kt` references `appDataModule` (the strip seam) — the boundary grep excludes that single file.
 
 **Shared state UI:** features render `UiState.Loading` → `AppLoadingState()` and `UiState.Failed` → `AppErrorState(title, message, onRetry, secondaryAction = …)` from `{PKG_PREFIX}.designsystem.app`. They do **not** define per-feature `LoadingContent`/`FailedContent`. Feature copy (`error_title`/`error_message`) is passed as params; the retry label defaults to `DesignSystemResources.string.retry_label`. **Empty/Uninitialized stays per-feature** (empty content varies screen to screen).
 

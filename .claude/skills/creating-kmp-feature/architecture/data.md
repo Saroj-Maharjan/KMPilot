@@ -24,6 +24,40 @@ use `Either` and are core infra in `:core:data`, not per-feature.
 3. **Lowercase Packages**: `{PKG_PREFIX}.featurename.data.model` (never camelCase or hyphens)
 4. **No Presentation Imports (Rule 11)**: Files under `data/` MUST NOT import from `{PKG_PREFIX}.{featurename}.presentation.*`. Repository returns `Either<DTO>` — the raw DTO from `data/model/`. The data layer does not know UI types exist.
 
+## Shared remote data → `data.app` tier (DRY across features)
+
+Remote data layers are **per-feature by default**. But when **two or more features hit the same
+endpoint or parse the same wire model**, that endpoint is **cross-feature shared app data** and
+belongs **once** in the `:core:data` app tier (`{PKG_PREFIX}.data.app`) — not copied into each
+feature. Same convention as the local-persistence app tier ([local-data.md](local-data.md) →
+"Generic vs app tier") and the `:core:designsystem` generic-vs-`app` split.
+
+**Symptom it's needed**: identical `@Resource` classes, identical wire DTOs, and identical
+`{Feature}RemoteDataSource` fetch methods duplicated across features — and silently **drifting**
+(each copy adds/drops fields). That duplication is the smell.
+
+**Where it goes** (`:core:data`):
+```
+data/app/
+├── model/                 # canonical wire DTOs — the field UNION of all consumers (extras nullable)
+├── remote/resources/      # the shared @Resource endpoints (declared once)
+├── remote/datasource/     # {Shared}RemoteDataSource (+Impl) → Either<List<DTO>>, injects generic ApiClient
+└── di/AppDataModule.kt    # binds the shared datasource (the data.app strip seam)
+```
+
+**Each feature then**: deletes its own Resource + wire model + `{Feature}RemoteDataSource`; its
+`RepositoryImpl` **injects the shared `{Shared}RemoteDataSource`** and keeps only its own
+**wire-DTO → presentation-DTO mapping** (that mapping stays per-feature — it's where features
+legitimately differ). The feature's own `*Dto` presentation models + repository logic are untouched.
+
+**Rules carried over**: generic `data.*` never imports `data.app` (boundary); the canonical DTO is
+the **superset** of every consumer's fields (reconcile drift — never blind-copy one feature's); the
+shared datasource injects the **generic** `ApiClient` (app→generic, allowed); it's bound in
+`AppDataModule` (the one sanctioned generic→app reference is the `includes` in `DataModules.kt`).
+
+**Stays per-feature**: an endpoint only **one** feature uses. Don't hoist speculatively — hoist when
+the second consumer appears.
+
 ## Layer Responsibilities
 
 ### 1. Models (data/model/)
@@ -37,7 +71,7 @@ use `Either` and are core infra in `:core:data`, not per-feature.
 - Naming: `{Feature}Response`, `{Feature}Request`, `{Entity}`, etc.
 
 **Key Points**:
-- Models stay in feature module (don't put in `:core:data` unless truly shared across multiple features)
+- Models stay in feature module **unless shared across ≥2 features** — then they're canonical wire DTOs in the `data.app` tier (see "Shared remote data → `data.app` tier" above), not duplicated per feature
 - Match server API structure exactly (use `@SerialName` if needed for field mapping)
 - Keep models simple data containers (no business logic)
 

@@ -20,12 +20,13 @@ Implements the data layer for Kotlin Multiplatform features.
 
 1. Load architecture references only when needed
 2. Create module structure (use the gradle template for `build.gradle.kts` — do NOT redeclare `compileSdk`, `minSdk`, or `jvmTarget`; root config handles them)
-3. Implement models (`data/model/`) — DTOs only, `@Serializable`
-4. Implement Ktor Resources (`data/remote/`)
-5. Implement DataSource interface + impl (`data/datasource/`)
-6. Implement Repository interface + impl (`data/repository/`) — thin delegation, returns `Either<DTO>`. **Do NOT map to UI types. Do NOT import from `presentation`.** (Rule 11)
-7. Self-check (Rule 11): grep your generated files for `import .*\.presentation\.` — must return zero results
-8. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
+3. **Reuse check (before writing any Resource/wire model)**: grep `core/data/.../data/app/` for an existing shared endpoint/`{Shared}RemoteDataSource` that already covers a needed call. If one exists → inject it in the repository and skip steps 3–5 for that call (do NOT redeclare its `@Resource`/wire DTO in the feature). If you'd be the **second** feature to define the same endpoint/wire model → flag it for hoisting to `data.app` instead of duplicating. See [data.md → "Shared remote data → `data.app` tier"](../../skills/creating-kmp-feature/architecture/data.md).
+4. Implement models (`data/model/`) — DTOs only, `@Serializable` (feature-specific only; shared wire models live in `data.app.model`)
+5. Implement Ktor Resources (`data/remote/`) — feature-specific endpoints only
+6. Implement DataSource interface + impl (`data/datasource/`)
+7. Implement Repository interface + impl (`data/repository/`) — thin delegation, returns `Either<DTO>`. Inject any shared `data.app` datasource from step 3; keep wire-DTO→presentation-DTO mapping here (per-feature). **Do NOT map to UI types. Do NOT import from `presentation`.** (Rule 11)
+8. Self-check (Rule 11): grep your generated files for `import .*\.presentation\.` — must return zero results
+9. Validate: `./gradlew :feature:{featurename}:assembleAndroidMain`
 
 ## Output Report
 

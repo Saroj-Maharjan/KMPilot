@@ -1,7 +1,7 @@
 # Local Persistence & App-State
 
 How **persisted local state** is structured in KMP, following Clean Architecture. This is the
-counterpart to [data.md](data.md): that doc covers per-feature **remote** data (Ktor/`ApiClient`,
+counterpart to [data.md](data.md): that doc covers **remote** data (Ktor/`ApiClient`,
 `Either<T>`); this one covers **on-device persistence** — theme, locale, auth token, flags, cached
 structured data.
 
@@ -9,10 +9,11 @@ structured data.
 
 ## Where it lives — `:core:data`, not the feature
 
-Remote data layers are **per-feature** (`feature/{name}/.../data/`). Persisted **app-state** is
-**core infrastructure**: it lives once in `:core:data` and is shared app-wide. Theme, locale, and
-token are app-global, not owned by any single feature — so they are written here by hand, not
-generated per feature.
+Remote data layers are **per-feature by default** (`feature/{name}/.../data/`) — but a remote
+endpoint/wire model shared by **≥2 features** moves to the `data.app` tier ([data.md → "Shared
+remote data"](data.md)). Persisted **app-state** is **core infrastructure**: it lives once in
+`:core:data` and is shared app-wide. Theme, locale, and token are app-global, not owned by any
+single feature — so they are written here by hand, not generated per feature.
 
 A feature that genuinely owns its *own* persisted state follows the same pattern inside its own
 module, but that is rare; default to remote-only feature data layers.
@@ -34,7 +35,7 @@ DB.
 ## Package layout (`:core:data`)
 
 ```
-{PKG_PREFIX}.data/
+{PKG_PREFIX}.data/                   # GENERIC tier — universal app-state, ships to every project
 ├── local/
 │   ├── pref/PreferencesManager.kt   # KV backend — generic, infra (see "Rule-1 exception")
 │   └── db/AppDatabase.kt            # Room backend — placeholder for structured data
@@ -42,13 +43,39 @@ DB.
 │   └── theme/  locale/  token/
 ├── repository/{domain}/             # {X}Repository       (impl internal; interface per visibility rule)
 │   └── theme/  locale/  token/
-└── di/LocalDataSourceModule.kt      # all local DI: backends + every datasource + repository
+├── di/LocalDataSourceModule.kt      # generic local DI: backends + theme/locale/token only
+└── app/                             # APP tier — project (domain) state, stripped downstream
+    ├── {domain}/                    # domain-first group (datasource+repo+helpers)
+    ├── datasource/local/{domain}/   # …or layer-first
+    ├── repository/{domain}/
+    └── di/AppDataModule.kt          # app local DI — the single strip seam
 ```
 
 **Packaging is layer-first** (`datasource/local/{domain}/`, `repository/{domain}/`) — mirrors the
 remote layout. **Domain-first exception**: a concern that carries domain *helpers* fitting no single
-layer may instead group everything under one `data/{domain}/` root (utils + datasource + repository
+layer may instead group everything under one `{domain}/` root (utils + datasource + repository
 together). Use this only when the helpers force it; layer-first is the default.
+
+### Generic vs app tier — where a new persisted concern goes
+
+`:core:data` mirrors the `:core:designsystem` two-tier split (generic vs `app/`):
+
+| Tier | Package | Holds | Downstream |
+|------|---------|-------|------------|
+| **Generic** | `{PKG_PREFIX}.data.*` | Universal app-state every app has: **theme, locale, token**, plus all backends/network infra | ships as-is |
+| **App** | `{PKG_PREFIX}.data.app.*` | **All** project/domain data — persisted state **and** shared cross-feature remote (endpoints/wire models/datasource); see [data.md → "Shared remote data"](data.md) | **stripped** |
+
+**Decision rule** for a new persisted concern: is it a universal app primitive (theme/locale/auth/
+flags) → generic `data.*`. Is it this project's own domain (anything feature-named / not universal
+to every app) → `data.app.*`. When unsure, it's app.
+
+- **Boundary rule** (same as designsystem): generic `data.*` files must **never** import
+  `data.app.*`. App may import generic. Enforce with a grep over generic files.
+- **Strip seam**: `data.app` has exactly one DI module, `AppDataModule.appDataModule`, pulled into
+  `dataModule` via `includes(appDataModule)`. That single `includes` line in `DataModules.kt` is the
+  **one sanctioned generic → app reference** (the documented exception the boundary grep skips).
+  Removing the app tier = drop that line + the `data.app` package. Backends (`PreferencesManager`)
+  stay generic, so app datasources still resolve them across the included modules.
 
 ## The two pairs per concern
 
@@ -160,10 +187,13 @@ class PreferencesManager(private val dataStorePreference: DataStore<Preferences>
 }
 ```
 
-## DI — one module, `localDataSourceModule`
+## DI — generic `localDataSourceModule` (+ app `appDataModule`)
 
-All local persistence DI lives in `di/LocalDataSourceModule.kt`: the backend(s), then every
-datasource, then every repository.
+Generic local persistence DI lives in `di/LocalDataSourceModule.kt`: the backend(s), then every
+**generic** datasource/repository (theme/locale/token). **App-tier** concerns are bound separately
+in `app/di/AppDataModule.kt` (`internal val appDataModule`); both are pulled into the `dataModule`
+aggregate via `includes(...)` (see "Generic vs app tier" above). Backends bound here are shared
+across both modules, so app datasources resolve `PreferencesManager` without re-binding it.
 
 ```kotlin
 internal val localDataSourceModule = module {
@@ -202,5 +232,9 @@ Persisted state in `:core:data` is read at the edges by other modules — see
 ## Canonical examples
 
 `theme`, `locale`, and `token` are the three reference concerns — app-global, hand-authored core
-infra. (App-specific persisted concerns follow the identical pattern but are not part of the
-template baseline.)
+infra, in the **generic** tier (`data.*`).
+
+App-specific persisted concerns follow the identical pattern but live in the **app** tier
+(`data.app.*`) and are stripped downstream — e.g. a simple `{domain}/` concern grouped layer-first,
+or a domain-first `{domain}/` group that carries its own helpers (utils + datasource + repository
+together). See "Generic vs app tier" above for the placement rule.

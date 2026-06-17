@@ -58,7 +58,7 @@ Use template: [templates/task-template.md](../templates/task-template.md)
 
 | Group | Agent | Tasks |
 |-------|-------|-------|
-| Data | `data-layer-agent` | Module structure, models, DataSource, Repository, Ktor Resources |
+| Data | `data-layer-agent` | Module structure, models, DataSource, Repository, Ktor Resources. *First* check `data.app` for an existing shared endpoint/datasource to **reuse** (cross-feature remote — see `architecture/data.md` → "Shared remote data"); if a second feature would re-declare the same endpoint/wire model, hoist to `data.app` instead of duplicating. |
 | Platform *(Rule 14, tag ≠ `network`)* | `platform-agent` | Capability DataSource interface + per-platform actuals (android/ios/desktop) + `expect/actual val platformModule` |
 | UI | `ui-layer-agent` | UiModel, ViewModel, Screen composables, Navigation (+ `expect/actual` native view for `native-view`/`mixed`) |
 | Integration | `integration-agent` | DI module, 4 integration points (+ first-feature Welcome handoff; + `platformModule` registration for Rule 14) |

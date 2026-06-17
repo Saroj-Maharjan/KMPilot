@@ -56,7 +56,7 @@ All rules, patterns, naming conventions, and feature structure: @.claude/skills/
 - Package names: lowercase only (`productdetail` not `product-detail`)
 - Features NEVER depend on other features
 - Specs live at `.claude/docs/{name}/spec.md`
-- `:core:designsystem` has two tiers: generic primitives (ship to every downstream project) + a project `app` tier (`{PKG_PREFIX}.designsystem.app`, stripped/neutralized by `install.sh`). Generic code must NEVER import `designsystem.app` — it's a package convention
+- **Core module tiers (generic vs `app/`)**: the two-tier split applies to every core library module that holds project-specific content — `:core:designsystem` (`designsystem.app`: `App*` state screens + project composites/brand drawables), `:core:data` (`data.app`: project/domain persisted state **and** shared cross-feature remote — endpoints/wire models/datasource), and `:core:common` (`common.app`: project/example value types). Generic code must NEVER import its module's `.app` tier (stripped/neutralized by `install.sh`) — it's a package convention; the lone sanctioned exception is `DataModules.kt` referencing `appDataModule`. Full map: `_shared/patterns.md` → "Core Module Tiers"
 - Loading/Failed UI is **shared**: features call `AppLoadingState`/`AppErrorState` from `designsystem.app` (copy + nav passed as params), never a private `LoadingContent`/`FailedContent`. Empty state stays per-feature
 
 ## Reference

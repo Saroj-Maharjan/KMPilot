@@ -24,7 +24,7 @@ Review a KMP feature against Clean Architecture, 14 critical rules, and 4 integr
 ## What Gets Checked
 
 ### Architecture Rules (14)
-1. Interface + Impl pairs
+1. Interface + Impl pairs — *exception:* a feature using a **shared `data.app` datasource** (cross-feature remote) owns no per-feature datasource; an empty/absent `datasource/` is correct (its repo injects `{PKG_PREFIX}.data.app.*`)
 2. Either<T> returns
 3. setState usage
 4. 4 UI states
