@@ -1,4 +1,4 @@
-package thisissadeghi.common
+package thisissadeghi.common.app
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -7,10 +7,10 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import thisissadeghi.common.Money.Companion.Zero
-import thisissadeghi.common.Money.Companion.displayFractionDivision
-import thisissadeghi.common.Money.Companion.displayFractionLength
-import thisissadeghi.common.Money.Companion.fractionLength
+import thisissadeghi.common.app.Money.Companion.Zero
+import thisissadeghi.common.app.Money.Companion.displayFractionDivision
+import thisissadeghi.common.app.Money.Companion.displayFractionLength
+import thisissadeghi.common.app.Money.Companion.fractionLength
 import kotlin.jvm.JvmInline
 import kotlin.math.absoluteValue
 import kotlin.math.log10

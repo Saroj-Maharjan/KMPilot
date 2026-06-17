@@ -1,4 +1,4 @@
-package thisissadeghi.designsystem
+package thisissadeghi.designsystem.app
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -18,9 +18,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.takeOrElse
-import thisissadeghi.common.Currency
-import thisissadeghi.common.Money
-import thisissadeghi.common.format
+import thisissadeghi.common.app.Currency
+import thisissadeghi.common.app.Money
+import thisissadeghi.common.app.format
 
 @Composable
 fun MoneyText(

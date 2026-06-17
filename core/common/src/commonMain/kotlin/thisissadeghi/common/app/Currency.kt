@@ -1,4 +1,4 @@
-package thisissadeghi.common
+package thisissadeghi.common.app
 
 import kotlinx.serialization.Serializable
 
