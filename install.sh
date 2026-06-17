@@ -351,12 +351,12 @@ NAVHOST_EOF
     rm -f  iosApp/iosApp.xcodeproj/project.pbxproj.backup
 
     # 9. Neutralize the design system's `app/` tier. `:core:designsystem` is split into
-    #    generic primitives (XButton, XText, Placeholder, AppLoadingState, AppErrorState,
-    #    MoneyText, ItemPickerModal, …) that ship to every project, and a `designsystem.app`
-    #    package holding KMPilot's own state screens.
-    #    AppLoadingState/AppErrorState are intentionally content-free (copy + navigation are
-    #    caller parameters), so they are KEPT as-is — downstream redesigns them via the
-    #    design pipeline.
+    #    generic primitives (XButton, XText, Placeholder, ItemPickerModal, …) that ship to every
+    #    project, and a `designsystem.app` package holding the project's own composed UI.
+    #    AppLoadingState/AppErrorState (in `designsystem.app`) are intentionally content-free
+    #    (copy + navigation are caller parameters), so they are KEPT as-is — downstream redesigns
+    #    them via the design pipeline. Project composites in `designsystem.app` (e.g. MoneyText)
+    #    are project/example content and are stripped in 9b.
     #    The generic `designsystem/motion/` package (XMotion + rememberReducedMotion expect/actual,
     #    Modifier.shimmer, PulseDot, AmbientMeshBackground, BokehCanvas, Modifier.pulseGlow,
     #    RevealOnAppear) is brand-neutral generic-tier and is KEPT (not stripped) — the motion
@@ -374,6 +374,119 @@ NAVHOST_EOF
         android:pathData="M12,2 A10,10 0 1 0 12,22 A10,10 0 1 0 12,2 Z" />
 </vector>
 LOGO_EOF
+
+    # 9b. Strip the project example `app/` tiers across the core library modules. The `app/`
+    #     package in each module is the project's own example/domain layer — generic code never
+    #     imports it (the boundary rule), so removing it yields a clean, generic-only template:
+    #       • common.app       — project/example value types (e.g. Money/Currency)
+    #       • designsystem.app — project composites (e.g. MoneyText); the content-free App* state
+    #                            screens are KEPT (see 9 above)
+    #       • data.app         — project/domain persisted + shared-remote data (empty in the
+    #                            baseline template; may be populated by a real project)
+    #     Guards are no-ops when a tier is absent, so this is safe whether or not `data.app` exists.
+    rm -rf core/common/src/commonMain/kotlin/thisissadeghi/common/app
+    find core/designsystem/src/commonMain/kotlin/thisissadeghi/designsystem/app -name '*.kt' \
+        ! -name 'AppErrorState.kt' ! -name 'AppLoadingState.kt' -delete 2>/dev/null || true
+    rm -rf core/data/src/commonMain/kotlin/thisissadeghi/data/app
+    # Drop the data.app DI strip seam (import + includes entry) — no-op if data.app never existed.
+    [ -f core/data/src/commonMain/kotlin/thisissadeghi/data/di/DataModules.kt ] && \
+        sedi '/appDataModule/d' core/data/src/commonMain/kotlin/thisissadeghi/data/di/DataModules.kt || true
+
+    # 9c. Reset the KEPT `App*` state screens to NEUTRAL defaults. `designsystem.app` keeps the
+    #     AppLoadingState/AppErrorState *contracts* (the signatures every feature calls), but their
+    #     bodies in the template are KMPilot's own design — overwrite them with generic baselines so
+    #     a fresh project ships a plain spinner / plain error layout (no branded illustration), then
+    #     redesigns via the design pipeline. The branded drawables they no longer use
+    #     (failed_background, warning) are left in place but orphaned — harmless, and available to
+    #     the redesign.
+    local app="$ds/kotlin/thisissadeghi/designsystem/app"
+    cat > "$app/AppLoadingState.kt" <<'APPLOADING_EOF'
+package thisissadeghi.designsystem.app
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import thisissadeghi.designsystem.XCircularProgressIndicator
+
+/**
+ * Shared, project-level **Loading** state — the neutral default written on install. Reused by every
+ * feature for Rule 4's `UiState.Loading`. Redesign per project via the design pipeline. Built only
+ * from generic primitives ([XCircularProgressIndicator]); never imported by generic design-system code.
+ */
+@Composable
+fun AppLoadingState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        XCircularProgressIndicator()
+    }
+}
+APPLOADING_EOF
+    cat > "$app/AppErrorState.kt" <<'APPERROR_EOF'
+package thisissadeghi.designsystem.app
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thisissadeghi.designsystem.DesignSystemResources
+import thisissadeghi.designsystem.XButton
+import thisissadeghi.designsystem.XText
+
+/**
+ * Shared, project-level **Failed** state — the neutral default written on install. Reused by every
+ * feature for Rule 4's `UiState.Failed`. Copy and navigation are **parameters** ([title]/[message]
+ * from the feature's own strings, [onRetry] the primary action, [retryLabel] defaulting to the
+ * shared label, [secondaryAction] an optional nav slot), so nothing app-specific is baked in.
+ * Redesign per project via the design pipeline. Built only from generic primitives ([XButton],
+ * [XText]); never imported by generic design-system code.
+ */
+@Composable
+fun AppErrorState(
+    title: String,
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    retryLabel: String = stringResource(DesignSystemResources.string.retry_label),
+    secondaryAction: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        XText(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        XText(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 320.dp).padding(bottom = 24.dp),
+        )
+        XButton(onClick = onRetry) {
+            XText(text = retryLabel)
+        }
+        secondaryAction?.invoke()
+    }
+}
+APPERROR_EOF
 }
 
 echo "→ Cloning KMPilot template (branch: $TEMPLATE_BRANCH) into $NAME/"
