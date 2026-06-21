@@ -76,8 +76,19 @@ The model is always `GEMINI_3_FLASH` for all Stitch generation calls. Device typ
    Use `AskUserQuestion` with these two options.
 
    If user picks **Update**:
-   - Call `mcp__stitch__update_design_system` with the new primary color and any other changed roles.
-   - Update `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary` to the live hex.
+   - Call `mcp__stitch__update_design_system` with the **full nested** `designSystem` object rebuilt
+     from the live `XTheme.kt` (same field mapping as [phase-init.md → Init-4](phase-init.md#init-4-create-design-system) — `displayName`, `theme.colorMode`, `theme.customColor`, `theme.overridePrimaryColor`,
+     `theme.headlineFont`/`bodyFont`, `theme.roundness`, and a regenerated `theme.designMd`), **plus**
+     the two required identifiers: `projectId` (from `stitch-project.json.projectId`) and
+     `name: assets/{stitch-project.json.designSystem.assetId}`. A partial payload (primary color only)
+     is rejected — the theme block and `name` are required.
+   - **Re-sync existing screens**: `update_design_system` changes the asset but does **not** restyle
+     already-generated screens. Call `mcp__stitch__list_screens` for the project, then
+     `mcp__stitch__apply_design_system` with `assetId`, `projectId`, and `selectedScreenInstances`
+     (the screen instances from `get_project`) so existing screens adopt the updated tokens. Skip if
+     no screens exist yet.
+   - Update `stitch-project.json.designSystem.themeSnapshot.{defaultTheme}.primary` to the live hex
+     (and `fontFamily`/`stitchFont`/`roundness` if those changed).
    - Update `stitch-project.json.designSystem.syncedAt` to current ISO timestamp.
    - Update `stitch-project.json.updatedAt`. Write the file.
 

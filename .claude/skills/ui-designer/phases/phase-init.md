@@ -249,6 +249,9 @@ After completing theme setup:
       "defaultTheme": "{light|dark}",
       "primaryHex": "{primaryHex}",
       "paletteCustomized": "{true|false}",
+      "fontFamily": "{theme font family from XFontFamily(), e.g. Manrope — written at Init-4}",
+      "stitchFont": "{mapped Stitch font enum, e.g. MANROPE — written at Init-4}",
+      "roundness": "{mapped ROUND_* from Shapes corner dp — written at Init-4}",
       "light": {
         "primary": "{hex}",
         "background": "{hex}",
@@ -320,35 +323,66 @@ Write the file. Mark Init-3 complete. Proceed to Init-4.
 
 ## Init-4: Create Design System
 
-Read `XTheme.kt` and map M3 roles to Stitch design-system fields using the `themeSnapshot` already written in Init-2.
+Build the Stitch design system from `XTheme.kt`. The `create_design_system`/`update_design_system`
+payload is **nested** — everything goes under `designSystem.theme`, not flat top-level fields. Use the
+color values from the scheme matching `defaultTheme` (the `themeSnapshot` written in Init-2).
 
-Use the color values from the scheme matching `defaultTheme`:
+### Field mapping (XTheme.kt → `designSystem.theme`)
 
-| XTheme.kt role | Stitch field | Notes |
+| Source | Stitch field | Notes |
 |---|---|---|
-| `primary` (active scheme) | `primaryColor` | Use scheme matching `defaultTheme` |
-| `secondary` | `secondaryColor` | Omit if not defined in XTheme.kt |
-| `tertiary` | `tertiaryColor` | Omit if not defined in XTheme.kt |
-| `defaultTheme` | `colorMode` | `LIGHT` or `DARK` |
-| `Shapes` corner dp | `roundness` | Map small/medium/large corner to Stitch roundness scale |
+| project name + theme name | `designSystem.displayName` | **Required**, e.g. `"KMPilot Gold"` |
+| `defaultTheme` | `theme.colorMode` | `LIGHT` or `DARK` |
+| `primaryHex` (seed) | `theme.customColor` | **Required**. The seed color — **NOT** `primaryColor` (no such field) |
+| `primary` (active scheme) | `theme.overridePrimaryColor` | Lock the exact brand primary so Stitch's dynamic palette doesn't drift it |
+| `secondary` (if defined) | `theme.overrideSecondaryColor` | Omit if XTheme has no secondary |
+| `tertiary` (if defined) | `theme.overrideTertiaryColor` | Omit if not defined |
+| font from `XFontFamily()` | `theme.headlineFont` + `theme.bodyFont` | **Both required.** Map the theme family to the nearest Stitch font enum (see below). Set `theme.labelFont` to the same value |
+| `Shapes` corner dp | `theme.roundness` | Map: ≤4dp→`ROUND_FOUR`, ~8dp→`ROUND_EIGHT`, ~12dp→`ROUND_TWELVE`, pill→`ROUND_FULL` |
+| brand + role palette | `theme.designMd` | **The brand doc — primary driver.** See below |
 
-Call `mcp__stitch__create_design_system` with:
-- `projectId`: from `stitch-project.json.projectId`
-- `primaryColor`: primary hex from active scheme
-- `colorMode`: `LIGHT` or `DARK` matching `defaultTheme`
-- `roundness`: mapped from `Shapes` corner dp
-- `secondaryColor` / `tertiaryColor`: if defined in XTheme.kt
+**Font mapping**: read the family the `Font(Res.font.*)` resources belong to in `XFontFamily()`
+(Init-2 already located `XTheme.kt`). Map it to the matching Stitch font enum (exact name,
+upper-snake): `Manrope`→`MANROPE`, `Inter`→`INTER`, `Outfit`→`OUTFIT`, `Roboto`-ish→`ROBOTO_FLEX`,
+etc. If no close match exists, fall back to `INTER`. Record the chosen enum in
+`themeSnapshot.stitchFont`.
+
+**`theme.designMd` (the most important field)**: a markdown brand doc that Stitch uses as the primary
+style driver — richer than the structured color fields alone. Build it from `XTheme.kt` + any brand
+notes the user gave. Include: a YAML front-matter `name:` + the role→hex map (background, surface,
+surface-variant, on-surface, on-surface-variant, outline, primary, on-primary, error, …) for the
+active scheme, then prose sections: **Brand & Style**, **Colors**, **Typography** (the chosen
+family + which M3 levels map where), **Layout & Spacing**, **Elevation & Depth**, **Shapes**,
+**Components** (buttons/inputs/cards/status). Keep it XTheme-derived — do not invent colors not in
+the theme.
+
+### Call sequence (two calls — Stitch contract)
+
+1. Call `mcp__stitch__create_design_system` with `projectId` (from `stitch-project.json.projectId`)
+   and the nested `designSystem` object built above.
+2. **Immediately** call `mcp__stitch__update_design_system` with the **same** `designSystem` object
+   plus `projectId` and `name: assets/{returned assetId}`. The `create_design_system` contract
+   requires this follow-up to actually apply the design system to the project and display it in the
+   Stitch UI — a create without the update may leave the DS unbound.
 
 Store the returned design system ID:
 - `stitch-project.json.designSystem.assetId = {returned assetId}`
-- `stitch-project.json.designSystem.name = {returned name}`
+- `stitch-project.json.designSystem.name = {returned name}` (= `assets/{assetId}`)
 - `stitch-project.json.designSystem.syncedAt = {ISO timestamp}`
+- `stitch-project.json.designSystem.themeSnapshot.fontFamily = {theme family}`
+- `stitch-project.json.designSystem.themeSnapshot.stitchFont = {mapped enum}`
+- `stitch-project.json.designSystem.themeSnapshot.roundness = {ROUND_*}`
 
 Update:
 - `stitch-project.json.initState.designSystemCreated = true`
 - `stitch-project.json.updatedAt = {ISO timestamp}`
 
 Write the file. Mark Init-4 complete.
+
+> **DESIGN.md file path (not used here)**: `upload_design_md` + `create_design_system_from_design_md`
+> are the *file-based* alternative — upload a base64 `DESIGN.md`, then build the DS from a selected
+> screen instance. This repo's source of truth is `XTheme.kt`, injected via the **inline
+> `theme.designMd` string** above, so the file-based path is intentionally skipped.
 
 **Source of truth rule**: XTheme.kt always wins when XTheme.kt and the Stitch design system drift. Stitch is a design-time mirror; sync direction is always XTheme.kt → Stitch.
 

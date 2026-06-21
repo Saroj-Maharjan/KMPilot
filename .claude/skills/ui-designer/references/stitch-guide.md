@@ -29,10 +29,11 @@ Quick reference for using Google Stitch MCP tools effectively within the UI Desi
 | `mcp__stitch__generate_screen_from_text` | Generate a new screen from prompt | Initial screen design |
 | `mcp__stitch__edit_screens` | Edit existing screens with prompt | Design iteration based on feedback |
 | `mcp__stitch__generate_variants` | Generate design variants | When user wants to explore alternatives |
-| `mcp__stitch__apply_design_system` | Apply a design system to selected screens | Not needed — screens auto-inherit the project design system on generation. Reserved for manual re-sync if drift is detected. |
-| `mcp__stitch__create_design_system` | Create a new design system for a project | Project Init only (Init-4) |
-| `mcp__stitch__update_design_system` | Update an existing design system | When drift detected between XTheme.kt and Stitch |
-| `mcp__stitch__list_design_systems` | List all design systems in a project | Debugging, verifying design system exists |
+| `mcp__stitch__apply_design_system` | Apply a DS to listed screen **instances** | New screens auto-inherit the active DS on generation, so **not** needed at create time. Required to **re-style existing screens after the DS changes** (drift Update path, Phase 0): pass `assetId` + `projectId` + `selectedScreenInstances` from `get_project`. |
+| `mcp__stitch__create_design_system` | Create a new DS for a project | Project Init only (Init-4). **Nested payload** under `designSystem.theme` (`customColor`, `headlineFont`/`bodyFont`, `roundness`, `designMd`, …). Per contract, **follow immediately with `update_design_system`** to bind+display it. |
+| `mcp__stitch__update_design_system` | Update an existing DS | (1) the bind-after-create follow-up in Init-4; (2) drift detected between XTheme.kt and Stitch (Phase 0). **Requires `name: assets/{id}` + `projectId` + full `theme` block** — partial payloads rejected. |
+| `mcp__stitch__list_design_systems` | List DSs for a project | Debugging, verifying the DS exists / reading back fonts+roundness+designMd |
+| `mcp__stitch__upload_design_md` + `mcp__stitch__create_design_system_from_design_md` | Create a DS from a base64 `DESIGN.md` file | **Not used** — this repo injects the brand doc via the inline `theme.designMd` string in Init-4 (source of truth = XTheme.kt). |
 
 ---
 

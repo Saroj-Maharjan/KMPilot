@@ -1,7 +1,7 @@
 ---
 description: Design UI screens in Google Stitch and produce a Compose Implementation Blueprint with HTML + token inventories persisted for downstream skills.
 argument-hint: [feature-name]
-allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(touch *), Bash(python3 *), AskUserQuestion, mcp__stitch__create_project, mcp__stitch__get_project, mcp__stitch__list_projects, mcp__stitch__list_screens, mcp__stitch__get_screen, mcp__stitch__generate_screen_from_text, mcp__stitch__edit_screens, mcp__stitch__generate_variants, mcp__stitch__create_design_system, mcp__stitch__update_design_system
+allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash(mkdir *), Bash(ls *), Bash(curl *), Bash(rm *), Bash(touch *), Bash(python3 *), AskUserQuestion, mcp__stitch__create_project, mcp__stitch__get_project, mcp__stitch__list_projects, mcp__stitch__list_screens, mcp__stitch__get_screen, mcp__stitch__generate_screen_from_text, mcp__stitch__edit_screens, mcp__stitch__generate_variants, mcp__stitch__create_design_system, mcp__stitch__update_design_system, mcp__stitch__apply_design_system, mcp__stitch__list_design_systems
 ---
 
 # UI Designer
