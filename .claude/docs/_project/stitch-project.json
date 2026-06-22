@@ -37,7 +37,10 @@
       "screenshot": ".claude/docs/_shared/designs/loading.png",
       "htmlPath": ".claude/docs/_shared/designs/extracted/stitch_loading.html",
       "tokensPath": ".claude/docs/_shared/designs/extracted/tokens_loading.md",
-      "dimensions": { "width": 780, "height": 1768 },
+      "dimensions": {
+        "width": 780,
+        "height": 1768
+      },
       "generatedAt": "2026-05-04T00:06:00Z",
       "designSystemApplied": true,
       "codeImplemented": true
@@ -48,7 +51,10 @@
       "screenshot": ".claude/docs/_shared/designs/failed.png",
       "htmlPath": ".claude/docs/_shared/designs/extracted/stitch_failed.html",
       "tokensPath": ".claude/docs/_shared/designs/extracted/tokens_failed.md",
-      "dimensions": { "width": 780, "height": 1768 },
+      "dimensions": {
+        "width": 780,
+        "height": 1768
+      },
       "generatedAt": "2026-05-04T00:06:00Z",
       "designSystemApplied": true,
       "codeImplemented": true
@@ -59,11 +65,18 @@
       "successScreenId": "916e3e1a96f14c44a5c9388bc58ed224",
       "successScreenName": "projects/11569217269690169371/screens/916e3e1a96f14c44a5c9388bc58ed224",
       "emptyScreenId": null,
-      "states": { "loading": true, "failed": true, "empty": false },
+      "states": {
+        "loading": true,
+        "failed": true,
+        "empty": false
+      },
       "screenshot": ".claude/docs/receive/designs/receive.png",
       "htmlPath": ".claude/docs/receive/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/receive/designs/extracted/tokens_success.md",
-      "dimensions": { "width": 780, "height": 1768 },
+      "dimensions": {
+        "width": 780,
+        "height": 1768
+      },
       "designFile": ".claude/docs/receive/designs/receive.md",
       "blueprintFile": ".claude/docs/receive/designs/receive_blueprint.md",
       "blueprintConsumed": true,
@@ -85,11 +98,18 @@
       "successScreenId": "e901ab89e18446bba468049a19d036e1",
       "successScreenName": "projects/11569217269690169371/screens/e901ab89e18446bba468049a19d036e1",
       "emptyScreenId": null,
-      "states": { "loading": true, "failed": true, "empty": false },
+      "states": {
+        "loading": true,
+        "failed": true,
+        "empty": false
+      },
       "screenshot": ".claude/docs/send/designs/send.png",
       "htmlPath": ".claude/docs/send/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/send/designs/extracted/tokens_success.md",
-      "dimensions": { "width": 800, "height": 1774 },
+      "dimensions": {
+        "width": 800,
+        "height": 1774
+      },
       "designFile": ".claude/docs/send/designs/send.md",
       "blueprintFile": ".claude/docs/send/designs/send_blueprint.md",
       "blueprintConsumed": true,
@@ -111,11 +131,18 @@
       "successScreenId": "4cbe6ee364784883acf200970d94246c",
       "successScreenName": "projects/11569217269690169371/screens/4cbe6ee364784883acf200970d94246c",
       "emptyScreenId": null,
-      "states": { "loading": true, "failed": true, "empty": false },
+      "states": {
+        "loading": true,
+        "failed": true,
+        "empty": false
+      },
       "screenshot": ".claude/docs/dashboard/designs/dashboard.png",
       "htmlPath": ".claude/docs/dashboard/designs/extracted/stitch_success.html",
       "tokensPath": ".claude/docs/dashboard/designs/extracted/tokens_success.md",
-      "dimensions": { "width": 780, "height": 4256 },
+      "dimensions": {
+        "width": 780,
+        "height": 4256
+      },
       "designFile": ".claude/docs/dashboard/designs/dashboard.md",
       "blueprintFile": ".claude/docs/dashboard/designs/dashboard_blueprint.md",
       "blueprintConsumed": true,
@@ -137,11 +164,18 @@
       "successScreenId": "532ef65069c941f88084039e55672d71",
       "successScreenName": "projects/11569217269690169371/screens/532ef65069c941f88084039e55672d71",
       "emptyScreenId": null,
-      "states": { "loading": true, "failed": true, "empty": false },
+      "states": {
+        "loading": true,
+        "failed": true,
+        "empty": false
+      },
       "screenshot": "designs/assetdetail.png",
       "htmlPath": "designs/extracted/stitch_success.html",
       "tokensPath": "designs/extracted/tokens_success.md",
-      "dimensions": { "width": 780, "height": 2962 },
+      "dimensions": {
+        "width": 780,
+        "height": 2962
+      },
       "designFile": "designs/assetdetail.md",
       "blueprintFile": "designs/assetdetail_blueprint.md",
       "blueprintConsumed": true,
@@ -154,11 +188,18 @@
       "successScreenId": "ce04a875165b49f399d8c0bc73c28fe1",
       "successScreenName": "projects/11569217269690169371/screens/ce04a875165b49f399d8c0bc73c28fe1",
       "emptyScreenId": null,
-      "states": { "loading": true, "failed": true, "empty": false },
+      "states": {
+        "loading": true,
+        "failed": true,
+        "empty": false
+      },
       "screenshot": "designs/swap.png",
       "htmlPath": "designs/extracted/stitch_success.html",
       "tokensPath": "designs/extracted/tokens_success.md",
-      "dimensions": { "width": 780, "height": 1768 },
+      "dimensions": {
+        "width": 780,
+        "height": 1768
+      },
       "designFile": "designs/swap.md",
       "blueprintFile": "designs/swap_blueprint.md",
       "blueprintConsumed": true,
@@ -166,6 +207,48 @@
       "approvedAt": "2026-06-10",
       "createdAt": "2026-06-10T00:00:00Z",
       "updatedAt": "2026-06-10T13:00:00Z"
+    },
+    "profile": {
+      "successScreenId": "9a5964fe13864fdbb70bf7ae168a0f29",
+      "successScreenName": "projects/11569217269690169371/screens/9a5964fe13864fdbb70bf7ae168a0f29",
+      "emptyScreenId": null,
+      "states": {
+        "loading": true,
+        "failed": false,
+        "empty": false
+      },
+      "screenshot": ".claude/docs/profile/designs/profile.png",
+      "htmlPath": ".claude/docs/profile/designs/extracted/stitch_success.html",
+      "tokensPath": ".claude/docs/profile/designs/extracted/tokens_success.md",
+      "dimensions": {
+        "width": 780,
+        "height": 1768
+      },
+      "designFile": ".claude/docs/profile/designs/profile.md",
+      "blueprintFile": ".claude/docs/profile/designs/profile_blueprint.md",
+      "blueprintConsumed": true,
+      "approved": true,
+      "approvedAt": "2026-06-22",
+      "secondaryScreens": [
+        {
+          "kind": "screen",
+          "screenId": "ac803ab94d8147f3836314c74714cffe",
+          "screenName": "projects/11569217269690169371/screens/ac803ab94d8147f3836314c74714cffe",
+          "role": "edit",
+          "label": "Edit Profile",
+          "screenshot": ".claude/docs/profile/designs/profile_edit.png",
+          "htmlPath": ".claude/docs/profile/designs/extracted/stitch_edit.html",
+          "tokensPath": ".claude/docs/profile/designs/extracted/tokens_edit.md",
+          "dimensions": {
+            "width": 780,
+            "height": 1768
+          },
+          "approved": true,
+          "generatedAt": "2026-06-22T00:00:00Z"
+        }
+      ],
+      "createdAt": "2026-06-22T00:00:00Z",
+      "updatedAt": "2026-06-22T13:02:22Z"
     }
   },
   "initState": {
@@ -174,5 +257,5 @@
     "completedAt": "2026-05-04T00:06:00Z"
   },
   "createdAt": "2026-05-04T00:00:00Z",
-  "updatedAt": "2026-05-21T00:00:00Z"
+  "updatedAt": "2026-06-22T00:00:00Z"
 }

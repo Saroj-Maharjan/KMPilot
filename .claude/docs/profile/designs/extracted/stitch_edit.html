@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Profile - KMPilot Gold</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F0D09',
+                        surface: '#1C1910',
+                        'surface-variant': '#302B1C',
+                        'on-surface': '#EDE8D5',
+                        'on-surface-variant': '#C4BA94',
+                        outline: '#726A48',
+                        'outline-variant': '#3F3822',
+                        primary: '#F5D76E',
+                        'on-primary': '#2C1900',
+                        'primary-container': '#4A3200',
+                        'on-primary-container': '#FFF0C0',
+                        error: '#FFB4AB',
+                        'on-error': '#690005',
+                        'error-container': '#93000A',
+                        'on-error-container': '#FFDAD6',
+                        success: '#4ADE80',
+                        danger: '#FF6B6B'
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope", "sans-serif"],
+                        display: ["Manrope", "sans-serif"],
+                        body: ["Manrope", "sans-serif"],
+                        label: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0F0D09;
+            color: #EDE8D5;
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .input-focus-glow:focus-within {
+            box-shadow: 0 0 0 1px #F5D76E, 0 0 12px rgba(245, 215, 110, 0.15);
+        }
+        .glass-header {
+            background-color: rgba(15, 13, 9, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<!-- JSON Component: TopAppBar -->
+<header class="fixed top-0 w-full z-50 glass-header border-b border-outline-variant h-16 flex items-center justify-between px-4">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center text-primary active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="font-headline text-headline-sm font-bold text-on-surface">Edit Profile</h1>
+</div>
+<button class="text-primary font-bold px-2 hover:opacity-80 transition-opacity active:scale-95">
+            Save
+        </button>
+</header>
+<main class="flex-1 mt-16 px-6 pb-32">
+<!-- Avatar Section -->
+<section class="flex flex-col items-center py-8">
+<div class="relative">
+<div class="w-20 h-20 rounded-full bg-surface-variant border border-primary flex items-center justify-center overflow-hidden">
+<span class="text-primary font-extrabold text-2xl tracking-tight">AJ</span>
+</div>
+<div class="absolute bottom-0 right-0 w-7 h-7 bg-primary-container rounded-full flex items-center justify-center border border-background">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+</div>
+<button class="mt-4 text-primary font-medium text-sm hover:opacity-80 transition-opacity">
+                Change Photo
+            </button>
+</section>
+<!-- Form Section -->
+<section class="space-y-6 max-w-lg mx-auto">
+<!-- Field 1: Full Name -->
+<div class="space-y-2">
+<label class="block text-sm font-label text-on-surface-variant px-1">Full Name</label>
+<div class="relative group input-focus-glow rounded-xl transition-all duration-200">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">person</span>
+</div>
+<input class="w-full h-14 bg-[#231F12] border border-outline rounded-xl pl-12 pr-4 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary transition-colors font-body" type="text" value="Alex Johnson"/>
+</div>
+</div>
+<!-- Field 2: Email Address -->
+<div class="space-y-2">
+<label class="block text-sm font-label text-on-surface-variant px-1">Email Address</label>
+<div class="relative group input-focus-glow rounded-xl transition-all duration-200">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">mail</span>
+</div>
+<input class="w-full h-14 bg-[#231F12] border border-outline rounded-xl pl-12 pr-4 text-on-surface placeholder:text-outline focus:outline-none focus:border-primary transition-colors font-body" type="email" value="alex@example.com"/>
+</div>
+</div>
+<p class="text-center text-xs text-on-surface-variant mt-4 px-4 leading-relaxed">
+                Changes will be reflected across the app
+            </p>
+</section>
+<!-- Aesthetic Card Block (Bento style hint) -->
+<section class="mt-10 max-w-lg mx-auto">
+<div class="bg-surface border border-outline-variant p-6 rounded-2xl">
+<div class="flex items-center gap-4 mb-4">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">security</span>
+</div>
+<div>
+<h3 class="text-on-surface font-bold">Privacy Settings</h3>
+<p class="text-on-surface-variant text-xs">Manage your visibility and data</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-on-surface-variant">chevron_right</span>
+</div>
+<div class="h-px bg-outline-variant w-full my-4"></div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</div>
+<div>
+<h3 class="text-on-surface font-bold">Notifications</h3>
+<p class="text-on-surface-variant text-xs">Alerts and status updates</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Fixed Bottom Button -->
+<div class="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
+<button class="w-full h-14 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] transition-transform shadow-lg shadow-primary/5 max-w-lg mx-auto">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 600;">check</span>
+            Save Changes
+        </button>
+</div>
+<!-- Micro-interaction script -->
+<script>
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+
+        // Haptic feedback simulation on button clicks
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.navigator.vibrate) {
+                    window.navigator.vibrate(10);
+                }
+            });
+        });
+    </script>
+</body></html>
