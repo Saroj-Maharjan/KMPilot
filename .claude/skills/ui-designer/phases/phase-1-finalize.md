@@ -29,9 +29,10 @@ Save `.claude/docs/{featurename}/designs/{featurename}.md`. The state rows are c
 {if needsLoading} - Loading: `.claude/docs/_shared/designs/loading.png` (shared)
 {if needsFailed}  - Failed: `.claude/docs/_shared/designs/failed.png` (shared)
 {if needsEmpty}   - Empty: `{featurename}_empty.png`
+{for each secondary screen} - {Label} ({role}): `{featurename}_{role}.png`
 ```
 
-Only emit a screenshot line for a state if the corresponding `needs*` flag is true. Do NOT list skipped states with a "(skipped)" placeholder — omit them entirely.
+Only emit a screenshot line for a state if the corresponding `needs*` flag is true. Do NOT list skipped states with a "(skipped)" placeholder — omit them entirely. Emit one extra line per **secondary screen** in `secondaryScreens[]` (Step 1.13b).
 
 ---
 
@@ -45,8 +46,11 @@ Acquire HTML + token inventory for each **selected** state. Success is always ac
 | loading | `needsLoading` | Read from `_shared/designs/extracted/stitch_loading.html` | Read from `_shared/designs/extracted/tokens_loading.md` |
 | failed | `needsFailed` | Read from `_shared/designs/extracted/stitch_failed.html` | Read from `_shared/designs/extracted/tokens_failed.md` |
 | empty | `needsEmpty` | Download from `features[featurename].emptyScreenId` | Extract per-feature |
+| secondary screen (per `secondaryScreens[]` entry) | one per entry | Download from `secondaryScreens[i].screenId` | Extract per-feature |
 
 Skipped states are not processed in any sub-step below.
+
+> **Secondary screens (Step 1.13b):** this acquisition is **kind-agnostic** — treat each `secondaryScreens[]` entry (whether `kind: surface` or `kind: screen`) exactly like the **success** state, but keyed by its `role` instead of a state name — i.e. wherever a sub-step downloads/tokenizes the success screen, do the same for each secondary screen using `secondaryScreens[i].screenId` and filenames `stitch_{role}.html` / `tokens_{role}.md`. Add each secondary screen's `stitch_{role}.html` to the `--html` argument list of the **icons** and **images** manifest commands (sub-steps 5 and 6 — `download_assets.py` accepts repeated `--html`) alongside the success/state HTML, so secondary-only icons/images are captured. **Fonts (sub-step 6b) are NOT per-screen**: typography is app-global — one typeface for the whole project, parsed from the **success** HTML only (`download_font.py` takes a single `--html`). Do **not** pass secondary HTML to the font command. (If a secondary screen's HTML uses a *different* typeface than success, that is a design inconsistency, not a second font — the Typography Audit in Step 1.16 flags it; the project keeps one global font.) After extraction, write `secondaryScreens[i].htmlPath = "designs/extracted/stitch_{role}.html"`, `tokensPath = "designs/extracted/tokens_{role}.md"`, and `dimensions` from that screen's `get_screen` response (Step 1.18). The Resume Check below applies per-entry too (skip one whose `stitch_{role}.html` + `tokens_{role}.md` both already exist).
 
 ### Resume Check (Partial Failure Recovery)
 
@@ -94,7 +98,7 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
 
    Do NOT re-tokenize loading/failed — those were already tokenized at Project Init time and live in `_shared/`.
 
-5. **Generate the Material Symbols icons manifest** for every `<span class="material-symbols-*" data-icon="...">` found in the selected-state HTML files. `/ui-designer` is a **design-only** skill — it does NOT download XML files or mutate any source code. It only writes the declarative `icons.json` manifest that downstream implementation skills consume.
+5. **Generate the Material Symbols icons manifest** for every `<span class="material-symbols-*" data-icon="...">` found in the selected-state **and secondary-screen** HTML files. `/ui-designer` is a **design-only** skill — it does NOT download XML files or mutate any source code. It only writes the declarative `icons.json` manifest that downstream implementation skills consume.
 
    ```bash
    python3 .claude/skills/_shared/download_assets.py \
@@ -105,22 +109,23 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
      [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
      [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
      [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_{role}.html  per secondaryScreens[] entry] \
      --manifest-only
    ```
 
    The `--manifest-only` flag is **mandatory** in `/ui-designer`. Without it the script would download XML files and edit `DesignSystemResources.kt` — both source-tree mutations that belong to `/creating-kmp-feature` or `/modifying-kmp-feature` (which activate the protect-feature-files hook marker before mutating source). Running the script without `--manifest-only` from within `/ui-designer` violates the blueprint-artifact-contract.
 
-   - Pass `--html` once per **selected** state (success always; loading/failed/empty per their `needs*` flag — same selection logic as the tokenizer above).
+   - Pass `--html` once per **selected** state (success always; loading/failed/empty per their `needs*` flag — same selection logic as the tokenizer above) **plus once per `secondaryScreens[]` entry** (`stitch_{role}.html`).
    - **Placement algorithm (usage-based, declarative)**: the manifest classifies each icon as chrome or domain based on cross-feature usage. The script scans every existing `.claude/docs/*/designs/extracted/icons.json` manifest, computes `users = {features that declare this icon} ∪ {current feature}`, and classifies `len(users) >= 2` → **chrome**, otherwise **domain**. The chrome icon's predicted path is `core/designsystem/.../composeResources/drawable/{ident}.xml`; the domain icon's is `feature/{featurename}/.../composeResources/drawable/{ident}.xml`. The implementing skill materializes the XML at the declared path.
    - **Doc-artifact promotion** is allowed and automatic in manifest-only mode: when adding a feature that pushes an icon from 1 → 2 users, every affected other feature's `icons.json` is updated in place to reflect the new chrome scope. These are all artifacts under `.claude/docs/` — never source.
    - **No source mutation**: the script never writes to `feature/*/composeResources/drawable/`, never edits `DesignSystemResources.kt`, never rewrites any `.kt` import. Those happen later in `/creating-kmp-feature` (or `/modifying-kmp-feature`) when the marker is active.
    - **Manifest fields** for each icon: `name`, `style`, `filled`, `scope`, `drawable_name`, predicted `drawable_path`, predicted `res_reference`, `source_url`, `download_status: "pending"`, `usage_count`, `users`, `occurrences`. Step 1.17 feeds this manifest to the blueprint generator so icon references resolve correctly.
    - Non-outlined styles (rounded, sharp) emit a warning — Stitch defaults to outlined, so divergence usually signals a design intent worth noting.
-   - **Completeness check (MANDATORY after running)**: count all `<span class="material-symbols-*">` occurrences in each selected-state HTML file and compare against the icons generated in `icons.json`. If any span is absent from the manifest (script missed it due to HTML format variance — e.g. icon name as text content instead of `data-icon` attribute), add it manually to `icons.json` with `download_status: "pending"`. An icon absent from `icons.json` WILL produce a blueprint with `Icons.Default.*` fallback — that is always wrong.
+   - **Completeness check (MANDATORY after running)**: count all `<span class="material-symbols-*">` occurrences in each selected-state **and secondary-screen** HTML file and compare against the icons generated in `icons.json`. If any span is absent from the manifest (script missed it due to HTML format variance — e.g. icon name as text content instead of `data-icon` attribute), add it manually to `icons.json` with `download_status: "pending"`. An icon absent from `icons.json` WILL produce a blueprint with `Icons.Default.*` fallback — that is always wrong.
 
    **Materialization happens later, in the implementation skill.** When the user runs `/creating-kmp-feature {featurename}` or `/modifying-kmp-feature {featurename}` in design-aware mode, it invokes the same script **without** `--manifest-only`. That run downloads each XML to its declared path, applies the JetBrains-required KMP cleanup pass (strip `android:tint`, `android:autoMirrored`, and translate **every** `@android:color/*` reference — in any color attribute — to its literal ARGB hex, since the `@android:color` namespace is unresolved by the KMP resource pipeline and crashes non-Android targets at runtime), extends `DesignSystemResources.kt` for any chrome additions, and inline-migrates any stale `feature/X/drawable/{ident}.xml` copies plus their Kotlin imports for icons whose scope flipped.
 
-6. **Generate the `<img>` assets manifest** for every `<img>` tag found in the selected-state HTML files. Stitch images are all hosted on its CDN (`lh3.googleusercontent.com/aida-public/...`). The script classifies each into a **`delivery`**: **`bundled`** (a static design asset — hero, decorative background, logo → downloaded + bundled, rendered via `painterResource`) or **`remote`** (dynamic content — avatar, flag, thumbnail, repeated list image → NOT bundled, rendered at runtime via `AsyncImage(url = <data field>)`; the Stitch CDN URL is an ephemeral placeholder that never ships).
+6. **Generate the `<img>` assets manifest** for every `<img>` tag found in the selected-state **and secondary-screen** HTML files. Stitch images are all hosted on its CDN (`lh3.googleusercontent.com/aida-public/...`). The script classifies each into a **`delivery`**: **`bundled`** (a static design asset — hero, decorative background, logo → downloaded + bundled, rendered via `painterResource`) or **`remote`** (dynamic content — avatar, flag, thumbnail, repeated list image → NOT bundled, rendered at runtime via `AsyncImage(url = <data field>)`; the Stitch CDN URL is an ephemeral placeholder that never ships).
 
    `/ui-designer` is design-only — it writes only the declarative manifest. Downloads (bundled only) happen later in `/creating-kmp-feature` or `/modifying-kmp-feature`.
 
@@ -133,6 +138,7 @@ If both exist for a state, skip it — the prior run's snapshot is the canonical
      [--html .claude/docs/_shared/designs/extracted/stitch_loading.html  if needsLoading] \
      [--html .claude/docs/_shared/designs/extracted/stitch_failed.html   if needsFailed] \
      [--html .claude/docs/{featurename}/designs/extracted/stitch_empty.html if needsEmpty] \
+     [--html .claude/docs/{featurename}/designs/extracted/stitch_{role}.html  per secondaryScreens[] entry] \
      --manifest-only
    ```
 
@@ -176,7 +182,7 @@ This step runs three audits that map design tokens to app-global constructs: the
 
 Audit every color used across the **selected** approved designs and map them to M3 roles. Color values are read from the **token inventories produced in Step 1.15**, not from prompts — Stitch can generate hex values that drift from what the prompt asked for, and the inventory is what `/verify-ui` will see.
 
-Only audit token inventories for **selected** states (`needsLoading`/`needsFailed`/`needsEmpty`). Skipped states contribute zero colors. Success is always audited.
+Only audit token inventories for **selected** states (`needsLoading`/`needsFailed`/`needsEmpty`). Skipped states contribute zero colors. Success is always audited. **Each secondary screen is also audited** — include every `tokens_{role}.md` from `secondaryScreens[]` so the Color/Typography/Motion audits cover the **union** across the primary + all secondary screens (a sheet/dialog reuses the same palette and type scale, so its tokens normally resolve to roles already found on the primary; flag any genuinely new role the same way).
 
 For any color found in `tokens_loading.md` or `tokens_failed.md` (only if those states are selected), annotate it with "(shared state screen)" in the audit output to make clear it originates from the shared Project Init screens.
 
@@ -184,7 +190,7 @@ For any color found in `tokens_loading.md` or `tokens_failed.md` (only if those 
 
 1. **Re-read `XTheme.kt`** to get the current roles from the active scheme (`XLightColors` or `XDarkColors` per `defaultTheme`).
 
-2. **Collect every color from the inventories** in `.claude/docs/{featurename}/designs/extracted/tokens_*.md` for the **selected** states only (always success; loading/failed/empty per their flags — loading/failed inventories live under `.claude/docs/_shared/designs/extracted/`). The extractor resolves each color class to its hex (custom Tailwind config + default palette + arbitrary values), so iterate through every inventory entry whose conversion contains a color.
+2. **Collect every color from the inventories** in `.claude/docs/{featurename}/designs/extracted/tokens_*.md` for the **selected** states (always success; loading/failed/empty per their flags — loading/failed inventories live under `.claude/docs/_shared/designs/extracted/`) **and every secondary screen's `tokens_{role}.md`**. The extractor resolves each color class to its hex (custom Tailwind config + default palette + arbitrary values), so iterate through every inventory entry whose conversion contains a color.
 
 3. **Reconcile against prompts.** Compare the inventory hexes against the "Defined" / "Proposed" hexes you specified in the Stitch prompts (Steps 1.10 and 1.14). If a color drifted (e.g., prompt asked for `#181228`, Stitch produced `#1A1A1F`), **the inventory wins** — record the inventory hex. Flag any drift in a single line at the top of the Color Audit so it's visible to the user.
 
@@ -239,9 +245,9 @@ Typography is app-global, exactly like color roles (see `_shared/patterns.md` �
 
 #### Procedure
 
-1. **Read the design typeface** from `fonts.json` (Step 1.15 sub-step 6b) — `family`, `weights`, `route`, `font_family_lines`.
+1. **Read the design typeface** from `fonts.json` (Step 1.15 sub-step 6b) — `family`, `weights`, `route`, `font_family_lines`. This is parsed from the **success** HTML and is the project's single global typeface. **Secondary-screen font check**: grep each `stitch_{role}.html`'s `font-family` / css2 `<link>`; if a secondary uses a *different* family than success, add a one-line **divergence warning** to the audit output (the project still ships **one** global font — flag the inconsistency for the user to reconcile in Stitch; do **not** emit a second font swap).
 2. **Read the theme's current font**: open `XTheme.kt`, find `XFontFamily()`, note the family the `Font(Res.font.*)` resources belong to (e.g. `outfit_*` → Outfit).
-3. **Map each text node to an M3 role**: from the token inventories' `font-size`/weight per node, pick the closest M3 type-scale role (`displayLarge`…`labelSmall`). Record size/weight divergences that would need an explicit `.copy(...)` override.
+3. **Map each text node to an M3 role**: from the token inventories' `font-size`/weight per node — across the selected states **and every secondary screen's `tokens_{role}.md`** — pick the closest M3 type-scale role (`displayLarge`…`labelSmall`). Record size/weight divergences that would need an explicit `.copy(...)` override.
 4. **Classify the font**: `matches current` (design family == theme family) → no swap; `swap required` (differs, e.g. design=Manrope vs theme=Outfit) → record the swap with the source from `fonts.json`.
 
 #### Typography Audit Output
@@ -274,7 +280,7 @@ This audit feeds the blueprint's **Typography Updates Required** (font swap + ro
 
 #### Procedure
 
-1. **Read the captured motion**: the `## Motion Inventory` section in each selected state's `tokens_{state}.md` (Step 1.15), plus the raw HTML's `<style>` / tailwind `animation` config / `<script>` if a token needs disambiguation.
+1. **Read the captured motion**: the `## Motion Inventory` section in each selected state's `tokens_{state}.md` **and each secondary screen's `tokens_{role}.md`** (Step 1.15), plus the raw HTML's `<style>` / tailwind `animation` config / `<script>` if a token needs disambiguation. Secondary screens get the same capture-only motion treatment as the primary.
 2. **Bucket every token via the Web-Motion Policy** (`_shared/motion.md`): **DROP** touch press (`active:*`, `ripple`) and pointer/hover (`hover:*`, `group-hover:*`, `.interactive-card:hover/:active`, `focus:`, `cursor-*`); **KEEP** the 4 families (Ambient bg, Loading/Attention loop, Entrance, Value-driven) + the `prefers-reduced-motion` honor.
 3. **Map each KEEP token** to a concrete Compose primitive + params (dur/easing/repeat/trigger) + **magnitude** (copied verbatim from the inventory's `### Keyframe magnitudes` — the only source for scale/translate/opacity/offset amounts; never invent) + target file (generic, reusable → DS `motion/`; one-off, feature-specific → feature `motion/{Feature}Motion.kt`), using motion.md's mapping + easing map. Durations/easings reference `XMotion` tokens.
 4. **End with the explicit Dropped line** listing every dropped class/element for transparency.
@@ -316,11 +322,12 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
 
 ### Procedure
 
-1. **Read the persisted inputs** for **selected states only** — issue all these Reads as **one batched response** (parallel tool calls), not one round-trip per file:
+1. **Read the persisted inputs** for **selected states + every secondary screen** — issue all these Reads as **one batched response** (parallel tool calls), not one round-trip per file:
    - Success — `.claude/docs/{featurename}/designs/extracted/stitch_success.html` + `tokens_success.md` (always)
    - Loading — `.claude/docs/_shared/designs/extracted/stitch_loading.html` + `tokens_loading.md` (only if `needsLoading`)
    - Failed — `.claude/docs/_shared/designs/extracted/stitch_failed.html` + `tokens_failed.md` (only if `needsFailed`)
    - Empty — `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` + `tokens_empty.md` (only if `needsEmpty`)
+   - Secondary screens — `.claude/docs/{featurename}/designs/extracted/stitch_{role}.html` + `tokens_{role}.md` for **each** `secondaryScreens[]` entry (Step 1.13b)
 
 2. **Tab-nav-bar detection (MANDATORY before generating)**: Scan the success-state HTML for a multi-tab bottom navigation bar (a persistent row of ≥2 selectable tab items). If found:
    - **Do NOT map it to `XScreen(bottomBar = { NavBar() })`** — that violates `blueprint-spec.md:47` and `patterns.md Rule 13`.
@@ -328,9 +335,9 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - In the blueprint Component Tree, emit the nav bar under a note: `[App-shell chrome — Integration Point 5. Do NOT add to XScreen.bottomBar. Wire via TopLevelDestination in App.kt.]`. Tab icons go in `composeApp/composeResources/drawable/` (NOT `icons.json` / `core:designsystem`); tab labels go in `composeApp/composeResources/values/strings.xml`. Both are app-module resources referenced via `{PROJECT_NAMESPACE}.composeapp.generated.resources.Res`.
    - A single sticky CTA (e.g. "Send", "Confirm") is NOT a tab nav bar — it goes in `XScreen.bottomBar` normally.
 
-3. **Generate the blueprint**: Feed the selected state HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
-   - HTML file contents for selected states (labeled by state)
-   - Token inventories for selected states (labeled by state) — authoritative for already-converted classes
+3. **Generate the blueprint**: Feed the selected state **and secondary-screen** HTML files **together with their token inventories** to Claude using the extraction prompt template from [blueprint-spec.md](../references/blueprint-spec.md#extraction-prompt-template). The inputs are:
+   - HTML file contents for selected states **and each secondary screen** (labeled by state / `{role}`)
+   - Token inventories for selected states **and each secondary screen** (labeled by state / `{role}`) — authoritative for already-converted classes
    - The icons manifest at `.claude/docs/{featurename}/designs/extracted/icons.json` (from Step 1.15 sub-step 5) — authoritative for every Material Symbols `<span>` in the design, resolving each to its drawable name and Compose `res_reference`. The blueprint must use the exact `res_reference` from the manifest (no manual `Icons.Default.*` fallback).
    - The images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Step 1.15 sub-step 6, with the user-confirmed `delivery` from Step 6a) — authoritative for every `<img>` tag in the design. The blueprint branches on each entry's `delivery`: `bundled` → `Image(painter = painterResource({res_reference}))`; `remote` → `AsyncImage(url = {data_binding}, loadingResId = DesignSystemResources.drawable.ds_image_placeholder, …)` (design-system `AsyncImage`, `url=`) + a Post-Implementation Checklist item to wire `{data_binding}`. The Stitch CDN URL is never emitted in code.
    - The X-component mapping table (from [stitch-guide.md](../references/stitch-guide.md#mapping-stitch-designs-to-kmp-x-components))
@@ -338,13 +345,15 @@ This step parses the Stitch HTML exports (downloaded/read in Step 1.15) into a s
    - The Typography Audit (from Step 1.16) + the font manifest at `.claude/docs/{featurename}/designs/extracted/fonts.json` (from Step 1.15 sub-step 6b) — authoritative for the per-node M3 type-scale role mapping and the font swap (family + source). The blueprint fills the Typography Scale `M3 Role` column and the contract's *Typography Updates Required* from these.
    - The Motion Audit (from Step 1.16, the `MOTION_AUDIT` block in `.claude/docs/{featurename}/designs/{featurename}.md`) + the `## Motion Inventory` in each `tokens_{state}.md` — authoritative for the blueprint's `## Motion` table (kept families → primitive + target file) and its Dropped note. Omit the `## Motion` section when no motion is present.
    - The `needsLoading`, `needsFailed`, `needsEmpty` flags so the prompt knows which sections to emit
+   - The `secondaryScreens[]` list (kind + role + label per entry) so the prompt emits one **Secondary Screens** subsection per entry (see [blueprint-spec.md → Secondary Screens](../references/blueprint-spec.md#component-tree)), branching on `kind`: **`surface`** → maps its `role` to the presentation X-component (`bottomsheet` → `XModalBottomSheet`, `dialog`/`modal` → `XDialog`/`XAlertDialog`, `drawer` → `XModalDrawerSheet`, `panel` → inline `XSurface`), toggled by a `{Feature}UiModel` visibility flag + primary callback; **`screen`** → a full sibling screen with its own `Screen`/`ScreenRoot` + `Route` + `NavGraphBuilder` entry, pushed from the primary via a callback (Rule 10). Either way, emit that entry's Component Tree + token inventory.
 
-3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` — with **exactly one `Write`**. Any later correction (verification failure in sub-step 4, manifest gap, user tweak) is applied with `Edit` on the affected section only; **never rewrite the whole file**. The blueprint covers **only selected states**; shared scaffold is described once. Use the canonical Component-Tree entries from [blueprint-spec.md → Component Tree](../references/blueprint-spec.md#component-tree):
+3. **Save the blueprint** to `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` — with **exactly one `Write`**. Any later correction (verification failure in sub-step 4, manifest gap, user tweak) is applied with `Edit` on the affected section only; **never rewrite the whole file**. The blueprint covers **selected states + every secondary screen**; shared scaffold is described once. Use the canonical Component-Tree entries from [blueprint-spec.md → Component Tree](../references/blueprint-spec.md#component-tree):
    - `states.loading` true → shared-screen entry; false → "Skipped" marker.
    - `states.failed` true → shared-screen entry; false → "Skipped" marker.
    - `states.empty` true → emit the section; false → omit the section entirely (no "Skipped" placeholder — empty is a content variant, not a Rule-4 UI state).
+   - `secondaryScreens[]` non-empty → emit a `### Secondary Screens` section with one `#### {Label} ({role}) — {kind}` subsection per entry (blueprint-spec rule 22a); empty → omit the section.
 
-4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states, String Inventory (every text node → a `{area}_{purpose}` key; Rule 12), **`## Motion` table when the Motion Audit found motion** (kept families + target-file column + Dropped note; omitted for a static design), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist). **Also verify**:
+4. **Verify** the blueprint file was written and contains the expected sections (Design Tokens, Typography Scale **with the `M3 Role` column filled**, Spacing Grid, Component Tree with selected states **plus a `### Secondary Screens` section with one subsection per `secondaryScreens[]` entry when non-empty**, String Inventory (every text node **across success + selected states + secondary screens** → a `{area}_{purpose}` key; Rule 12), **`## Motion` table when the Motion Audit found motion** (kept families incl. any secondary-screen rows + target-file column + Dropped note; omitted for a static design), Pre-Implementation Contract with Component Overrides **and Typography Updates Required** tables, Post-Implementation Checklist). **Also verify**:
    - Component Tree must NOT assign a tab nav bar to `XScreen(bottomBar = { ... })`. Any multi-tab nav bar must appear only as an app-shell Point-5 note (see sub-step 2 above). If found in `XScreen.bottomBar`, fix that Component-Tree section via `Edit` (do not rewrite the file).
    - Blueprint must NOT contain `Icons.Default.{Name}`, `androidx.compose.material.icons`, or the phrase "No XML download needed for font glyphs" / "use `Icons.Default.*`". Every Material Symbol must reference its `res_reference` from `icons.json`. If found, the manifest is incomplete — add missing icons to `icons.json` and patch the affected blueprint lines via `Edit` (do not rewrite the file).
 
@@ -364,6 +373,7 @@ Update `.claude/docs/_project/stitch-project.json` after design approval:
   - `designFile`: `"designs/{featurename}.md"`
   - `blueprintFile`: `"designs/{featurename}_blueprint.md"`
   - `emptyScreenId`: the approved empty screen ID **if `needsEmpty == true`**, otherwise leave `null` (the `states` map was already written in Step 1.7 and does not change here)
+  - `secondaryScreens[]`: for each entry (the `kind`/`screenId`/`screenName`/`role`/`label`/`screenshot`/`approved`/`generatedAt` were written in Step 1.13b), fill the remaining fields now — `htmlPath: "designs/extracted/stitch_{role}.html"`, `tokensPath: "designs/extracted/tokens_{role}.md"`, and `dimensions` from that screen's Step 1.15 `get_screen` response. Leave the array empty/absent when the feature has no secondary screens.
   - **`"blueprintConsumed": false`** — signals to implementation skills that a new blueprint is available
   - `approved`: `true`
   - `approvedAt`: current ISO date
@@ -388,8 +398,10 @@ Design System ID: {designSystemAssetId}
 {if needsLoading} | Loading | .claude/docs/_shared/designs/loading.png (shared) |
 {if needsFailed}  | Failed  | .claude/docs/_shared/designs/failed.png (shared) |
 {if needsEmpty}   | Empty   | designs/{featurename}_empty.png |
+{for each secondary screen} | {Label} ({role}) | designs/{featurename}_{role}.png |
 
 States selected: success{, loading if needsLoading}{, failed if needsFailed}{, empty if needsEmpty}
+Secondary screens: {comma-separated "label (role) — kind", or "none"}
 States skipped (no design reference): {comma-separated skipped states, or "none"}
 
 Design spec: designs/{featurename}.md
@@ -411,12 +423,13 @@ After Phase 1 completes:
 - Loading screenshot: `.claude/docs/_shared/designs/loading.png` — **only if `needsLoading`**
 - Failed screenshot: `.claude/docs/_shared/designs/failed.png` — **only if `needsFailed`**
 - Empty screenshot: `.claude/docs/{featurename}/designs/{featurename}_empty.png` — **only if `needsEmpty`**
-- Design description: `.claude/docs/{featurename}/designs/{featurename}.md` (with state rows for selected states only)
-- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (selected states only; skipped state sections marked "Skipped" for loading/failed, omitted for empty)
-- Persisted HTML + token inventories for selected states: `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` and `tokens_{state}.md` (consumed by `/verify-ui`). Loading/failed inventories continue to live in `.claude/docs/_shared/`.
+- Secondary surface screenshots: `.claude/docs/{featurename}/designs/{featurename}_{role}.png` — one per `secondaryScreens[]` entry (Step 1.13b)
+- Design description: `.claude/docs/{featurename}/designs/{featurename}.md` (with screenshot rows for selected states + each secondary screen)
+- Implementation blueprint: `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (selected states + a `### Secondary Screens` section per `secondaryScreens[]` entry; skipped state sections marked "Skipped" for loading/failed, omitted for empty)
+- Persisted HTML + token inventories for selected states **and each secondary screen**: `.claude/docs/{featurename}/designs/extracted/stitch_{state|role}.html` and `tokens_{state|role}.md` (consumed by `/verify-ui`). Loading/failed inventories continue to live in `.claude/docs/_shared/`.
 - Icons manifest: `.claude/docs/{featurename}/designs/extracted/icons.json` (consumed by Step 1.17 blueprint generator, `/creating-kmp-feature` / `/modifying-kmp-feature` in design-aware mode, and `/verify-ui`). The manifest declares predicted drawable paths and `res_reference` values for every icon, with `download_status: "pending"` until an implementation skill materializes them.
 - Images manifest: `.claude/docs/{featurename}/designs/extracted/images.json` (consumed by the same downstream skills). Per `<img>` tag, carries a user-confirmed `delivery`: `bundled` entries declare predicted drawable path + `res_reference` (`download_status: "pending"`); `remote` entries declare `data_binding` + `placeholder_ref` (`download_status: "remote"`, no drawable). `delivery_locked: true` records the user's confirmation so full-mode runs don't re-derive it.
-- stitch-project.json updated with approved screen, per-feature `states` selection map, screenshots for selected states, and `blueprintConsumed: false`
+- stitch-project.json updated with approved screen, per-feature `states` selection map, screenshots for selected states, **the `secondaryScreens[]` array (one entry per secondary screen, with paths/dimensions filled)**, and `blueprintConsumed: false`
 - All variant screenshots cleaned up
 - User approval received
 

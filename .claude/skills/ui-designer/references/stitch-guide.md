@@ -380,9 +380,24 @@ Created once by Project Init (`phase-init.md`). The `projectId` in this file is 
   },
   "features": {
     "{featurename}": {
-      "successScreenId": "string — Stitch screen ID for success state",
+      "successScreenId": "string — Stitch screen ID for the primary success screen",
       "successScreenName": "string — Full resource name",
       "emptyScreenId": "string or null — Stitch screen ID for empty state (only when states.empty == true)",
+      "secondaryScreens": [
+        {
+          "kind": "string — surface (overlay: visibility flag + callback, no Route) | screen (full sibling screen: own Route + NavGraphBuilder entry, pushed via callback)",
+          "screenId": "string — Stitch screen ID for this secondary screen",
+          "screenName": "string — Full resource name",
+          "role": "string — for surface: bottomsheet | dialog | modal | drawer | panel; for screen: a short slug (edit | detail | step2 | …)",
+          "label": "string — human label, e.g. 'Filter bottom sheet' or 'Edit profile'",
+          "screenshot": "string — path to .png",
+          "htmlPath": "string — path to .html",
+          "tokensPath": "string — path to tokens.md",
+          "dimensions": { "width": "number", "height": "number" },
+          "approved": "boolean",
+          "generatedAt": "string — ISO timestamp"
+        }
+      ],
       "states": {
         "loading": "boolean — true if this feature opts in to the shared loading screen",
         "failed":  "boolean — true if this feature opts in to the shared failed screen",

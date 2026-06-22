@@ -17,6 +17,8 @@ Test Compose screens using runComposeUiTest. **Do NOT re-read source files** - u
 
 **Tests ALWAYS target `{Feature}ScreenRoot`** - allows testing without ViewModel mocking.
 
+**Secondary screens:** a `kind: screen` secondary (e.g. edit-profile) has its **own** `{Feature}{Role}ScreenRoot` — give it its own ScreenRoot test file, same pattern. A `kind: surface` secondary (bottom sheet/dialog) has no separate ScreenRoot; test its visible/hidden states by toggling the `{Feature}UiModel` visibility field passed to `{Feature}ScreenRoot`.
+
 ## Output Path
 ```
 feature/{featurename}/src/commonTest/kotlin/{PKG_PATH}/{featurename}/presentation/ui/{Feature}ScreenTest.kt

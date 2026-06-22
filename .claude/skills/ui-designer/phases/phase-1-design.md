@@ -22,36 +22,51 @@ Design Progress:
 - [ ] Step 1.10: Generate screens in Stitch
 - [ ] Step 1.11: Present designs to user
 - [ ] Step 1.12: Iterate on feedback (if needed)
-- [ ] Step 1.13: Finalize approved success design
+- [ ] Step 1.13: Finalize approved success design (primary screen)
+- [ ] Step 1.13b: Design secondary screens (conditional) — per kept secondary: `kind: screen` → full primary loop (1.10–1.13); `kind: surface` → single-variant approve-or-edit loop
 - [ ] Step 1.14: Generate state designs for selected optional states only
-- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states (MANDATORY) — includes Material Symbols icons manifest (sub-step 5), `<img>` assets manifest (sub-step 6), and font manifest (sub-step 6b); all manifest-only — no XML/image/font downloads here
+- [ ] Step 1.15: Acquire HTML & Token Inventories for selected states + secondary screens (MANDATORY) — includes Material Symbols icons manifest (sub-step 5), `<img>` assets manifest (sub-step 6), and font manifest (sub-step 6b — global, success-only); all manifest-only — no XML/image/font downloads here
 - [ ] Step 1.16: Color, Typography & Motion Audit — reconciled against HTML inventories (MANDATORY)
 - [ ] Step 1.17: Generate Implementation Blueprint
 - [ ] Step 1.18: Update stitch-project.json
 - [ ] Step 1.19: User final approval
 ```
 
-> **Staged files (token efficiency — read each when you reach it, do NOT preload):** Steps 1.1–1.13 live in this file. Step 1.14 state designs → [phase-1-states.md](phase-1-states.md) (only when an optional state was selected in Step 1.7). "Save Design Description" + Steps 1.15–1.19 → [phase-1-finalize.md](phase-1-finalize.md) (always).
+> **Staged files (token efficiency — read each when you reach it, do NOT preload):** Steps 1.1–1.13b live in this file. Step 1.14 state designs → [phase-1-states.md](phase-1-states.md) (only when an optional state was selected in Step 1.7). "Save Design Description" + Steps 1.15–1.19 → [phase-1-finalize.md](phase-1-finalize.md) (always).
 
-> **Resume fast-path (StitchMode: stitch-resume):** if Phase 0 loaded a **non-null `successScreenId`** with `approved == false`, Steps 1.1–1.13 are already complete — the success design was user-approved and finalized in a prior session. Do **not** re-ask requirements or regenerate the success screen. Re-derive the state selections from the persisted `features[{featurename}].states` map (Step 1.7 already wrote it), then continue at Step 1.14: read [phase-1-states.md](phase-1-states.md) if any state is `true`, else go straight to [phase-1-finalize.md](phase-1-finalize.md). When writing "Save Design Description" in a resumed session, derive the description from the approved screenshot (`designs/{featurename}.png`) and the extracted HTML once Step 1.15 has run.
+> **Resume fast-path (StitchMode: stitch-resume):** if Phase 0 loaded a **non-null `successScreenId`** with `approved == false`, Steps 1.1–1.13 are already complete — the success design was user-approved and finalized in a prior session. Do **not** re-ask requirements or regenerate the success screen. Re-derive the state selections from the persisted `features[{featurename}].states` map (Step 1.7 already wrote it) **and the secondary screens from the persisted `features[{featurename}].secondaryScreens[]` array** (each carries its `kind`; Step 1.13b already wrote any that were approved; resume Step 1.13b only for secondaries accepted in Step 1.1 that have no entry yet). Then continue at Step 1.14: read [phase-1-states.md](phase-1-states.md) if any state is `true`, else go straight to [phase-1-finalize.md](phase-1-finalize.md). When writing "Save Design Description" in a resumed session, derive the description from the approved screenshot (`designs/{featurename}.png`) and the extracted HTML once Step 1.15 has run.
 
 ---
 
 ## Step 1.1: Gather Screen Requirements
 
-> **Scope**: This skill handles **one screen per invocation**. For multi-screen features, invoke `/ui-designer` once per screen.
+> **Scope**: This skill handles **one feature per invocation**. A feature is its **primary screen** plus zero or more **tightly-related secondary screens** — either an **overlay surface** (bottom sheet, dialog, modal, drawer, panel) **or a full sibling screen** (e.g. a profile screen + its edit screen) of the *same* feature. Design them together this pass. Genuinely **separate** features still split: one feature per invocation.
 
-### Screen Count Check (Fail Fast)
+### Screen Grouping Check
 
-**Before parsing requirements**, count distinct screens implied by the user's prompt, the spec, or the PRD. Indicators of multiple screens: explicit lists ("login and dashboard"), connectives ("then", "after that", "followed by"), or screen-name plurals.
+**Before parsing requirements**, identify the distinct screens implied by the user's prompt, the spec, or the PRD, and decide which belong to **this** feature versus a separate one. Indicators of multiple screens: explicit lists ("login and dashboard"), connectives ("then", "after that", "followed by"), or screen-name plurals.
 
-If **>1 screen** is detected, fail fast — do **not** silently scope down. Use `AskUserQuestion`:
+**Step 1 — count.** If exactly **1 screen** is detected, set it as the primary and proceed (no secondary screens, no grouping question).
 
-> "Detected {N} screens in your request: {comma-separated list}. `/ui-designer` handles one screen per invocation. Which would you like to design first?"
+**Step 2 — classify each additional screen** into one of three buckets — two are **kept in this feature** (`kind: surface` or `kind: screen`), one **splits off** (separate feature):
 
-Each option = one screen name (max 4; if more, show top 4 plus "Other"). Use the user's pick as the sole screen for this invocation. The remaining screens stay for subsequent `/ui-designer` runs.
+| Classify as… | `kind` | Indicators |
+|--------------|--------|-----------|
+| **Overlay surface** (keep) | `surface` | "bottom sheet", "sheet", "dialog", "modal", "popup", "drawer"; overlay phrasing ("opens a …", "shows a … sheet/dialog over the screen"); a filter/sort/options/confirm surface; no distinct nav destination of its own |
+| **Tightly-coupled full screen** (keep) | `screen` | a **full** screen that is **reached from the primary** (a detail, edit, or step-2 of the primary's flow — e.g. profile → edit-profile, list → item-detail), operates on the **same entity/data domain**, and would not be navigated to from anywhere else. It **is** a nav destination, but a *child* of this feature, not a standalone one |
+| **Separate feature** (split, later invocation) | — | a distinct destination on a **different data domain**; "then navigate to…" an unrelated area; its own top-level (tab) entry; a full screen that stands alone / is reached from many features |
 
-If exactly **1 screen** is detected, proceed.
+> The `surface` vs `screen` line: a **surface** floats over the primary (visibility flag + callback, no Route — Rule 10); a **screen** is a full screen with its **own Route + NavGraphBuilder entry**, pushed from the primary via a callback. The `screen` vs `separate-feature` line is the judgment call — **same entity + reached only from the primary → keep as `screen`; different domain or stands alone → split**. When unsure, lean on the user via Step 3.
+
+Assign each kept screen a **role** + short **label**: for `surface`, role ∈ `bottomsheet`/`dialog`/`modal`/`drawer`/`panel` (e.g. "Filter bottom sheet"); for `screen`, role = a short slug naming its job (`edit`, `detail`, `step2`) with a label (e.g. "Edit profile").
+
+**Step 3 — confirm the grouping (MANDATORY) via `AskUserQuestion`.** Present the proposed primary + each kept secondary (with its `kind` + role) for **this invocation**, and list any screens flagged as **separate features**. Let the user correct the grouping (Other / free text) — moving a screen between `screen` and separate-feature is the most likely correction, so make it easy. Example framing:
+
+> "I read this as one feature: primary **{primary}** + {kind} **{label}**. Separate features I'd do in their own runs: {list, or 'none'}. Design these together?"
+
+**Step 4 — handle separate features.** If ≥1 separate feature was detected (and the user confirms it's separate), ask which **feature** to design first (`AskUserQuestion`; max 4 options + Other). Use the chosen feature (its primary + kept secondaries) for this invocation; the others stay for subsequent `/ui-designer` runs.
+
+Carry the confirmed **secondary screens** (each with `kind` + `role` + `label`) in working context — Step 1.13b designs them after the primary success screen is approved, and Steps 1.15–1.18 take them through the rest of the pipeline.
 
 ### Determine Screen Details
 
@@ -555,11 +570,47 @@ This is optional but recommended for clarity.
 
 ---
 
+## Step 1.13b: Design Secondary Screens (Conditional)
+
+**Run only when Step 1.1 accepted one or more secondary screens for this feature** (`kind: surface` or `kind: screen`). If none were accepted, skip straight to the "Next" section. Run this **after** the primary success screen is finalized (Step 1.13).
+
+For **each** accepted secondary screen (in the order confirmed in Step 1.1), run a generate + iterate loop whose **depth matches the kind** — a full child screen gets the **same treatment as the primary**:
+
+- **`kind: screen`** (a full sibling screen) → run the **full primary loop**, i.e. Steps **1.10–1.13** as written (variants + "Approve / Edit / More variants / Regenerate", max 10 iterations, then finalize). It is a full screen, so it earns the same variant-and-approve flow the primary screen gets — not the lighter single-variant path.
+- **`kind: surface`** (an overlay) → run the lighter **single-variant generate + approve-or-edit loop**, the **same pattern as the empty-state loop** in [phase-1-states.md](phase-1-states.md) (Step 1.14 → "Approve-or-Edit Loop").
+
+Do not duplicate either procedure here; follow the chosen one with these substitutions:
+
+- **Resume check**: if `.claude/docs/{featurename}/designs/{featurename}_{role}.png` already exists AND a matching `secondaryScreens[]` entry (same `role`+`label`) has a non-null `screenId`, skip generation for that screen — reuse the stored screen. Otherwise generate.
+- **Initial generation**: always start the screen fresh with `mcp__stitch__generate_screen_from_text`, **not** `edit_screens` on the success screen — each secondary is its own Stitch screen. Use `projectId` from `stitch-project.json.projectId`, `modelId: GEMINI_3_FLASH`, `deviceType: MOBILE`, and record/diff the screen list via the **Screen Sync Procedure** (Step 1.10) exactly as for the primary. (Iteration after that follows the chosen loop: `kind: screen` may use `generate_variants`/`edit_screens` per Steps 1.11–1.12; `kind: surface` uses `edit_screens` on its own screen per the empty-state Approve-or-Edit loop. Neither ever edits the success screen.)
+- **Prompt — branch on `kind`**:
+  - **`kind: surface`** — an overlay sized to its content, **not** a full screen. The **Shared-Conventions chrome** (top app bar, bottom navigation) usually does **NOT** apply — do not paste it. Describe per role: a `bottomsheet` as a rounded-top sheet anchored to the bottom with a drag handle; a `dialog`/`modal` as a centered rounded card with a scrim; a `drawer` as an edge-anchored panel.
+  - **`kind: screen`** — a **full screen**, same as the primary. The **Shared-Conventions chrome applies** — paste the Step 1.5 Shared Conventions block so its top app bar / background / nav match the primary (it usually shows a back arrow returning to the primary). Describe its full layout.
+  - **Both**: reuse the **same M3 color/typography** (Defined + Proposed roles from Step 1.9 / the primary's prompt) so the secondary matches the approved palette.
+- **Screenshot naming**: `{featurename}_{role}_v{N}.png` during iteration; on approval, rename the chosen one to `{featurename}_{role}.png` and delete the remaining `{featurename}_{role}_v*.png`.
+- **Iteration limit**: max 10 per secondary screen (same cap as the primary and the empty state).
+
+**Persist each approved secondary** — append (or update the matching) entry in `stitch-project.json.features[{featurename}].secondaryScreens[]`:
+
+```
+{ "kind": "{surface|screen}",
+  "screenId": "{approved screenId}",
+  "screenName": "projects/{projectId}/screens/{approved screenId}",
+  "role": "{role}", "label": "{label}",
+  "screenshot": "designs/{featurename}_{role}.png",
+  "approved": true,
+  "generatedAt": "{ISO timestamp}" }
+```
+
+Leave `htmlPath` / `tokensPath` / `dimensions` unset here — Step 1.15 fills them when it extracts the HTML + tokens. Update `features[{featurename}].updatedAt` and write the file. (Ask the user to clean up old Stitch variant screens, same note as Step 1.13.)
+
+---
+
 ## Next: Steps 1.14–1.19 (staged files — read when you reach this point, not before)
 
-Step 1.13 complete. Continue:
+Steps 1.13 and 1.13b complete. Continue:
 
 1. **If any optional state was selected in Step 1.7** (`needsLoading` / `needsFailed` / `needsEmpty`) → Read [phase-1-states.md](phase-1-states.md) and run Step 1.14's state designs now.
 2. **Then — always** → Read [phase-1-finalize.md](phase-1-finalize.md) and run "Save Design Description" (the always-run closer of Step 1.14) plus Steps 1.15–1.19. When no optional state was selected, skip phase-1-states.md entirely and go straight here.
 
-> **Context checkpoint (optional):** everything needed from here on is persisted — `stitch-project.json` (`successScreenId`, `states`, `emptyScreenId`) and the screenshots under `designs/`. If this session is context-heavy (many edit iterations, large designs), offer the user: run `/clear`, then re-invoke `/ui-designer {featurename}` — Phase 0 resumes (`StitchMode: stitch-resume`) and the **Resume fast-path** at the top of this file continues at Step 1.14 losslessly, in a fresh context window.
+> **Context checkpoint (optional):** everything needed from here on is persisted — `stitch-project.json` (`successScreenId`, `states`, `emptyScreenId`, `secondaryScreens[]`) and the screenshots under `designs/`. If this session is context-heavy (many edit iterations, large designs), offer the user: run `/clear`, then re-invoke `/ui-designer {featurename}` — Phase 0 resumes (`StitchMode: stitch-resume`) and the **Resume fast-path** at the top of this file continues at Step 1.14 losslessly, in a fresh context window.

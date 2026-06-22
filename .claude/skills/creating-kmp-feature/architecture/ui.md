@@ -216,6 +216,7 @@ fun FeatureScreenRoot(
 - Every sub-component reachable from `{Feature}Content` lives in its own file under `components/`, no matter how small.
 - A component's private helpers and private sub-composables stay in the **same file** as that component — they are not promoted to new files.
 - The only composables that may live in `{Feature}Screen.kt` are the allowlist entries (see "Screen Composables" above): `{Feature}Screen`, `{Feature}ScreenRoot`, and the optional `EmptyContent` shell. Loading/Failed route to the shared `AppLoadingState`/`AppErrorState` (`{PKG_PREFIX}.designsystem.app`) — never private shells.
+- **Secondary screens (design-aware):** the allowlist is **per `*Screen.kt` file**. A `kind: screen` secondary (e.g. profile + edit-profile) is a full child screen with its **own** `{Feature}{Role}Screen.kt` (own allowlist) + its own `{Feature}{Role}Route` registered in the **same** `NavGraphBuilder.{featurename}()` extension, reached via a hoisted callback (Rule 10). A `kind: surface` secondary (bottom sheet/dialog) renders its host X-component from `{Feature}ScreenRoot` (gated by a `{Feature}UiModel` visibility field) with content under `components/` — **no** Route, no allowlist entry. Full rule: `_shared/patterns.md` → "Secondary Screens within a Feature".
 
 **Pattern**:
 - Simple composable functions

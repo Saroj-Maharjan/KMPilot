@@ -26,6 +26,8 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 | 5 *(optional)* | Bottom-bar tab | `App.kt` + `navigation/TopLevelDestination.kt` | `TopLevelDestination` enum entry — **only** if the feature is a top-level tab |
 
+> **Secondary screens don't add an integration point.** A feature with `kind: screen` secondaries (e.g. profile + edit-profile) registers **extra child routes inside its own `NavGraphBuilder.{featurename}()` extension** (written by `ui-layer-agent`). The nav host still calls `{featurename}(...)` once at Point 4 — you register the feature extension, not each child route. `kind: surface` secondaries are overlays with no Route at all. Pass through whatever `onXClick` callbacks the feature's nav extension exposes for its child screens.
+
 ## Workflow
 
 1. Create DI module (`di/{Feature}Modules.kt` exposing `val {featurename}Module`)

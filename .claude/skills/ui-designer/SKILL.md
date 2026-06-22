@@ -18,12 +18,12 @@ After `ui-designer` completes, the user can invoke `/creating-kmp-feature` (new 
 
 **Invocation modes:**
 - `/ui-designer` (no args) — explicitly run Project Init for the repo
-- `/ui-designer {featurename}` — design that feature's screen (Project Init auto-runs if needed)
+- `/ui-designer {featurename}` — design that **feature** (its primary screen **plus any tightly-related secondary screens** — an overlay surface like a bottom sheet/dialog, or a full sibling screen like an edit screen — designed together in the same pass; Project Init auto-runs if needed)
 
 ## Quick Start (first feature)
 
 1. **(First-time only)** Run `/ui-designer` with no arguments to initialize the shared Stitch project + design system from `XTheme.kt`. If you skip this, any future `/ui-designer {featurename}` call will auto-bootstrap.
-2. Run `/ui-designer {featurename}` (e.g., `/ui-designer dashboard`) — one screen per invocation. Iterate via approve/edit. Produces a blueprint at `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`.
+2. Run `/ui-designer {featurename}` (e.g., `/ui-designer dashboard`) — **one feature per invocation** (the primary screen + any tightly-related secondary screens: an overlay surface like a bottom sheet/dialog, or a full sibling screen like an edit screen). Iterate via approve/edit. Produces a blueprint at `.claude/docs/{featurename}/designs/{featurename}_blueprint.md`.
 3. Run `/creating-kmp-feature {featurename}` (new) or `/modifying-kmp-feature {featurename}` (existing) to implement — they auto-detect the blueprint.
 4. Run `/verify-ui {featurename}` to audit code against the design.
 
@@ -102,6 +102,7 @@ See: [Phase 1: Design](phases/phase-1-design.md) — staged: Step 1.14 continues
     - **Empty** — dual gate: user opt-in **AND** `isListBased == true` (determined in Step 1.1). When `isListBased == false`, the Empty option is not even offered. When both gates pass, design per-feature via a single approve-or-edit loop.
     - **Skipped states** are omitted everywhere: no token inventory, no implementation reference. Loading/Failed sections in the blueprint show an explicit "Skipped" marker; Empty is omitted entirely.
     - All shared and empty designs use the same single approve-or-edit loop pattern (max 10 iterations).
+12. **One feature per invocation — primary + secondary screens** — `/ui-designer {featurename}` designs a whole **feature**, not a single screen. A feature is its primary success screen **plus zero or more tightly-related secondary screens**, each either an **overlay surface** (`kind: surface` — bottom sheet, dialog, modal, drawer, panel) **or a full sibling screen** (`kind: screen` — e.g. profile + edit-profile: a child route reached from the primary, same data/domain). Detected screens are classified (kept `surface`/`screen` vs separate feature) and the grouping is **confirmed with the user** before generating (Phase 1 Step 1.1). Genuinely separate features still split — one feature per invocation. Each secondary goes through the **full pipeline** (generate → approve → HTML/token extract → blueprint section) and is persisted under the same `features[{featurename}]` object in a `secondaryScreens[]` array (each entry carries its `kind`; empty/absent when the feature has none — the common case, which behaves exactly as before).
 
 ## Stitch MCP Reference
 
@@ -121,7 +122,7 @@ See: [Stitch MCP Reference](references/stitch-guide.md)
 
 ## Completion Report
 
-Emit one screenshot row per **selected** state only. Always show Success. Loading/Failed/Empty rows appear only when `stitch-project.json.features[{featurename}].states.{state} == true`.
+Emit one screenshot row per **selected** state only. Always show Success. Loading/Failed/Empty rows appear only when `stitch-project.json.features[{featurename}].states.{state} == true`. Append one additional row per **secondary screen** in `secondaryScreens[]` (label + role + kind + screenshot).
 
 ```
 ## UI Designer Complete: {FeatureName}

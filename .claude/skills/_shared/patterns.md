@@ -392,6 +392,22 @@ The optional `EmptyContent` shell (3) is present only when the design calls for 
 
 **Enforcement**: any top-level `@Composable fun` defined in `{Feature}Screen.kt` outside the 3-name allowlist (`{Feature}Screen`, `{Feature}ScreenRoot`, optional `EmptyContent`) is a violation — **except** for `@Preview`-annotated composables (see "Previews" below). A private `LoadingContent`/`FailedContent` is itself a violation: route to the shared `AppLoadingState`/`AppErrorState` instead. The reviewer / lint check is a simple grep for `@Composable fun` at file scope in `Screen.kt` against the allowlist; `@Preview`-annotated entries are exempt.
 
+### Secondary Screens within a Feature
+
+A feature may own — besides its primary screen — one or more **secondary screens**, designed together in a single `/ui-designer` invocation (one feature per invocation) and recorded in `stitch-project.json.features[{featurename}].secondaryScreens[]`, each tagged with a **`kind`**. They are part of the **same feature module** — features still never depend on other features, and the **4 Integration Points are unchanged** (a secondary screen is internal to the feature, not a new module or nav-host registration).
+
+**`kind: surface`** — an **overlay** (bottom sheet, dialog, modal, drawer, panel):
+- Rendered from `{Feature}ScreenRoot` via the role's host X-component (`bottomsheet` → `XModalBottomSheet`, `dialog`/`modal` → `XDialog`/`XAlertDialog`, `drawer` → `XModalDrawerSheet`, `panel` → inline `XSurface`).
+- Visibility is a plain field on `{Feature}UiModel` (e.g. `val {role}Visible: Boolean = false`); open/close via **callbacks** hoisted to the ViewModel (Rule 10). **Not** a navigation destination — no Route.
+- Its content composable is its own file under `presentation/ui/components/`. It adds **no** entry to the `Screen.kt` allowlist (the host is invoked inside `ScreenRoot`/`Content`, not declared at `Screen.kt` file scope).
+
+**`kind: screen`** — a **full sibling/child screen** of the same feature (e.g. profile → edit-profile):
+- A complete screen mirroring the primary's structure: its **own** `{Feature}{Role}Screen.kt` (with its **own** 3-name allowlist: `{Feature}{Role}Screen` + `{Feature}{Role}ScreenRoot` [+ optional `EmptyContent`]) and its own `components/` files. Uses its **own `XScreen`** (Rule 13 — never a nested Scaffold).
+- Gets its **own `{Feature}{Role}Route`** and a `composable<{Feature}{Role}Route> { … }` registered **inside the same `NavGraphBuilder.{featurename}()` extension** as the primary (one feature nav extension, multiple child routes). The primary navigates to it via a **hoisted callback** (Rule 10 — e.g. `onEditClick`), wired in the feature's nav graph; screens never receive a `navController`.
+- It is a **child route of this feature**, not a separate feature and not Integration Point 5 (that's only for top-level bottom-bar tabs).
+
+**Allowlist scope**: the `Screen.kt` allowlist is enforced **per `*Screen.kt` file** — each child screen's `{Feature}{Role}Screen.kt` carries its own independent 3-name allowlist. `Naming`: child screen types follow the primary's conventions with the role inserted — `{Feature}{Role}Screen`, `{Feature}{Role}ScreenRoot`, `{Feature}{Role}Route`, `NavGraphBuilder.{featurename}{role}()` (or extend the single `{featurename}()` extension with the extra `composable<…>`).
+
 **Picking the screen shape**: see [architecture/ui.md → "Screen Shapes"](../creating-kmp-feature/architecture/ui.md) — Shape A (data-fetch), Shape B (form), Shape C (native-view host, Rule 14). Shape choice affects which **optional** slots are present in `Screen.kt`, but never changes the file layout under `components/`. Deviation from Shape A must be recorded in the feature's spec under Design Decisions.
 
 **Fragment-composable rule**: a component that emits ≥2 top-level siblings MUST own its enclosing `Column`/`Row` — never emit bare siblings and rely on the caller's layout. A `Box` caller z-stacks all children; a fragment composable passed to a `Box` merges all rows into one. Apply `modifier` to the wrapping `Column`, not to the first child. Full rule + grep hint: [architecture/ui.md → "Fragment-composable rule"](../creating-kmp-feature/architecture/ui.md). A composable emitting ≥2 top-level siblings must own its enclosing `Column`/`Row` (Box z-stacks — never use Box as a multi-child container wrapper).

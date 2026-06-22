@@ -26,6 +26,7 @@ Implements the UI/presentation layer for Kotlin Multiplatform features.
 6. Implement Screen + ScreenRoot (BOTH required) — `ScreenRoot` takes `uiModel: {Feature}UiModel` only
 7. Handle all 4 UI states (Uninitialized/Loading/Success/Failed) per async slot
 8. Implement Navigation with callbacks
+8a. **Secondary screens (design-aware — only when the blueprint has a `## Component Tree → Secondary Screens` section / the skill passes `secondaryScreens[]`)**: implement each per its `kind` (see `@../../skills/_shared/patterns.md` → "Secondary Screens within a Feature"). **`surface`** → render the role's host X-component (`XModalBottomSheet`/`XDialog`/`XAlertDialog`/`XModalDrawerSheet`/inline `XSurface`) from `{Feature}ScreenRoot`, gated by a `{Feature}UiModel` visibility field (e.g. `val {role}Visible: Boolean = false`), open/close via callbacks hoisted to the ViewModel (Rule 10); content composable in its own `components/` file; **no Route**, no new `Screen.kt` allowlist entry. **`screen`** → a full child screen: its **own** `{Feature}{Role}Screen.kt` (own 3-name allowlist) + `components/`, its **own** `{Feature}{Role}Route`, and a `composable<{Feature}{Role}Route>` added **inside the same `NavGraphBuilder.{featurename}()` extension** as the primary; the primary navigates via a hoisted callback (e.g. `onEditClick`) — screens never take `navController`. It is a **child route of this feature**, not a separate feature.
 8b. **Motion (design-aware)**: if the blueprint has a `## Motion` table, implement each row in a `motion/` file — feature-specific rows → `presentation/ui/motion/{Feature}Motion.kt`; generic rows → call the DS `core/designsystem/.../motion/` primitives (already created by the skill). Gate every kept row with `rememberReducedMotion()`; never inline motion in `Screen.kt`/components; never implement interaction/hover motion. See the Motion section below + `@../../skills/_shared/motion.md`.
 9. Self-check (Rule 11): grep `import .*\.presentation\.` is zero in any file you generated under `data/`; no `{Feature}UiState.kt` file exists
 10. Self-check (Rule 12): grep your composables for `text = "`, `contentDescription = "`, `label = "` followed by a literal — every hit must be `stringResource(...)` (allowed exceptions: control sentinels, single-glyph symbols, repository data). `composeResources/values/strings.xml` exists and every referenced key is present.
@@ -68,6 +69,8 @@ Everything else — including `{Feature}Content` and **every** sub-component rea
 
 `{Feature}Content` is **never** inlined into `Screen.kt`. Create `presentation/ui/components/{Feature}Content.kt` as part of the standard file set.
 
+**Allowlist is per `*Screen.kt` file.** A `kind: screen` secondary (step 8a) has its **own** `{Feature}{Role}Screen.kt` with its **own** independent 3-name allowlist (`{Feature}{Role}Screen`, `{Feature}{Role}ScreenRoot`, optional `EmptyContent`). A `kind: surface` secondary adds **no** allowlist entry — its host is invoked inside `{Feature}ScreenRoot`/`{Feature}Content`, and its content composable lives under `components/`.
+
 ### Files Created (standard data-fetching feature)
 
 - `presentation/{Feature}UiModel.kt`
@@ -77,6 +80,7 @@ Everything else — including `{Feature}Content` and **every** sub-component rea
 - `presentation/ui/components/{Feature}Content.kt`
 - `presentation/ui/components/{SubComponent}.kt` × N (one per sub-component)
 - `presentation/navigation/{Feature}Navigation.kt`
+- *(design-aware, per `secondaryScreens[]` entry)* — `surface`: `presentation/ui/components/{Role}Sheet.kt` (or dialog/etc.) + a `{Feature}UiModel` visibility field. `screen`: `presentation/ui/{Feature}{Role}Screen.kt` (own allowlist) + its `components/` + a `{Feature}{Role}Route` and `composable<…>` added to `{Feature}Navigation.kt`'s single `NavGraphBuilder.{featurename}()` extension.
 
 ## Native-view interop (Shape C, Rule 14)
 

@@ -54,7 +54,8 @@ Read `.claude/docs/_project/stitch-project.json` to load:
 - `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`)
 - Per-feature screen IDs (`features[featurename].successScreenId`, `.emptyScreenId`)
 - **Per-feature state selections** (`features[featurename].states = { loading, failed, empty }`). False flags mean the state was skipped at design time and is **not audited** below.
-- **Backward compatibility**: if `states` is absent on a legacy feature entry, derive it from observable state — `{ loading: true, failed: true, empty: (emptyScreenId != null) }`. Pre-optional-states features had loading/failed always present and empty only when an `emptyScreenId` was recorded.
+- **Secondary screens** (`features[featurename].secondaryScreens[]` — each `{ kind, screenId, role, label, htmlPath, tokensPath, dimensions }`, written by `/ui-designer` Step 1.13b). Each is an additional **audit unit** keyed by its `role`; `kind: surface` = an overlay (bottom sheet / dialog / modal / drawer / panel), `kind: screen` = a full sibling screen of the same feature (own Route, reached via callback). Empty/absent → the feature has none; audit nothing extra.
+- **Backward compatibility**: if `states` is absent on a legacy feature entry, derive it from observable state — `{ loading: true, failed: true, empty: (emptyScreenId != null) }`. Pre-optional-states features had loading/failed always present and empty only when an `emptyScreenId` was recorded. If `secondaryScreens` is absent, the feature has no secondary screens.
 
 If any prerequisite is missing, stop and inform the user.
 
@@ -64,39 +65,39 @@ If any prerequisite is missing, stop and inform the user.
 
 ## Step 2: Acquire HTML (reuse or download)
 
-`/ui-designer` Step 1.15 persists per-state HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html`. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
+`/ui-designer` Steps 1.15 / 1.13b persist per-unit HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{key}.html`, where **`{key}`** is the state name (`success`/`loading`/`failed`/`empty`) for states and the **`role`** for each secondary screen. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
-2. Build the **audit state list**: always include `success`. Include `loading`/`failed`/`empty` **only when `states.{state} == true`** (per Step 1's derived flags). Skipped states are not acquired and not audited.
-3. For each state in the audit list:
-   - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{state}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call. Note: `loading`/`failed` HTML lives in `.claude/docs/_shared/designs/extracted/stitch_{state}.html` (shared) — check there for those states.
+2. Build the **audit unit list**: always include `success`; include `loading`/`failed`/`empty` **only when `states.{state} == true`** (per Step 1's derived flags); include **one unit per `secondaryScreens[]` entry, keyed by its `role`**. Skipped states are not acquired and not audited.
+3. For each unit (`{key}`) in the audit list:
+   - **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/stitch_{key}.html` exists and is non-empty (`wc -c` > 0), use it as-is. Skip the Stitch call. Note: `loading`/`failed` HTML lives in `.claude/docs/_shared/designs/extracted/stitch_{key}.html` (shared) — check there for those states.
    - **Download path** (only when the file is missing or empty):
 
      **For loading and failed states — screenId lookup:**
      - Use `stitch-project.json.sharedStateScreens.{state}.screenId` and `stitch-project.json.projectId`
 
-     **For success and empty states — screenId lookup:**
-     - Use `stitch-project.json.features[featurename].successScreenId` (or `emptyScreenId`) and `stitch-project.json.projectId`
+     **For success, empty, and secondary screens — screenId lookup:**
+     - Use `stitch-project.json.features[featurename].successScreenId` (or `emptyScreenId`, or the matching `secondaryScreens[i].screenId` whose `role == {key}`) and `stitch-project.json.projectId`
 
      Call `mcp__stitch__get_screen` with all 3 required params.
-     Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{state}.html {htmlCode.downloadUrl}`
+     Download: `curl -sL -o .claude/docs/{featurename}/designs/extracted/stitch_{key}.html {htmlCode.downloadUrl}`
      Verify with `wc -c …` — if 0 bytes, call `mcp__stitch__get_screen` again to get a fresh URL and retry the curl once.
-   - Download states **sequentially** (concurrent downloads can race the URL's single-use semantics).
+   - Download units **sequentially** (concurrent downloads can race the URL's single-use semantics).
 
 ---
 
 ## Step 3: Token Extraction
 
-For each state **in the audit state list from Step 2** (skipped states are not extracted), reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
+For each unit (`{key}` = state name or secondary-surface `role`) **in the audit unit list from Step 2** (skipped states are not extracted), reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
 
-1. **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/tokens_{state}.md` exists and is non-empty, use it as-is.
+1. **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/tokens_{key}.md` exists and is non-empty, use it as-is.
 2. **Re-extract path** (only when the inventory is missing or you re-downloaded the HTML in Step 2):
    ```bash
    python3 .claude/skills/_shared/extract_tokens.py \
-     .claude/docs/{featurename}/designs/extracted/stitch_{state}.html \
-     > .claude/docs/{featurename}/designs/extracted/tokens_{state}.md
+     .claude/docs/{featurename}/designs/extracted/stitch_{key}.html \
+     > .claude/docs/{featurename}/designs/extracted/tokens_{key}.md
    ```
-3. Read each `tokens_{state}.md`.
+3. Read each `tokens_{key}.md`.
 4. **Do not read the raw HTML.** Use only the script output.
 5. Trust the auto-converted dp/sp/color values directly.
 
@@ -244,12 +245,29 @@ Emit blocks in the Step 5.2 format. Silence = OK.
 
 ### 5.5 Loading, Failed, and Empty states — brief checklist
 
-Run this subsection **only for non-success states present in the audit state list** (Step 2). Skipped states are omitted from the audit report entirely.
+Run this subsection **only for non-success states present in the audit unit list** (Step 2). Skipped states are omitted from the audit report entirely. (Secondary surfaces are audited separately in 5.5b, not here.)
 
 These states are typically trivial (a spinner, an error illustration, or an empty-state placeholder). **Loading/Failed are rendered by the shared `{PKG_PREFIX}.designsystem.app.AppLoadingState`/`AppErrorState` (one per project, not per-feature)** — audit that shared component against the shared `_shared/designs/` inventory once; the feature only passes copy (`error_title`/`error_message`) + an optional secondary action. Empty is per-feature. Inspect the inventory and code for each present state:
 
 - If everything matches → write `### {State}: no mismatches.` and stop.
 - If there are mismatches → emit them as Step 5.2 blocks under a `### {State}` heading.
+
+No "OK" bullets — silence means OK.
+
+### 5.5b Secondary screens — full audit (one per `secondaryScreens[]` entry)
+
+Run this subsection **once per secondary screen in the audit unit list** (Step 2). A secondary screen — whether `kind: surface` (bottom sheet / dialog / modal / drawer / panel) or `kind: screen` (a full sibling screen like edit-profile) — has its own content tree, so audit it with the **full Step 5.2 + 5.3 + 5.4 machinery**, not the brief checklist:
+
+1. **Locate the implementing code**, branching on the entry's `kind`:
+   - **`surface`** — presented by its role's X-component (`bottomsheet` → `XModalBottomSheet`, `dialog`/`modal` → `XDialog`/`XAlertDialog`, `drawer` → `XModalDrawerSheet`, `panel` → inline `XSurface`), gated by a visibility flag on `{Feature}UiModel` and triggered by a callback on the primary screen (Rule 10 — **not** a nav destination). Find the composable(s) under `presentation/ui/components/` that build its content.
+   - **`screen`** — a full sibling screen: its own `{Feature}{Role}Screen` + `{Feature}{Role}ScreenRoot` using `XScreen` (Rule 13), its own `{Feature}{Role}Route` + `NavGraphBuilder.{featurename}{role}()` entry in `presentation/navigation/`, reached from the primary via a **callback** (Rule 10 — no `navController` passed to screens). Find that screen + route.
+2. **Convert and compare** every element in `tokens_{role}.md` against that code, exactly as Step 5.2 does for Success (spacing, color role, corner radius, type-scale role, icon size, border). Run the 5.3 Trap Checklist and the 5.4 Component-Overrides check against the secondary's code too.
+3. **Flag structural violations** (CRITICAL):
+   - **`surface`**: wrong host (e.g. a sheet rendered as a full `XScreen`, or a second nested `Scaffold` — Rule 13).
+   - **`screen`**: no own `Route`/`NavGraphBuilder` entry (inlined into the primary instead of a real child route), a nested `Scaffold` instead of its own `XScreen` (Rule 13), or navigation wired via a `navController` passed into the screen instead of a hoisted callback (Rule 10).
+
+- If everything matches → write `### {Label} ({role}): no mismatches.`
+- If there are mismatches → emit them as Step 5.2 blocks under a `### {Label} ({role})` heading.
 
 No "OK" bullets — silence means OK.
 
@@ -261,7 +279,7 @@ No "OK" bullets — silence means OK.
 | **Minor** | Spacing 1–3dp off, shadow omitted, letter-spacing off, **raw `fontSize`/`fontWeight` instead of a type-scale role when the value is otherwise correct (5.4b)**, minor decorative detail, design-system-authoritative trap (centre-aligned title, 90% dialog width), **any manifest-audit MINOR from 5.7 or 5.8**, **any Motion Audit finding from 5.10** (presence-only — missing row, family mismatch, inline placement, missing reduced-motion gate) | Report; fix if requested |
 | **Data-only** | Different mock data text/values | Ignore |
 
-This is a **reference table only**. Apply these labels inline as you produce mismatch blocks in 5.2–5.5 and 5.7–5.8. The actual save happens in 5.9 (after all audit sub-sections complete).
+This is a **reference table only**. Apply these labels inline as you produce mismatch blocks in 5.2–5.5b and 5.7–5.8. The actual save happens in 5.9 (after all audit sub-sections complete).
 
 ### 5.7 Icons Manifest Audit
 
@@ -501,6 +519,7 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 
 ### Token Audit
 - Visual elements audited: {N}
+- Audit units: success{, loading/failed/empty when selected}{, one per secondary screen — "label (role) — kind"}
 - Critical mismatches: {N}
 - Minor mismatches: {N}
 
@@ -519,7 +538,7 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 ### X-Components Compliance
 - Material3 violations: {N} ({PASS if 0, FAIL otherwise})
 
-{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 / 5.7 / 5.8 / 5.10 — only the blocks, no OK rows.}
+{Mismatch blocks from Step 5.2 / 5.3 / 5.4 / 5.5 / 5.5b / 5.7 / 5.8 / 5.10 — only the blocks, no OK rows.}
 
 {Compliance violations table (if any).}
 ```
@@ -584,11 +603,12 @@ This skill does not invoke `/modifying-kmp-feature` — the user controls the pi
 ## Verify UI Complete: {FeatureName}
 
 ### Token Audit Results
-| State | Critical | Minor | Status |
-|-------|----------|-------|--------|
+| Unit | Critical | Minor | Status |
+|------|----------|-------|--------|
 | Success | {N} | {N} | {PASS/FAIL} |
 | Loading | {N} | {N} | {PASS/FAIL} |
 | Failed | {N} | {N} | {PASS/FAIL} |
+| {Label} ({role}) | {N} | {N} | {PASS/FAIL} |  ← one row per secondary screen (5.5b)
 
 ### Asset Manifest Audit
 | Manifest | Critical | Minor | Status |

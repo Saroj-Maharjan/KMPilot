@@ -76,6 +76,24 @@ Token inventory: `.claude/docs/_shared/designs/extracted/tokens_failed.md`
 
 > Omit this entire section when `states.empty == false`. Empty is a content variant, not a Rule-4 UI state, so no "Skipped" placeholder is emitted.
 
+### Secondary Screens
+
+> Emit **one subsection per `secondaryScreens[]` entry** (Step 1.13b), branching on its `kind`. Omit this whole section when the feature has none. Both kinds reuse the feature's M3 color/type roles (the Color/Typography audits already cover their tokens) and decompose their content by the same Decomposition Rules — one file per component under `presentation/ui/components/`.
+
+**`kind: surface`** — an overlay of the same screen.
+
+#### {Label} ({role}) — surface
+- Presentation: **{X-component for the role}** — `bottomsheet` → `XModalBottomSheet`; `dialog`/`modal` → `XDialog` / `XAlertDialog`; `drawer` → `XModalDrawerSheet`; `panel` → inline `XSurface`. Driven by a visibility flag on `{Feature}UiModel` (e.g. `val {role}Visible: Boolean`), toggled by a callback on the primary screen (the trigger — note which primary element opens it). **Not** a nav destination (Rule 10: callbacks, not navigation).
+  - content: **[surface content tree]**
+
+**`kind: screen`** — a **full sibling screen** of the same feature (e.g. profile → edit-profile).
+
+#### {Label} ({role}) — screen
+- A full screen built like the primary: its own `{Feature}{Role}Screen` + `{Feature}{Role}ScreenRoot` using `XScreen(topBar = XTopAppBar(back arrow → primary), …)` (Rule 13 — its own `XScreen`, **never** a nested Scaffold). It gets its **own `{Feature}{Role}Route`** + `NavGraphBuilder.{featurename}{role}()` entry in the feature's `navigation/`, and the primary pushes to it via a **callback** (Rule 10 — e.g. `onEditClick`), wired in the feature's nav graph (no `navController` passed to screens). It may share the feature's ViewModel or have its own, per data flow.
+  - content: **[full-screen content tree]** (topBar + body + optional bottomBar CTA, exactly like the primary's Component Tree)
+
+> A `screen` is a **child route inside this feature**, not a separate feature — it shares the feature's data/domain and is reached only from the primary.
+
 ## String Inventory
 
 > Every user-facing text node in the design → a proposed string-resource key (Rule 12). The implementer creates `composeResources/values/strings.xml` from this table and references the keys via `stringResource(Res.string.*)`. **Exclude**: repository-supplied data (names, dates, tickers), single-glyph symbols (`$`, `₿`, `%`, `✓`), and control sentinels. Key naming: `{area}_{purpose}` snake_case (suffix `_template` for format strings, `cd_` for content descriptions, `section_` for headers, `status_` for badges).
@@ -210,16 +228,18 @@ Example annotation in the blueprint component tree:
 > **Execution discipline (token efficiency — does not change the output):** read **all** input files listed below in **one batched response** (parallel `Read` calls); produce the blueprint with **exactly one `Write`**; apply every later correction (verification failure, manifest gap, user tweak) with `Edit` on the affected section — never rewrite the whole file.
 
 Feed this prompt with:
-1. Raw HTML content for **selected states only** (labeled by state) — read `features[featurename].states` to know which states are selected:
+1. Raw HTML content for **selected states + every secondary screen** (labeled by state / `{role}`) — read `features[featurename].states` for selected states and `features[featurename].secondaryScreens[]` for secondary screens:
    - success: `.claude/docs/{featurename}/designs/extracted/stitch_success.html` (always)
    - loading: `.claude/docs/_shared/designs/extracted/stitch_loading.html` **(shared state — include only if `states.loading == true`)**
    - failed: `.claude/docs/_shared/designs/extracted/stitch_failed.html` **(shared state — include only if `states.failed == true`)**
    - empty: `.claude/docs/{featurename}/designs/extracted/stitch_empty.html` (include only if `states.empty == true`)
-2. **Token inventories** from `extract_tokens.py` for the same selected states (labeled by state) — authoritative for already-converted classes
+   - secondary screens: `.claude/docs/{featurename}/designs/extracted/stitch_{role}.html` (one per `secondaryScreens[]` entry)
+2. **Token inventories** from `extract_tokens.py` for the same selected states **and secondary screens** (labeled by state / `{role}`) — authoritative for already-converted classes
    - success: `.claude/docs/{featurename}/designs/extracted/tokens_success.md` (always)
    - loading: `.claude/docs/_shared/designs/extracted/tokens_loading.md` **(shared — only if `states.loading == true`)**
    - failed: `.claude/docs/_shared/designs/extracted/tokens_failed.md` **(shared — only if `states.failed == true`)**
    - empty: `.claude/docs/{featurename}/designs/extracted/tokens_empty.md` (only if `states.empty == true`)
+   - secondary screens: `.claude/docs/{featurename}/designs/extracted/tokens_{role}.md` (one per `secondaryScreens[]` entry)
 3. Icons manifest at `.claude/docs/{featurename}/designs/extracted/icons.json` (from Phase 1 Step 1.15 sub-step 5, written in manifest-only mode by `/ui-designer`) — authoritative for every Material Symbols `<span>` in the design; resolves each to its predicted drawable path and the exact Compose `res_reference` the blueprint must emit. Every entry's `download_status` is `pending` at design time; implementation skills will flip it to `downloaded` when they materialize the file.
 3b. Images manifest at `.claude/docs/{featurename}/designs/extracted/images.json` (from Phase 1 Step 1.15 sub-step 6, also manifest-only) — authoritative for every `<img>` tag. Each entry carries a **`delivery`** field that decides how the blueprint renders it:
    - **`delivery: "bundled"`** (static design asset — hero, decorative background, logo) → `Image(painter = painterResource({res_reference}))`. The raster is downloaded + bundled by the implementation skill.
@@ -341,10 +361,10 @@ RULES:
     - **Dropdown trigger**: A row with text + `expand_more`/`chevron_down` Material icon →
       `XExposedDropdownMenuBox` anchor with `XDropdownMenuItem` menu, NOT a plain clickable `Row`.
       The visual shows a static selector, but the implementation needs a popup menu.
-17. **Independent state parsing**: Each state screen has its own HTML file with its own
+17. **Independent state parsing**: Each state screen — **and each secondary screen** (`stitch_{role}.html`) — has its own HTML file with its own
     tailwind config. Do NOT carry values (border radius, padding, colors, font sizes)
-    from one state's HTML to another. Re-read the `tailwind.config` `<script>` tag and
-    CSS classes independently for each state file. A failed state may define
+    from one screen's HTML to another. Re-read the `tailwind.config` `<script>` tag and
+    CSS classes independently for each state/secondary file. A failed state may define
     `rounded-card: 12px` while the success state uses `rounded-xl: 1.5rem` — these are
     different values that must be translated separately.
 18. **No silent omissions**: The mapping table above is not exhaustive. For ANY Tailwind
@@ -376,8 +396,11 @@ RULES:
     `painterResource` / remote `AsyncImage` with each `data_binding` wired — one sub-item per remote
     image), string-key coverage, build validation, ktlint format.
 20a. **String Inventory (Rule 12)**: After the Component Tree (before the Pre-Implementation Contract), emit a
-    `## String Inventory` table — one row per user-facing text node in the HTML, mapping it to a proposed
-    `{area}_{purpose}` string-resource key + the default English value. Exclude repository data, single-glyph
+    `## String Inventory` table — one row per user-facing text node **across the success state, every selected
+    state, AND every secondary screen** (`stitch_{role}.html`), mapping it to a proposed
+    `{area}_{purpose}` string-resource key + the default English value. The whole feature (primary + all secondary
+    screens) shares one `composeResources/values/strings.xml`, so secondary-screen strings are listed in this
+    same table. Exclude repository data, single-glyph
     symbols, and control sentinels. Do not list shared strings (Retry/Yes/No/common errors) — they come from
     `DesignSystemResources`. The implementer builds `composeResources/values/strings.xml` from this table.
 21. **Material Symbols icons**: For every `<span class="material-symbols-*" data-icon="...">` in the HTML, look up the icon in the `icons.json` manifest and emit `XIcon(painter = painterResource({res_reference}))` using the manifest's exact `res_reference` value (e.g. `DesignSystemResources.drawable.arrow_back` for chrome icons, `Res.drawable.qr_code_scanner` for domain icons). The manifest already encodes the fill-variant naming (`_fill` suffix when `data-weight="fill"`) and the chrome/domain split — do not re-derive these from the HTML. **Never** emit `Icons.Default.{Name}` or any reference to `androidx.compose.material.icons.*` — that library is pinned/deprecated and produces a different glyph family from the Material Symbols Stitch renders.
@@ -393,8 +416,11 @@ RULES:
     - `states.failed == false` → emit the "Skipped" form of the Failed State section.
     - `states.empty == false` → **omit the Empty State section entirely** (empty is a content variant, not a Rule-4 UI state).
     Only consume HTML/token inputs for states that are selected; do not invent content for skipped states.
-23. **Motion**: Build the `## Motion` table from the token inventory's `## Motion Inventory` + the
-    Motion Audit. Bucket every token via the Web-Motion Policy in [`_shared/motion.md`](../../_shared/motion.md)
+22a. **Secondary screens**: For **each** `secondaryScreens[]` entry, emit one `#### {Label} ({role}) — {kind}` subsection under `### Secondary Screens` (see Component Tree template), branching on `kind`. **`surface`** → map `role` to the presentation X-component (`bottomsheet` → `XModalBottomSheet`, `dialog`/`modal` → `XDialog`/`XAlertDialog`, `drawer` → `XModalDrawerSheet`, `panel` → inline `XSurface`), toggled by a `{Feature}UiModel` visibility flag + primary callback (Rule 10 — never a nav destination). **`screen`** → a full sibling screen with its own `{Feature}{Role}Screen`/`ScreenRoot` (own `XScreen`, Rule 13), its own `{Feature}{Role}Route` + `NavGraphBuilder.{featurename}{role}()` entry, pushed from the primary via a callback (Rule 10 — a child route of this feature, not a separate feature). Either way, build its content tree from `stitch_{role}.html` + `tokens_{role}.md` (same Decomposition Rules); its strings join the **String Inventory**; its icons/images are already in the same `icons.json`/`images.json` (their HTML was passed to the manifests in Step 1.15). Omit the whole section when there are no secondary screens.
+23. **Motion**: Build the `## Motion` table from the token inventory's `## Motion Inventory` (success +
+    selected states **+ every secondary screen's `tokens_{role}.md`**) + the
+    Motion Audit. Secondary-screen motion rows go in this same table (tag the row's Element with its screen so
+    it lands in the right `motion/` file). Bucket every token via the Web-Motion Policy in [`_shared/motion.md`](../../_shared/motion.md)
     (do **not** restate the policy or the family→primitive mapping — link it):
     - **DROP** touch press (`active:*`, `ripple`) and pointer/hover (`hover:*`, `group-hover:*`,
       `.interactive-card:hover/:active`, `focus:`, `cursor-*`) — never a row; list them once in the
