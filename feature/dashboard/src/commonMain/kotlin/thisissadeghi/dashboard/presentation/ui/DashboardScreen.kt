@@ -40,6 +40,7 @@ fun DashboardScreen(
     onActionClick: (String) -> Unit,
     onBackToDashboard: () -> Unit,
     onAssetClick: (String) -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiModelState.collectAsStateWithLifecycle()
@@ -49,6 +50,7 @@ fun DashboardScreen(
         onRetry = viewModel::retry,
         onBackToDashboard = onBackToDashboard,
         onAssetClick = onAssetClick,
+        onProfileClick = onProfileClick,
         modifier = modifier,
     )
 }
@@ -60,6 +62,7 @@ fun DashboardScreenRoot(
     onRetry: () -> Unit,
     onBackToDashboard: () -> Unit,
     onAssetClick: (String) -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     XScreen(
@@ -91,6 +94,7 @@ fun DashboardScreenRoot(
                     data = state.value,
                     onActionClick = onActionClick,
                     onAssetClick = onAssetClick,
+                    onProfileClick = onProfileClick,
                 )
         }
     }
@@ -170,6 +174,7 @@ private fun DashboardScreenRootPreviewSuccess() {
             onRetry = {},
             onBackToDashboard = {},
             onAssetClick = {},
+            onProfileClick = {},
         )
     }
 }
@@ -184,6 +189,7 @@ private fun DashboardScreenRootPreviewLoading() {
             onRetry = {},
             onBackToDashboard = {},
             onAssetClick = {},
+            onProfileClick = {},
         )
     }
 }
@@ -201,6 +207,7 @@ private fun DashboardScreenRootPreviewFailed() {
             onRetry = {},
             onBackToDashboard = {},
             onAssetClick = {},
+            onProfileClick = {},
         )
     }
 }

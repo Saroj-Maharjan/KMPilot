@@ -8,6 +8,8 @@ import thisissadeghi.assetdetail.presentation.navigation.assetdetail
 import thisissadeghi.dashboard.presentation.navigation.DashboardRoute
 import thisissadeghi.dashboard.presentation.navigation.dashboard
 import thisissadeghi.designsystem.XNavHost
+import thisissadeghi.profile.presentation.navigation.ProfileRoute
+import thisissadeghi.profile.presentation.navigation.profile
 import thisissadeghi.receive.presentation.navigation.ReceiveRoute
 import thisissadeghi.receive.presentation.navigation.receive
 import thisissadeghi.send.presentation.navigation.SendRoute
@@ -43,6 +45,7 @@ fun BaseAppNavHost(modifier: Modifier) {
                 navController.popBackStack(DashboardRoute, inclusive = false)
             },
             onAssetClick = { assetId -> navController.navigate(AssetDetailRoute(assetId)) },
+            onProfileClick = { navController.navigate(ProfileRoute) },
         )
         send(onBackClick = { navController.popBackStack() })
         receive(onBackClick = { navController.popBackStack() })
@@ -50,6 +53,10 @@ fun BaseAppNavHost(modifier: Modifier) {
         swap(
             onBackClick = { navController.popBackStack() },
             onSwapComplete = { navController.popBackStack(DashboardRoute, inclusive = false) },
+        )
+        profile(
+            navController = navController,
+            onBackClick = { navController.popBackStack() },
         )
     }
 }

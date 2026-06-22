@@ -13,6 +13,7 @@ fun NavGraphBuilder.dashboard(
     onActionClick: (String) -> Unit,
     onBackToDashboard: () -> Unit,
     onAssetClick: (String) -> Unit,
+    onProfileClick: () -> Unit,
 ) {
     composable<DashboardRoute> {
         DashboardScreen(
@@ -20,6 +21,7 @@ fun NavGraphBuilder.dashboard(
             onActionClick = onActionClick,
             onBackToDashboard = onBackToDashboard,
             onAssetClick = onAssetClick,
+            onProfileClick = onProfileClick,
         )
     }
 }

@@ -50,6 +50,7 @@ kotlin {
             implementation(project(":feature:receive"))
             implementation(project(":feature:assetdetail"))
             implementation(project(":feature:swap"))
+            implementation(project(":feature:profile"))
         }
     }
 }

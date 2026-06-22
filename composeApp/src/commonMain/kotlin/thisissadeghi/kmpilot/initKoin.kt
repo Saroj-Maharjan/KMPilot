@@ -11,6 +11,7 @@ import thisissadeghi.common.di.commonModule
 import thisissadeghi.dashboard.di.dashboardModule
 import thisissadeghi.data.config.BuildOptionProvider
 import thisissadeghi.data.di.dataModule
+import thisissadeghi.profile.di.profileModule
 import thisissadeghi.receive.di.receiveModule
 import thisissadeghi.send.di.sendModule
 import thisissadeghi.swap.di.swapModule
@@ -32,5 +33,6 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}): KoinApplication =
             receiveModule,
             assetdetailModule,
             swapModule,
+            profileModule,
         )
     }
