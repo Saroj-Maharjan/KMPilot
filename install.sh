@@ -8,14 +8,21 @@
 # Usage (local):
 #   ./install.sh <ProjectName> [package.prefix]
 #
+# Installs from the latest published vX.Y.Z release tag by default (reproducible).
+# The new project keeps a ./update.sh you can run later to pull future releases
+# without clobbering your code (see update.sh).
+#
 # Env vars:
 #   KMPILOT_TEMPLATE_REPO   Git URL of the template (default: ThisIsSadeghi/KMPilot)
-#   KMPILOT_TEMPLATE_BRANCH Branch or tag to install from (default: main)
+#   KMPILOT_TEMPLATE_BRANCH Branch or tag to install from (default: latest release
+#                           tag; set to "main" for the bleeding edge)
 
 set -euo pipefail
 
 TEMPLATE_REPO="${KMPILOT_TEMPLATE_REPO:-https://github.com/ThisIsSadeghi/KMPilot.git}"
-TEMPLATE_BRANCH="${KMPILOT_TEMPLATE_BRANCH:-main}"
+# Resolved after the git check below: defaults to the latest vX.Y.Z release tag
+# (reproducible installs); override with KMPILOT_TEMPLATE_BRANCH=main for bleeding edge.
+TEMPLATE_BRANCH="${KMPILOT_TEMPLATE_BRANCH:-}"
 
 if [[ $# -lt 1 ]]; then
     cat >&2 <<USAGE
@@ -36,6 +43,14 @@ NAME="$1"
 PKG="${2:-dev.kmpilot.$(echo "$NAME" | tr '[:upper:]' '[:lower:]')}"
 
 command -v git >/dev/null 2>&1 || { echo "Error: git is required" >&2; exit 1; }
+
+# Pick the install ref: explicit override wins; otherwise the newest published
+# vX.Y.Z tag (so installs are pinned to a release); fall back to main if untagged.
+if [[ -z "$TEMPLATE_BRANCH" ]]; then
+    TEMPLATE_BRANCH="$(git ls-remote --tags --refs --sort=-v:refname "$TEMPLATE_REPO" 'v*' 2>/dev/null \
+        | head -n1 | sed -E 's#.*refs/tags/##')"
+    TEMPLATE_BRANCH="${TEMPLATE_BRANCH:-main}"
+fi
 
 if [[ -e "$NAME" ]]; then
     echo "Error: '$NAME' already exists in $(pwd)" >&2
@@ -61,29 +76,25 @@ trim_template() {
     # reference implementation.
     echo "→ Trimming template to a fresh project shell..."
 
-    # 1. Remove example feature modules from the cloned target
-    rm -rf feature/dashboard feature/send feature/receive
-
-    # 2. Drop feature gradle wiring
-    sedi '/include(":feature:dashboard")/d' settings.gradle.kts
-    sedi '/include(":feature:send")/d'      settings.gradle.kts
-    sedi '/include(":feature:receive")/d'   settings.gradle.kts
-    sedi '/project(":feature:dashboard")/d' composeApp/build.gradle.kts
-    sedi '/project(":feature:send")/d'      composeApp/build.gradle.kts
-    sedi '/project(":feature:receive")/d'   composeApp/build.gradle.kts
-    # Root build.gradle.kts holds kover-aggregation deps per feature
-    sedi '/"kover"(project(":feature:dashboard"))/d' build.gradle.kts
-    sedi '/"kover"(project(":feature:send"))/d'      build.gradle.kts
-    sedi '/"kover"(project(":feature:receive"))/d'   build.gradle.kts
-
-    # 3. Drop feature DI: the import line and the modules(...) entry per feature
+    # 1-3. Strip EVERY example feature module and its wiring. Generic on purpose:
+    #       a hardcoded list silently drifts whenever a sample feature is added
+    #       (it did — assetdetail/swap/profile shipped to fresh installs). Looping
+    #       over feature/*/ keeps the clean-slate guarantee no matter what ships.
     local koin="composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/initKoin.kt"
-    sedi '/import thisissadeghi\.dashboard\./d' "$koin"
-    sedi '/import thisissadeghi\.send\./d'      "$koin"
-    sedi '/import thisissadeghi\.receive\./d'   "$koin"
-    sedi '/^[[:space:]]*dashboardModule,/d'     "$koin"
-    sedi '/^[[:space:]]*sendModule,/d'          "$koin"
-    sedi '/^[[:space:]]*receiveModule,/d'       "$koin"
+    if [[ -d feature ]]; then
+        for fdir in feature/*/; do
+            # Only real modules (have a build.gradle.kts); skips gradle's build/ dir.
+            [[ -f "${fdir}build.gradle.kts" ]] || continue
+            local fname
+            fname="$(basename "$fdir")"
+            rm -rf "$fdir"
+            sedi "/include(\":feature:${fname}\")/d"            settings.gradle.kts
+            sedi "/project(\":feature:${fname}\")/d"            composeApp/build.gradle.kts
+            sedi "/\"kover\"(project(\":feature:${fname}\"))/d" build.gradle.kts
+            sedi "/import thisissadeghi\\.${fname}\\./d"        "$koin"
+            sedi "/^[[:space:]]*${fname}Module,/d"              "$koin"
+        done
+    fi
 
     # 3a. Replace the mock-API BASE_URL with a neutral placeholder. The template
     #     ships KMPilot's own mock API URL, which rename.sh would otherwise
@@ -489,6 +500,29 @@ fun AppErrorState(
 APPERROR_EOF
 }
 
+write_manifest() {
+    # Records identity + installed version so update.sh can later diff against
+    # upstream and re-apply the package rename. Written AFTER rename (so the
+    # upstream identifiers below are NOT rewritten) and committed in the initial
+    # commit. Keystone artifact — without it, update.sh has no baseline or pkg.
+    local version="unknown"
+    [[ -f VERSION ]] && version="$(tr -d '[:space:]' < VERSION)"
+    local now
+    now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    cat > .kmpilot.json <<MANIFEST_EOF
+{
+  "kmpilotVersion": "${version}",
+  "projectName": "${NAME}",
+  "packagePrefix": "${PKG}",
+  "templateRepo": "${TEMPLATE_REPO}",
+  "upstreamPkg": "thisissadeghi",
+  "upstreamName": "KMPilot",
+  "installedAt": "${now}"
+}
+MANIFEST_EOF
+    echo "→ Wrote .kmpilot.json (version ${version}, package ${PKG})"
+}
+
 echo "→ Cloning KMPilot template (branch: $TEMPLATE_BRANCH) into $NAME/"
 git clone --depth=1 --branch "$TEMPLATE_BRANCH" --quiet "$TEMPLATE_REPO" "$NAME"
 
@@ -502,7 +536,8 @@ bash scripts/rename.sh --name="$NAME" --pkg="$PKG"
 
 # Template-only files we don't need in a user project. scripts/rename.sh is a
 # one-shot installer tool (it has already run above and still embeds KMPilot's
-# OLD identifiers); scripts/ is empty once it's gone.
+# OLD identifiers); scripts/ is empty once it's gone. update.sh is KEPT — it is
+# the downstream's entrypoint for pulling future releases.
 rm -f install.sh
 rm -rf scripts
 
@@ -524,6 +559,11 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
         echo "  For iOS builds: brew install cocoapods && cd $NAME/iosApp && pod install"
     fi
 fi
+
+# Stamp the update manifest (reads VERSION, so do it before dropping VERSION),
+# then remove the upstream VERSION file — kmpilotVersion now lives in .kmpilot.json.
+write_manifest
+rm -f VERSION
 
 echo "→ Initializing fresh git repository..."
 git init --quiet
