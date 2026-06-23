@@ -1,0 +1,24 @@
+<svg width="820" height="200" viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KMPilot — Spec-Driven Development for Kotlin Multiplatform">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFC15A"/>
+      <stop offset="1" stop-color="#C8902A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- backdrop -->
+  <rect width="820" height="200" rx="22" fill="#0E1116"/>
+  <rect x="1" y="1" width="818" height="198" rx="21" fill="none" stroke="#1E242C" stroke-width="2"/>
+
+  <!-- paper-plane mark -->
+  <g transform="translate(118,100)">
+    <path d="M-48 -26 L50 0 L-48 26 L-31 0 Z" fill="url(#gold)"/>
+    <path d="M-31 0 L50 0 L-4 15 Z" fill="#9C6E1E" opacity="0.85"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="196" y="96" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="66" font-weight="800" fill="#FFFFFF" letter-spacing="-1">KM<tspan fill="url(#gold)">Pilot</tspan></text>
+
+  <!-- tagline -->
+  <text x="198" y="134" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="23" font-weight="500" fill="#9BA3AE">Spec-Driven Development for Kotlin Multiplatform</text>
+</svg>
