@@ -66,6 +66,10 @@ jobs:
           {
             echo "## Install"
             echo
+            echo "Replace \`<MyApp>\` and \`<com.acme.myapp>\` with your own values:"
+            echo "- **\`MyApp\`** — project name (folder, root project, Android app label)"
+            echo "- **\`com.acme.myapp\`** — package prefix / application ID (\`namespace\`, \`applicationId\`, source-set package roots)"
+            echo
             echo '```bash'
             echo "curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/download/${GITHUB_REF_NAME}/install.sh \\"
             echo "  | bash -s <MyApp> <com.acme.myapp>"
