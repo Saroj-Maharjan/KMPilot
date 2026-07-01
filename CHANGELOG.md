@@ -11,6 +11,8 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-07-01
+
 ### Changed
 - **[Tooling]** `install.sh` is now **release-pinned**. The release workflow stamps
   the published tag into the installer, so a released `install.sh` clones the exact
@@ -63,5 +65,6 @@ Kotlin Multiplatform + Compose Multiplatform.
   feature shape; reference features are stripped on install, so a fresh project
   starts on a Welcome screen.
 
-[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.1...HEAD
 [0.1.0]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.0
+[0.1.1]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.1
