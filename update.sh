@@ -148,7 +148,7 @@ fi
 # ── path tiers ──────────────────────────────────────────────────────────────
 TIER1_PATHS=(.claude/skills .claude/agents .claude/hooks .claude/commands
              .claude/settings.json .claude/docs/_shared
-             CLAUDE.md gradlew gradlew.bat gradle/wrapper)
+             CLAUDE.md gradlew gradlew.bat gradle/wrapper update.sh)
 TIER2_PATHS=(core)
 MANUAL_PATHS=(gradle/libs.versions.toml build.gradle.kts settings.gradle.kts
              composeApp androidApp iosApp)
@@ -161,6 +161,11 @@ up_show() { git -C "$UP" show "${1}:${2}" 2>/dev/null || true; }
 process_file() {
     local up_path="$1" status="$2" rename="$3" down_path
     if [[ "$rename" == "yes" ]]; then down_path="$(rename_path "$up_path")"; else down_path="$up_path"; fi
+
+    # Never overwrite the running updater in place — bash may re-read $0 mid-run and
+    # corrupt this very invocation. Stage it as update.sh.new for the user to swap in
+    # (surfaced in the summary below).
+    if [[ "$down_path" == "update.sh" ]]; then down_path="update.sh.new"; fi
 
     if [[ "$status" == "D" ]]; then
         warn "upstream removed: $up_path — left your $down_path untouched (delete manually if unused)"
@@ -234,6 +239,11 @@ if [[ -n "$changed_manual" ]]; then
     warn "Manual review — upstream changed these; reconcile by hand (NOT auto-applied):"
     printf '%s\n' "$changed_manual" | sed 's/^/      /' >&2
     manual=$(( manual + $(printf '%s\n' "$changed_manual" | grep -c .) ))
+    if printf '%s\n' "$changed_manual" | grep -qE 'libs\.versions\.toml|iosApp/iosApp/Info\.plist'; then
+        warn "  ↳ Your APP version lives in these (android-versionName/versionCode, iOS CFBundleShortVersionString/CFBundleVersion)."
+        warn "    That version is YOURS and independent of KMPilot's — merge only dependency/config changes;"
+        warn "    do NOT copy KMPilot's version numbers over your own."
+    fi
 fi
 
 # ── bump manifest version (unless dry run) ──────────────────────────────────
@@ -254,6 +264,16 @@ if [[ "$DRY_RUN" == "yes" ]]; then
     echo "Dry run — nothing written. Re-run without --dry-run to apply."
     exit 0
 fi
+# The updater changed and was staged as update.sh.new (couldn't cp over the running script's
+# inode mid-run). Swapping it in with `mv` (rename) IS safe — this process keeps executing its
+# original inode, the new file only takes effect next run. update.sh is tracked in git, so the
+# change shows in `git diff` and is revertible. Only exists when DRY_RUN=no, so no guard needed.
+if [[ -f update.sh.new ]]; then
+    mv -f update.sh.new update.sh && chmod +x update.sh
+    echo "↻ Updated the updater itself (update.sh) — change is in your git diff; revert if unwanted."
+    echo ""
+fi
+echo "Release notes: ${REPO%.git}/blob/main/CHANGELOG.md"
 if [[ "$conflicts" -gt 0 ]]; then
     echo "Resolve the <<<<<<< conflict markers, then:  git diff  →  git add -A  →  git commit"
     exit 1

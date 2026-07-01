@@ -52,14 +52,14 @@ https://github.com/user-attachments/assets/a1438483-68d3-4550-b876-9a62db0d1a21
 **1. Install** — replace `<MyApp>` and `<com.acme.myapp>` with your own values:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh \
+curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/install.sh \
   | bash -s <MyApp> <com.acme.myapp>
 ```
 
 - **`MyApp`** — project name (folder, root project, Android app label)
 - **`com.acme.myapp`** — package prefix / application ID (`namespace`, `applicationId`, source-set package roots)
 
-Clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#-staying-up-to-date)).
+Clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#-staying-up-to-date)). The installer is **release-pinned**: it clones the exact tag it shipped with, so the installer and the template tree are always the same release.
 
 > **Windows:** run the same command inside **Git Bash** (ships with [Git for Windows](https://git-scm.com/download/win)) or WSL — not PowerShell or `cmd`. The installer uses bash + GNU `sed`/`find`, both present in Git Bash. iOS targets remain macOS-only.
 
@@ -227,7 +227,10 @@ The installer pins your project to a tagged release and leaves a `./update.sh` s
 ./update.sh --dry-run  # preview what would change; writes nothing
 ```
 
-It re-applies your package rename to each upstream change and 3-way-merges it in. It **never touches** `feature/`, your app modules, or your per-feature specs, and it **never commits** — you review `git diff`, resolve any `<<<<<<<` markers, then commit. See [CHANGELOG.md](CHANGELOG.md) for each release's upgrade notes (tagged `[Tooling]` / `[Core]` / `[Breaking]`).
+It re-applies your package rename to each upstream change and 3-way-merges it in. It **never touches** `feature/`, your app modules, or your per-feature specs, and it **never commits** — you review `git diff`, resolve any `<<<<<<<` markers, then commit. `update.sh` keeps itself current (it's part of the tooling tier): when the updater changes upstream it writes an `update.sh.new` for you to swap in. See [CHANGELOG.md](CHANGELOG.md) for each release's upgrade notes (tagged `[Tooling]` / `[Core]` / `[Breaking]`).
+
+> **Migrating a project installed from 0.1.0:** existing projects are unaffected in place. To get the self-updating `update.sh`, re-pull it once —
+> `curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/update.sh -o update.sh` — then run `./update.sh` as usual.
 
 <br />
 

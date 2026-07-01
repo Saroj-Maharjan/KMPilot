@@ -1,0 +1,88 @@
+name: Release
+
+# Cuts a GitHub release when a vX.Y.Z tag is pushed. Verifies the version is
+# single-sourced (tag == VERSION == libs.versions.toml), stamps the pinned tag into
+# install.sh, and publishes install.sh + update.sh as release assets so downstream
+# users can `curl .../releases/latest/download/install.sh` and get an installer that
+# clones the exact tag it shipped with.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify version is single-sourced (tag == VERSION == libs)
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v0.2.0
+          VER="${TAG#v}"                    # 0.2.0
+          FILE_VER="$(tr -d '[:space:]' < VERSION)"
+          LIBS_VER="$(sed -n 's/^android-versionName *= *"\([^"]*\)".*/\1/p' gradle/libs.versions.toml | head -n1)"
+          IOS_VER="$(sed -n '/<key>CFBundleShortVersionString<\/key>/{n;s/.*<string>\(.*\)<\/string>.*/\1/p;}' iosApp/iosApp/Info.plist)"
+          echo "tag=$VER  VERSION=$FILE_VER  android=$LIBS_VER  ios=$IOS_VER"
+          if [ "$FILE_VER" != "$VER" ]; then
+            echo "::error::VERSION file ($FILE_VER) does not match tag ($VER). Use scripts/release.sh to cut releases."
+            exit 1
+          fi
+          if [ "$LIBS_VER" != "$VER" ]; then
+            echo "::error::libs.versions.toml android-versionName ($LIBS_VER) does not match tag ($VER)."
+            exit 1
+          fi
+          if [ "$IOS_VER" != "$VER" ]; then
+            echo "::error::iosApp/iosApp/Info.plist CFBundleShortVersionString ($IOS_VER) does not match tag ($VER)."
+            exit 1
+          fi
+
+      - name: Stamp the installer with the pinned tag
+        run: |
+          mkdir -p dist
+          sed "s/__KMPILOT_PINNED_TAG__/${GITHUB_REF_NAME}/g" install.sh > dist/install.sh
+          cp update.sh dist/update.sh
+          chmod +x dist/install.sh dist/update.sh
+          # Sanity: the placeholder must be gone from the published asset.
+          if grep -q '__KMPILOT_PINNED_TAG__' dist/install.sh; then
+            echo "::error::pinned-tag placeholder still present after stamping"; exit 1
+          fi
+
+      - name: Build release notes (install command on top, then changelog)
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          # This version's changelog section (between its header and the next one).
+          awk -v v="$VER" '
+            $0 ~ "^## \\[" v "\\]" { grab=1; next }
+            grab && /^## \[/       { exit }
+            grab                   { print }
+          ' CHANGELOG.md > body.md
+          [ -s body.md ] || echo "Release ${GITHUB_REF_NAME}" > body.md
+          # Prepend the install command so every release page leads with how to install.
+          {
+            echo "## Install"
+            echo
+            echo '```bash'
+            echo "curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/download/${GITHUB_REF_NAME}/install.sh \\"
+            echo "  | bash -s <MyApp> <com.acme.myapp>"
+            echo '```'
+            echo
+            echo "> Always-latest instead: \`releases/latest/download/install.sh\` · bleeding edge: \`KMPILOT_TEMPLATE_BRANCH=main\`"
+            echo
+            echo "## What's changed"
+            echo
+            cat body.md
+          } > notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/install.sh dist/update.sh \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file notes.md

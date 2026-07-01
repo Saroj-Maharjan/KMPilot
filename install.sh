@@ -23,6 +23,11 @@ TEMPLATE_REPO="${KMPILOT_TEMPLATE_REPO:-https://github.com/ThisIsSadeghi/KMPilot
 # Resolved after the git check below: defaults to the latest vX.Y.Z release tag
 # (reproducible installs); override with KMPILOT_TEMPLATE_BRANCH=main for bleeding edge.
 TEMPLATE_BRANCH="${KMPILOT_TEMPLATE_BRANCH:-}"
+# Stamped to a release tag (vX.Y.Z) by .github/workflows/release.yml when it uploads
+# this file as a release asset — so a released installer clones the EXACT tag it shipped
+# with (script and template tree are the same release; no drift). Left as the placeholder
+# on main, so a raw-main run falls through to "resolve the latest published tag" below.
+PINNED_TAG="__KMPILOT_PINNED_TAG__"
 
 if [[ $# -lt 1 ]]; then
     cat >&2 <<USAGE
@@ -44,12 +49,20 @@ PKG="${2:-dev.kmpilot.$(echo "$NAME" | tr '[:upper:]' '[:lower:]')}"
 
 command -v git >/dev/null 2>&1 || { echo "Error: git is required" >&2; exit 1; }
 
-# Pick the install ref: explicit override wins; otherwise the newest published
-# vX.Y.Z tag (so installs are pinned to a release); fall back to main if untagged.
+# Pick the install ref, in priority order:
+#   1. KMPILOT_TEMPLATE_BRANCH — explicit override (e.g. =main for bleeding edge)
+#   2. PINNED_TAG              — stamped into this script by the release workflow, so a
+#                               released install.sh clones the exact tag it shipped with
+#   3. newest published vX.Y.Z — for raw-main runs (unstamped script): resolve latest tag
+#   4. main                    — last resort when the repo has no tags yet
 if [[ -z "$TEMPLATE_BRANCH" ]]; then
-    TEMPLATE_BRANCH="$(git ls-remote --tags --refs --sort=-v:refname "$TEMPLATE_REPO" 'v*' 2>/dev/null \
-        | head -n1 | sed -E 's#.*refs/tags/##')"
-    TEMPLATE_BRANCH="${TEMPLATE_BRANCH:-main}"
+    if [[ "$PINNED_TAG" != '__KMPILOT_PINNED_TAG__' && -n "$PINNED_TAG" ]]; then
+        TEMPLATE_BRANCH="$PINNED_TAG"
+    else
+        TEMPLATE_BRANCH="$(git ls-remote --tags --refs --sort=-v:refname "$TEMPLATE_REPO" 'v*' 2>/dev/null \
+            | head -n1 | sed -E 's#.*refs/tags/##')"
+        TEMPLATE_BRANCH="${TEMPLATE_BRANCH:-main}"
+    fi
 fi
 
 if [[ -e "$NAME" ]]; then
@@ -500,13 +513,77 @@ fun AppErrorState(
 APPERROR_EOF
 }
 
+write_fresh_docs() {
+    # Replace KMPilot's own README + CHANGELOG (upstream marketing / release history) with
+    # a minimal project README and an empty changelog, so the new project owns its docs
+    # instead of inheriting the template's. Runs AFTER rename.sh so the upstream KMPilot
+    # credit/links written below are NOT rewritten by the rename. Uses a quoted heredoc
+    # (literal) + a placeholder sed so the code fences and links stay intact.
+    echo "→ Writing a fresh README.md + CHANGELOG.md..."
+    cat > README.md <<'README_EOF'
+# __PROJECT_NAME__
+
+A Kotlin Multiplatform + Compose Multiplatform app, generated from
+[KMPilot](https://github.com/ThisIsSadeghi/KMPilot).
+
+## Build
+
+```bash
+./gradlew assembleDebug          # Android
+# open iosApp/iosApp.xcodeproj in Xcode for iOS
+```
+
+## Build features with Claude Code
+
+Run the scaffolding commands inside [Claude Code](https://claude.ai/code):
+
+```
+/creating-kmp-feature            # scaffold a new feature
+/modifying-kmp-feature           # change an existing one
+/feature-test                    # generate its test suite
+/feature-review                  # audit the architecture
+```
+
+## Staying up to date
+
+Pull newer KMPilot releases without touching your code:
+
+```bash
+./update.sh            # tooling only (.claude skills/agents/hooks, CLAUDE.md, gradle wrapper)
+./update.sh --core     # also merge core/ modules (rename-aware; conflicts surfaced, never silent)
+./update.sh --dry-run  # preview what would change; writes nothing
+```
+
+Release notes live in the upstream
+[CHANGELOG](https://github.com/ThisIsSadeghi/KMPilot/blob/main/CHANGELOG.md).
+README_EOF
+    sedi "s/__PROJECT_NAME__/${NAME}/g" README.md
+
+    cat > CHANGELOG.md <<'CHANGELOG_EOF'
+# Changelog
+
+All notable changes to this project are documented here.
+
+## [Unreleased]
+CHANGELOG_EOF
+}
+
 write_manifest() {
     # Records identity + installed version so update.sh can later diff against
     # upstream and re-apply the package rename. Written AFTER rename (so the
     # upstream identifiers below are NOT rewritten) and committed in the initial
     # commit. Keystone artifact — without it, update.sh has no baseline or pkg.
-    local version="unknown"
-    [[ -f VERSION ]] && version="$(tr -d '[:space:]' < VERSION)"
+    # Prefer the resolved release tag — it is authoritative, and update.sh diffs from
+    # v$version, so the manifest MUST match the tag actually cloned. Fall back to the
+    # VERSION file only for bleeding-edge (main) installs that aren't on a tag.
+    local version
+    if [[ "$TEMPLATE_BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+        version="${TEMPLATE_BRANCH#v}"
+    elif [[ -f VERSION ]]; then
+        version="$(tr -d '[:space:]' < VERSION)"
+    else
+        version="unknown"
+    fi
     local now
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     cat > .kmpilot.json <<MANIFEST_EOF
@@ -560,8 +637,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     fi
 fi
 
-# Stamp the update manifest (reads VERSION, so do it before dropping VERSION),
-# then remove the upstream VERSION file — kmpilotVersion now lives in .kmpilot.json.
+# Replace the template's README/CHANGELOG with fresh project docs (post-rename, so the
+# upstream KMPilot credit links survive), then stamp the update manifest, then drop the
+# upstream VERSION file — kmpilotVersion now lives in .kmpilot.json.
+write_fresh_docs
 write_manifest
 rm -f VERSION
 
