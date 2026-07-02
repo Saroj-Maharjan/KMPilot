@@ -490,20 +490,23 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
 
 **If Approve** → exit the loop; continue to step 8.
 
-**If Edit**:
+**If Edit** — apply the [Edit-as-Variant Pattern](../references/stitch-guide.md#edit-as-variant-pattern-all-design-edits) (`edit_screens` is broken via MCP; the edit produces a **new** screen that becomes the working loading screen):
 1. Use `AskUserQuestion` (free text via "Other") to capture the user's edit request.
 2. Record baseline by calling `mcp__stitch__list_screens`.
-3. Call `mcp__stitch__edit_screens` with:
+3. Call `mcp__stitch__generate_variants` with:
    ```
    projectId: {stitch-project.json.projectId}
    selectedScreenIds: [{current loadingScreenId}]
-   prompt: {user's edit request}
+   prompt: "{user's edit request}. Keep everything else exactly the same."
    deviceType: MOBILE
    modelId: GEMINI_3_FLASH
+   variantOptions:
+     variantCount: 1
+     creativeRange: "REFINE"
    ```
 4. Apply the same timeout/connection-reset handling as the initial generation (Screen Sync Procedure, no blind retries — max 2 sync attempts).
 5. Diff `list_screens` against baseline. The new screen ID becomes the working `loadingScreenId`.
-6. Re-download as `.claude/docs/_shared/designs/loading.png` (overwrite).
+6. Call `get_screen` for the new ID and re-download as `.claude/docs/_shared/designs/loading.png` (overwrite).
 7. Return to the top of the Approve-or-Edit Loop.
 
 **Iteration limit**: Maximum 10 edit iterations. If not converging, ask the user to clarify before continuing.
@@ -599,20 +602,23 @@ After each generation/edit, tell the user the screenshot is at `.claude/docs/_sh
 
 **If Approve** → exit the loop; continue to step 7.
 
-**If Edit**:
+**If Edit** — apply the [Edit-as-Variant Pattern](../references/stitch-guide.md#edit-as-variant-pattern-all-design-edits) (`edit_screens` is broken via MCP; the edit produces a **new** screen that becomes the working failed screen):
 1. Use `AskUserQuestion` (free text via "Other") to capture the user's edit request.
 2. Record baseline by calling `mcp__stitch__list_screens`.
-3. Call `mcp__stitch__edit_screens` with:
+3. Call `mcp__stitch__generate_variants` with:
    ```
    projectId: {stitch-project.json.projectId}
    selectedScreenIds: [{current failedScreenId}]
-   prompt: {user's edit request}
+   prompt: "{user's edit request}. Keep everything else exactly the same."
    deviceType: MOBILE
    modelId: GEMINI_3_FLASH
+   variantOptions:
+     variantCount: 1
+     creativeRange: "REFINE"
    ```
 4. Apply the same timeout/connection-reset handling (Screen Sync Procedure, no blind retries — max 2 sync attempts).
 5. Diff `list_screens` against baseline. The new screen ID becomes the working `failedScreenId`.
-6. Re-download as `.claude/docs/_shared/designs/failed.png` (overwrite).
+6. Call `get_screen` for the new ID and re-download as `.claude/docs/_shared/designs/failed.png` (overwrite).
 7. Return to the top of the Approve-or-Edit Loop.
 
 **Iteration limit**: Maximum 10 edit iterations.

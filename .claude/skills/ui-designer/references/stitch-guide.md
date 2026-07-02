@@ -5,6 +5,7 @@ Quick reference for using Google Stitch MCP tools effectively within the UI Desi
 ## Contents
 - **Available Tools** — the Stitch MCP tool table
 - **Get Screen Call Pattern** — the 3-param construction for `get_screen`
+- **Edit-as-Variant Pattern** — `edit_screens` is broken via MCP; ALL edits go through `generate_variants` (new screen each iteration)
 - **Prompt Engineering for Stitch** — prompt structure + good/bad examples
 - **M3 Color Roles Reference** — pointer to m3-colors.md
 - **Design Iteration Patterns** — refine colors / layout / components; variants
@@ -27,7 +28,7 @@ Quick reference for using Google Stitch MCP tools effectively within the UI Desi
 | `mcp__stitch__list_screens` | List all screens in a project | After generation, to find screen IDs |
 | `mcp__stitch__get_screen` | Get screen details + screenshot URL | Retrieve screen data. **Requires all 3 params** — see [Get Screen Call Pattern](#get-screen-call-pattern) below |
 | `mcp__stitch__generate_screen_from_text` | Generate a new screen from prompt | Initial screen design |
-| `mcp__stitch__edit_screens` | Edit existing screens with prompt | Design iteration based on feedback |
+| `mcp__stitch__edit_screens` | ⚠ **BROKEN via MCP — never call.** The call returns but no edit is applied server-side | Do not use for anything. All design edits go through `generate_variants` instead — see [Edit-as-Variant Pattern](#edit-as-variant-pattern-all-design-edits) |
 | `mcp__stitch__generate_variants` | Generate design variants | When user wants to explore alternatives |
 | `mcp__stitch__apply_design_system` | Apply a DS to listed screen **instances** | New screens auto-inherit the active DS on generation, so **not** needed at create time. Required to **re-style existing screens after the DS changes** (drift Update path, Phase 0): pass `assetId` + `projectId` + `selectedScreenInstances` from `get_project`. |
 | `mcp__stitch__create_design_system` | Create a new DS for a project | Project Init only (Init-4). **Nested payload** under `designSystem.theme` (`customColor`, `headlineFont`/`bodyFont`, `roundness`, `designMd`, …). Per contract, **follow immediately with `update_design_system`** to bind+display it. |
@@ -52,6 +53,37 @@ screenId  = {screenId}
 Throughout this skill, instructions of the form *"call `get_screen` for {screenId}"* mean: build the three params using the pattern above, then invoke the tool.
 
 The response carries both `screenshot.downloadUrl` (for `.png` screenshots) and `htmlCode.downloadUrl` (for raw HTML — used in Step 1.15 only).
+
+---
+
+## Edit-as-Variant Pattern (all design edits)
+
+**`edit_screens` is currently broken when called through MCP** — the call returns but the edit is never applied server-side. Until Google fixes this, this skill **never calls `edit_screens`, anywhere, for any reason**. Every design-edit request is implemented with `generate_variants` instead, and the edited screen is treated exactly like a newly generated screen (new screenId).
+
+This is the canonical procedure — the phases reference it as *"apply the Edit-as-Variant Pattern"*:
+
+1. **Record baseline**: Call `mcp__stitch__list_screens` with the shared `projectId` and record the current screen IDs.
+2. **Call** `mcp__stitch__generate_variants` with:
+   ```
+   projectId: {stitch-project.json.projectId}
+   selectedScreenIds: [{screenId of the screen being edited}]
+   prompt: "{user's edit request}. Keep everything else exactly the same."
+   deviceType: MOBILE
+   modelId: GEMINI_3_FLASH
+   variantOptions:
+     variantCount: 1
+     creativeRange: "REFINE"
+   ```
+3. **Timeout / connection reset**: same rule as every screen-creating call — the request usually completed server-side; **never blind-retry**. Run the Screen Sync Procedure (browser open + confirm), then `list_screens`; only retry if no new screen appeared (max 3 attempts total).
+4. **Run the Screen Sync Procedure**, then diff `list_screens` against the baseline. The **new screen ID becomes the working screenId** for whatever is being iterated (`emptyScreenId`, `loadingScreenId`, `failedScreenId`, the success-variant in play, …). The pre-edit screen remains in the project untouched.
+5. **Download**: call `get_screen` for the **new** screenId and download `screenshot.downloadUrl` with `=s0`, overwriting the working `.png`.
+
+**Consequences to keep in mind:**
+- Every edit iteration leaves the previous screen behind in the Stitch project (MCP has no delete API). The existing "ask the user to clean up old screens in the browser" note at finalization covers this — with edit-as-variant it matters more, so always deliver that note after an edit-heavy session.
+- The working screenId **changes on every edit iteration** — always persist the latest ID on approval, never an earlier one.
+- `creativeRange: "REFINE"` + a single variant + "Keep everything else exactly the same." keeps the variant as close to a true edit as Stitch allows. If a REFINE variant ignores the requested change, re-issue with the change described more explicitly (exact hex/dp/text values) rather than escalating the creative range.
+
+**When Google fixes `edit_screens` over MCP**: revert to the in-place edit flow (it's in git history — the previous revision of this section documented the Edit-in-Place Contract).
 
 ---
 
@@ -146,6 +178,8 @@ Key points (read the full reference when writing Stitch prompts or doing Color A
 
 ## Design Iteration Patterns
 
+All "Edit prompt" examples below are delivered via the [Edit-as-Variant Pattern](#edit-as-variant-pattern-all-design-edits) (`generate_variants`, variantCount 1, REFINE) — never via `edit_screens`.
+
 ### Refining Colors
 ```
 Edit prompt: "Change the background (M3: background) to #121218 and make the
@@ -238,11 +272,20 @@ Press/hover feedback (touch `active:*`, `ripple`; pointer `hover:*`/`group-hover
 
 **Status**: Upstream bug in Google Stitch API. Not caused by this skill or MCP client.
 
-**Problem**: After `generate_screen_from_text` or `edit_screens` completes successfully, `list_screens` returns empty — the newly created screen is not queryable via MCP. The screen exists server-side (`get_project` returns a valid `thumbnailScreenshot`), but it is not indexed for `list_screens` or `get_screen` until the project is opened in a browser.
+**Problem**: After a **screen-creating** call (`generate_screen_from_text`, `generate_variants`) completes successfully, `list_screens` returns empty — the newly created screen is not queryable via MCP. The screen exists server-side (`get_project` returns a valid `thumbnailScreenshot`), but it is not indexed for `list_screens` or `get_screen` until the project is opened in a browser.
 
-**Workaround**: A timeout/connection error from `generate_screen_from_text` or `edit_screens` does NOT mean the generation failed — it often succeeded in the background. **Never auto-retry the generation call on timeout/connection reset** — retrying produces duplicate screens because the original request usually completed server-side. Instead, ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger the project sync, wait for their confirmation, then call `list_screens` to locate the new screen. See the **Screen Sync Procedure** in Phase 1.
+**Workaround**: A timeout/connection error from a screen-creating call does NOT mean the generation failed — it often succeeded in the background. **Never auto-retry the generation call on timeout/connection reset** — retrying produces duplicate screens because the original request usually completed server-side. Instead, ask the user to open `https://stitch.withgoogle.com/projects/{projectId}` in their browser to trigger the project sync, wait for their confirmation, then call `list_screens` to locate the new screen. See the **Screen Sync Procedure** in Phase 1.
 
-**`edit_screens` vs `generate_screen_from_text`**: Use `edit_screens` to modify an existing screen (fix layout, change colors, remove elements). Use `generate_screen_from_text` only when creating a brand new screen from scratch. Using `generate_screen_from_text` to "fix" an existing screen creates a duplicate and pollutes the project.
+### `edit_screens` Broken via MCP
+
+**Status**: `edit_screens` called through MCP returns without error but the edit is **never applied** server-side. Upstream Google issue.
+
+**Workaround**: this skill never calls `edit_screens`. All edits go through `generate_variants` per the [Edit-as-Variant Pattern](#edit-as-variant-pattern-all-design-edits). Remove the workaround (restore the in-place edit flow from git history) once Google fixes the tool.
+
+**Choosing the right tool**:
+- `generate_variants` — **all edits and derivations**: modify a screen based on feedback (variantCount 1, REFINE, per the Edit-as-Variant Pattern), derive an alternate version (e.g. an empty state from the success screen), or explore alternatives (variantCount 3, EXPLORE). Always creates new screens; the original is preserved.
+- `generate_screen_from_text` — create a brand new screen from scratch only. Using it to "fix" an existing screen loses the existing design's context; prefer `generate_variants` on the existing screen.
+- `edit_screens` — **do not call** (broken via MCP, see above).
 
 **Tracking**: Reported on the [Google AI Developers Forum — Stitch](https://discuss.ai.google.dev/c/stitch/61). Remove this workaround once Google fixes the API.
 
@@ -278,10 +321,17 @@ Read the .png file → shown to user in conversation
 
 ### On Each Iteration
 
-When the user requests edits or regeneration:
+When the user requests **edits** (via the [Edit-as-Variant Pattern](#edit-as-variant-pattern-all-design-edits) — creates a new screen):
 1. **Delete all** existing `{featurename}_v*.png` files
-2. Run the Stitch operation
-3. Re-download all screenshots with fresh `_v{N}` numbering
+2. Run `generate_variants` (variantCount 1, REFINE) on the screen being iterated
+3. Identify the new screen via baseline diff + Screen Sync Procedure; it becomes the working screen
+4. Call `get_screen` for the **new screenId** and download the fresh screenshot as `{featurename}_v1.png`
+5. Display for the user to approve or edit again
+
+When the user requests **regeneration** (creates a new screen):
+1. **Delete all** existing `{featurename}_v*.png` files
+2. Run `generate_screen_from_text` with the revised prompt
+3. Identify the new screen via baseline diff + Screen Sync Procedure, download with fresh `_v{N}` numbering
 4. Display all inline for user to pick again
 
 When the user requests **variants**:

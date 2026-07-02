@@ -414,11 +414,13 @@ Bottom navigation per Shared Conventions above (Products tab selected).
 16dp horizontal padding, 8dp vertical spacing between cards.
 ```
 
-### Screen Sync Procedure (Required After Every Stitch Generation/Edit)
+### Screen Sync Procedure (Required After Every Screen-Creating Stitch Call)
 
-Due to a known upstream bug in the Google Stitch API, newly generated or edited screens are not immediately visible to `list_screens` until the project is opened in a browser. This is a Google server-side issue, not a problem with this skill or the MCP client. See [Known Issues](../references/stitch-guide.md#known-issues-google-stitch-api) for details.
+Due to a known upstream bug in the Google Stitch API, newly **created** screens are not immediately visible to `list_screens` until the project is opened in a browser. This is a Google server-side issue, not a problem with this skill or the MCP client. See [Known Issues](../references/stitch-guide.md#known-issues-google-stitch-api) for details.
 
-**After every `generate_screen_from_text`, `edit_screens`, or `generate_variants` call**, follow this procedure:
+**This procedure applies to every Stitch generation call** — `generate_screen_from_text` and `generate_variants`. (Those are the only two design tools in use: `edit_screens` is broken via MCP and never called — all edits go through `generate_variants` per the [Edit-as-Variant Pattern](../references/stitch-guide.md#edit-as-variant-pattern-all-design-edits), so every operation creates a new screen and needs this sync.)
+
+**After every `generate_screen_from_text` or `generate_variants` call**, follow this procedure:
 
 1. **Ask the user** to open the Stitch project in their browser:
 ```
@@ -493,28 +495,33 @@ If user picks **Edit**, **More variants**, or **Regenerate** → proceed to Step
 
 ### After Any Stitch Operation (shared procedure)
 
-After every edit, variant, or regeneration call:
+After every edit (edit-as-variant), exploratory-variant, or regeneration call:
 1. **Delete all** existing `{featurename}_v*.png` files from the designs directory
 2. **Run the Screen Sync Procedure** (Step 1.10) to ensure new screens are visible
 3. Call `mcp__stitch__list_screens` to get the updated screen list
 4. Compare with the pre-operation screen list to identify **newly created screens**
 5. **Download screenshots** — the numbering depends on the operation type (always use `=s0` suffix for hi-res):
-   - **For variants**: The original screen (the one variants were generated from) is kept as `{featurename}_v1.png`. Download each new variant screen as `{featurename}_v2.png`, `{featurename}_v3.png`, etc. This gives the user the original + N variants to compare side by side.
-   - **For edits/regeneration**: Download only the newly created screens as `{featurename}_v1.png`, `{featurename}_v2.png`, etc. (the original is replaced by the edit result).
+   - **For exploratory variants**: The original screen (the one variants were generated from) is kept as `{featurename}_v1.png`. Download each new variant screen as `{featurename}_v2.png`, `{featurename}_v3.png`, etc. This gives the user the original + N variants to compare side by side.
+   - **For edits/regeneration**: Download only the newly created screens as `{featurename}_v1.png`, `{featurename}_v2.png`, etc. (the old screen is abandoned in favor of the new result — the **new screenId becomes the working screen**).
 6. **Notify user** that screenshots are ready, listing their file paths — **do not read/display inline** — and return to Step 1.11
 
 ### If User Requests Edits
 
+`edit_screens` is **broken via MCP** — never call it. Edits are implemented as single REFINE variants per the [Edit-as-Variant Pattern](../references/stitch-guide.md#edit-as-variant-pattern-all-design-edits); the result is a **new screen** that replaces the old one as the working screen.
+
 1. **Record baseline**: Call `mcp__stitch__list_screens` to record the current screen list before editing.
-2. **Edit** using `mcp__stitch__edit_screens` with:
+2. **Edit** using `mcp__stitch__generate_variants` with:
 ```
 projectId: {projectId}
 selectedScreenIds: [{screenId of variant to edit}]
-prompt: {user's edit request}
+prompt: "{user's edit request}. Keep everything else exactly the same."
 deviceType: MOBILE
 modelId: GEMINI_3_FLASH
+variantOptions:
+  variantCount: 1
+  creativeRange: "REFINE"
 ```
-3. Follow the **After Any Stitch Operation** procedure above.
+3. Follow the **After Any Stitch Operation** procedure above (edits numbering: the new screen becomes `{featurename}_v1.png` and the working screenId).
 
 ### If User Wants Variants
 
@@ -548,7 +555,7 @@ Maximum 10 iterations per screen. If not converging, ask user to clarify require
 
 After user selects their preferred variant:
 
-1. **Identify the approved screen**: Edits/variants generate new screens in Stitch. Download only the **screen corresponding to the user's selection** from Step 1.11 — this may not be the most recently generated screen.
+1. **Identify the approved screen**: Every Stitch operation (edits included — they run as variants) creates new screens. Download only the **screen corresponding to the user's selection** from Step 1.11 — this may not be the most recently generated screen.
 2. **Rename** the selected `{featurename}_v{N}.png` → **`{featurename}.png`**
 3. **Delete all** remaining `{featurename}_v*.png` files
 4. **Write successScreenId and successScreenName to project-wide config**:
@@ -582,7 +589,7 @@ For **each** accepted secondary screen (in the order confirmed in Step 1.1), run
 Do not duplicate either procedure here; follow the chosen one with these substitutions:
 
 - **Resume check**: if `.claude/docs/{featurename}/designs/{featurename}_{role}.png` already exists AND a matching `secondaryScreens[]` entry (same `role`+`label`) has a non-null `screenId`, skip generation for that screen — reuse the stored screen. Otherwise generate.
-- **Initial generation**: always start the screen fresh with `mcp__stitch__generate_screen_from_text`, **not** `edit_screens` on the success screen — each secondary is its own Stitch screen. Use `projectId` from `stitch-project.json.projectId`, `modelId: GEMINI_3_FLASH`, `deviceType: MOBILE`, and record/diff the screen list via the **Screen Sync Procedure** (Step 1.10) exactly as for the primary. (Iteration after that follows the chosen loop: `kind: screen` may use `generate_variants`/`edit_screens` per Steps 1.11–1.12; `kind: surface` uses `edit_screens` on its own screen per the empty-state Approve-or-Edit loop. Neither ever edits the success screen.)
+- **Initial generation**: always start the screen fresh with `mcp__stitch__generate_screen_from_text` — each secondary is its own Stitch screen, never derived by operating on the success screen. Use `projectId` from `stitch-project.json.projectId`, `modelId: GEMINI_3_FLASH`, `deviceType: MOBILE`, and record/diff the screen list via the **Screen Sync Procedure** (Step 1.10) exactly as for the primary. (Iteration after that follows the chosen loop: `kind: screen` uses variants/edit-as-variant per Steps 1.11–1.12; `kind: surface` iterates on its own screen per the empty-state Approve-or-Edit loop. All edits run through `generate_variants` — `edit_screens` is broken via MCP and never called.)
 - **Prompt — branch on `kind`**:
   - **`kind: surface`** — an overlay sized to its content, **not** a full screen. The **Shared-Conventions chrome** (top app bar, bottom navigation) usually does **NOT** apply — do not paste it. Describe per role: a `bottomsheet` as a rounded-top sheet anchored to the bottom with a drag handle; a `dialog`/`modal` as a centered rounded card with a scrim; a `drawer` as an edge-anchored panel.
   - **`kind: screen`** — a **full screen**, same as the primary. The **Shared-Conventions chrome applies** — paste the Step 1.5 Shared Conventions block so its top app bar / background / nav match the primary (it usually shows a back arrow returning to the primary). Describe its full layout.
