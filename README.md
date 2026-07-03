@@ -72,11 +72,11 @@ cd MyApp && claude
 **3. Run skills along the lifecycle**
 
 ```
-> /ui-designer checkout flow with delivery options          # design
-> /creating-kmp-feature product detail screen with reviews  # scaffold
+> /design-ui checkout flow with delivery options          # design
+> /create-feature product detail screen with reviews  # scaffold
 > /verify-ui productdetail                                  # verify UI vs design
-> /feature-test productdetail                               # test all layers
-> /feature-review productdetail                             # audit architecture
+> /test-feature productdetail                               # test all layers
+> /review-feature productdetail                             # audit architecture
 ```
 
 See [Skills](#-skills) for the full catalog and [The Pattern](#-the-pattern) for the flow.
@@ -89,13 +89,13 @@ See [Skills](#-skills) for the full catalog and [The Pattern](#-the-pattern) for
 
 ```mermaid
 graph LR
-  A["🎨 /ui-designer<br/>design"] --> B["🏗️ /creating-kmp-feature<br/>scaffold"]
+  A["🎨 /design-ui<br/>design"] --> B["🏗️ /create-feature<br/>scaffold"]
   B --> C["🔍 /verify-ui<br/>verify"]
-  C --> D["✅ /feature-test<br/>test"]
-  D --> E["📋 /feature-review<br/>review"]
+  C --> D["✅ /test-feature<br/>test"]
+  D --> E["📋 /review-feature<br/>review"]
 ```
 
-Each skill owns one phase and composes without coordinating. The blueprint from `/ui-designer` is picked up automatically by `/creating-kmp-feature`; the spec is regenerated as the code evolves; `/verify-ui`, `/feature-test`, and `/feature-review` audit against it.
+Each skill owns one phase and composes without coordinating. The blueprint from `/design-ui` is picked up automatically by `/create-feature`; the spec is regenerated as the code evolves; `/verify-ui`, `/test-feature`, and `/review-feature` audit against it.
 
 > The architecture is the constraint, the LLM is the executor, the spec is the contract. KMP is the proof point — the pattern generalizes to any opinionated stack.
 
@@ -123,23 +123,23 @@ Slash-commands ordered by the lifecycle they cover. Run them inside Claude Code 
 
 | Phase | Command | Does |
 |---|---|---|
-| Design | `/ui-designer {name}` | Design screens in Google Stitch, produce a Compose blueprint |
-| Scaffold | `/creating-kmp-feature {prompt}` | Build a complete feature from a prompt (uses the blueprint if present) |
-| Iterate | `/modifying-kmp-feature {prompt}` | Apply changes to an existing feature |
+| Design | `/design-ui {name}` | Design screens in Google Stitch, produce a Compose blueprint |
+| Scaffold | `/create-feature {prompt}` | Build a complete feature from a prompt (uses the blueprint if present) |
+| Iterate | `/modify-feature {prompt}` | Apply changes to an existing feature |
 | Verify UI | `/verify-ui {name}` | Audit the implementation against the Stitch design |
-| Test | `/feature-test {name}` | Generate fixtures, repository, ViewModel, and UI tests |
-| Review | `/feature-review {name}` | Audit a feature against the 14 architecture rules |
+| Test | `/test-feature {name}` | Generate fixtures, repository, ViewModel, and UI tests |
+| Review | `/review-feature {name}` | Audit a feature against the 14 architecture rules |
 | Spec | `/audit-spec {name}` | Regenerate or diff a feature's living spec |
 | Coverage | `/coverage` | Test coverage report |
-| Health | `/features-health` | Status report across all feature modules |
+| Health | `/health-report` | Status report across all feature modules |
 
-Plus two auto-activated skills: `using-design-system` (enforces X-components on UI work) and `bridging-swift-kotlin` (guides iOS SDK integration).
+Plus two auto-activated skills: `using-design-system` (enforces X-components on UI work) and `bridge-swift` (guides iOS SDK integration).
 
 <br />
 
 ## 📦 What Gets Generated
 
-Every feature module follows the same Clean Architecture shape, plus a living spec at `.claude/docs/{name}/spec.md` and a full test suite (fixtures, repository, ViewModel, UI) when you run `/feature-test`.
+Every feature module follows the same Clean Architecture shape, plus a living spec at `.claude/docs/{name}/spec.md` and a full test suite (fixtures, repository, ViewModel, UI) when you run `/test-feature`.
 
 <details>
 <summary><b>Feature module layout</b></summary>

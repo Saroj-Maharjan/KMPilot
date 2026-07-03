@@ -171,7 +171,7 @@ This project ships with Claude Code skills for feature scaffolding, testing, and
 
 ```bash
 claude
-> /creating-kmp-feature ...
+> /create-feature ...
 ```
 
 Available skills are in `.claude/skills/`.

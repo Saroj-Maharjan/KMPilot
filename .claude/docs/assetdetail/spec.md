@@ -190,7 +190,7 @@ GET endpoints are routed through `AssetDetailLocalDataSourceImpl` (mock data) un
 
 | # | Point | File | Status |
 |---|-------|------|--------|
-| 1 | Module include | `settings.gradle.kts` | ✅ (added by data-layer-agent) |
+| 1 | Module include | `settings.gradle.kts` | ✅ (added by data-layer) |
 | 2 | Gradle dependency | `composeApp/build.gradle.kts` | ✅ |
 | 3 | DI initialization | `composeApp/.../initKoin.kt` | ✅ |
 | 4 | Navigation | `composeApp/.../BaseAppNavHost.kt` | ✅ |

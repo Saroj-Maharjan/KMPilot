@@ -38,7 +38,7 @@ The audit has three sources: HTML inventory, code, and the catalog. The blueprin
 
 ## Why we dropped the blueprint as an audit source (with one exception)
 
-The implementation blueprint is the design ground truth at *implementation time*. It is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode) so the developer writes Compose that matches the design. By the time `/verify-ui` runs, most of the blueprint has already done its job.
+The implementation blueprint is the design ground truth at *implementation time*. It is consumed by `/create-feature` and `/modify-feature` (design-aware mode) so the developer writes Compose that matches the design. By the time `/verify-ui` runs, most of the blueprint has already done its job.
 
 Reading the blueprint's **token data** a second time in verify-ui caused three problems:
 

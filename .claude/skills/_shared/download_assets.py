@@ -53,22 +53,22 @@ Heuristic, per image (see _classify_image_delivery):
             same CSS class signature (data-bound collection), OR its alt text
             looks like an entity name (low confidence).
   - bundled if role in {background, hero} and not repeated.
-  - else    bundled, low confidence (ambiguous — /ui-designer asks the user).
-A user override is persisted with `delivery_locked: true` (set by /ui-designer
+  - else    bundled, low confidence (ambiguous — /design-ui asks the user).
+A user override is persisted with `delivery_locked: true` (set by /design-ui
 after the AskUserQuestion confirm); subsequent runs reuse the locked decision
 verbatim instead of re-deriving it.
 
 MODES (apply equally to both --type values)
 -------------------------------------------
---manifest-only (used by /ui-designer):
+--manifest-only (used by /design-ui):
   Only writes the {icons|images}.json manifest. NO source mutation, NO
   downloads. Updates other features' manifests on promotion (doc artifacts only).
 
---cleanup-only (used by /modifying-kmp-feature post-UI-agent):
+--cleanup-only (used by /modify-feature post-UI-agent):
   Sweeps feature/{f}/.../drawable/ for orphans (files whose ident is not in
   the manifest AND not referenced by any .kt). Safe deletion only.
 
-default (full, used by /creating-kmp-feature and pre-UI-agent /modifying-):
+default (full, used by /create-feature and pre-UI-agent /modifying-):
   Downloads, applies KMP cleanup (icons only), extends DesignSystemResources.kt,
   inline-migrates stale references in other features.
 
@@ -629,7 +629,7 @@ def _classify_image_delivery(role: str, alt: str, repeat_count: int):
         return "bundled", "high", f"role={role} (static design asset)"
     if _looks_like_entity_name(alt):
         return "remote", "low", f"alt looks like an entity name: {alt!r}"
-    return "bundled", "low", "ambiguous — defaulted to bundled (confirm in /ui-designer)"
+    return "bundled", "low", "ambiguous — defaulted to bundled (confirm in /design-ui)"
 
 
 def _suggest_data_binding(role: str, alt: str) -> str:
@@ -649,7 +649,7 @@ def _suggest_data_binding(role: str, alt: str) -> str:
 
 def read_locked_deliveries(manifest_path: Path, asset_type: AssetType) -> dict:
     """Return {source_url: {delivery, data_binding}} for prior-manifest entries
-    flagged `delivery_locked: true` (a user-confirmed choice from /ui-designer).
+    flagged `delivery_locked: true` (a user-confirmed choice from /design-ui).
     Lets full-mode re-runs honor the user's bundle/remote decision instead of
     re-deriving it from the HTML. Read-only; images only."""
     out: dict = {}
@@ -1070,7 +1070,7 @@ def main(argv):
     cross_feature_usage = scan_existing_manifests(project_root, args.feature, asset_type)
 
     # Resolve the manifest path up front so we can honor user-locked delivery
-    # choices from a prior /ui-designer run (images only; read-only).
+    # choices from a prior /design-ui run (images only; read-only).
     manifest_path = args.manifest or (args.html[0].parent / asset_type.manifest_filename)
     locked_deliveries = read_locked_deliveries(manifest_path, asset_type)
 
@@ -1120,7 +1120,7 @@ def main(argv):
             if locked:
                 delivery = locked["delivery"]
                 delivery_conf = "high"
-                delivery_reason = "locked (user-confirmed in /ui-designer)"
+                delivery_reason = "locked (user-confirmed in /design-ui)"
                 data_binding = locked.get("data_binding")
             else:
                 delivery, delivery_conf, delivery_reason = _classify_image_delivery(

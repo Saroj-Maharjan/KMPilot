@@ -2,7 +2,7 @@
 
 All skills and agents that touch animation link here. Loaded **only** when motion work happens, so `patterns.md` / `blueprint-spec.md` / `stitch-guide.md` stay lean. Do not duplicate this file's tables elsewhere — link to it.
 
-The pipeline **captures → blueprints → implements → verifies** whatever motion a Stitch design contains. It is **capture-only**: `/ui-designer` never injects a motion directive into a Stitch prompt. The user controls motion aggressiveness through their own design prompts; the design encodes it (CSS `@keyframes`, a tailwind `theme.extend.animation` config, custom `<style>` classes, JS drivers), and the pipeline mirrors it in Compose.
+The pipeline **captures → blueprints → implements → verifies** whatever motion a Stitch design contains. It is **capture-only**: `/design-ui` never injects a motion directive into a Stitch prompt. The user controls motion aggressiveness through their own design prompts; the design encodes it (CSS `@keyframes`, a tailwind `theme.extend.animation` config, custom `<style>` classes, JS drivers), and the pipeline mirrors it in Compose.
 
 ---
 

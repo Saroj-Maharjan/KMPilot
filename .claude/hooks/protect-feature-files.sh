@@ -41,7 +41,7 @@ if [[ "$FILE_PATH" == *"/feature/"* ]] || [[ "$FILE_PATH" == feature/* ]]; then
   fi
 
   # Block direct feature source edits - must use skills
-  echo "Blocked: Cannot edit feature source files directly. Use /creating-kmp-feature or /modifying-kmp-feature skill first." >&2
+  echo "Blocked: Cannot edit feature source files directly. Use /create-feature or /modify-feature skill first." >&2
   exit 2
 fi
 

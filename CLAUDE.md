@@ -6,13 +6,13 @@
 
 | Action | Skill | Trigger Keywords |
 |--------|-------|------------------|
-| Create feature | `/creating-kmp-feature` | "new feature", "add feature", "create" |
-| Modify feature | `/modifying-kmp-feature` | "add to", "change", "update", "fix", "modify" |
-| Review feature | `/feature-review` | "review", "check", "audit" |
-| Test feature | `/feature-test` | "test", "generate tests" |
-| Design UI | `/ui-designer` | "design screen", "Stitch", "design UI", "mockup" |
+| Create feature | `/create-feature` | "new feature", "add feature", "create" |
+| Modify feature | `/modify-feature` | "add to", "change", "update", "fix", "modify" |
+| Review feature | `/review-feature` | "review", "check", "audit" |
+| Test feature | `/test-feature` | "test", "generate tests" |
+| Design UI | `/design-ui` | "design screen", "Stitch", "design UI", "mockup" |
 | Verify UI | `/verify-ui` | "verify UI", "audit UI", "check implementation" |
-| Bridge iOS↔Kotlin | `/bridging-swift-kotlin` | "iOS SDK", "Swift", "call Swift", "native framework", "MapKit", "biometrics", "Apple Pay" |
+| Bridge iOS↔Kotlin | `/bridge-swift` | "iOS SDK", "Swift", "call Swift", "native framework", "MapKit", "biometrics", "Apple Pay" |
 
 **IMPORTANT:** Invoke the skill IMMEDIATELY upon recognizing feature work. Do NOT:
 - Read files first to "understand the codebase"
@@ -27,15 +27,15 @@ The skills contain workflows that handle exploration, planning, and implementati
 
 The design pipeline uses a **blueprint artifact contract** for decoupled skill coordination:
 
-1. `/ui-designer` designs screens in Stitch and produces a self-contained blueprint (sets `blueprintConsumed: false` in `stitch-project.json`)
-2. `/creating-kmp-feature` or `/modifying-kmp-feature` auto-detect the blueprint and enter **design-aware mode** (sets `blueprintConsumed: true` after implementation)
+1. `/design-ui` designs screens in Stitch and produces a self-contained blueprint (sets `blueprintConsumed: false` in `stitch-project.json`)
+2. `/create-feature` or `/modify-feature` auto-detect the blueprint and enter **design-aware mode** (sets `blueprintConsumed: true` after implementation)
 3. `/verify-ui` audits the implementation against the Stitch design (three-way token audit)
 
 Each skill is independently invocable — no skill calls another skill. The user controls the pipeline.
 
 ### Platform Capabilities & Native Views (Rule 14)
 
-Features needing a device capability (GPS, camera, BLE, biometrics) or a native view (map, camera preview, WebView) are handled **inside** `/creating-kmp-feature` / `/modifying-kmp-feature` — no separate command. Those skills classify the feature's **Platform Profile** (`network` / `platform-capability` / `native-view` / `mixed`) in Phase 2, then route work to `kmp-platform-agent` (capability behind a `commonMain` DataSource → `Either<T>`, per-platform actuals incl. desktop) and `ui-layer-agent` (the `expect @Composable` native-view interop). When an iOS `actual` needs Swift, they finish the Kotlin side and route you to `/bridging-swift-kotlin` (the iOS-Swift leg). Full patterns: `.claude/skills/creating-kmp-feature/architecture/platform.md`.
+Features needing a device capability (GPS, camera, BLE, biometrics) or a native view (map, camera preview, WebView) are handled **inside** `/create-feature` / `/modify-feature` — no separate command. Those skills classify the feature's **Platform Profile** (`network` / `platform-capability` / `native-view` / `mixed`) in Phase 2, then route work to `platform` (capability behind a `commonMain` DataSource → `Either<T>`, per-platform actuals incl. desktop) and `ui-layer` (the `expect @Composable` native-view interop). When an iOS `actual` needs Swift, they finish the Kotlin side and route you to `/bridge-swift` (the iOS-Swift leg). Full patterns: `.claude/skills/create-feature/architecture/platform.md`.
 
 ---
 

@@ -54,18 +54,18 @@ Read `.claude/docs/_project/stitch-project.json` to load:
 - `projectId` and shared state screen IDs (`sharedStateScreens.loading.screenId`, `sharedStateScreens.failed.screenId`)
 - Per-feature screen IDs (`features[featurename].successScreenId`, `.emptyScreenId`)
 - **Per-feature state selections** (`features[featurename].states = { loading, failed, empty }`). False flags mean the state was skipped at design time and is **not audited** below.
-- **Secondary screens** (`features[featurename].secondaryScreens[]` — each `{ kind, screenId, role, label, htmlPath, tokensPath, dimensions }`, written by `/ui-designer` Step 1.13b). Each is an additional **audit unit** keyed by its `role`; `kind: surface` = an overlay (bottom sheet / dialog / modal / drawer / panel), `kind: screen` = a full sibling screen of the same feature (own Route, reached via callback). Empty/absent → the feature has none; audit nothing extra.
+- **Secondary screens** (`features[featurename].secondaryScreens[]` — each `{ kind, screenId, role, label, htmlPath, tokensPath, dimensions }`, written by `/design-ui` Step 1.13b). Each is an additional **audit unit** keyed by its `role`; `kind: surface` = an overlay (bottom sheet / dialog / modal / drawer / panel), `kind: screen` = a full sibling screen of the same feature (own Route, reached via callback). Empty/absent → the feature has none; audit nothing extra.
 - **Backward compatibility**: if `states` is absent on a legacy feature entry, derive it from observable state — `{ loading: true, failed: true, empty: (emptyScreenId != null) }`. Pre-optional-states features had loading/failed always present and empty only when an `emptyScreenId` was recorded. If `secondaryScreens` is absent, the feature has no secondary screens.
 
 If any prerequisite is missing, stop and inform the user.
 
-> The implementation blueprint is consumed by `/creating-kmp-feature` and `/modifying-kmp-feature` (design-aware mode). Verify-ui does **not** read it — the audit compares HTML directly against the implemented code, with the X-components catalog as the third source for default-render checks.
+> The implementation blueprint is consumed by `/create-feature` and `/modify-feature` (design-aware mode). Verify-ui does **not** read it — the audit compares HTML directly against the implemented code, with the X-components catalog as the third source for default-render checks.
 
 ---
 
 ## Step 2: Acquire HTML (reuse or download)
 
-`/ui-designer` Steps 1.15 / 1.13b persist per-unit HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{key}.html`, where **`{key}`** is the state name (`success`/`loading`/`failed`/`empty`) for states and the **`role`** for each secondary screen. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
+`/design-ui` Steps 1.15 / 1.13b persist per-unit HTML to `.claude/docs/{featurename}/designs/extracted/stitch_{key}.html`, where **`{key}`** is the state name (`success`/`loading`/`failed`/`empty`) for states and the **`role`** for each secondary screen. Reuse those files when present — Stitch URLs are typically one-time use, so a fresh download can fail and there is no benefit to re-downloading the exact same design snapshot.
 
 1. `mkdir -p .claude/docs/{featurename}/designs/extracted`
 2. Build the **audit unit list**: always include `success`; include `loading`/`failed`/`empty` **only when `states.{state} == true`** (per Step 1's derived flags); include **one unit per `secondaryScreens[]` entry, keyed by its `role`**. Skipped states are not acquired and not audited.
@@ -88,7 +88,7 @@ If any prerequisite is missing, stop and inform the user.
 
 ## Step 3: Token Extraction
 
-For each unit (`{key}` = state name or secondary-surface `role`) **in the audit unit list from Step 2** (skipped states are not extracted), reuse the inventory `/ui-designer` already produced when present; otherwise re-extract.
+For each unit (`{key}` = state name or secondary-surface `role`) **in the audit unit list from Step 2** (skipped states are not extracted), reuse the inventory `/design-ui` already produced when present; otherwise re-extract.
 
 1. **Reuse path**: If `.claude/docs/{featurename}/designs/extracted/tokens_{key}.md` exists and is non-empty, use it as-is.
 2. **Re-extract path** (only when the inventory is missing or you re-downloaded the HTML in Step 2):
@@ -203,7 +203,7 @@ Skip a row entirely when the X-component isn't used in the feature. Do **not** w
 
 ### 5.4 Component Overrides Check — feature-specific traps from the blueprint
 
-The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/ui-designer` Step 1.16 in the blueprint's **Component Overrides** table. Together with the **Typography Updates Required** table (Step 5.4b), these are the only blueprint sections verify-ui consults.
+The fixed checklist in 5.3 catches the seven traps that have caused real bugs across multiple features. Per-feature divergences (e.g. `XCard containerColor`, a non-default `XBadge` size) are recorded by `/design-ui` Step 1.16 in the blueprint's **Component Overrides** table. Together with the **Typography Updates Required** table (Step 5.4b), these are the only blueprint sections verify-ui consults.
 
 1. Read **only** the `### Component Overrides` table inside `## Pre-Implementation Contract` of `.claude/docs/{featurename}/designs/{featurename}_blueprint.md` (Step 5.4b separately reads `### Typography Updates Required`). Do not read any other blueprint section. If the blueprint is missing, skip 5.4 and note in the audit: `Blueprint not found — Component Overrides check skipped.`
 2. For each row (`Component | Property | HTML Value | X-component Default | Override Required`):
@@ -283,7 +283,7 @@ This is a **reference table only**. Apply these labels inline as you produce mis
 
 ### 5.7 Icons Manifest Audit
 
-**Purpose**: Verify the implementation matches the icons manifest produced by `/ui-designer` Step 1.15 sub-step 5 and materialized by `/creating-kmp-feature` / `/modifying-kmp-feature` (design-aware mode).
+**Purpose**: Verify the implementation matches the icons manifest produced by `/design-ui` Step 1.15 sub-step 5 and materialized by `/create-feature` / `/modify-feature` (design-aware mode).
 
 **Skip condition**: If `.claude/docs/{featurename}/designs/extracted/icons.json` does not exist OR `stitch-project.json.features[{featurename}].blueprintConsumed != true`, skip this step with: `### Icons Manifest Audit: skipped — feature not implemented in design-aware mode.`
 
@@ -309,7 +309,7 @@ For each entry in `icons.json.icons`:
    ### MINOR — Icon declared but not referenced in code: {entry.drawable_name}
    - **HTML:** icon present in design (state(s): {entry.occurrences})
    - **Code:** no `painterResource({entry.res_reference})` call found in `feature/{featurename}/src/`
-   - **Fix:** Either reference the icon in the relevant composable, or remove its `<span>` from the Stitch design and re-run `/ui-designer`.
+   - **Fix:** Either reference the icon in the relevant composable, or remove its `<span>` from the Stitch design and re-run `/design-ui`.
    - **Source:** icons.json
    ```
 
@@ -337,7 +337,7 @@ When the feature wires a bottom nav bar, also scan `App.kt` for `XNavigationBar`
 - **Source:** Blueprint Component Overrides (app-shell chrome at Integration Point 5)
 ```
 
-This is **not** a hardcoded property list — it is driven entirely by what `/ui-designer` recorded in the blueprint's Component Overrides table. Tab count, order, labels, and app-shell icons remain out of scope.
+This is **not** a hardcoded property list — it is driven entirely by what `/design-ui` recorded in the blueprint's Component Overrides table. Tab count, order, labels, and app-shell icons remain out of scope.
 
 4. **Forbidden legacy imports** — grep all feature Kotlin for `import androidx.compose.material.icons.`. Any match is CRITICAL (the pinned `material-icons-extended` library is deprecated; every icon usage in a design-aware feature must go through `XIcon(painter = painterResource(...))`):
    ```markdown
@@ -353,7 +353,7 @@ This is **not** a hardcoded property list — it is driven entirely by what `/ui
    ### MINOR — Orphan icon XML: {ident}.xml
    - **Where:** `{drawable_dir}/{ident}.xml`
    - **Code:** not referenced by any icons.json manifest AND no `.kt` code references it
-   - **Fix:** If the icon is no longer used by any feature, delete it. If it should be in a feature's manifest, re-run `/ui-designer {featurename}` to regenerate.
+   - **Fix:** If the icon is no longer used by any feature, delete it. If it should be in a feature's manifest, re-run `/design-ui {featurename}` to regenerate.
    ```
 
    The "not actively referenced" rule alone is sufficient — pre-existing project assets (the design system's logos, placeholders, level icons, etc.) survive because their Kotlin call-sites still reference them. No hardcoded allowlist needed.
@@ -369,7 +369,7 @@ This is **not** a hardcoded property list — it is driven entirely by what `/ui
 
 ### 5.8 Images Manifest Audit
 
-**Purpose**: Verify the implementation matches the images manifest produced by `/ui-designer` Step 1.15 sub-step 6 and materialized by `/creating-kmp-feature` / `/modifying-kmp-feature`.
+**Purpose**: Verify the implementation matches the images manifest produced by `/design-ui` Step 1.15 sub-step 6 and materialized by `/create-feature` / `/modify-feature`.
 
 **Skip condition**: If `.claude/docs/{featurename}/designs/extracted/images.json` does not exist OR `stitch-project.json.features[{featurename}].blueprintConsumed != true`, skip with: `### Images Manifest Audit: skipped — feature not implemented in design-aware mode.`
 
@@ -560,17 +560,17 @@ Also confirm `composeResources/values/strings.xml` exists and every `Res.string.
 
    ---
 
-   > **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
+   > **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modify-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
    ```
 
-This skill does not invoke `/modifying-kmp-feature` — the user controls the pipeline.
+This skill does not invoke `/modify-feature` — the user controls the pipeline.
 
 ### Only minor mismatches
 
 | Option | Description |
 |--------|-------------|
 | Accept (Recommended) | Minor differences are acceptable |
-| Fix all | User invokes `/modifying-kmp-feature` |
+| Fix all | User invokes `/modify-feature` |
 
 ---
 
@@ -628,5 +628,5 @@ Audit report: .claude/docs/{featurename}/designs/{featurename}_audit.md
 
 ---
 
-> **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modifying-kmp-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
+> **Next step —** run `/clear` to free the context window (the audit at `.claude/docs/{featurename}/designs/{featurename}_audit.md` + the blueprint are durable artifacts the next skill re-reads fresh, so clearing loses nothing), then `/modify-feature {featurename} fix all UI audit issues based on @.claude/docs/{featurename}/designs/{featurename}_audit.md` to apply the fixes.
 ```

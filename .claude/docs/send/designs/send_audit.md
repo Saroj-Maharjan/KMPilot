@@ -180,4 +180,4 @@ All 10 rows from the blueprint's `Component Overrides` table are satisfied in co
 | Failed | 4 | 1 | FAIL |
 | X-Components | 0 | — | PASS |
 
-**Total critical: 11.** Run `/modifying-kmp-feature send fix all UI audit issues based on @.claude/docs/send/designs/send_audit.md` to apply the fixes.
+**Total critical: 11.** Run `/modify-feature send fix all UI audit issues based on @.claude/docs/send/designs/send_audit.md` to apply the fixes.

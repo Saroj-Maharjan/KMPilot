@@ -8,7 +8,7 @@
       "alt": "BTC",
       "delivery": "remote",
       "delivery_confidence": "high",
-      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_reason": "locked (user-confirmed in /design-ui)",
       "delivery_locked": true,
       "data_binding": "avatarUrl",
       "compose_hint": "AsyncImage",
@@ -54,7 +54,7 @@
       ],
       "delivery": "bundled",
       "delivery_confidence": "high",
-      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_reason": "locked (user-confirmed in /design-ui)",
       "delivery_locked": true
     },
     {
@@ -63,7 +63,7 @@
       "alt": "ETH",
       "delivery": "remote",
       "delivery_confidence": "high",
-      "delivery_reason": "locked (user-confirmed in /ui-designer)",
+      "delivery_reason": "locked (user-confirmed in /design-ui)",
       "delivery_locked": true,
       "data_binding": "avatarUrl",
       "compose_hint": "AsyncImage",

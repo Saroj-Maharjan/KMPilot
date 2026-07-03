@@ -30,7 +30,7 @@ Provided when relevant to the agent's layer (see table):
 | `{NAV_HOST_PATH}` | — | — | ✅ |
 
 Source of truth for what the orchestrator passes:
-`@../../skills/creating-kmp-feature/phases/phase-4-implementation.md`.
+`@../../skills/create-feature/phases/phase-4-implementation.md`.
 
 ## Build Validation
 
@@ -47,9 +47,9 @@ After implementation:
 4. Report if still failing
 
 Troubleshooting files:
-- Data: @../../skills/creating-kmp-feature/troubleshooting/data.md
-- UI: @../../skills/creating-kmp-feature/troubleshooting/ui.md
-- Integration: @../../skills/creating-kmp-feature/troubleshooting/integration.md
+- Data: @../../skills/create-feature/troubleshooting/data.md
+- UI: @../../skills/create-feature/troubleshooting/ui.md
+- Integration: @../../skills/create-feature/troubleshooting/integration.md
 
 ## Error Handling Pattern
 

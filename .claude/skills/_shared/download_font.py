@@ -39,9 +39,9 @@ SOURCES (precedence in `auto`)
 
 MODES
   --manifest-only : write fonts.json only (no download, no source mutation). Used
-                    by /ui-designer (design-only skill).
+                    by /design-ui (design-only skill).
   default (full)  : download .ttf into the font dir + write fonts.json. Used by
-                    /creating-kmp-feature & /modifying-kmp-feature (design-aware).
+                    /create-feature & /modify-feature (design-aware).
   --dry-run       : resolve + report, mutate nothing.
 
 On any failure the script prints the exact filenames, target dir, and Font(...)

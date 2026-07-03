@@ -187,23 +187,23 @@ fun WelcomeScreen() {
                     index = "01",
                     title = "Code-first",
                     description = "Skip the design step and scaffold straight into Kotlin.",
-                    commands = listOf("/creating-kmp-feature"),
+                    commands = listOf("/create-feature"),
                 )
                 Spacer(Modifier.height(12.dp))
                 PathCard(
                     index = "02",
                     title = "Design-first",
                     description = "Design your screens in Stitch, then let the blueprint drive the scaffold.",
-                    commands = listOf("/ui-designer", "/creating-kmp-feature"),
+                    commands = listOf("/design-ui", "/create-feature"),
                 )
 
                 Spacer(Modifier.height(56.dp))
                 EyebrowLabel("IN YOUR TOOLBOX")
                 Spacer(Modifier.height(16.dp))
 
-                CommandRow("/modifying-kmp-feature", "Change an existing feature")
-                CommandRow("/feature-test", "Generate the test suite")
-                CommandRow("/feature-review", "Audit the architecture")
+                CommandRow("/modify-feature", "Change an existing feature")
+                CommandRow("/test-feature", "Generate the test suite")
+                CommandRow("/review-feature", "Audit the architecture")
                 CommandRow("/verify-ui", "Compare implementation against Stitch design")
 
                 Spacer(Modifier.height(40.dp))
@@ -327,8 +327,8 @@ private fun CommandRow(command: String, description: String) {
 WELCOME_EOF
 
     # 5. Replace nav host with a Welcome-only version. The integration
-    #    agent in /creating-kmp-feature swaps this for the first feature's
-    #    route (and deletes WelcomeScreen.kt) — see kmp-integration-agent.md.
+    #    agent in /create-feature swaps this for the first feature's
+    #    route (and deletes WelcomeScreen.kt) — see integrator.md.
     cat > composeApp/src/commonMain/kotlin/thisissadeghi/kmpilot/BaseAppNavHost.kt <<'NAVHOST_EOF'
 package thisissadeghi.kmpilot
 
@@ -538,10 +538,10 @@ A Kotlin Multiplatform + Compose Multiplatform app, generated from
 Run the scaffolding commands inside [Claude Code](https://claude.ai/code):
 
 ```
-/creating-kmp-feature            # scaffold a new feature
-/modifying-kmp-feature           # change an existing one
-/feature-test                    # generate its test suite
-/feature-review                  # audit the architecture
+/create-feature            # scaffold a new feature
+/modify-feature           # change an existing one
+/test-feature                    # generate its test suite
+/review-feature                  # audit the architecture
 ```
 
 ## Staying up to date

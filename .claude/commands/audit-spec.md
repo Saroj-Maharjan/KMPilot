@@ -23,8 +23,8 @@ Audit, generate, or compare specifications for existing features.
 |----------|------|
 | Legacy feature without spec | Yes |
 | Check spec-code consistency | Yes (--compare) |
-| New feature creation | No → `/creating-kmp-feature` |
-| Modifying existing feature | No → `/modifying-kmp-feature` |
+| New feature creation | No → `/create-feature` |
+| Modifying existing feature | No → `/modify-feature` |
 
 ## Mode 1: Generate Spec (Default)
 
@@ -57,7 +57,7 @@ Audit, generate, or compare specifications for existing features.
 
    ---
 
-   > **Next step —** review `.claude/docs/{featurename}/spec.md` and fill any TODO sections, then run `/clear` to free the context window, followed by `/feature-review {featurename}` to validate the implementation against it.
+   > **Next step —** review `.claude/docs/{featurename}/spec.md` and fill any TODO sections, then run `/clear` to free the context window, followed by `/review-feature {featurename}` to validate the implementation against it.
    ```
 
 ## Mode 2: Compare/Drift Detection (--compare)
