@@ -9,7 +9,7 @@ rm -f /tmp/.claude-kmpilot-skill-active
 cat <<'RULES'
 ## Critical Architecture Rules (Re-injected After Compaction)
 
-**11 Rules:**
+**14 Rules:**
 1. Interface + Impl pairs for DataSource/Repository
 2. Either<T> for errors - NEVER throw exceptions
 3. setState { copy() } - NEVER _uiModel.value =
@@ -21,6 +21,9 @@ cat <<'RULES'
 9. No UseCases - ViewModels call repositories directly
 10. Callback params (onBackClick) - not navController
 11. Single *UiModel + DTO-wrapped UiState<T> - NO *UiState.kt; data/ never imports presentation/
+12. No hardcoded user-facing strings - stringResource(Res.string.*)/DesignSystemResources; ViewModel strings via UiText
+13. Single app-shell Scaffold - feature screens use XScreen, never Scaffold/XScaffold; shell owns window insets
+14. Platform capability = commonMain DataSource -> Either<T> (actuals for android/ios/desktop); native view = expect @Composable; DI via includes(platformModule)
 
 **4 Integration Points (all required):**
 1. settings.gradle.kts - include(":feature:{name}")
@@ -28,7 +31,7 @@ cat <<'RULES'
 3. initKoin.kt - add {featurename}Module to modules(...)
 4. BaseAppNavHost.kt - {featurename}(onBackClick = {...})
 
-**Mandatory Workflow:** NEVER edit feature/ files directly. Use /creating-kmp-feature or /modifying-kmp-feature.
+**Mandatory Workflow:** NEVER edit feature/ files directly. Use /create-feature or /modify-feature.
 
 Full patterns: @.claude/skills/_shared/patterns.md
 RULES
