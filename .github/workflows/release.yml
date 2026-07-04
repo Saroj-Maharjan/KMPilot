@@ -71,6 +71,14 @@ jobs:
             grab                   { print }
           ' CHANGELOG.md > body.md
           [ -s body.md ] || echo "Release ${GITHUB_REF_NAME}" > body.md
+          # Drop "### Migrating …" subsections from the changelog body — the
+          # Update section above already covers migration; say it once.
+          awk '
+            /^### Migrating/   { skip=1; next }
+            skip && /^#{2,3} / { skip=0 }
+            skip               { next }
+                               { print }
+          ' body.md > body.tmp && mv body.tmp body.md
           # Prepend the install command so every release page leads with how to install.
           {
             echo "## Install"
