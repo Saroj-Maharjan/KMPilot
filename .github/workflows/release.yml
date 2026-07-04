@@ -77,6 +77,18 @@ jobs:
             echo
             echo "> Always-latest instead: \`releases/latest/download/install.sh\` · bleeding edge: \`KMPILOT_TEMPLATE_BRANCH=main\`"
             echo
+            echo "## Update"
+            echo
+            echo "Already have a project from \`install.sh\`? Pull this release into it:"
+            echo
+            echo '```bash'
+            echo "./update.sh            # tooling only — .claude skills/agents/hooks, CLAUDE.md, gradle wrapper"
+            echo "./update.sh --core     # also merge core/ modules (rename-aware; conflicts are surfaced, never silent)"
+            echo "./update.sh --dry-run  # preview what would change; writes nothing"
+            echo '```'
+            echo
+            echo "It never touches \`feature/\`, your app modules, or your per-feature specs, and never commits — review \`git diff\`, resolve any \`<<<<<<<\` markers, then commit. See upgrade notes below (tagged \`[Tooling]\` / \`[Core]\` / \`[Breaking]\`)."
+            echo
             echo "## What's changed"
             echo
             cat body.md
