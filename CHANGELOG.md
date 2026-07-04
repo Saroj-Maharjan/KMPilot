@@ -18,6 +18,19 @@ may conflict), or **[Breaking]** (manual steps required).
 - **[Tooling]** Compaction hook re-injected only 11 of the 14 architecture rules,
   dropping Rules 12–14 (string resources, single app-shell Scaffold, platform
   capability) after a `/compact`.
+- **[Tooling]** `update.sh` now applies upstream **renames and deletions**. Renamed
+  files (detected via git rename tracking) carry your local edits to the new path and
+  the old copy is removed; files deleted upstream are removed when your copy is
+  unmodified. A locally edited copy is never force-deleted — only flagged. Previously
+  a release that renamed skills left both the old and new skill directories on disk,
+  keeping stale skills discoverable.
+- **[Tooling]** `update.sh` preserves the executable bit on newly added files (new
+  hooks would otherwise land non-executable and silently never fire) and never
+  text-merges binary files (e.g. `gradle-wrapper.jar`) — it takes upstream's copy when
+  yours is unmodified and flags it for manual reconciliation otherwise.
+- **[Tooling]** `update.sh` no longer misleads after a conflicted run: the exit message
+  explains that `.kmpilot.json` is already bumped and how to abandon the update
+  wholesale, so a partial revert can't silently shift the next update's base.
 
 ## [0.1.1] — 2026-07-01
 

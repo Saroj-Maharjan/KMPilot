@@ -10,6 +10,9 @@
 #   • Tier 2 (--core): re-applies YOUR package rename to upstream core/ changes,
 #     then 3-way-merges. Conflicts are written as <<<<<<< markers — NEVER
 #     auto-resolved.
+#   • Upstream renames follow your local edits to the new path; upstream
+#     deletions are applied only when your copy is unmodified — a locally
+#     edited copy is never force-deleted, just flagged.
 #   • Never touches feature/, your app modules (composeApp/androidApp/iosApp),
 #     or your per-feature specs (.claude/docs/<feature>/).
 #   • Never commits. You review `git diff`, resolve any conflicts, then commit.
@@ -45,7 +48,7 @@ while [[ $# -gt 0 ]]; do
         --to=*)     TO_OVERRIDE="${1#*=}" ;;
         --from)     FROM_OVERRIDE="${2:-}"; shift ;;
         --from=*)   FROM_OVERRIDE="${1#*=}" ;;
-        -h|--help)  sed -n '2,25p' "$0"; exit 0 ;;
+        -h|--help)  sed -n '2,28p' "$0"; exit 0 ;;
         *)          die "unknown argument '$1' (try --help)" ;;
     esac
     shift
@@ -153,45 +156,147 @@ TIER2_PATHS=(core)
 MANUAL_PATHS=(gradle/libs.versions.toml build.gradle.kts settings.gradle.kts
              composeApp androidApp iosApp)
 
-applied=0; merged=0; conflicts=0; skipped=0; manual=0
+applied=0; merged=0; moved=0; deleted=0; conflicts=0; skipped=0; manual=0
 
 up_show() { git -C "$UP" show "${1}:${2}" 2>/dev/null || true; }
 
-# process_file <upstream-path> <status A|M|D> <rename yes|no>
+# make the downstream file executable when upstream tracks it as 100755
+# (files land via `git show >`/cp, which drops the exec bit — hooks would
+# silently stop firing without this)
+apply_mode() {  # <upstream-path> <downstream-path>
+    local mode
+    mode="$(git -C "$UP" ls-tree -r "$TARGET_TAG" -- "$1" 2>/dev/null | awk '{print $1; exit}')"
+    if [[ "$mode" == "100755" ]]; then chmod +x "$2"; fi
+}
+
+# git's own binary heuristic: numstat prints "-<TAB>-" for binary content
+is_binary() {  # <file>
+    local n
+    n="$(git diff --no-index --numstat /dev/null "$1" 2>/dev/null || true)"
+    [[ "$n" == "-"$'\t'"-"$'\t'* ]]
+}
+
+# delete a downstream file and prune now-empty parent dirs
+remove_down() {  # <downstream-path>
+    if [[ "$DRY_RUN" == "no" ]]; then
+        rm -f "$1"
+        rmdir -p "$(dirname "$1")" 2>/dev/null || true
+    fi
+}
+
+# process_file <up-old-path> <up-new-path> <status A|M|D|R> <rename yes|no>
+# For A/M/D old == new; for R (upstream rename) they differ. Reads the caller's
+# BASE at the old path, writes the result to the new path.
 process_file() {
-    local up_path="$1" status="$2" rename="$3" down_path
-    if [[ "$rename" == "yes" ]]; then down_path="$(rename_path "$up_path")"; else down_path="$up_path"; fi
+    local up_old="$1" up_new="$2" status="$3" rename="$4" down_old down_new
+    if [[ "$rename" == "yes" ]]; then
+        down_old="$(rename_path "$up_old")"; down_new="$(rename_path "$up_new")"
+    else
+        down_old="$up_old"; down_new="$up_new"
+    fi
 
     # Never overwrite the running updater in place — bash may re-read $0 mid-run and
     # corrupt this very invocation. Stage it as update.sh.new for the user to swap in
     # (surfaced in the summary below).
-    if [[ "$down_path" == "update.sh" ]]; then down_path="update.sh.new"; fi
-
-    if [[ "$status" == "D" ]]; then
-        warn "upstream removed: $up_path — left your $down_path untouched (delete manually if unused)"
-        manual=$((manual+1)); return
-    fi
+    if [[ "$down_new" == "update.sh" ]]; then down_new="update.sh.new"; fi
 
     local base_f="$TMP/base" theirs_f="$TMP/theirs" ours_f="$TMP/ours" result="$TMP/result"
     : > "$base_f"; : > "$theirs_f"
 
-    if [[ "$rename" == "yes" ]]; then
-        up_show "$TARGET_TAG" "$up_path" > "$TMP/raw"; rename_stream "$TMP/raw" "$theirs_f"
-        if [[ "$status" != "A" ]]; then up_show "$BASE_TAG" "$up_path" > "$TMP/raw"; rename_stream "$TMP/raw" "$base_f"; fi
-    else
-        up_show "$TARGET_TAG" "$up_path" > "$theirs_f"
-        if [[ "$status" != "A" ]]; then up_show "$BASE_TAG" "$up_path" > "$base_f"; fi
+    if [[ "$status" != "D" ]]; then
+        if [[ "$rename" == "yes" ]]; then
+            up_show "$TARGET_TAG" "$up_new" > "$TMP/raw"; rename_stream "$TMP/raw" "$theirs_f"
+        else
+            up_show "$TARGET_TAG" "$up_new" > "$theirs_f"
+        fi
+    fi
+    if [[ "$status" != "A" ]]; then
+        if [[ "$rename" == "yes" ]]; then
+            up_show "$BASE_TAG" "$up_old" > "$TMP/raw"; rename_stream "$TMP/raw" "$base_f"
+        else
+            up_show "$BASE_TAG" "$up_old" > "$base_f"
+        fi
     fi
 
-    # downstream missing this file → straight add
-    if [[ ! -f "$down_path" ]]; then
-        if [[ "$DRY_RUN" == "no" ]]; then mkdir -p "$(dirname "$down_path")"; cp "$theirs_f" "$down_path"; fi
-        info "add:     $down_path"; applied=$((applied+1)); return
+    # ── upstream deletion: apply only when your copy is unmodified ──
+    if [[ "$status" == "D" ]]; then
+        if [[ ! -f "$down_old" ]]; then skipped=$((skipped+1)); return; fi
+        if cmp -s "$down_old" "$base_f"; then
+            remove_down "$down_old"
+            info "delete:  $down_old"; deleted=$((deleted+1))
+        else
+            warn "upstream removed $up_old but your $down_old has local changes — delete manually if unused"
+            manual=$((manual+1))
+        fi
+        return
     fi
-    cp "$down_path" "$ours_f"
 
-    # already identical to upstream target → nothing to do
-    if cmp -s "$ours_f" "$theirs_f"; then skipped=$((skipped+1)); return; fi
+    # ours: prefer the new path (a rename may already be half-applied), else the
+    # old path (upstream rename — your edits live there and must follow the move)
+    local ours_src=""
+    if [[ -f "$down_new" ]]; then ours_src="$down_new"
+    elif [[ -f "$down_old" ]]; then ours_src="$down_old"; fi
+
+    # downstream missing entirely → straight add
+    if [[ -z "$ours_src" ]]; then
+        if [[ "$DRY_RUN" == "no" ]]; then
+            mkdir -p "$(dirname "$down_new")"; cp "$theirs_f" "$down_new"
+            apply_mode "$up_new" "$down_new"
+        fi
+        info "add:     $down_new"; applied=$((applied+1)); return
+    fi
+    cp "$ours_src" "$ours_f"
+
+    # clear_old_path: after content landed at $down_new, deal with a leftover
+    # old-path copy. Uses the caller's locals (bash dynamic scoping).
+    clear_old_path() {
+        if [[ "$down_old" == "$down_new" || ! -f "$down_old" ]]; then return 0; fi
+        if [[ "$ours_src" == "$down_old" ]]; then
+            # this copy was the merge input — its content now lives at the new path
+            remove_down "$down_old"
+            info "move:    $down_old → $down_new"; moved=$((moved+1))
+        elif cmp -s "$down_old" "$base_f"; then
+            # stale unmodified leftover from an earlier update run
+            remove_down "$down_old"
+            info "delete:  $down_old (renamed upstream)"; deleted=$((deleted+1))
+        else
+            warn "renamed upstream, but old copy $down_old has local edits — delete manually"
+            manual=$((manual+1))
+        fi
+        return 0
+    }
+
+    # already identical to upstream target → at most finish the move
+    if cmp -s "$ours_f" "$theirs_f"; then
+        if [[ "$ours_src" != "$down_new" ]]; then
+            if [[ "$DRY_RUN" == "no" ]]; then
+                mkdir -p "$(dirname "$down_new")"; cp "$theirs_f" "$down_new"
+                apply_mode "$up_new" "$down_new"
+            fi
+            clear_old_path
+        else
+            clear_old_path
+            skipped=$((skipped+1))
+        fi
+        return
+    fi
+
+    # ── binary: never text-merge (merge-file would corrupt it) ──
+    if is_binary "$theirs_f" || is_binary "$ours_f"; then
+        if cmp -s "$ours_f" "$base_f"; then
+            if [[ "$DRY_RUN" == "no" ]]; then
+                mkdir -p "$(dirname "$down_new")"; cp "$theirs_f" "$down_new"
+                apply_mode "$up_new" "$down_new"
+            fi
+            clear_old_path
+            info "binary:  $down_new (took upstream — your copy was unmodified)"
+            applied=$((applied+1))
+        else
+            warn "binary changed upstream AND locally: $down_new — reconcile manually"
+            manual=$((manual+1))
+        fi
+        return
+    fi
 
     set +e
     git merge-file -p -L "yours" -L "base ($BASE_TAG)" -L "upstream ($TARGET_TAG)" \
@@ -199,27 +304,36 @@ process_file() {
     local rc=$?
     set -e
     if [[ $rc -eq 0 ]]; then
-        [[ "$DRY_RUN" == "no" ]] && cp "$result" "$down_path"
-        info "merge:   $down_path"; merged=$((merged+1))
+        if [[ "$DRY_RUN" == "no" ]]; then
+            mkdir -p "$(dirname "$down_new")"; cp "$result" "$down_new"
+            apply_mode "$up_new" "$down_new"
+        fi
+        info "merge:   $down_new"; merged=$((merged+1))
+        clear_old_path
     elif [[ $rc -ge 1 && $rc -lt 128 ]]; then
-        [[ "$DRY_RUN" == "no" ]] && cp "$result" "$down_path"
-        warn "CONFLICT: $down_path — resolve the <<<<<<< markers"; conflicts=$((conflicts+1))
+        if [[ "$DRY_RUN" == "no" ]]; then
+            mkdir -p "$(dirname "$down_new")"; cp "$result" "$down_new"
+            apply_mode "$up_new" "$down_new"
+        fi
+        warn "CONFLICT: $down_new — resolve the <<<<<<< markers"; conflicts=$((conflicts+1))
+        clear_old_path
     else
-        warn "merge error on $down_path (skipped)"; manual=$((manual+1))
+        warn "merge error on $down_new (skipped)"; manual=$((manual+1))
     fi
 }
 
 # process_tier <rename yes|no> <path...>
 process_tier() {
     local rename="$1"; shift
-    while IFS=$'\t' read -r status path; do
+    while IFS=$'\t' read -r status p1 p2; do
         [[ -z "${status:-}" ]] && continue
         case "${status:0:1}" in
-            A) process_file "$path" A "$rename" ;;
-            D) process_file "$path" D "$rename" ;;
-            *) process_file "$path" M "$rename" ;;
+            A) process_file "$p1" "$p1" A "$rename" ;;
+            D) process_file "$p1" "$p1" D "$rename" ;;
+            R) process_file "$p1" "$p2" R "$rename" ;;
+            *) process_file "$p1" "$p1" M "$rename" ;;
         esac
-    done < <(git -C "$UP" diff --name-status --no-renames "$BASE_TAG" "$TARGET_TAG" -- "$@")
+    done < <(git -C "$UP" diff --name-status --find-renames "$BASE_TAG" "$TARGET_TAG" -- "$@")
 }
 
 echo "→ Tier 1 — tooling (.claude, CLAUDE.md, gradle wrapper)…"
@@ -256,6 +370,8 @@ echo ""
 echo "── Update summary ($BASE_TAG → $TARGET_TAG) ──"
 echo "   added:     $applied"
 echo "   merged:    $merged"
+echo "   moved:     $moved"
+echo "   deleted:   $deleted"
 echo "   unchanged: $skipped"
 echo "   conflicts: $conflicts"
 echo "   manual:    $manual"
@@ -276,6 +392,9 @@ fi
 echo "Release notes: ${REPO%.git}/blob/main/CHANGELOG.md"
 if [[ "$conflicts" -gt 0 ]]; then
     echo "Resolve the <<<<<<< conflict markers, then:  git diff  →  git add -A  →  git commit"
+    echo "Abandoning instead? Revert EVERYTHING in one go:  git checkout -- ."
+    echo "(.kmpilot.json was already bumped to ${TARGET_VER} — a partial revert that keeps it"
+    echo " makes the next update diff from the wrong base and silently skip changes.)"
     exit 1
 fi
 echo "Review with:  git diff   then commit when satisfied (this script never commits)."
