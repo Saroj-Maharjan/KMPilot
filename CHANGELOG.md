@@ -11,6 +11,8 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-07-04
+
 ### Added
 - **[Tooling]** **Upstream-owned rule layers**: `.claude/skills`, `.claude/agents`,
   `.claude/commands` and `.claude/hooks` are now applied **as-is from the release** —
@@ -124,6 +126,7 @@ Kotlin Multiplatform + Compose Multiplatform.
   feature shape; reference features are stripped on install, so a fresh project
   starts on a Welcome screen.
 
-[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.2...HEAD
 [0.1.0]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.0
 [0.1.1]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.1
+[0.1.2]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.2
