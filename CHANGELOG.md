@@ -12,6 +12,14 @@ may conflict), or **[Breaking]** (manual steps required).
 ## [Unreleased]
 
 ### Added
+- **[Tooling]** **Upstream-owned rule layers**: `.claude/skills`, `.claude/agents`,
+  `.claude/commands` and `.claude/hooks` are now applied **as-is from the release** —
+  no 3-way merge, no `<<<<<<<` conflicts. Downstream projects follow upstream rules:
+  local edits to shipped rule files are overridden (`force:` in the log, recoverable
+  via git), and upstream deletions/renames apply even over local edits. Files you
+  created yourself (paths KMPilot never shipped, e.g. your own skills) are never
+  touched. `settings.json`, `CLAUDE.md`, the gradle wrapper and `update.sh` keep the
+  conflict-surfacing 3-way merge so your own additions survive.
 - **[Tooling]** `update.sh` **re-execs under the target release's updater**: when
   `update.sh` itself changed in the release being pulled, the run transparently
   restarts under the new updater so its merge logic drives *this* update, not just
@@ -20,11 +28,12 @@ may conflict), or **[Breaking]** (manual steps required).
   writes `update.sh` directly (no `update.sh.new` staging — that now only happens
   when the running process is the project's own `update.sh`).
 - **[Tooling]** `update.sh` ends every run — including "already on the latest
-  release" — with a **stale sweep**: unmodified template files the target release
-  no longer ships are deleted (a file is only swept when its bytes match what some
-  upstream release shipped at that exact path; your own or locally edited files are
-  never touched). Re-running `./update.sh` after updating with a pre-0.1.2 updater
-  now heals the stale skill/agent/command copies it left behind — no flags needed.
+  release" — with a **stale sweep**: template files the target release no longer
+  ships are deleted. In the upstream-owned rule layers any file whose path ever
+  shipped in a release is swept (local edits included); on merged paths only
+  byte-identical copies are swept. Files at paths KMPilot never shipped are never
+  touched. Re-running `./update.sh` after updating with a pre-0.1.2 updater heals
+  the stale skill/agent/command copies it left behind — no flags needed.
 
 ### Migrating from 0.1.0 / 0.1.1
 Old updaters can't benefit from fixes they predate, so update the updater **before**
@@ -46,12 +55,13 @@ is automatic — the updater always re-execs under the target release's updater.
 - **[Tooling]** Compaction hook re-injected only 11 of the 14 architecture rules,
   dropping Rules 12–14 (string resources, single app-shell Scaffold, platform
   capability) after a `/compact`.
-- **[Tooling]** `update.sh` now applies upstream **renames and deletions**. Renamed
-  files (detected via git rename tracking) carry your local edits to the new path and
-  the old copy is removed; files deleted upstream are removed when your copy is
-  unmodified. A locally edited copy is never force-deleted — only flagged. Previously
-  a release that renamed skills left both the old and new skill directories on disk,
-  keeping stale skills discoverable.
+- **[Tooling]** `update.sh` now applies upstream **renames and deletions**. On merged
+  paths, renamed files (detected via git rename tracking) carry your local edits to
+  the new path and the old copy is removed; files deleted upstream are removed when
+  your copy is unmodified, and a locally edited copy is only flagged. (In the
+  upstream-owned rule layers, deletions/renames apply unconditionally — see Added.)
+  Previously a release that renamed skills left both the old and new skill
+  directories on disk, keeping stale skills discoverable.
 - **[Tooling]** `update.sh` preserves the executable bit on newly added files (new
   hooks would otherwise land non-executable and silently never fire) and never
   text-merges binary files (e.g. `gradle-wrapper.jar`) — it takes upstream's copy when

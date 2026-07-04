@@ -5,8 +5,13 @@
 #   • Reads .kmpilot.json (written at install) for your installed version and
 #     package prefix.
 #   • Fetches upstream at your installed version (base) and the target release.
-#   • Tier 1 (always): 3-way-merges package-agnostic tooling — .claude/skills,
-#     .claude/agents, .claude/hooks, .claude/commands, CLAUDE.md, gradle wrapper.
+#   • Tier 1 (always), two policies:
+#       – OVERRIDE: .claude/skills, .claude/agents, .claude/commands,
+#         .claude/hooks are upstream-owned rule layers — the release version is
+#         applied as-is, local edits are overridden (never merged, no conflicts).
+#         Files you created yourself (paths KMPilot never shipped) are untouched.
+#       – MERGE: .claude/settings.json, CLAUDE.md, gradle wrapper, update.sh
+#         are 3-way-merged so your own additions survive.
 #   • Tier 2 (--core): re-applies YOUR package rename to upstream core/ changes,
 #     then 3-way-merges. Conflicts are written as <<<<<<< markers — NEVER
 #     auto-resolved.
@@ -54,7 +59,7 @@ while [[ $# -gt 0 ]]; do
         --to=*)     TO_OVERRIDE="${1#*=}" ;;
         --from)     FROM_OVERRIDE="${2:-}"; shift ;;
         --from=*)   FROM_OVERRIDE="${1#*=}" ;;
-        -h|--help)  sed -n '2,33p' "$0"; exit 0 ;;
+        -h|--help)  sed -n '2,38p' "$0"; exit 0 ;;
         *)          die "unknown argument '$1' (try --help)" ;;
     esac
     shift
@@ -160,8 +165,11 @@ if [[ -z "${KMPILOT_REEXEC:-}" ]]; then
 fi
 
 # ── path tiers ──────────────────────────────────────────────────────────────
-TIER1_PATHS=(.claude/skills .claude/agents .claude/hooks .claude/commands
-             .claude/settings.json .claude/docs/_shared
+# OVERRIDE: upstream-owned rule layers — downstream must follow upstream; the
+# release version is applied as-is (local edits overridden, no merge conflicts).
+OVERRIDE_PATHS=(.claude/skills .claude/agents .claude/commands .claude/hooks)
+# MERGE: shared tooling where downstream additions are legitimate — 3-way-merged.
+TIER1_PATHS=(.claude/settings.json .claude/docs/_shared
              CLAUDE.md gradlew gradlew.bat gradle/wrapper update.sh)
 TIER2_PATHS=(core)
 MANUAL_PATHS=(gradle/libs.versions.toml build.gradle.kts settings.gradle.kts
@@ -195,14 +203,24 @@ remove_down() {  # <downstream-path>
     fi
 }
 
+# is_override_path <path>: true when the path lives in an upstream-owned layer
+is_override_path() {
+    local p="$1" o
+    for o in "${OVERRIDE_PATHS[@]}"; do
+        if [[ "$p" == "$o" || "$p" == "$o"/* ]]; then return 0; fi
+    done
+    return 1
+}
+
 # ── stale sweep ──────────────────────────────────────────────────────────────
-# Delete Tier-1 files the target release no longer ships, when the local copy
-# is byte-identical to what SOME upstream release shipped at that same path —
-# i.e. pure template residue, never modified by you. This is what heals a
-# project whose previous update ran under a pre-0.1.2 updater that could not
-# apply deletions/renames (it left old skill/agent/command copies behind).
-# Your own files (paths upstream never shipped, or locally edited content)
-# are never touched.
+# Delete Tier-1 files the target release no longer ships. Heals a project whose
+# previous update ran under a pre-0.1.2 updater that could not apply
+# deletions/renames (it left old skill/agent/command copies behind).
+#   • OVERRIDE layers: swept whenever the path shipped in ANY upstream release —
+#     upstream owns these files, local edits included (recoverable via git).
+#   • MERGE paths: swept only when byte-identical to what some release shipped
+#     at that path — locally edited copies are kept.
+# Files you created yourself (paths upstream never shipped) are never touched.
 stale_sweep() {
     local f blob t t_blob all_tags
     all_tags="$(git -C "$UP" tag -l 'v*')"
@@ -211,17 +229,28 @@ stale_sweep() {
         [[ -f "$f" ]] || continue
         # still shipped at the target release → not stale
         if git -C "$UP" cat-file -e "${TARGET_TAG}:${f}" 2>/dev/null; then continue; fi
-        blob="$(git hash-object "$f")"
-        for t in $all_tags; do
-            t_blob="$(git -C "$UP" rev-parse -q --verify "${t}:${f}" 2>/dev/null || true)"
-            if [[ -n "$t_blob" && "$t_blob" == "$blob" ]]; then
-                remove_down "$f"
-                info "sweep:   $f (no longer shipped upstream)"
-                deleted=$((deleted+1))
-                break
-            fi
-        done
-    done < <(find "${TIER1_PATHS[@]}" -type f 2>/dev/null)
+        if is_override_path "$f"; then
+            for t in $all_tags; do
+                if git -C "$UP" cat-file -e "${t}:${f}" 2>/dev/null; then
+                    remove_down "$f"
+                    info "sweep:   $f (upstream rule file no longer shipped)"
+                    deleted=$((deleted+1))
+                    break
+                fi
+            done
+        else
+            blob="$(git hash-object "$f")"
+            for t in $all_tags; do
+                t_blob="$(git -C "$UP" rev-parse -q --verify "${t}:${f}" 2>/dev/null || true)"
+                if [[ -n "$t_blob" && "$t_blob" == "$blob" ]]; then
+                    remove_down "$f"
+                    info "sweep:   $f (no longer shipped upstream)"
+                    deleted=$((deleted+1))
+                    break
+                fi
+            done
+        fi
+    done < <(find "${OVERRIDE_PATHS[@]}" "${TIER1_PATHS[@]}" -type f 2>/dev/null)
 }
 
 # ── already on the latest release: still sweep, then exit ───────────────────
@@ -260,11 +289,13 @@ fi
 
 [[ "$DRY_RUN" == "yes" ]] && echo "→ Updating $BASE_TAG → $TARGET_TAG  (dry run)" || echo "→ Updating $BASE_TAG → $TARGET_TAG"
 
-# process_file <up-old-path> <up-new-path> <status A|M|D|R> <rename yes|no>
+# process_file <up-old-path> <up-new-path> <status A|M|D|R> <rename yes|no> <policy merge|override>
 # For A/M/D old == new; for R (upstream rename) they differ. Reads the caller's
-# BASE at the old path, writes the result to the new path.
+# BASE at the old path, writes the result to the new path. Policy `override`
+# applies upstream as-is (no 3-way merge, local edits overridden); `merge` is
+# the conflict-surfacing 3-way merge.
 process_file() {
-    local up_old="$1" up_new="$2" status="$3" rename="$4" down_old down_new
+    local up_old="$1" up_new="$2" status="$3" rename="$4" policy="$5" down_old down_new
     if [[ "$rename" == "yes" ]]; then
         down_old="$(rename_path "$up_old")"; down_new="$(rename_path "$up_new")"
     else
@@ -292,6 +323,41 @@ process_file() {
         else
             up_show "$BASE_TAG" "$up_old" > "$base_f"
         fi
+    fi
+
+    # ── override policy: upstream rule layers are authoritative ──
+    # No 3-way merge and no conflicts: the target release's file lands as-is,
+    # deletions/renames apply even over local edits (recoverable via git).
+    if [[ "$policy" == "override" ]]; then
+        if [[ "$status" == "D" ]]; then
+            if [[ -f "$down_old" ]]; then
+                remove_down "$down_old"
+                info "delete:  $down_old"; deleted=$((deleted+1))
+            else
+                skipped=$((skipped+1))
+            fi
+            return
+        fi
+        if [[ "$down_old" != "$down_new" && -f "$down_old" ]]; then
+            remove_down "$down_old"
+            info "move:    $down_old → $down_new"; moved=$((moved+1))
+        fi
+        if [[ -f "$down_new" ]] && cmp -s "$down_new" "$theirs_f"; then
+            skipped=$((skipped+1)); return
+        fi
+        if [[ ! -f "$down_new" ]]; then
+            info "add:     $down_new"
+        elif cmp -s "$down_new" "$base_f"; then
+            info "update:  $down_new"
+        else
+            info "force:   $down_new (upstream rule file — local changes overridden)"
+        fi
+        if [[ "$DRY_RUN" == "no" ]]; then
+            mkdir -p "$(dirname "$down_new")"; cp "$theirs_f" "$down_new"
+            apply_mode "$up_new" "$down_new"
+        fi
+        applied=$((applied+1))
+        return
     fi
 
     # ── upstream deletion: apply only when your copy is unmodified ──
@@ -398,26 +464,29 @@ process_file() {
     fi
 }
 
-# process_tier <rename yes|no> <path...>
+# process_tier <rename yes|no> <policy merge|override> <path...>
 process_tier() {
-    local rename="$1"; shift
+    local rename="$1" policy="$2"; shift 2
     while IFS=$'\t' read -r status p1 p2; do
         [[ -z "${status:-}" ]] && continue
         case "${status:0:1}" in
-            A) process_file "$p1" "$p1" A "$rename" ;;
-            D) process_file "$p1" "$p1" D "$rename" ;;
-            R) process_file "$p1" "$p2" R "$rename" ;;
-            *) process_file "$p1" "$p1" M "$rename" ;;
+            A) process_file "$p1" "$p1" A "$rename" "$policy" ;;
+            D) process_file "$p1" "$p1" D "$rename" "$policy" ;;
+            R) process_file "$p1" "$p2" R "$rename" "$policy" ;;
+            *) process_file "$p1" "$p1" M "$rename" "$policy" ;;
         esac
     done < <(git -C "$UP" diff --name-status --find-renames "$BASE_TAG" "$TARGET_TAG" -- "$@")
 }
 
-echo "→ Tier 1 — tooling (.claude, CLAUDE.md, gradle wrapper)…"
-process_tier no "${TIER1_PATHS[@]}"
+echo "→ Tier 1 — upstream rule layers (skills/agents/commands/hooks — upstream wins)…"
+process_tier no override "${OVERRIDE_PATHS[@]}"
+
+echo "→ Tier 1 — merged tooling (settings, CLAUDE.md, gradle wrapper, updater)…"
+process_tier no merge "${TIER1_PATHS[@]}"
 
 if [[ "$WITH_CORE" == "yes" ]]; then
     echo "→ Tier 2 — core/ (rename-aware)…"
-    process_tier yes "${TIER2_PATHS[@]}"
+    process_tier yes merge "${TIER2_PATHS[@]}"
 else
     core_changed="$(git -C "$UP" diff --name-only --no-renames "$BASE_TAG" "$TARGET_TAG" -- "${TIER2_PATHS[@]}" 2>/dev/null | grep -c . || true)"
     [[ "${core_changed:-0}" -gt 0 ]] && info "core/ changed in $core_changed file(s) — re-run with --core to merge them"
