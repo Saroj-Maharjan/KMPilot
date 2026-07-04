@@ -16,7 +16,28 @@ may conflict), or **[Breaking]** (manual steps required).
   `update.sh` itself changed in the release being pulled, the run transparently
   restarts under the new updater so its merge logic drives *this* update, not just
   the next one. Loop-guarded via `KMPILOT_REEXEC`; the stash/preflight moved after
-  the re-exec point so a stashed working tree is always restored.
+  the re-exec point so a stashed working tree is always restored. A re-exec'd run
+  writes `update.sh` directly (no `update.sh.new` staging — that now only happens
+  when the running process is the project's own `update.sh`).
+- **[Tooling]** `update.sh` ends every run — including "already on the latest
+  release" — with a **stale sweep**: unmodified template files the target release
+  no longer ships are deleted (a file is only swept when its bytes match what some
+  upstream release shipped at that exact path; your own or locally edited files are
+  never touched). Re-running `./update.sh` after updating with a pre-0.1.2 updater
+  now heals the stale skill/agent/command copies it left behind — no flags needed.
+
+### Migrating from 0.1.0 / 0.1.1
+Old updaters can't benefit from fixes they predate, so update the updater **before**
+updating the project:
+
+```bash
+curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/update.sh -o update.sh
+./update.sh
+```
+
+(A project installed from 0.1.0 has an updater that never updates itself; 0.1.1's
+updates itself only after running its old merge logic once. From 0.1.2 onward this
+is automatic — the updater always re-execs under the target release's updater.)
 
 ### Fixed
 - **[Tooling]** `/design-ui`'s `edit_screens` MCP tool silently no-ops (upstream Stitch

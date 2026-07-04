@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history + tags: notes step diffs update.sh against the previous release
 
       - name: Verify version is single-sourced (tag == VERSION == libs)
         run: |
@@ -55,6 +57,13 @@ jobs:
       - name: Build release notes (install command on top, then changelog)
         run: |
           VER="${GITHUB_REF_NAME#v}"
+          # Did this release change the updater? Only then do the notes lead with
+          # "update the updater first" (pre-0.1.2 updaters can't self-bootstrap).
+          PREV_TAG="$(git tag -l 'v*' --sort=-v:refname | grep -vx "${GITHUB_REF_NAME}" | head -n1)"
+          UPDATER_CHANGED=no
+          if [ -z "$PREV_TAG" ] || ! git diff --quiet "$PREV_TAG" "$GITHUB_REF_NAME" -- update.sh; then
+            UPDATER_CHANGED=yes
+          fi
           # This version's changelog section (between its header and the next one).
           awk -v v="$VER" '
             $0 ~ "^## \\[" v "\\]" { grab=1; next }
@@ -81,6 +90,16 @@ jobs:
             echo
             echo "Already have a project from \`install.sh\`? Pull this release into it:"
             echo
+            if [ "$UPDATER_CHANGED" = "yes" ]; then
+              echo "**This release changes \`update.sh\` itself.** On a project installed before v0.1.2,"
+              echo "update the updater first — old updaters can't apply fixes they predate (from v0.1.2"
+              echo "onward this happens automatically):"
+              echo
+              echo '```bash'
+              echo "curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/update.sh -o update.sh"
+              echo '```'
+              echo
+            fi
             echo '```bash'
             echo "./update.sh            # tooling only — .claude skills/agents/hooks, CLAUDE.md, gradle wrapper"
             echo "./update.sh --core     # also merge core/ modules (rename-aware; conflicts are surfaced, never silent)"

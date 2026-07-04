@@ -15,6 +15,9 @@
 #     edited copy is never force-deleted, just flagged.
 #   • If the target release changed update.sh itself, the run re-execs under
 #     the NEW updater so its merge logic applies immediately (not next run).
+#   • Every run ends with a stale sweep: unmodified template files the target
+#     release no longer ships are deleted — so re-running ./update.sh heals
+#     leftovers from updates made under an older updater.
 #   • Never touches feature/, your app modules (composeApp/androidApp/iosApp),
 #     or your per-feature specs (.claude/docs/<feature>/).
 #   • Never commits. You review `git diff`, resolve any conflicts, then commit.
@@ -51,7 +54,7 @@ while [[ $# -gt 0 ]]; do
         --to=*)     TO_OVERRIDE="${1#*=}" ;;
         --from)     FROM_OVERRIDE="${2:-}"; shift ;;
         --from=*)   FROM_OVERRIDE="${1#*=}" ;;
-        -h|--help)  sed -n '2,30p' "$0"; exit 0 ;;
+        -h|--help)  sed -n '2,33p' "$0"; exit 0 ;;
         *)          die "unknown argument '$1' (try --help)" ;;
     esac
     shift
@@ -65,6 +68,9 @@ while [[ "$ROOT" != "/" && ! -f "$ROOT/.kmpilot.json" ]]; do ROOT="$(dirname "$R
 [[ -f "$ROOT/.kmpilot.json" ]] || die "no .kmpilot.json found — run this from inside a project installed by KMPilot's install.sh"
 cd "$ROOT"
 MANIFEST="$ROOT/.kmpilot.json"
+# Absolute path of the script we are executing — decides whether update.sh can
+# be written directly (re-exec'd from a temp copy) or must be staged as .new.
+RUNNING_SELF="$(cd "$(dirname "$0")" 2>/dev/null && pwd || true)/$(basename "$0")"
 
 # ── read manifest (no jq dependency) ────────────────────────────────────────
 json_get() { sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$MANIFEST" | head -n1; }
@@ -133,11 +139,6 @@ git -C "$UP" rev-parse -q --verify "refs/tags/${TARGET_TAG}^{commit}" >/dev/null
     || die "target tag '$TARGET_TAG' not found upstream"
 TARGET_VER="${TARGET_TAG#v}"
 
-if [[ "$BASE_TAG" == "$TARGET_TAG" ]]; then
-    echo "✓ Already on the latest release ($TARGET_TAG). Nothing to do."
-    exit 0
-fi
-
 # ── bootstrap: run under the TARGET release's updater ───────────────────────
 # If update.sh itself changed in the target release, re-exec this run under the
 # new updater so its merge logic applies to THIS update, not just the next one.
@@ -157,20 +158,6 @@ if [[ -z "${KMPILOT_REEXEC:-}" ]]; then
         die "re-exec failed"   # unreachable unless exec itself errored
     fi
 fi
-
-# ── preflight: clean working tree (so merge results are reviewable) ─────────
-if [[ "$DRY_RUN" == "no" ]]; then
-    if ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; then
-        if [[ "$STASH" == "yes" ]]; then
-            git -C "$ROOT" stash push -u -m "kmpilot-update" >/dev/null; STASHED=yes
-            info "stashed your working changes"
-        else
-            die "working tree not clean. Commit or stash first, or pass --stash."
-        fi
-    fi
-fi
-
-[[ "$DRY_RUN" == "yes" ]] && echo "→ Updating $BASE_TAG → $TARGET_TAG  (dry run)" || echo "→ Updating $BASE_TAG → $TARGET_TAG"
 
 # ── path tiers ──────────────────────────────────────────────────────────────
 TIER1_PATHS=(.claude/skills .claude/agents .claude/hooks .claude/commands
@@ -208,6 +195,71 @@ remove_down() {  # <downstream-path>
     fi
 }
 
+# ── stale sweep ──────────────────────────────────────────────────────────────
+# Delete Tier-1 files the target release no longer ships, when the local copy
+# is byte-identical to what SOME upstream release shipped at that same path —
+# i.e. pure template residue, never modified by you. This is what heals a
+# project whose previous update ran under a pre-0.1.2 updater that could not
+# apply deletions/renames (it left old skill/agent/command copies behind).
+# Your own files (paths upstream never shipped, or locally edited content)
+# are never touched.
+stale_sweep() {
+    local f blob t t_blob all_tags
+    all_tags="$(git -C "$UP" tag -l 'v*')"
+    while IFS= read -r f; do
+        f="${f#./}"
+        [[ -f "$f" ]] || continue
+        # still shipped at the target release → not stale
+        if git -C "$UP" cat-file -e "${TARGET_TAG}:${f}" 2>/dev/null; then continue; fi
+        blob="$(git hash-object "$f")"
+        for t in $all_tags; do
+            t_blob="$(git -C "$UP" rev-parse -q --verify "${t}:${f}" 2>/dev/null || true)"
+            if [[ -n "$t_blob" && "$t_blob" == "$blob" ]]; then
+                remove_down "$f"
+                info "sweep:   $f (no longer shipped upstream)"
+                deleted=$((deleted+1))
+                break
+            fi
+        done
+    done < <(find "${TIER1_PATHS[@]}" -type f 2>/dev/null)
+}
+
+# ── already on the latest release: still sweep, then exit ───────────────────
+if [[ "$BASE_TAG" == "$TARGET_TAG" ]]; then
+    echo "✓ Already on the latest release ($TARGET_TAG)."
+    if [[ "$DRY_RUN" == "no" ]] && { ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; }; then
+        info "working tree not clean — skipped the stale-file sweep (commit or stash, then re-run)"
+    else
+        stale_sweep
+        if [[ "$deleted" -gt 0 ]]; then
+            if [[ "$DRY_RUN" == "yes" ]]; then
+                echo "  Dry run — $deleted stale file(s) from an older updater would be deleted."
+            else
+                echo "  Swept $deleted stale file(s) left by an older updater — review with: git diff"
+            fi
+        else
+            echo "  Nothing to do."
+        fi
+    fi
+    exit 0
+fi
+
+# ── preflight: clean working tree (so merge results are reviewable) ─────────
+if [[ "$DRY_RUN" == "no" ]]; then
+    if ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; then
+        if [[ "$STASH" == "yes" ]]; then
+            git -C "$ROOT" stash push -u -m "kmpilot-update" >/dev/null; STASHED=yes
+            info "stashed your working changes"
+        else
+            die "working tree not clean. Commit or stash first, or pass --stash."
+        fi
+    fi
+    # stray artifact from an aborted earlier run — the bootstrap supersedes it
+    rm -f update.sh.new
+fi
+
+[[ "$DRY_RUN" == "yes" ]] && echo "→ Updating $BASE_TAG → $TARGET_TAG  (dry run)" || echo "→ Updating $BASE_TAG → $TARGET_TAG"
+
 # process_file <up-old-path> <up-new-path> <status A|M|D|R> <rename yes|no>
 # For A/M/D old == new; for R (upstream rename) they differ. Reads the caller's
 # BASE at the old path, writes the result to the new path.
@@ -219,10 +271,10 @@ process_file() {
         down_old="$up_old"; down_new="$up_new"
     fi
 
-    # Never overwrite the running updater in place — bash may re-read $0 mid-run and
-    # corrupt this very invocation. Stage it as update.sh.new for the user to swap in
-    # (surfaced in the summary below).
-    if [[ "$down_new" == "update.sh" ]]; then down_new="update.sh.new"; fi
+    # Never overwrite the RUNNING updater in place — bash may re-read $0 mid-run
+    # and corrupt this very invocation. Only needed when this process actually
+    # executes ROOT/update.sh; a re-exec'd run (temp copy) writes it directly.
+    if [[ "$down_new" == "update.sh" && "$RUNNING_SELF" == "$ROOT/update.sh" ]]; then down_new="update.sh.new"; fi
 
     local base_f="$TMP/base" theirs_f="$TMP/theirs" ours_f="$TMP/ours" result="$TMP/result"
     : > "$base_f"; : > "$theirs_f"
@@ -370,6 +422,9 @@ else
     core_changed="$(git -C "$UP" diff --name-only --no-renames "$BASE_TAG" "$TARGET_TAG" -- "${TIER2_PATHS[@]}" 2>/dev/null | grep -c . || true)"
     [[ "${core_changed:-0}" -gt 0 ]] && info "core/ changed in $core_changed file(s) — re-run with --core to merge them"
 fi
+
+echo "→ Stale sweep (unmodified files no longer shipped upstream)…"
+stale_sweep
 
 # ── manual-review report ────────────────────────────────────────────────────
 changed_manual="$(git -C "$UP" diff --name-only --no-renames "$BASE_TAG" "$TARGET_TAG" -- "${MANUAL_PATHS[@]}" 2>/dev/null || true)"
