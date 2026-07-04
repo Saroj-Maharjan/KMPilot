@@ -5,7 +5,13 @@
 <br />
 <br />
 
-**Describe a feature in plain English — get it designed, built, tested, and reviewed across Android + iOS, with Clean Architecture _enforced, not hoped for_.**
+**Describe a feature in plain English — get it designed, built, tested, and reviewed across Android + iOS, with modular Clean Architecture _enforced, not hoped for_.**
+
+Spec-driven development for Kotlin Multiplatform.
+
+<br />
+
+> **This is a live template, not a starter app — don't `git clone` it directly.** Use the one-line installer in [Quick Start](#quick-start): it clones the right release, renames the project to yours, and gives you a fresh git history.
 
 <br />
 
@@ -16,6 +22,10 @@
 [![Android](https://img.shields.io/badge/Android-23+-34A853?logo=android&logoColor=white)](/)
 [![iOS](https://img.shields.io/badge/iOS-15+-000000?logo=apple&logoColor=white)](/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+<br />
+
+**Featured in** [Android Weekly #733](https://androidweekly.net/issues/issue-733) and [ProAndroidDev](https://proandroiddev.com/design-a-screen-get-a-clean-architecture-feature-and-keep-ai-generated-kmp-code-from-drifting-c134ffc9bfc2).
 
 <br />
 
@@ -33,33 +43,56 @@ https://github.com/user-attachments/assets/a1438483-68d3-4550-b876-9a62db0d1a21
 
 <br />
 
-## ✨ What you get
+## Why not just start from scratch?
 
-- 🎨 **Design → code** — describe a screen, get a [Stitch](https://stitch.withgoogle.com) mockup, then a matching Compose UI verified against the design.
-- 🏗️ **Features on rails** — every feature lands in the same Clean Architecture shape (data → presentation → DI), shared across Android + iOS.
-- 🤖 **Agent-built layers** — specialized agents scaffold the data, UI, and integration code so a whole feature comes from one prompt.
-- 📋 **Living specs** — each feature keeps a `spec.md` that stays in sync with the code as it evolves.
-- ✅ **Tests & review built in** — fixtures, repository, ViewModel, and UI tests, plus an audit against 14 architecture rules.
-- 🍎 **Native when you need it** — guided Swift ↔ Kotlin bridging for iOS SDKs (biometrics, MapKit, payments…).
-- 🔄 **Safe updates** — pull new template releases with `./update.sh` without touching your features.
+|  | From scratch + an LLM | With KMPilot |
+|---|:---:|:---:|
+| Architecture consistency | drifts feature to feature | one enforced shape, every time |
+| Module boundaries | blur as the codebase grows | each feature its own module, never depends on another |
+| Android + iOS | wire it yourself | shared by default |
+| UI from a design | hand-translate | Stitch → Compose, verified |
+| Tests | if you remember | fixtures + repo + VM + UI generated |
+| Code review | manual | audited against 14 rules |
+| Spec / docs | rot immediately | living `spec.md`, kept in sync |
+
+> The architecture is the constraint, the LLM is the executor, the spec is the contract. KMP is the proof point — the pattern generalizes to any opinionated stack.
+
+<div align="center">
+
+⭐ **If that's the problem you have, star the repo — it's the easiest way to keep this maintained.**
+
+</div>
 
 <br />
 
-## ⚡ Quick Start
+## What you get
+
+- **Design → code** — describe a screen, get a [Stitch](https://stitch.withgoogle.com) mockup, then a matching Compose UI verified against the design.
+- **Features on rails** — every feature lands in the same Clean Architecture shape (data → presentation → DI), shared across Android + iOS.
+- **Modular by construction** — each feature is its own Gradle module and never depends on another feature; shared code lives in versioned `core/` tiers.
+- **Agent-built layers** — specialized agents scaffold the data, UI, and integration code so a whole feature comes from one prompt.
+- **Living specs** — each feature keeps a `spec.md` that stays in sync with the code as it evolves.
+- **Tests & review built in** — fixtures, repository, ViewModel, and UI tests, plus an audit against 14 architecture rules.
+- **Native when you need it** — guided Swift ↔ Kotlin bridging for iOS SDKs (biometrics, MapKit, payments…).
+- **Safe updates** — pull new template releases with `./update.sh` without touching your features.
+
+<br />
+
+## Quick Start
 
 **Prerequisites:** JDK 21+ · Android Studio · Xcode 15+ (iOS) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
 **1. Install** — replace `<MyApp>` and `<com.acme.myapp>` with your own values:
+
+- **`MyApp`** — project name (folder, root project, Android app label)
+- **`com.acme.myapp`** — package prefix / application ID (`namespace`, `applicationId`, source-set package roots)
 
 ```bash
 curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/install.sh \
   | bash -s <MyApp> <com.acme.myapp>
 ```
 
-- **`MyApp`** — project name (folder, root project, Android app label)
-- **`com.acme.myapp`** — package prefix / application ID (`namespace`, `applicationId`, source-set package roots)
-
-Clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#-staying-up-to-date)). The installer is **release-pinned**: it clones the exact tag it shipped with, so the installer and the template tree are always the same release.
+Clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#staying-up-to-date)). The installer is **release-pinned**: it clones the exact tag it shipped with, so the installer and the template tree are always the same release.
 
 > **Windows:** run the same command inside **Git Bash** (ships with [Git for Windows](https://git-scm.com/download/win)) or WSL — not PowerShell or `cmd`. The installer uses bash + GNU `sed`/`find`, both present in Git Bash. iOS targets remain macOS-only.
 
@@ -79,47 +112,29 @@ cd MyApp && claude
 > /review-feature productdetail                             # audit architecture
 ```
 
-See [Skills](#-skills) for the full catalog and [The Pattern](#-the-pattern) for the flow.
+See [Skills](#skills) for the full catalog and [The Pattern](#the-pattern) for the flow.
 
 <br />
 
-## 🔁 The Pattern
+## The Pattern
 
 **Spec-Driven Development for KMP.** Every feature has a living spec at `.claude/docs/{name}/spec.md` that stays in sync with the code. Skills are phases of one lifecycle:
 
 ```mermaid
 graph LR
-  A["🎨 /design-ui<br/>design"] --> B["🏗️ /create-feature<br/>scaffold"]
-  B --> C["🔍 /verify-ui<br/>verify"]
-  C --> D["✅ /test-feature<br/>test"]
-  D --> E["📋 /review-feature<br/>review"]
+  A["/design-ui<br/>design"] --> B["/create-feature<br/>scaffold"]
+  B --> C["/verify-ui<br/>verify"]
+  C --> D["/test-feature<br/>test"]
+  D --> E["/review-feature<br/>review"]
 ```
 
 Each skill owns one phase and composes without coordinating. The blueprint from `/design-ui` is picked up automatically by `/create-feature`; the spec is regenerated as the code evolves; `/verify-ui`, `/test-feature`, and `/review-feature` audit against it.
 
-> The architecture is the constraint, the LLM is the executor, the spec is the contract. KMP is the proof point — the pattern generalizes to any opinionated stack.
-
-<details>
-<summary><b>Why not just start from scratch?</b></summary>
-
 <br />
 
-| | From scratch + an LLM | With KMPilot |
-|---|:---:|:---:|
-| Architecture consistency | drifts feature to feature | one enforced shape, every time |
-| Android + iOS | wire it yourself | shared by default |
-| UI from a design | hand-translate | Stitch → Compose, verified |
-| Tests | if you remember | fixtures + repo + VM + UI generated |
-| Code review | manual | audited against 14 rules |
-| Spec / docs | rot immediately | living `spec.md`, kept in sync |
+## Skills
 
-</details>
-
-<br />
-
-## 🧩 Skills
-
-Slash-commands ordered by the lifecycle they cover. Run them inside Claude Code in your KMPilot project.
+Slash-commands for the core lifecycle. Run them inside Claude Code in your KMPilot project.
 
 | Phase | Command | Does |
 |---|---|---|
@@ -129,15 +144,14 @@ Slash-commands ordered by the lifecycle they cover. Run them inside Claude Code 
 | Verify UI | `/verify-ui {name}` | Audit the implementation against the Stitch design |
 | Test | `/test-feature {name}` | Generate fixtures, repository, ViewModel, and UI tests |
 | Review | `/review-feature {name}` | Audit a feature against the 14 architecture rules |
-| Spec | `/audit-spec {name}` | Regenerate or diff a feature's living spec |
-| Coverage | `/coverage` | Test coverage report |
-| Health | `/health-report` | Status report across all feature modules |
+
+<sub>Utility commands: `/audit-spec {name}` (regenerate/diff a spec) · `/coverage` (test coverage report) · `/health-report` (status across all feature modules).</sub>
 
 Plus two auto-activated skills: `using-design-system` (enforces X-components on UI work) and `bridge-swift` (guides iOS SDK integration).
 
 <br />
 
-## 📦 What Gets Generated
+## What Gets Generated
 
 Every feature module follows the same Clean Architecture shape, plus a living spec at `.claude/docs/{name}/spec.md` and a full test suite (fixtures, repository, ViewModel, UI) when you run `/test-feature`.
 
@@ -172,7 +186,7 @@ feature/{name}/
 
 <br />
 
-## 🗂️ Project Structure
+## Project Structure
 
 <details>
 <summary><b>Repository layout</b></summary>
@@ -204,7 +218,7 @@ KMPilot/
 
 <br />
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technologies |
 |:---------|:-------------|
@@ -217,7 +231,7 @@ KMPilot/
 
 <br />
 
-## 🔄 Staying up to date
+## Staying up to date
 
 The installer pins your project to a tagged release and leaves a `./update.sh` so you can pull later releases **without corrupting your code**:
 
@@ -234,7 +248,7 @@ It re-applies your package rename to each upstream change and 3-way-merges it in
 
 <br />
 
-## 📚 Documentation
+## Documentation
 
 | Resource | Description |
 |:---------|:------------|
@@ -244,7 +258,7 @@ It re-applies your package rename to each upstream change and 3-way-merges it in
 
 <br />
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
@@ -253,8 +267,6 @@ Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ---
 
 <div align="center">
-
-⭐ **If KMPilot saves you time, consider starring the repo.**
 
 **MIT License**
 

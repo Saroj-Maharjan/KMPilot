@@ -2,6 +2,13 @@
 
 Thanks for your interest in contributing.
 
+## Building an app vs. contributing to KMPilot
+
+These are two different things — make sure you're doing the one you mean to:
+
+- **Building an app with KMPilot?** Don't clone this repo. Use the installer in the [README](README.md#quick-start) — it clones the right release, renames the project, and gives you a clean git history to build on.
+- **Contributing to KMPilot itself** (fixing a skill, agent, or template bug)? Cloning is correct — that's what the rest of this document covers.
+
 ## How to Contribute
 
 ### Reporting Bugs
