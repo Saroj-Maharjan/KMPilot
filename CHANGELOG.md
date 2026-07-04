@@ -11,6 +11,13 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+### Added
+- **[Tooling]** `update.sh` **re-execs under the target release's updater**: when
+  `update.sh` itself changed in the release being pulled, the run transparently
+  restarts under the new updater so its merge logic drives *this* update, not just
+  the next one. Loop-guarded via `KMPILOT_REEXEC`; the stash/preflight moved after
+  the re-exec point so a stashed working tree is always restored.
+
 ### Fixed
 - **[Tooling]** `/design-ui`'s `edit_screens` MCP tool silently no-ops (upstream Stitch
   bug — success reported, edit never applied). Banned; all edit flows now route through

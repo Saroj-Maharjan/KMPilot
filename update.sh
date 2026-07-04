@@ -13,6 +13,8 @@
 #   • Upstream renames follow your local edits to the new path; upstream
 #     deletions are applied only when your copy is unmodified — a locally
 #     edited copy is never force-deleted, just flagged.
+#   • If the target release changed update.sh itself, the run re-execs under
+#     the NEW updater so its merge logic applies immediately (not next run).
 #   • Never touches feature/, your app modules (composeApp/androidApp/iosApp),
 #     or your per-feature specs (.claude/docs/<feature>/).
 #   • Never commits. You review `git diff`, resolve any conflicts, then commit.
@@ -34,6 +36,7 @@ warn() { printf '⚠  %s\n' "$*" >&2; }
 die()  { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
 # ── args ────────────────────────────────────────────────────────────────────
+ORIG_ARGS=("$@")   # kept verbatim for the re-exec bootstrap below
 WITH_CORE=no
 DRY_RUN=no
 STASH=no
@@ -48,7 +51,7 @@ while [[ $# -gt 0 ]]; do
         --to=*)     TO_OVERRIDE="${1#*=}" ;;
         --from)     FROM_OVERRIDE="${2:-}"; shift ;;
         --from=*)   FROM_OVERRIDE="${1#*=}" ;;
-        -h|--help)  sed -n '2,28p' "$0"; exit 0 ;;
+        -h|--help)  sed -n '2,30p' "$0"; exit 0 ;;
         *)          die "unknown argument '$1' (try --help)" ;;
     esac
     shift
@@ -113,18 +116,6 @@ cleanup() {
 trap cleanup EXIT
 UP="$TMP/upstream"
 
-# ── preflight: clean working tree (so merge results are reviewable) ─────────
-if [[ "$DRY_RUN" == "no" ]]; then
-    if ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; then
-        if [[ "$STASH" == "yes" ]]; then
-            git -C "$ROOT" stash push -u -m "kmpilot-update" >/dev/null; STASHED=yes
-            info "stashed your working changes"
-        else
-            die "working tree not clean. Commit or stash first, or pass --stash."
-        fi
-    fi
-fi
-
 echo "→ Fetching upstream ($REPO)…"
 git clone --quiet --no-checkout "$REPO" "$UP" || die "clone failed: $REPO"
 
@@ -146,6 +137,39 @@ if [[ "$BASE_TAG" == "$TARGET_TAG" ]]; then
     echo "✓ Already on the latest release ($TARGET_TAG). Nothing to do."
     exit 0
 fi
+
+# ── bootstrap: run under the TARGET release's updater ───────────────────────
+# If update.sh itself changed in the target release, re-exec this run under the
+# new updater so its merge logic applies to THIS update, not just the next one.
+# KMPILOT_REEXEC guards against loops (e.g. a locally edited update.sh that
+# never matches upstream). Must happen before any stash: exec skips the EXIT
+# trap, so a stash pushed here would never be popped.
+if [[ -z "${KMPILOT_REEXEC:-}" ]]; then
+    git -C "$UP" show "${TARGET_TAG}:update.sh" > "$TMP/update.sh.upstream" 2>/dev/null || true
+    if [[ -s "$TMP/update.sh.upstream" ]] && ! cmp -s "$TMP/update.sh.upstream" "$0"; then
+        echo "↻ Updater changed in $TARGET_TAG — re-running under the new updater…"
+        NEW_SELF="$(mktemp "${TMPDIR:-/tmp}/kmpilot-update.XXXXXX")"
+        cp "$TMP/update.sh.upstream" "$NEW_SELF"
+        # exec never fires the EXIT trap — drop the clone ourselves first
+        trap - EXIT
+        rm -rf "$TMP"
+        KMPILOT_REEXEC=1 exec bash "$NEW_SELF" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
+        die "re-exec failed"   # unreachable unless exec itself errored
+    fi
+fi
+
+# ── preflight: clean working tree (so merge results are reviewable) ─────────
+if [[ "$DRY_RUN" == "no" ]]; then
+    if ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; then
+        if [[ "$STASH" == "yes" ]]; then
+            git -C "$ROOT" stash push -u -m "kmpilot-update" >/dev/null; STASHED=yes
+            info "stashed your working changes"
+        else
+            die "working tree not clean. Commit or stash first, or pass --stash."
+        fi
+    fi
+fi
+
 [[ "$DRY_RUN" == "yes" ]] && echo "→ Updating $BASE_TAG → $TARGET_TAG  (dry run)" || echo "→ Updating $BASE_TAG → $TARGET_TAG"
 
 # ── path tiers ──────────────────────────────────────────────────────────────
