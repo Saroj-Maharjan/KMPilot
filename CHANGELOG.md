@@ -11,6 +11,14 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+### Fixed
+- **[Tooling]** `/design-ui`'s `edit_screens` MCP tool silently no-ops (upstream Stitch
+  bug — success reported, edit never applied). Banned; all edit flows now route through
+  `generate_variants` (variantCount 1 + REFINE) instead.
+- **[Tooling]** Compaction hook re-injected only 11 of the 14 architecture rules,
+  dropping Rules 12–14 (string resources, single app-shell Scaffold, platform
+  capability) after a `/compact`.
+
 ## [0.1.1] — 2026-07-01
 
 ### Changed
