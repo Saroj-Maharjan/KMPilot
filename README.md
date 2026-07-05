@@ -25,7 +25,7 @@ Spec-driven development for Kotlin Multiplatform.
 
 <br />
 
-**Featured in** [Android Weekly #733](https://androidweekly.net/issues/issue-733) and [ProAndroidDev](https://proandroiddev.com/design-a-screen-get-a-clean-architecture-feature-and-keep-ai-generated-kmp-code-from-drifting-c134ffc9bfc2).
+**Featured in** [Android Weekly #733](https://androidweekly.net/issues/issue-733), [Kotlin Weekly #518](https://mailchi.mp/kotlinweekly/kotlin-weekly-518) and [ProAndroidDev](https://proandroiddev.com/design-a-screen-get-a-clean-architecture-feature-and-keep-ai-generated-kmp-code-from-drifting-c134ffc9bfc2).
 
 <br />
 
