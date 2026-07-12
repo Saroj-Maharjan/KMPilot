@@ -11,6 +11,15 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+### Changed
+- **[Tooling]** `install.sh` is now an **interactive, colorized installer**. Run it
+  with no arguments (`curl … | bash`) and it walks a guided flow — banner, numbered
+  step log, clone spinner, and prompts for the project name / package with inline
+  validation. Passing both as arguments stays fully non-interactive (unchanged for
+  scripting). New env vars: `NO_COLOR` (disable color) and `KMPILOT_ASSUME_YES=1`
+  (skip the confirmation prompt). Template surgery, rename, and manifest logic are
+  unchanged.
+
 ## [0.1.2] — 2026-07-04
 
 ### Added

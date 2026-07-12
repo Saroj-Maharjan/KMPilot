@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
-# Bootstrap a new KMPilot project.
+# Bootstrap a new KMPilot project — interactive, colorized installer.
+#
+# Engine (clone → trim → rename → fresh docs → manifest → git init) with an
+# interactive, colorized presentation layer: a banner, colored step log, a
+# clone spinner, and prompts for the project name / package when you don't
+# pass them as arguments.
 #
 # Usage (remote):
 #   curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh \
-#     | sh -s <ProjectName> [package.prefix]
+#     | bash -s <ProjectName> [package.prefix]
+#   # or run with no args for the guided prompts:
+#   curl -fsSL https://raw.githubusercontent.com/ThisIsSadeghi/KMPilot/main/install.sh | bash
 #
 # Usage (local):
 #   ./install.sh <ProjectName> [package.prefix]
+#   ./install.sh                 # guided prompts
 #
 # Installs from the latest published vX.Y.Z release tag by default (reproducible).
 # The new project keeps a ./update.sh you can run later to pull future releases
@@ -16,6 +24,8 @@
 #   KMPILOT_TEMPLATE_REPO   Git URL of the template (default: ThisIsSadeghi/KMPilot)
 #   KMPILOT_TEMPLATE_BRANCH Branch or tag to install from (default: latest release
 #                           tag; set to "main" for the bleeding edge)
+#   NO_COLOR                Set to any value to disable colored output.
+#   KMPILOT_ASSUME_YES      Set to 1 to skip the confirmation prompt.
 
 set -euo pipefail
 
@@ -29,31 +39,128 @@ TEMPLATE_BRANCH="${KMPILOT_TEMPLATE_BRANCH:-}"
 # on main, so a raw-main run falls through to "resolve the latest published tag" below.
 PINNED_TAG="__KMPILOT_PINNED_TAG__"
 
-if [[ $# -lt 1 ]]; then
-    cat >&2 <<USAGE
-Usage: install.sh <ProjectName> [package.prefix]
+# ─────────────────────────────────────────────────────────────────────────────
+# Presentation helpers (color, tty, logging)
+# ─────────────────────────────────────────────────────────────────────────────
 
-Arguments:
-  ProjectName      PascalCase display name (e.g., MyStore)
-  package.prefix   Optional dotted package (defaults to dev.kmpilot.<lower>)
-
-Examples:
-  install.sh MyStore
-  install.sh MyStore com.acme.store
-USAGE
-    exit 1
+# Colors on only when stdout is a real terminal and NO_COLOR is unset. Under
+# curl | bash, stdin is the script but stdout is still the terminal, so this
+# stays true and the output is colored.
+if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]; then
+    BOLD=$'\033[1m'; DIM=$'\033[2m'; RESET=$'\033[0m'
+    RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'
+    BLUE=$'\033[34m'; MAGENTA=$'\033[35m'; CYAN=$'\033[36m'
+    BORDER=$'\033[38;5;39m'   # vivid azure for the banner frame
+else
+    BOLD=""; DIM=""; RESET=""
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; MAGENTA=""; CYAN=""; BORDER=""
 fi
 
-NAME="$1"
-PKG="${2:-dev.kmpilot.$(echo "$NAME" | tr '[:upper:]' '[:lower:]')}"
+# Interactive prompts read from the controlling terminal, not stdin — so the
+# guided flow works even when the script itself arrives on stdin (curl | bash).
+if [[ -r /dev/tty ]]; then TTY=/dev/tty; else TTY=""; fi
 
-command -v git >/dev/null 2>&1 || { echo "Error: git is required" >&2; exit 1; }
+STEP_NO=0
+step() {   # numbered top-level step
+    STEP_NO=$((STEP_NO + 1))
+    printf '%s%s[%s]%s %s%s\n' "$BOLD" "$CYAN" "$STEP_NO" "$RESET" "$BOLD" "$1$RESET"
+}
+substep() { printf '    %s%s›%s %s\n' "$DIM" "$BLUE" "$RESET" "$1"; }
+ok()      { printf '    %s✓%s %s\n' "$GREEN" "$RESET" "$1"; }
+warn()    { printf '    %s⚠%s %s\n' "$YELLOW" "$RESET" "$1"; }
+die()     { printf '\n%s✗ %s%s\n' "$RED" "$1" "$RESET" >&2; exit 1; }
 
-# Pick the install ref, in priority order:
+banner() {
+    printf '\n'
+    printf '%s%s  ╭───────────────────────────────────────────────╮%s\n' "$BOLD" "$BORDER" "$RESET"
+    printf '%s%s  │%s  %s%sKMPilot%s  %s·%s  Kotlin Multiplatform scaffolder  %s%s│%s\n' \
+        "$BOLD" "$BORDER" "$RESET" "$BOLD" "$CYAN" "$RESET" "$DIM" "$RESET" "$BOLD$BORDER" "" "$RESET"
+    printf '%s%s  ╰───────────────────────────────────────────────╯%s\n' "$BOLD" "$BORDER" "$RESET"
+    printf '%s     an Android + iOS app from a handful of Claude Code commands%s\n\n' "$DIM" "$RESET"
+}
+
+# Run a command with a braille spinner. Captures the child exit code safely
+# under `set -e` (a bare failing `wait` would abort before we could read $?).
+spinner() {
+    local msg="$1"; shift
+    if [[ ! -t 1 ]]; then          # non-terminal: no animation, just run
+        "$@"; return $?
+    fi
+    "$@" &
+    local pid=$! frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' i=0 rc=0
+    tput civis 2>/dev/null || true # hide cursor
+    while kill -0 "$pid" 2>/dev/null; do
+        printf '\r    %s%s%s %s' "$CYAN" "${frames:i++%${#frames}:1}" "$RESET" "$msg"
+        sleep 0.08
+    done
+    if wait "$pid"; then rc=0; else rc=$?; fi
+    tput cnorm 2>/dev/null || true # restore cursor
+    printf '\r\033[K'              # clear the spinner line
+    return $rc
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Input: arguments, then guided prompts for anything missing
+# ─────────────────────────────────────────────────────────────────────────────
+
+command -v git >/dev/null 2>&1 || die "git is required but was not found on PATH."
+
+NAME="${1:-}"
+PKG_ARG="${2:-}"
+
+# Validators (kept permissive but enough to avoid a broken rename downstream).
+valid_name() { [[ "$1" =~ ^[A-Za-z][A-Za-z0-9]*$ ]]; }
+valid_pkg()  { [[ "$1" =~ ^[a-z][a-z0-9]*(\.[a-z][a-z0-9]+)+$ ]]; }
+
+prompt_name() {
+    [[ -n "$TTY" ]] || die "No project name given and no terminal to prompt on.
+Pass one:  install.sh <ProjectName> [package.prefix]"
+    local ans
+    while :; do
+        printf '%s?%s %sProject name%s %s(PascalCase, e.g. MyStore)%s: ' \
+            "$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET" > /dev/tty
+        read -r ans < "$TTY" || die "Aborted."
+        if valid_name "$ans"; then NAME="$ans"; return; fi
+        warn "Use letters and digits only, starting with a letter."
+    done
+}
+
+prompt_pkg() {
+    local default="dev.kmpilot.$(echo "$NAME" | tr '[:upper:]' '[:lower:]')"
+    if [[ -n "$PKG_ARG" ]]; then PKG="$PKG_ARG"; return; fi
+    if [[ -z "$TTY" ]]; then PKG="$default"; return; fi
+    local ans
+    while :; do
+        printf '%s?%s %sPackage prefix%s %s[%s]%s: ' \
+            "$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$default" "$RESET" > /dev/tty
+        read -r ans < "$TTY" || die "Aborted."
+        ans="${ans:-$default}"
+        if valid_pkg "$ans"; then PKG="$ans"; return; fi
+        warn "Use a dotted lowercase package, e.g. com.acme.store"
+    done
+}
+
+confirm() {
+    [[ "${KMPILOT_ASSUME_YES:-0}" == "1" ]] && return 0
+    [[ -n "$TTY" ]] || return 0     # non-interactive: proceed (matches install.sh)
+    local ans
+    printf '\n    %sProceed?%s %s[Y/n]%s ' "$BOLD" "$RESET" "$DIM" "$RESET" > /dev/tty
+    read -r ans < "$TTY" || die "Aborted."
+    case "${ans:-y}" in [Yy]*|"") return 0 ;; *) die "Cancelled." ;; esac
+}
+
+banner
+
+[[ -n "$NAME" ]] || prompt_name
+valid_name "$NAME" || die "Invalid project name '$NAME' (letters and digits, start with a letter)."
+prompt_pkg
+
+if [[ -e "$NAME" ]]; then die "'$NAME' already exists in $(pwd)."; fi
+
+# Resolve the install ref, in priority order:
 #   1. KMPILOT_TEMPLATE_BRANCH — explicit override (e.g. =main for bleeding edge)
-#   2. PINNED_TAG              — stamped into this script by the release workflow, so a
-#                               released install.sh clones the exact tag it shipped with
-#   3. newest published vX.Y.Z — for raw-main runs (unstamped script): resolve latest tag
+#   2. PINNED_TAG              — stamped into this script by the release workflow
+#   3. newest published vX.Y.Z — for raw-main runs (unstamped script)
 #   4. main                    — last resort when the repo has no tags yet
 if [[ -z "$TEMPLATE_BRANCH" ]]; then
     if [[ "$PINNED_TAG" != '__KMPILOT_PINNED_TAG__' && -n "$PINNED_TAG" ]]; then
@@ -65,10 +172,14 @@ if [[ -z "$TEMPLATE_BRANCH" ]]; then
     fi
 fi
 
-if [[ -e "$NAME" ]]; then
-    echo "Error: '$NAME' already exists in $(pwd)" >&2
-    exit 1
-fi
+# Recap what we're about to build.
+printf '\n'
+printf '    %sProject%s   %s%s%s\n'  "$DIM" "$RESET" "$BOLD" "$NAME" "$RESET"
+printf '    %sPackage%s   %s\n'      "$DIM" "$RESET" "$PKG"
+printf '    %sTemplate%s  %s %s(%s)%s\n' "$DIM" "$RESET" "$TEMPLATE_REPO" "$DIM" "$TEMPLATE_BRANCH" "$RESET"
+printf '    %sTarget%s    %s/%s\n'   "$DIM" "$RESET" "$(pwd)" "$NAME"
+confirm
+printf '\n'
 
 # Cross-platform sed -i (BSD/macOS vs GNU/Linux)
 if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -76,6 +187,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 else
     sedi() { sed -i "$@"; }
 fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Core template surgery — logic identical to install.sh, only the echoes restyled
+# ─────────────────────────────────────────────────────────────────────────────
 
 trim_template() {
     # Strip KMPilot's example features from the cloned target and write a
@@ -87,7 +202,6 @@ trim_template() {
     # NOTE: This trims the CLONE only. The KMPilot repo itself keeps
     # feature/dashboard/ (and any other sample features) as a working
     # reference implementation.
-    echo "→ Trimming template to a fresh project shell..."
 
     # 1-3. Strip EVERY example feature module and its wiring. Generic on purpose:
     #       a hardcoded list silently drifts whenever a sample feature is added
@@ -519,7 +633,6 @@ write_fresh_docs() {
     # instead of inheriting the template's. Runs AFTER rename.sh so the upstream KMPilot
     # credit/links written below are NOT rewritten by the rename. Uses a quoted heredoc
     # (literal) + a placeholder sed so the code fences and links stay intact.
-    echo "→ Writing a fresh README.md + CHANGELOG.md..."
     cat > README.md <<'README_EOF'
 # __PROJECT_NAME__
 
@@ -597,24 +710,45 @@ write_manifest() {
   "installedAt": "${now}"
 }
 MANIFEST_EOF
-    echo "→ Wrote .kmpilot.json (version ${version}, package ${PKG})"
+    ok "Wrote .kmpilot.json (version ${version}, package ${PKG})"
 }
 
-echo "→ Cloning KMPilot template (branch: $TEMPLATE_BRANCH) into $NAME/"
-git clone --depth=1 --branch "$TEMPLATE_BRANCH" --quiet "$TEMPLATE_REPO" "$NAME"
+# ─────────────────────────────────────────────────────────────────────────────
+# Orchestration
+# ─────────────────────────────────────────────────────────────────────────────
+
+step "Cloning KMPilot template"
+substep "ref: ${BOLD}${TEMPLATE_BRANCH}${RESET}"
+spinner "Cloning into ${NAME}/ ..." \
+    git -c advice.detachedHead=false clone --depth=1 --branch "$TEMPLATE_BRANCH" --quiet "$TEMPLATE_REPO" "$NAME" \
+    || die "Clone failed. Check the repo URL / ref and your network."
+ok "Cloned into ${BOLD}${NAME}/${RESET}"
 
 cd "$NAME"
 rm -rf .git
 
+step "Trimming to a fresh project shell"
 trim_template
+ok "Example features removed, Welcome screen written"
 
-echo "→ Renaming project..."
-bash scripts/rename.sh --name="$NAME" --pkg="$PKG"
+step "Renaming project to ${BOLD}${NAME}${RESET}"
+substep "package ${PKG}"
+# rename.sh is chatty; capture its output so it doesn't break the styled log,
+# and surface it only if the rename fails.
+RENAME_LOG="$(mktemp)"
+if spinner "Rewriting identifiers ..." \
+        bash -c 'bash scripts/rename.sh --name="$1" --pkg="$2" >"$3" 2>&1' _ "$NAME" "$PKG" "$RENAME_LOG"; then
+    rm -f "$RENAME_LOG"
+    ok "Identifiers rewritten"
+else
+    cat "$RENAME_LOG" >&2; rm -f "$RENAME_LOG"; die "rename.sh failed."
+fi
 
 # Template-only files we don't need in a user project. scripts/rename.sh is a
 # one-shot installer tool (it has already run above and still embeds KMPilot's
 # OLD identifiers); scripts/ is empty once it's gone. update.sh is KEPT — it is
-# the downstream's entrypoint for pulling future releases.
+# the downstream's entrypoint for pulling future releases. install.sh is the
+# installer itself; already run, and not wanted in the generated project.
 rm -f install.sh
 rm -rf scripts
 
@@ -623,36 +757,45 @@ rm -rf scripts
 # has a [CP] Check Pods Manifest.lock build phase that aborts the build until
 # Pods/ and Podfile.lock exist.
 if [[ "$(uname -s)" == "Darwin" ]]; then
+    step "iOS setup"
     if command -v pod >/dev/null 2>&1; then
-        echo "→ Running pod install in iosApp/..."
-        if (cd iosApp && pod install >/dev/null 2>&1); then
-            echo "  ✓ Pods installed"
+        if spinner "Running pod install ..." bash -c 'cd iosApp && pod install >/dev/null 2>&1'; then
+            ok "Pods installed"
         else
-            echo "  ⚠ pod install failed — run 'cd $NAME/iosApp && pod install' manually"
-            echo "    Common fix: brew install cocoapods"
+            warn "pod install failed — run 'cd $NAME/iosApp && pod install' manually"
+            substep "Common fix: brew install cocoapods"
         fi
     else
-        echo "→ Skipping pod install (CocoaPods not installed)"
-        echo "  For iOS builds: brew install cocoapods && cd $NAME/iosApp && pod install"
+        warn "CocoaPods not installed — skipping pod install"
+        substep "For iOS builds: brew install cocoapods && cd $NAME/iosApp && pod install"
     fi
 fi
 
 # Replace the template's README/CHANGELOG with fresh project docs (post-rename, so the
 # upstream KMPilot credit links survive), then stamp the update manifest, then drop the
 # upstream VERSION file — kmpilotVersion now lives in .kmpilot.json.
+step "Writing project docs + manifest"
 write_fresh_docs
 write_manifest
 rm -f VERSION
+ok "README.md + CHANGELOG.md written"
 
-echo "→ Initializing fresh git repository..."
+step "Initializing git repository"
 git init --quiet
 git add -A
 git -c user.email=kmpilot@local -c user.name=kmpilot commit --quiet \
     -m "Initial commit from KMPilot template"
+ok "Initial commit created"
 
-echo ""
-echo "✓ '$NAME' ready at $(pwd)"
-echo ""
-echo "Next:"
-echo "  cd $NAME"
-echo "  claude"
+# ─────────────────────────────────────────────────────────────────────────────
+# Done
+# ─────────────────────────────────────────────────────────────────────────────
+printf '\n'
+printf '%s%s  ✓ %s is ready%s  %s%s\n' "$BOLD" "$GREEN" "$NAME" "$RESET" "$DIM" "$RESET"
+printf '%s    %s%s\n\n' "$DIM" "$(pwd)$RESET" ""
+printf '  %sNext%s\n' "$BOLD" "$RESET"
+printf '    %s$%s cd %s\n'   "$DIM" "$RESET" "$NAME"
+printf '    %s$%s claude\n'  "$DIM" "$RESET"
+printf '\n'
+printf '  %sthen try%s  %s/design-ui%s  or  %s/create-feature%s\n\n' \
+    "$DIM" "$RESET" "$CYAN" "$RESET" "$CYAN" "$RESET"

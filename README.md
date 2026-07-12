@@ -82,7 +82,13 @@ https://github.com/user-attachments/assets/a1438483-68d3-4550-b876-9a62db0d1a21
 
 **Prerequisites:** JDK 21+ · Android Studio · Xcode 15+ (iOS) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
-**1. Install** — replace `<MyApp>` and `<com.acme.myapp>` with your own values:
+**1. Install** — run the installer and it prompts you for the project name and package:
+
+```bash
+curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/install.sh | bash
+```
+
+Prefer to pass them up front (scriptable, non-interactive)? Give them as arguments:
 
 - **`MyApp`** — project name (folder, root project, Android app label)
 - **`com.acme.myapp`** — package prefix / application ID (`namespace`, `applicationId`, source-set package roots)
@@ -92,7 +98,7 @@ curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/ins
   | bash -s <MyApp> <com.acme.myapp>
 ```
 
-Clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#staying-up-to-date)). The installer is **release-pinned**: it clones the exact tag it shipped with, so the installer and the template tree are always the same release.
+The installer walks each step (clone → trim → rename → docs → git), validating your project name and package as it goes. It clones the latest release, renames packages, initializes fresh git — and leaves a `./update.sh` so you can pull future releases later (see [Staying up to date](#staying-up-to-date)). The installer is **release-pinned**: it clones the exact tag it shipped with, so the installer and the template tree are always the same release.
 
 > **Windows:** run the same command inside **Git Bash** (ships with [Git for Windows](https://git-scm.com/download/win)) or WSL — not PowerShell or `cmd`. The installer uses bash + GNU `sed`/`find`, both present in Git Bash. iOS targets remain macOS-only.
 
