@@ -11,6 +11,8 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-07-12
+
 ### Changed
 - **[Tooling]** `install.sh` is now an **interactive, colorized installer**. Run it
   with no arguments (`curl … | bash`) and it walks a guided flow — banner, numbered
@@ -135,7 +137,8 @@ Kotlin Multiplatform + Compose Multiplatform.
   feature shape; reference features are stripped on install, so a fresh project
   starts on a Welcome screen.
 
-[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/ThisIsSadeghi/KMPilot/compare/v0.1.3...HEAD
 [0.1.0]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.0
 [0.1.1]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.1
 [0.1.2]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.2
+[0.1.3]: https://github.com/ThisIsSadeghi/KMPilot/releases/tag/v0.1.3
