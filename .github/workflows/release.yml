@@ -83,9 +83,13 @@ jobs:
           {
             echo "## Install"
             echo
-            echo "Replace \`<MyApp>\` and \`<com.acme.myapp>\` with your own values:"
-            echo "- **\`MyApp\`** — project name (folder, root project, Android app label)"
-            echo "- **\`com.acme.myapp\`** — package prefix / application ID (\`namespace\`, \`applicationId\`, source-set package roots)"
+            echo "Run the installer — it prompts you for the project name and package, then walks each step (clone → trim → rename → docs → git), validating as it goes:"
+            echo
+            echo '```bash'
+            echo "curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/download/${GITHUB_REF_NAME}/install.sh | bash"
+            echo '```'
+            echo
+            echo "Prefer to pass them up front (scriptable, non-interactive)? Give them as arguments — \`<MyApp>\` is the project name (folder, root project, Android app label); \`<com.acme.myapp>\` the package prefix / application ID (\`namespace\`, \`applicationId\`, source-set package roots):"
             echo
             echo '```bash'
             echo "curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/download/${GITHUB_REF_NAME}/install.sh \\"
