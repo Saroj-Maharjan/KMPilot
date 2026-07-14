@@ -16,6 +16,7 @@ Spec-driven development for Kotlin Multiplatform.
 <br />
 
 [![Release](https://img.shields.io/github/v/release/ThisIsSadeghi/KMPilot?label=release&color=C8902A&logo=github&logoColor=white)](https://github.com/ThisIsSadeghi/KMPilot/releases)
+[![Full walkthrough](https://img.shields.io/badge/%E2%96%B6-Full%20walkthrough-FF0000?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=tDGFY66E7Zo)
 [![Built for Claude Code](https://img.shields.io/badge/Built%20for-Claude%20Code-D97757)](https://claude.ai/code)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.11-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/compose-multiplatform/)
@@ -34,6 +35,12 @@ Spec-driven development for Kotlin Multiplatform.
 https://github.com/user-attachments/assets/a1438483-68d3-4550-b876-9a62db0d1a21
 
 <sub>Demo: **[Kickoff26](https://github.com/ThisIsSadeghi/Kickoff26)** — a 2026 World Cup companion app, built with KMPilot.</sub>
+
+<br />
+
+**See the whole pipeline on the record:** an Android + iOS app from seven Claude Code commands, every prompt and timing included.
+
+**▶ [Watch the walkthrough](https://www.youtube.com/watch?v=tDGFY66E7Zo)** · **📄 [Read the walkthrough](https://proandroiddev.com/seven-claude-code-commands-one-kotlin-multiplatform-app-on-android-and-ios-cb01e920a3e6)**
 
 <br />
 
