@@ -37,7 +37,7 @@ grep -rn "proandroiddev.com" README.md CHANGELOG.md CONTRIBUTING.md
 - YouTube video description — swap both article links for friend links.
 - `Loupe` and `Kickoff26` READMEs — both link the walkthrough article.
 
-### 2. Build CI + badge
+### 2. Build CI
 
 > **Superseded in part by Phase 1.** `.github/workflows/build.yml` now exists — Phase 1
 > created it because the `archTest` gate needed somewhere to live. It triggers on
@@ -45,14 +45,13 @@ grep -rn "proandroiddev.com" README.md CHANGELOG.md CONTRIBUTING.md
 > checker self-test → `archTest` → `assembleDebug`. First green run:
 > [#2](https://github.com/ThisIsSadeghi/KMPilot/pull/2), 2026-08-01.
 >
-> **What is left for this phase:** decide the badge question, and the ktlint one.
+> **What is left for this phase:** the ktlint question. The badge is dropped.
 
-- **Badge — decide first.** The workflow no longer runs on `push` to `main`, and
-  `badge.svg` reports the most recent run on the **default branch**, so a plain build
-  badge would sit at "no status". Either point it at the PR event
-  (`badge.svg?event=pull_request`), or re-add a `push: branches: [main]` trigger purely to
-  feed the badge, or skip the build badge entirely. Skipping is defensible — nothing
-  reaches `main` except through a green PR.
+- **No build badge.** Decided 2026-08-01. The workflow triggers on `pull_request` only, so
+  the default branch never runs and `badge.svg` would sit at "no status" anyway. Nothing
+  reaches `main` except through a green PR, so the badge would add a row of pixels and a
+  maintenance question for no signal. The README badge row keeps Release / walkthrough /
+  Kotlin / CMP / Android / iOS / License.
 - `ktlintCheck` is **not** in the workflow. `ktlint` is configured with
   `ignoreFailures.set(true)` in root `build.gradle.kts:70`, so adding it as-is would be
   decorative. Decide: flip it to failing for CI, or leave lint advisory. Recommendation
@@ -82,8 +81,7 @@ grep -rn "proandroiddev.com" README.md CHANGELOG.md CONTRIBUTING.md
 
 | Path | Change |
 |---|---|
-| `README.md` | friend links, CI badge |
-| `.github/workflows/build.yml` | new |
+| `README.md` | friend links |
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | new |
 | `.github/ISSUE_TEMPLATE/feature_request.yml` | new |
 | `.github/ISSUE_TEMPLATE/config.yml` | new |
@@ -94,17 +92,17 @@ grep -rn "proandroiddev.com" README.md CHANGELOG.md CONTRIBUTING.md
 
 1. Generate both Medium friend links by hand; paste them into the phase's PR description so they are recorded.
 2. Grep for `proandroiddev.com` across tracked docs; replace.
-3. Write `build.gradle.kts`-compatible `build.yml`; push the branch and confirm the run goes green **before** adding the badge (a red badge is worse than none).
-4. Add the badge line to `README.md`.
-5. Add the three issue-template files.
-6. Open the PR.
+3. Add the three issue-template files.
+4. Open the PR.
+
+*(The former steps 3-4 — writing `build.yml` and adding a badge — are gone: Phase 1 created
+the workflow, and the badge is dropped. Only the ktlint decision remains, see section 2.)*
 
 ---
 
 ## Exit criteria
 
 - [ ] CI run green on the PR.
-- [ ] Badge renders green on the branch's README preview.
 - [ ] `grep -rn "proandroiddev.com" README.md` returns only friend links.
 - [ ] Three issue templates present; new-issue picker shows both forms.
 - [ ] Discussions enabled (manual).
