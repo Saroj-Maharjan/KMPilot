@@ -1,5 +1,5 @@
 # Code Review: Dashboard
-**Date**: 2026-05-22 | **Spec**: v3.3.0
+**Date**: 2026-08-01 | **Spec**: v3.6.0
 
 ---
 
@@ -9,120 +9,63 @@ Passed: 15/18 | Warnings: 3 | Critical: 0
 
 ---
 
-## Preview Rule Verification
+## Mechanized Checks (`kmpilot_check.py dashboard`)
 
-This section specifically addresses the Compose Multiplatform preview additions.
+0 errors, 0 warnings across all 19 deterministic checks (R3, R5, R7, R8, R9, R11a/b/c, R12, R13, S1-S4, I1-I4). See `.claude/docs/_project/check-report.json` (generated 2026-08-01T05:11:15Z). Not re-derived below.
+
+---
+
+## Judgment Rules (delegated to code-reviewer agent)
+
+| Rule | Verdict | Files | Findings |
+|---|---|---|---|
+| 1 — Interface + Impl | PASS | `data/datasource/`, `data/repository/` | Local + Remote datasource, Repository all interface+impl pairs. `DashboardLocalDataSourceImpl` bound in DI but unused in prod path — documented in spec §2.3, not a violation, just dead weight |
+| 2 — Either\<T\> | PASS | `data/repository/DashboardRepositoryImpl.kt:10` | `getDashboard()` is the only fallible op; `Either<DashboardData>` correct at every layer |
+| 4 — 4 UI States | PASS | `presentation/ui/DashboardScreen.kt:72-99` | Uninitialized/Loading → `AppLoadingState()`, Failed → `AppErrorState(...)` w/ retry + secondary action, Success → `DashboardContent`. All branches substantive |
+| 6 — ImmutableList | N/A | `presentation/DashboardUiModel.kt:6-8` | UiModel holds only `UiState<DashboardData>`, no raw `List<T>` field directly on it. Lists live inside the DTO, rendered via plain `.forEach` (no `LazyColumn`/`items()`) — outside this rule's scope |
+| 10 — Callback params | PASS | `presentation/ui/DashboardScreen.kt:38-44`, `presentation/navigation/DashboardNavigation.kt:12-16` | All callbacks (`onActionClick`, `onBackToDashboard`, `onAssetClick`, `onProfileClick`), zero `navController` |
+| 11 (semantic) | **WARNING** | `presentation/DashboardViewModel.kt:16-17` | `T=DashboardData` DTO ✓, `RepositoryImpl` returns `Either<DashboardData>` ✓, but public flow named `uiModelState` not `uiModel` — see P2-2 |
+| 12 (semantic) | PASS | all `components/*.kt` | UiModel carries no raw String fields; all copy via `stringResource(Res.string.*)` |
+| 14 — Platform | N/A | — | Pure `network` profile (single GET via ApiClient), no platform types, no `expect`/`actual` |
+
+## UI File Organization
 
 | Check | Result | Detail |
-|-------|--------|--------|
-| Deprecated `org.jetbrains.compose.ui.tooling.preview.Preview` import | NOT PRESENT | Zero matches across all 11 files that import @Preview |
-| Canonical `androidx.compose.ui.tooling.preview.Preview` import | CORRECT | Found in `DashboardScreen.kt` and all 10 component files |
-| Preview composables false-flagged by allowlist | NOT FALSE-FLAGGED | All 13 preview functions are `private` and `@Preview`-annotated — correctly exempt |
-| `sampleDashboardData` false-flagged as an allowlist violation | NOT FALSE-FLAGGED | Private `val` (non-`@Composable`) that supports previews — exempt |
-| Gradle: `compose.ui.tooling.preview` in commonMain | CORRECT | `implementation(libs.compose.ui.tooling.preview)` in `commonMain` dependencies |
-| Gradle: `compose.ui.tooling` as androidRuntimeClasspath | CORRECT | `androidRuntimeClasspath(libs.compose.ui.tooling)` at module level |
-
-**Conclusion**: The new preview encoding works correctly with zero false positives. The canonical CMP 1.11.0+ import is used everywhere; the deprecated JetBrains import is absent.
+|---|---|---|
+| `DashboardContent` location | PASS | `presentation/ui/components/DashboardContent.kt` — correctly extracted (fixed since v3.4.0, see spec Appendix C changelog) |
+| `Screen.kt` allowlist | PASS | `DashboardScreenRoot` + `DashboardScreen` only; Loading/Failed route to shared `AppLoadingState`/`AppErrorState`, no private shells |
+| `DashboardScreenRoot`/`DashboardScreen` param naming | **WARNING** | Param named `uiState` not `uiModel` (`DashboardScreen.kt:60`, local var `:46`) — same root cause as Rule 11 finding |
+| `DashboardHeader` sub-component | Low-priority note | Private composable w/ own `@Preview` inside `DashboardContent.kt:74-115` rather than its own file — deliberate (spec Appendix C v3.4.0), optional to extract further |
+| `@Preview` composables | PASS | Canonical `androidx.compose.ui.tooling.preview.Preview` import used everywhere; all preview fns `private`, exempt from allowlist |
 
 ---
 
-## Spec Compliance
+## Spec Compliance (`.claude/docs/dashboard/spec.md` v3.6.0)
 
 | Section | Status | Details |
-|---------|--------|---------|
-| Data Models | PASS | All 9 `@Serializable` DTOs present matching spec |
-| Interfaces | PASS | `DashboardRemoteDataSource` and `DashboardRepository` present; `DashboardLocalDataSource` present (unbound — see P2-1) |
-| State | PASS | `UiState<DashboardData>` in `DashboardUiModel` matches spec |
-| Navigation | PASS | `onActionClick: (String) -> Unit`, `onBackToDashboard: () -> Unit` callbacks; no navController |
-
----
-
-## Rules (1-11)
-
-### PASS  Rule 1: Interface + Impl
-**Files**: `data/datasource/` (4 files), `data/repository/` (2 files)
-**Findings**: `DashboardRemoteDataSource`/`DashboardRemoteDataSourceImpl` and `DashboardRepository`/`DashboardRepositoryImpl` are correctly paired. `DashboardLocalDataSource`/`DashboardLocalDataSourceImpl` also exist as a valid pair, but `DashboardLocalDataSourceImpl` is not bound in DI (see P2-1).
-
-### PASS  Rule 2: Either<T>
-**Files**: `data/datasource/DashboardRemoteDataSource.kt:7`, `data/repository/DashboardRepository.kt:7`, `data/repository/DashboardRepositoryImpl.kt:10`
-**Findings**: All fallible operations return `Either<DashboardData>`. Repository delegates directly to remote data source.
-
-### PASS  Rule 3: setState
-**Files**: `presentation/DashboardViewModel.kt:24,28,32`
-**Findings**: Three `_uiModelState.setState { copy(...) }` calls. Zero `_uiModel.value =` or `_uiState.value =` direct assignments found.
-
-### PASS  Rule 4: 4 UI States
-**Files**: `presentation/ui/DashboardScreen.kt:94-111`
-**Findings**: `when` branch in `DashboardScreenRoot` handles `Uninitialized`+`Loading` → `LoadingContent`, `Failed` → `ErrorContent`, `Success` → `DashboardContent`. All four states covered.
-
-### PASS  Rule 5: X-Components (No Material3)
-**Files**: All presentation files
-**Findings**: Zero forbidden Material3 component imports. `XScaffold`, `XText`, `XButton`, `XTextButton`, `XIcon`, `XCircularProgressIndicator` used throughout. `MaterialTheme.colorScheme.*` accesses are permitted (theme accessor via `XTheme`).
-
-### WARNING  Rule 6: ImmutableList
-**Files**: `data/model/DashboardData.kt:9-15`, `presentation/DashboardViewModel.kt:28-30`
-**Findings**: `DashboardData` DTO has 6 mutable `List<T>` fields. No `.toImmutableList()` conversion exists anywhere in the feature. Since `DashboardData` is stored inside `UiState.Success`, Compose cannot guarantee referential stability for the list fields, preventing safe recomposition skipping of list-driven sections.
-
-### PASS  Rule 7: Lowercase Packages
-**Files**: All 24 `.kt` files
-**Findings**: All packages follow `thisissadeghi.dashboard.*` lowercase pattern. No violations.
-
-### PASS  Rule 8: DI Binding
-**Files**: `di/DashboardModules.kt`
-**Findings**: `singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()` and `singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()` present in top-level `val dashboardModule`. `viewModelOf(::DashboardViewModel)` registered.
-
-### PASS  Rule 9: No UseCases
-**Files**: All files scanned
-**Findings**: Zero `UseCase` references. ViewModel calls `repository.getDashboard()` directly.
-
-### PASS  Rule 10: Callback Parameters
-**Files**: `presentation/ui/DashboardScreen.kt:66-79`
-**Findings**: `DashboardScreen` and `DashboardScreenRoot` take `onActionClick: (String) -> Unit` and `onBackToDashboard: () -> Unit`. Zero `navController` references.
-
-### PASS  Rule 11: Single UiModel + DTO-wrapped UiState
-**Files**: `presentation/DashboardUiModel.kt`, `data/` layer
-**Findings**:
-- (a) Zero `*UiState.kt` files in `presentation/` — PASS
-- (b) Exactly 1 `*UiModel.kt` — PASS
-- (c) Zero `import .*\.presentation\.` in `data/` layer — PASS
-- (d) `UiState<DashboardData>` wraps a `data/model/` DTO — PASS
-- (e) Repository returns `Either<DashboardData>` — PASS
-- (f) ViewModel exposes `val uiModelState` (not `val uiModel`) — minor naming deviation, see P2-2
-
-### WARNING  UI File Organization: DashboardContent in Screen.kt
-**Files**: `presentation/ui/DashboardScreen.kt:117-141`
-**Findings**: `DashboardContent` (private, 24 lines) is inlined in `Screen.kt` rather than extracted to `components/DashboardContent.kt`. Under the updated strict allowlist, `Screen.kt` is limited to `DashboardScreen`, `DashboardScreenRoot`, and the three optional state shells (`LoadingContent`, `FailedContent`, `EmptyContent`). `DashboardContent` is the success content orchestrator — it owns the `LazyColumn` layout across 9 sections and qualifies as a self-contained unit that should live in `components/`. Flagged as Warning (predates the rule update).
-
-### PASS  UI File Organization: @Preview Composables (Exempt)
-**Files**: `DashboardScreen.kt:316-356`, all 10 `components/*.kt` files
-**Findings**: All 13 preview functions are `private @Preview @Composable`, co-located with the composable they preview. Exempt from allowlist per preview rule. Three screen-level previews in `DashboardScreen.kt`; ten component-level previews each in their respective component file. `sampleDashboardData` is a private `val` supporting those previews — also exempt.
+|---|---|---|
+| Data Models | PASS | All DTOs match spec §4.3 field-for-field |
+| Interfaces | PASS | Matches spec §5.2 |
+| State | PASS | `DashboardUiModel` matches spec §6.2 |
+| Navigation | **WARNING** | Spec §5.3 documents only `onActionClick`/`onBackToDashboard`; impl adds `onAssetClick`, `onProfileClick` (real, wired callbacks) — spec is stale |
+| Functional Requirements | **WARNING** | Spec FR-6 (§3.1) says 4 quick actions; impl has 5 (Swap added, `QuickActions.kt:52-56`) — deliberate addition, spec never updated |
 
 ---
 
 ## Integration Points
 
-### PASS  Point 1: Gradle Include
-**Found**: YES — `settings.gradle.kts:37`
-
-### PASS  Point 2: Gradle Dependency
-**Found**: YES — `composeApp/build.gradle.kts:48`
-
-### PASS  Point 3: DI Init
-**Found**: YES — `initKoin.kt` — `dashboardModule` listed in `modules(...)`
-
-### PASS  Point 4: Navigation
-**Found**: YES — `BaseAppNavHost.kt:26` — `dashboard(...)` extension
+| Point | Result | Location |
+|---|---|---|
+| 1. Gradle Include | PASS | `settings.gradle.kts` |
+| 2. Gradle Dependency | PASS | `composeApp/build.gradle.kts` |
+| 3. DI Init | PASS | `initKoin.kt` — `dashboardModule` in `modules(...)` |
+| 4. Navigation | PASS | `BaseAppNavHost.kt` — `dashboard(...)` extension |
 
 ---
 
 ## Design-Aware Compliance
 
-| Check | Result | Detail |
-|-------|--------|--------|
-| Blueprint present | YES | `.claude/docs/dashboard/designs/dashboard_blueprint.md` |
-| `blueprintConsumed` flag | TRUE | `stitch-project.json → features.dashboard.blueprintConsumed: true` |
-| Component coverage | PASS | All 10 blueprint-defined sections mapped to component files |
-| Theme alignment | PASS | Blueprint tokens match `stitch-project.json` dark theme snapshot |
+`blueprintConsumed: true`. Profile avatar, asset-click, and Swap action are post-blueprint additions from a later `/modify-feature` pass — never round-tripped back into the blueprint or spec. Expected (blueprints are one-time artifacts); fully captured by the Spec Compliance findings above, no separate action needed.
 
 ---
 
@@ -133,18 +76,21 @@ None.
 
 ### Warnings (P2)
 
-**P2-1: DashboardLocalDataSource pair exists but is dead (not bound in DI, not used)**
-`DashboardLocalDataSource` + `DashboardLocalDataSourceImpl` are not referenced by `DashboardRepositoryImpl` or registered in `DashboardModules`. Either remove the dead pair or register and wire it.
-Fix: Remove both files, or add `singleOf(::DashboardLocalDataSourceImpl).bind<DashboardLocalDataSource>()` to `DashboardModules` and inject into `DashboardRepositoryImpl` for local caching.
-Files: `di/DashboardModules.kt`, `data/datasource/DashboardLocalDataSource.kt`, `data/datasource/DashboardLocalDataSourceImpl.kt`
+**P2-1: ViewModel public flow named `uiModelState` instead of `uiModel` (Rule 11 / UI File Org convention)**
+`DashboardViewModel` exposes `uiModelState`, which propagates as `uiState` naming into `DashboardScreen`/`DashboardScreenRoot`. Convention (and every other reviewed feature — `assetdetail`, `profile`, `swap`) uses `val uiModel: StateFlow<{Feature}UiModel>`. Since CLAUDE.md names `feature/dashboard/` as the reference implementation, this drift risks propagating into features copied from it.
+Fix: Rename `_uiModelState`→`_uiModel`, `uiModelState`→`uiModel` in `DashboardViewModel.kt:16-17`; update `DashboardScreenRoot` param and `DashboardScreen` local var in `DashboardScreen.kt:46,60`.
+Files: `presentation/DashboardViewModel.kt:16-17`, `presentation/ui/DashboardScreen.kt:46,60`
 
-**P2-2: ViewModel public flow named `uiModelState` instead of `uiModel` (Rule 11 convention)**
-`val uiModelState` in `DashboardViewModel` propagates as `uiState` naming in `DashboardScreen` and `DashboardScreenRoot`. Rule 11 convention specifies `val uiModel: StateFlow<DashboardUiModel>`.
-Fix: Rename `_uiModelState` → `_uiModel`, `uiModelState` → `uiModel` in ViewModel, and update `DashboardScreen` collector and `DashboardScreenRoot` parameter accordingly.
-Files: `presentation/DashboardViewModel.kt:16-17`, `presentation/ui/DashboardScreen.kt:72,84`
+**P2-2: Spec Navigation section (§5.3) stale — missing `onAssetClick`/`onProfileClick`**
+Implementation added two real, wired callbacks (profile-avatar click, portfolio-asset click) that the spec never documents.
+Fix: Update spec §5.3 to list all 4 callbacks (`onActionClick`, `onBackToDashboard`, `onAssetClick`, `onProfileClick`).
+Files: `.claude/docs/dashboard/spec.md:313-315`
 
-**P2-3: ImmutableList not used for DTO list fields (Rule 6)**
-`DashboardData` holds 6 `List<T>` fields with no `.toImmutableList()` conversion before they reach `UiState.Success`. Compose treats mutable `List` as unstable, forcing recomposition of all list-driven sections on every state update.
-Fix option A (preferred): Annotate `DashboardData` with `@Immutable` (from `androidx.compose.runtime`) since it is a `@Serializable` data class whose contents won't be mutated after construction.
-Fix option B: In `DashboardRepositoryImpl`/ViewModel, convert each list field via `.toImmutableList()` before wrapping in `UiState.Success`.
-Files: `data/model/DashboardData.kt:9-15`, `presentation/DashboardViewModel.kt:28-30`
+**P2-3: Spec FR-6 (§3.1) stale — says 4 quick actions, impl has 5**
+Swap was added as a 5th quick action (`QuickActions.kt:52-56`, wired end-to-end incl. sample data) but the spec's functional requirement was never updated.
+Fix: Update spec §3.1 FR-6 to list 5 quick actions (Send, Receive, Pay, Top Up, Swap).
+Files: `.claude/docs/dashboard/spec.md:67`
+
+---
+
+> **Next step —** run `/clear` to free the context window, then `/modify-feature dashboard apply fixes from @.claude/docs/dashboard/fixes.md` to address the review findings.
