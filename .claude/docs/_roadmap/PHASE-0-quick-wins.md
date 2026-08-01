@@ -40,16 +40,19 @@ grep -rn "proandroiddev.com" README.md CHANGELOG.md CONTRIBUTING.md
 ### 2. Build CI + badge
 
 > **Superseded in part by Phase 1.** `.github/workflows/build.yml` now exists — Phase 1
-> created it because the `archTest` gate needed somewhere to live. It already runs on
-> `push` to `main` + `pull_request`, sets up JDK 21 and `gradle/actions/setup-gradle`,
-> and runs the checker self-test → `archTest` → `assembleDebug`. First green run on `main`:
+> created it because the `archTest` gate needed somewhere to live. It triggers on
+> **`pull_request` only**, sets up JDK 21 and `gradle/actions/setup-gradle`, and runs the
+> checker self-test → `archTest` → `assembleDebug`. First green run:
 > [#2](https://github.com/ThisIsSadeghi/KMPilot/pull/2), 2026-08-01.
 >
-> **What is left for this phase:** add the badge, and decide the ktlint question.
+> **What is left for this phase:** decide the badge question, and the ktlint one.
 
-- Add the badge to the existing badge row in `README.md` (alongside Release / walkthrough
-  / Kotlin / CMP / Android / iOS / License). The precondition — a green run on `main` —
-  is already met.
+- **Badge — decide first.** The workflow no longer runs on `push` to `main`, and
+  `badge.svg` reports the most recent run on the **default branch**, so a plain build
+  badge would sit at "no status". Either point it at the PR event
+  (`badge.svg?event=pull_request`), or re-add a `push: branches: [main]` trigger purely to
+  feed the badge, or skip the build badge entirely. Skipping is defensible — nothing
+  reaches `main` except through a green PR.
 - `ktlintCheck` is **not** in the workflow. `ktlint` is configured with
   `ignoreFailures.set(true)` in root `build.gradle.kts:70`, so adding it as-is would be
   decorative. Decide: flip it to failing for CI, or leave lint advisory. Recommendation

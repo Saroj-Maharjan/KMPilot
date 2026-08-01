@@ -7,10 +7,10 @@ name: Build
 # Phase 0 of the roadmap extends this workflow (README badge, matrix); Phase 1
 # added the archTest gate.
 
+# Pull requests only — every change reaches `main` through a PR, so a push-to-main
+# run would just rebuild an already-verified merge commit. Add `workflow_dispatch`
+# if you ever need to re-run it against `main` by hand.
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 jobs:
