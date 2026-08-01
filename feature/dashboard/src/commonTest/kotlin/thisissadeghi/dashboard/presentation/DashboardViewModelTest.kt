@@ -54,7 +54,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 val first = awaitItem()
                 // First emission is either Uninitialized or Loading (init immediately sets Loading)
                 assertTrue(
@@ -71,7 +71,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 // Consume initial states
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
@@ -98,7 +98,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -122,7 +122,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -146,7 +146,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -171,7 +171,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -199,7 +199,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -225,7 +225,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1) // Loading
                 advanceUntilIdle()
 
@@ -244,7 +244,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1) // Loading
                 advanceUntilIdle()
 
@@ -263,7 +263,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1) // Loading
                 advanceUntilIdle()
 
@@ -282,7 +282,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1) // Loading
                 advanceUntilIdle()
 
@@ -301,7 +301,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1) // Loading
                 advanceUntilIdle()
 
@@ -328,7 +328,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 while (current.dashboardState !is UiState.Failed) {
                     advanceUntilIdle()
@@ -356,7 +356,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 while (current.dashboardState !is UiState.Failed) {
                     advanceUntilIdle()
@@ -387,7 +387,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 while (current.dashboardState !is UiState.Failed) {
                     advanceUntilIdle()
@@ -413,7 +413,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -434,7 +434,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 while (current.dashboardState !is UiState.Failed) {
                     advanceUntilIdle()
@@ -466,7 +466,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -497,7 +497,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -522,7 +522,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -546,7 +546,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()
@@ -570,7 +570,7 @@ class DashboardViewModelTest {
 
             createViewModel()
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
                 if (current.dashboardState is UiState.Uninitialized) {
                     current = awaitItem()

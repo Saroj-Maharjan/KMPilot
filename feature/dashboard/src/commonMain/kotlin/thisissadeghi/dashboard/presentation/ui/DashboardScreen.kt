@@ -43,9 +43,9 @@ fun DashboardScreen(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val uiState by viewModel.uiModelState.collectAsStateWithLifecycle()
+    val uiModel by viewModel.uiModel.collectAsStateWithLifecycle()
     DashboardScreenRoot(
-        uiState = uiState,
+        uiModel = uiModel,
         onActionClick = onActionClick,
         onRetry = viewModel::retry,
         onBackToDashboard = onBackToDashboard,
@@ -57,7 +57,7 @@ fun DashboardScreen(
 
 @Composable
 fun DashboardScreenRoot(
-    uiState: DashboardUiModel,
+    uiModel: DashboardUiModel,
     onActionClick: (String) -> Unit,
     onRetry: () -> Unit,
     onBackToDashboard: () -> Unit,
@@ -69,7 +69,7 @@ fun DashboardScreenRoot(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
     ) {
-        when (val state = uiState.dashboardState) {
+        when (val state = uiModel.dashboardState) {
             UiState.Uninitialized, UiState.Loading ->
                 AppLoadingState()
 
@@ -169,7 +169,7 @@ private val sampleDashboardData =
 private fun DashboardScreenRootPreviewSuccess() {
     XTheme {
         DashboardScreenRoot(
-            uiState = DashboardUiModel(dashboardState = UiState.Success(sampleDashboardData)),
+            uiModel = DashboardUiModel(dashboardState = UiState.Success(sampleDashboardData)),
             onActionClick = {},
             onRetry = {},
             onBackToDashboard = {},
@@ -184,7 +184,7 @@ private fun DashboardScreenRootPreviewSuccess() {
 private fun DashboardScreenRootPreviewLoading() {
     XTheme {
         DashboardScreenRoot(
-            uiState = DashboardUiModel(dashboardState = UiState.Loading),
+            uiModel = DashboardUiModel(dashboardState = UiState.Loading),
             onActionClick = {},
             onRetry = {},
             onBackToDashboard = {},
@@ -199,7 +199,7 @@ private fun DashboardScreenRootPreviewLoading() {
 private fun DashboardScreenRootPreviewFailed() {
     XTheme {
         DashboardScreenRoot(
-            uiState =
+            uiModel =
                 DashboardUiModel(
                     dashboardState = UiState.Failed(ErrorModel.Message("Network unavailable")),
                 ),
