@@ -4,10 +4,10 @@
 
 | Field | Value |
 |-------|-------|
-| Version | 1.2.2 |
+| Version | 1.3.0 |
 | Status | Active |
 | Created | 2026-05-03 |
-| Updated | 2026-06-03 |
+| Updated | 2026-08-01 |
 
 ---
 
@@ -55,6 +55,7 @@ Receiving crypto requires sharing an exact wallet address. A dedicated Receive s
 
 ## Last Updated
 
+- 2026-08-01 — Rule 11 + Screen.kt allowlist (S1 archTest fix): folded `ReceiveUiState` into `ReceiveUiModel` (removed `ReceiveUiState.kt`) — `ReceiveUiModel` now holds a single `UiState<ReceiveData>` slot (`dataState`); added `data/model/ReceiveData.kt` as the data-layer DTO (coinName, networkName, walletAddress); ViewModel constructs `ReceiveData` directly — no Repository/DataSource added (feature stays offline-only per Non-Goals). Also moved `ReceiveSuccessContent` and `ReceiveBottomBar` out of `ReceiveScreen.kt` into their own files under `presentation/ui/components/` (`ReceiveContent.kt`, `ReceiveBottomBar.kt`), both now public top-level (were file-private). Internal refactor, no behavior change (v1.3.0)
 - 2026-06-03 — Shared state UI: `Loading`/`Failed` now render `thisissadeghi.designsystem.app.AppLoadingState`/`AppErrorState` (design-system `app` tier). Removed the private `ReceiveLoadingContent`/`ReceiveFailedContent` and the duplicated `retry_label` (shared `AppErrorState` defaults `retryLabel` to `DesignSystemResources.string.retry_label`). `Failed` passes `error_title`/`error_message` (no secondary action). Internal refactor, no behavior change (v1.2.2)
 - 2026-06-02 — Rule 13 (single app-shell Scaffold) + IME-inset fix (v1.2.1): `ReceiveScreenRoot` migrated `XScaffold` → `XScreen` (sticky `ReceiveBottomBar` in `bottomBar` slot, Success-state only); removed `paddingValues` threading from `ReceiveLoadingContent`/`ReceiveSuccessContent`/`ReceiveFailedContent`. The app shell pads the NavHost top + horizontal + ime; `ReceiveBottomBar` owns its nav-bar inset, padding content with `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (`max(0, navBar − ime)`) so it clears the nav bar when the keyboard is closed and drops to 0 when the shell's `imePadding()` lifts the screen. Background still bleeds to the screen edge.
 - 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings (top bar, address label, network warning, bottom-bar actions, failed state) to `composeResources/values/strings.xml`, replaced with `stringResource`. Coin/network names left as data (VM-supplied). No behavior change.
@@ -110,10 +111,12 @@ The system SHALL display the wallet address in Success state as soon as the scre
 
 ```
 feature/receive/src/commonMain/kotlin/thisissadeghi/receive/
+├── data/
+│   └── model/
+│       └── ReceiveData.kt
 ├── presentation/
 │   ├── ReceiveViewModel.kt
 │   ├── ReceiveUiModel.kt
-│   ├── ReceiveUiState.kt
 │   ├── ui/
 │   │   ├── ReceiveScreen.kt
 │   │   └── components/
@@ -130,8 +133,8 @@ feature/receive/src/commonMain/kotlin/thisissadeghi/receive/
 ### Data Flow
 
 ```
-ViewModel (static hardcoded data)
-    └─▶ UiState<ReceiveUiModel>
+ViewModel (static hardcoded data → ReceiveData DTO)
+    └─▶ UiState<ReceiveData> (on ReceiveUiModel)
             └─▶ [UI]
 ```
 
@@ -142,8 +145,8 @@ No DataSource or Repository — data never leaves the ViewModel.
 | Class | Purpose | Location |
 |-------|---------|----------|
 | `ReceiveViewModel` | Emits static `UiState.Success` on init | `presentation/` |
-| `ReceiveUiState` | State holder wrapping `UiState<ReceiveUiModel>` | `presentation/` |
-| `ReceiveUiModel` | UI-facing data model | `presentation/` |
+| `ReceiveUiModel` | Single presentation state container — wraps `UiState<ReceiveData>` | `presentation/` |
+| `ReceiveData` | Data-layer DTO (coinName, networkName, walletAddress) | `data/model/` |
 | `ReceiveScreen` | ViewModel wrapper — collects state, delegates to ScreenRoot | `presentation/ui/` |
 | `ReceiveScreenRoot` | Testable composable — all UI implemented here | `presentation/ui/` |
 | `AssetSelectorCard` | Tappable coin + network selector row card | `presentation/ui/components/` |
@@ -155,14 +158,14 @@ No DataSource or Repository — data never leaves the ViewModel.
 ### Data Models
 
 ```kotlin
-data class ReceiveUiModel(
+data class ReceiveData(
     val coinName: String,
     val networkName: String,
     val walletAddress: String,
 )
 
-data class ReceiveUiState(
-    val state: UiState<ReceiveUiModel> = UiState.Uninitialized,
+data class ReceiveUiModel(
+    val dataState: UiState<ReceiveData> = UiState.Uninitialized,
 )
 ```
 
@@ -194,8 +197,8 @@ Navigation wiring: `receive(onBackClick = { navController.popBackStack() })` + `
 ### UiState Structure
 
 ```kotlin
-data class ReceiveUiState(
-    val state: UiState<ReceiveUiModel> = UiState.Uninitialized,
+data class ReceiveUiModel(
+    val dataState: UiState<ReceiveData> = UiState.Uninitialized,
 )
 ```
 
@@ -205,7 +208,7 @@ data class ReceiveUiState(
 Uninitialized ──(init)──▶ Success
 ```
 
-The transition is synchronous inside `ReceiveViewModel.init` via `_uiState.setState { copy(state = UiState.Success(...)) }`. There is no Loading intermediate — `Uninitialized` and `Loading` both render the loading spinner but the screen never visibly pauses there.
+The transition is synchronous inside `ReceiveViewModel.init` via `_uiModel.setState { copy(dataState = UiState.Success(...)) }`. There is no Loading intermediate — `Uninitialized` and `Loading` both render the loading spinner but the screen never visibly pauses there.
 
 The `Failed` state is defined in `UiState` and handled in the UI (error layout) but is unreachable in the current offline implementation.
 

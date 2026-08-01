@@ -3,10 +3,10 @@
 ## Metadata
 | Field | Value |
 |-------|-------|
-| Version | 1.0.1 |
+| Version | 1.0.2 |
 | Status | Active |
 | Created | 2026-06-10 |
-| Updated | 2026-06-10 |
+| Updated | 2026-08-01 |
 
 ## Purpose
 Displays a full breakdown of a single crypto asset — live price, historical price chart with selectable periods, key market stats, user holdings, recent activity, and a top-holders community widget. A sticky Buy/Sell footer opens a trade bottom sheet for purchasing. Navigated to as a pushed screen from the Dashboard portfolio list.
@@ -49,6 +49,7 @@ The Dashboard already surfaces a portfolio card per asset. Users tapping an asse
 ## Last Updated
 - 2026-06-10 — Generated from implementation
 - 2026-06-10 — Fix iOS build: `kotlin.text.String.format` ("%.Nf" patterns, JVM-only, unresolved on Kotlin/Native) replaced with `:core:common` `Double.formatDecimals(decimals: Int)` / `Float.formatDecimals(decimals: Int)` extensions (`thisissadeghi.common.ext`) at all 14 call sites: PriceChart.kt, AssetDetailViewModel.kt, HeroSection.kt (x2, incl. new `Float` overload for `displayPrice`), ActivitySection.kt (x2), StatsGrid.kt (x6), BuyBottomSheet.kt. Same fix as swap (1.0.0→1.0.1).
+- 2026-08-01 — Moved `StickyTradeBar` out of `AssetDetailScreen.kt` into `presentation/ui/components/StickyTradeBar.kt` to satisfy the `Screen.kt` 3-name allowlist (archTest S1 warning). No behavior change (1.0.1→1.0.2).
 
 ## Requirements
 
@@ -111,7 +112,7 @@ feature/assetdetail/src/commonMain/kotlin/thisissadeghi/assetdetail/
 │   ├── navigation/      AssetDetailNavigation.kt (AssetDetailRoute, assetdetail ext)
 │   └── ui/
 │       ├── AssetDetailScreen.kt
-│       ├── components/  (12 component files — see Component Tree)
+│       ├── components/  (13 component files — see Component Tree)
 │       └── motion/      AssetDetailMotion.kt
 └── di/
     └── AssetDetailModules.kt
@@ -245,6 +246,8 @@ data class AssetDetailUiModel(
 
 ### Component Tree
 ```
+StickyTradeBar (XScreen bottomBar slot — sticky Buy/Sell footer)
+
 AssetDetailContent
 ├── HeroSection         — coin circle, name+ticker, animated price, % change badge
 ├── TimePeriodSelector  — row of 1D/1W/1M/1Y/All chips

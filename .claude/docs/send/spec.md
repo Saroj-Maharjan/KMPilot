@@ -1,7 +1,7 @@
 # Feature Spec: Send
 
 **Status:** Complete
-**Version:** 2.3.1
+**Version:** 2.4.0
 **Module:** `:feature:send`
 **Package:** `thisissadeghi.send`
 **Generated:** 2026-02-25
@@ -48,7 +48,7 @@ The send flow is a core action in the crypto wallet app. This first iteration sh
 |-------|-------------|
 | Data | Local-only. `SendLocalDataSource` interface + `SendLocalDataSourceImpl` returns hardcoded dummy `SendData`. No network calls. |
 | Repository | `SendRepository` interface + `SendRepositoryImpl` wraps the data source. Returns `Either<SendData>`. |
-| Presentation | `SendViewModel` calls repository directly (no UseCases). Drives `SendUiState` through `Uninitialized → Loading → Success/Failed`. |
+| Presentation | `SendViewModel` calls repository directly (no UseCases). Drives `SendUiModel.dataState` through `Uninitialized → Loading → Success/Failed`. Repository's `SendData` flows straight into `UiState.Success` — no manual DTO→UiModel mapping. |
 | UI | `SendScreen` (ViewModel wrapper) + `SendScreenRoot` (testable composable). State-routed via `when(uiState.state)`. |
 | DI | `val sendModule` (top-level Koin module). Listed in `initKoin`'s `modules(...)`. |
 | Navigation | `SendRoute` (`@Serializable object`). `NavGraphBuilder.send(onBackClick)` extension function. |
@@ -101,8 +101,7 @@ data class NetworkInfo(val name: String, val description: String)
 ### Presentation Layer
 | File | Description |
 |------|-------------|
-| `presentation/SendUiState.kt` | State holder — wraps `UiState<SendUiModel>` |
-| `presentation/SendUiModel.kt` | UI-facing model derived from `SendData` |
+| `presentation/SendUiModel.kt` | Single state container (Rule 11) — `val dataState: UiState<SendData> = UiState.Uninitialized` |
 | `presentation/SendViewModel.kt` | ViewModel — invokes repository, manages 4 UI states |
 | `presentation/ui/SendScreen.kt` | `SendScreen` (ViewModel wrapper) + `SendScreenRoot` (testable) + state composables |
 | `presentation/ui/components/HeroAmountSection.kt` | 64sp ExtraBold amount + BTC pill + gold cursor underline + balance row + quick chips |
@@ -284,3 +283,4 @@ navController.navigate(SendRoute)
 - 2026-05-31 — i18n (Rule 12): extracted all hardcoded UI strings to `composeResources/values/strings.xml`, replaced with `stringResource`. Balance/USD use format-arg templates. No behavior change. Quick-amount chips (`25%`/`50%`/`MAX`) intentionally left as raw control sentinels (parsed in logic); ₿/$ glyphs left as symbols (v2.2.0)
 - 2026-06-02 — Rule 13 (single app-shell Scaffold) + IME-inset fix: `SendScreenRoot` migrated `XScaffold` → `XScreen` (sticky `SendBottomBar` in `bottomBar` slot, Success-state only); removed `paddingValues` threading from `SuccessContent`/`LoadingContent`/`FailedContent`. The app shell pads the NavHost top + horizontal + ime; `SendBottomBar` owns its nav-bar inset, padding content with `windowInsetsPadding(WindowInsets.navigationBars.exclude(WindowInsets.ime))` (`max(0, navBar − ime)`) so it clears the nav bar when the keyboard is closed and drops to 0 when the shell's `imePadding()` lifts the screen — avoiding a double gap above the keyboard. Background still bleeds to the screen edge (padding after `.background(...)`) (v2.3.1)
 - 2026-06-03 — Shared state UI: `Loading`/`Failed` now render `thisissadeghi.designsystem.app.AppLoadingState`/`AppErrorState` (design-system `app` tier). Removed the private `LoadingContent`/`FailedContent` and the duplicated `retry_label` (shared `AppErrorState` defaults `retryLabel` to `DesignSystemResources.string.retry_label`). `Failed` passes `error_title`/`error_message` + a "Return to Dashboard" `secondaryAction`; `Uninitialized` stays per-feature. Internal refactor, no behavior change (v2.3.2)
+- 2026-08-01 — Rule 11 + Screen.kt allowlist: folded SendUiState into SendUiModel — SendUiModel now holds `dataState: UiState<SendData>` directly (dropped the flat mirror fields — repository's SendData already has everything needed; SendScreen reads nested selectedCoin/selectedNetwork); deleted SendUiState.kt. Also moved `SuccessContent` and `SendBottomBar` out of `SendScreen.kt` into `presentation/ui/components/SendContent.kt` and `SendBottomBar.kt`, fixing 2 checker S1 warnings. Internal refactor, no behavior/UI change (v2.4.0)

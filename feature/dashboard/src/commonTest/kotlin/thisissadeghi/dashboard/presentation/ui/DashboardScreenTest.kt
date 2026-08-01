@@ -24,10 +24,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createLoadingState(),
+                        uiModel = DashboardUiFixtures.createLoadingState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -44,10 +46,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createUninitializedState(),
+                        uiModel = DashboardUiFixtures.createUninitializedState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -66,10 +70,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(),
+                        uiModel = DashboardUiFixtures.createSuccessState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -84,10 +90,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(),
+                        uiModel = DashboardUiFixtures.createSuccessState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -106,10 +114,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(data),
+                        uiModel = DashboardUiFixtures.createSuccessState(data),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -128,10 +138,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(data),
+                        uiModel = DashboardUiFixtures.createSuccessState(data),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -148,10 +160,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(),
+                        uiModel = DashboardUiFixtures.createSuccessState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -172,10 +186,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(data),
+                        uiModel = DashboardUiFixtures.createSuccessState(data),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -189,10 +205,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(),
+                        uiModel = DashboardUiFixtures.createSuccessState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -209,10 +227,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -226,10 +246,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -246,10 +268,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -263,10 +287,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -280,10 +306,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createNetworkErrorState(),
+                        uiModel = DashboardUiFixtures.createNetworkErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -298,10 +326,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createServerErrorState(),
+                        uiModel = DashboardUiFixtures.createServerErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -316,10 +346,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createUnauthorizedErrorState(),
+                        uiModel = DashboardUiFixtures.createUnauthorizedErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -334,10 +366,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -356,10 +390,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = { retryCalled = true },
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -376,10 +412,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createErrorState(),
+                        uiModel = DashboardUiFixtures.createErrorState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = { backCalled = true },
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }
@@ -394,10 +432,12 @@ class DashboardScreenTest {
             setContent {
                 XTheme {
                     DashboardScreenRoot(
-                        uiState = DashboardUiFixtures.createSuccessState(),
+                        uiModel = DashboardUiFixtures.createSuccessState(),
                         onActionClick = {},
                         onRetry = {},
                         onBackToDashboard = {},
+                        onAssetClick = {},
+                        onProfileClick = {},
                     )
                 }
             }

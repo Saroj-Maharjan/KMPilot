@@ -88,7 +88,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 if (current.dashboardState is UiState.Uninitialized) {
@@ -121,7 +121,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Success) {
@@ -152,7 +152,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Success) {
@@ -199,7 +199,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Success) {
@@ -232,7 +232,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 // First emission must be Uninitialized or Loading (init triggers loadDashboard immediately)
                 val first = awaitItem()
                 assertTrue(
@@ -273,7 +273,7 @@ class DashboardIntegrationTest {
                 }
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Failed) {
@@ -311,7 +311,7 @@ class DashboardIntegrationTest {
                 }
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Failed) {
@@ -353,7 +353,7 @@ class DashboardIntegrationTest {
                 }
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 // First failure
@@ -395,7 +395,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -421,7 +421,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -447,7 +447,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -473,7 +473,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -499,7 +499,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -525,7 +525,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -549,7 +549,7 @@ class DashboardIntegrationTest {
                 throw Exception("Connection refused")
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -570,7 +570,7 @@ class DashboardIntegrationTest {
                 throw Exception("Connect timed out")
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -597,7 +597,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -622,7 +622,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 skipItems(1)
                 advanceUntilIdle()
 
@@ -651,7 +651,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 advanceUntilIdle()
 
                 while (awaitItem().dashboardState is UiState.Loading) {
@@ -681,7 +681,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 advanceUntilIdle()
 
                 while (awaitItem().dashboardState is UiState.Loading) {
@@ -709,7 +709,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Failed) {
@@ -759,7 +759,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 var current = awaitItem()
 
                 while (current.dashboardState !is UiState.Success) {
@@ -784,7 +784,7 @@ class DashboardIntegrationTest {
                 )
             }
 
-            viewModel.uiModelState.test {
+            viewModel.uiModel.test {
                 advanceUntilIdle()
 
                 while (awaitItem().dashboardState !is UiState.Success) {

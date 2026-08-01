@@ -13,23 +13,23 @@ import thisissadeghi.dashboard.data.repository.DashboardRepository
 class DashboardViewModel(
     private val repository: DashboardRepository,
 ) : ViewModel() {
-    private val _uiModelState = MutableStateFlow(DashboardUiModel())
-    val uiModelState = _uiModelState.asStateFlow()
+    private val _uiModel = MutableStateFlow(DashboardUiModel())
+    val uiModel = _uiModel.asStateFlow()
 
     init {
         loadDashboard()
     }
 
     fun loadDashboard() {
-        _uiModelState.setState { copy(dashboardState = UiState.Loading) }
+        _uiModel.setState { copy(dashboardState = UiState.Loading) }
         viewModelScope.launch {
             when (val result = repository.getDashboard()) {
                 is Either.Success ->
-                    _uiModelState.setState {
+                    _uiModel.setState {
                         copy(dashboardState = UiState.Success(result.data))
                     }
                 is Either.Failure ->
-                    _uiModelState.setState {
+                    _uiModel.setState {
                         copy(dashboardState = UiState.Failed(result.error))
                     }
             }

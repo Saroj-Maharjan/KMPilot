@@ -1,53 +1,19 @@
 # Dashboard Feature - Required Fixes
-**Date:** 2026-05-22
+**Date:** 2026-08-01
 **Review status:** PASS WITH WARNINGS (0 Critical, 3 Warnings)
 
----
-
-## Fix 1 (P2-1): Remove or register DashboardLocalDataSource dead pair
-
-**File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/data/datasource/DashboardLocalDataSource.kt`
-**File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/data/datasource/DashboardLocalDataSourceImpl.kt`
-**File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/di/DashboardModules.kt`
-
-**Issue**: `DashboardLocalDataSource` and `DashboardLocalDataSourceImpl` exist but are neither referenced by `DashboardRepositoryImpl` nor registered in `DashboardModules`. The pair is dead code.
-
-**Option A — Remove the dead pair (if local caching is not planned)**:
-Delete `DashboardLocalDataSource.kt` and `DashboardLocalDataSourceImpl.kt`.
-
-**Option B — Wire it up (if local caching is planned)**:
-
-Current `DashboardModules.kt` (relevant section):
-```kotlin
-module {
-    singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()
-    singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()
-    viewModelOf(::DashboardViewModel)
-}
-```
-
-Fixed (add the missing binding):
-```kotlin
-module {
-    singleOf(::DashboardRemoteDataSourceImpl).bind<DashboardRemoteDataSource>()
-    singleOf(::DashboardLocalDataSourceImpl).bind<DashboardLocalDataSource>()
-    singleOf(::DashboardRepositoryImpl).bind<DashboardRepository>()
-    viewModelOf(::DashboardViewModel)
-}
-```
-
-Then inject `DashboardLocalDataSource` into `DashboardRepositoryImpl` and use it for caching/fallback.
+Note: prior fixes.md (2026-05-22) items for the dead `DashboardLocalDataSource` binding, missing `@Immutable`/ImmutableList, and `DashboardContent` extraction are **already resolved** in current code — confirmed by fresh read during this review. Superseded by the 3 items below.
 
 ---
 
-## Fix 2 (P2-2): Rename ViewModel public flow from `uiModelState` to `uiModel`
+## Fix 1 (P2-1): Rename ViewModel public flow from `uiModelState` to `uiModel`
 
 **File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/presentation/DashboardViewModel.kt`
 **File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/presentation/ui/DashboardScreen.kt`
 
-**Issue**: Rule 11 convention specifies `val uiModel: StateFlow<{Feature}UiModel>`. The current name `uiModelState` also causes the Screen to use the parameter name `uiState` for what is actually a `DashboardUiModel` — creating misleading naming that conflicts with `UiState<T>`.
+**Issue**: Rule 11 convention specifies `val uiModel: StateFlow<{Feature}UiModel>`. Current name `uiModelState` propagates as param/local name `uiState` in the Screen, which reads as `UiState<T>` (a different type) rather than the UiModel it actually is. Every other reviewed feature (`assetdetail`, `profile`, `swap`) uses `uiModel`. Since CLAUDE.md names `feature/dashboard/` the reference implementation, this drift risks propagating into features copied from it.
 
-**Current code** in `DashboardViewModel.kt`:
+**Current code** in `DashboardViewModel.kt:16-17`:
 ```kotlin
 private val _uiModelState = MutableStateFlow(DashboardUiModel())
 val uiModelState = _uiModelState.asStateFlow()
@@ -59,25 +25,18 @@ private val _uiModel = MutableStateFlow(DashboardUiModel())
 val uiModel = _uiModel.asStateFlow()
 ```
 
-Also update all `_uiModelState.setState` calls to `_uiModel.setState`:
-```kotlin
-// line 24
-_uiModel.setState { copy(dashboardState = UiState.Loading) }
-// lines 28, 32
-_uiModel.setState { copy(dashboardState = UiState.Success(result.data)) }
-_uiModel.setState { copy(dashboardState = UiState.Failed(result.error)) }
-```
+Also rename all `_uiModelState.setState` call sites to `_uiModel.setState`.
 
-**Current code** in `DashboardScreen.kt`:
+**Current code** in `DashboardScreen.kt:46,60`:
 ```kotlin
-// DashboardScreen (line 72)
+// DashboardScreen
 val uiState by viewModel.uiModelState.collectAsStateWithLifecycle()
 DashboardScreenRoot(
     uiState = uiState,
     ...
 )
 
-// DashboardScreenRoot signature (line 83-84)
+// DashboardScreenRoot signature
 fun DashboardScreenRoot(
     uiState: DashboardUiModel,
     ...
@@ -98,122 +57,26 @@ fun DashboardScreenRoot(
     ...
 ```
 
-Update all references to `uiState` inside `DashboardScreenRoot` body to `uiModel` (e.g. `uiState.dashboardState` → `uiModel.dashboardState`), and update preview calls (`uiState = ...` → `uiModel = ...`).
+Update all body references (`uiState.dashboardState` → `uiModel.dashboardState`, etc.) and preview call sites (`uiState = ...` → `uiModel = ...`).
 
 ---
 
-## Fix 3 (P2-3): Add `@Immutable` to DashboardData to satisfy Rule 6
+## Fix 2 (P2-2): Update spec §5.3 Navigation — add `onAssetClick`/`onProfileClick`
 
-**File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/data/model/DashboardData.kt`
+**File**: `.claude/docs/dashboard/spec.md:313-315` (§5.3 Navigation)
 
-**Issue**: `DashboardData` contains 6 `List<T>` fields. Compose treats `List<T>` as unstable, causing full recomposition of all list-driven sections on every state emission. Rule 6 requires stable collections in state.
+**Issue**: Implementation wires two real callbacks the spec doesn't document: `onAssetClick: (String) -> Unit` (portfolio asset card click) and `onProfileClick: () -> Unit` (profile avatar click). Spec currently lists only `onActionClick`/`onBackToDashboard`.
 
-**Recommended fix — annotate with `@Immutable`** (preferred for a `@Serializable` DTO that is never mutated after deserialization):
-
-**Current code** (`DashboardData.kt:5-16`):
-```kotlin
-@Serializable
-data class DashboardData(
-    val accountBalance: AccountBalance,
-    val monthlySummary: MonthlySummary,
-    val recentTransactions: List<Transaction>,
-    val budgetCategories: List<BudgetCategory>,
-    val savingsGoals: List<SavingsGoal>,
-    val quickActions: List<QuickAction>,
-    val upcomingBills: List<UpcomingBill>,
-    val spendingInsight: SpendingInsight,
-    val portfolioAssets: List<PortfolioAsset>,
-)
-```
-
-**Fixed**:
-```kotlin
-import androidx.compose.runtime.Immutable
-
-@Immutable
-@Serializable
-data class DashboardData(
-    val accountBalance: AccountBalance,
-    val monthlySummary: MonthlySummary,
-    val recentTransactions: List<Transaction>,
-    val budgetCategories: List<BudgetCategory>,
-    val savingsGoals: List<SavingsGoal>,
-    val quickActions: List<QuickAction>,
-    val upcomingBills: List<UpcomingBill>,
-    val spendingInsight: SpendingInsight,
-    val portfolioAssets: List<PortfolioAsset>,
-)
-```
-
-**Alternative fix — convert to ImmutableList at ViewModel** (if you want stronger runtime guarantees):
-
-In `DashboardViewModel.kt` around line 28-30, after receiving `Either.Success`:
-```kotlin
-is Either.Success -> {
-    val data = result.data
-    val stableData = data.copy(
-        recentTransactions = data.recentTransactions.toImmutableList(),
-        budgetCategories = data.budgetCategories.toImmutableList(),
-        savingsGoals = data.savingsGoals.toImmutableList(),
-        quickActions = data.quickActions.toImmutableList(),
-        upcomingBills = data.upcomingBills.toImmutableList(),
-        portfolioAssets = data.portfolioAssets.toImmutableList(),
-    )
-    _uiModel.setState { copy(dashboardState = UiState.Success(stableData)) }
-}
-```
-
-Note: For the ImmutableList alternative, you would also need to change the `List<T>` field types in `DashboardData` to `ImmutableList<T>` (from `kotlinx.collections.immutable`), which would require a custom `@Serializable` serializer or keeping the DTO with `List<T>` and using a separate presentation-layer stable model. The `@Immutable` annotation approach (option A) is simpler and idiomatic for read-only DTOs.
+**Action**: Add both callbacks to §5.3's callback table/signature list, matching `DashboardScreen.kt:42-43` and `DashboardNavigation.kt:15-16`.
 
 ---
 
-## Fix 4 (P2 / Pre-existing): Extract DashboardContent to components/
+## Fix 3 (P2-3): Update spec §3.1 FR-6 — 5 quick actions, not 4
 
-**File**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/presentation/ui/DashboardScreen.kt:117-141`
-**Target**: `feature/dashboard/src/commonMain/kotlin/thisissadeghi/dashboard/presentation/ui/components/DashboardContent.kt`
+**File**: `.claude/docs/dashboard/spec.md:67` (§3.1 FR-6)
 
-**Issue**: `DashboardContent` (the success-state content orchestrator) is inlined in `Screen.kt`. Under the updated strict Screen.kt allowlist, it belongs in `components/`.
+**Issue**: Spec says "4 quick action buttons: Send, Receive, Pay, Top Up (stubs)." Implementation ships a 5th — Swap (`QuickActions.kt:52-56`, `onSwapClick`, `quick_action_swap` string, `swap_horiz` icon), wired end-to-end including sample data in `DashboardLocalDataSourceImpl`. This is a deliberate, complete addition — spec text is just stale.
 
-**Action**: Move the private `DashboardContent` composable (lines 117-141 of `DashboardScreen.kt`) to a new file `components/DashboardContent.kt`, change its visibility from `private` to `internal` (or `public`), and update the call site in `DashboardScreenRoot` to reference it.
+**Action**: Update FR-6 to read "5 quick action buttons: Send, Receive, Pay, Top Up, Swap."
 
-**New file** `components/DashboardContent.kt`:
-```kotlin
-package thisissadeghi.dashboard.presentation.ui.components
-
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import thisissadeghi.dashboard.data.model.DashboardData
-
-@Composable
-internal fun DashboardContent(
-    data: DashboardData,
-    onActionClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        DashboardHeader()
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 48.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            item { BalanceCard(data.accountBalance) }
-            item { QuickActionsSection(data.quickActions, onActionClick) }
-            item { InsightBanner(data.spendingInsight) }
-            item { MonthlySummaryCard(data.monthlySummary) }
-            item { BudgetsSection(data.budgetCategories) }
-            item { SavingsGoalsSection(data.savingsGoals) }
-            item { UpcomingBillsCard(data.upcomingBills) }
-            item { PortfolioSection(data.portfolioAssets) }
-            item { RecentTransactionsSection(data.recentTransactions) }
-        }
-    }
-}
-```
-
-Remove lines 115-141 from `DashboardScreen.kt` and delete the `// ─── Dashboard Content ───` section header.
+---

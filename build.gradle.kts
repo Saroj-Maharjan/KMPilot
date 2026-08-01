@@ -159,6 +159,30 @@ allprojects {
     }
 }
 
+// Deterministic architecture checker (see .claude/skills/_shared/kmpilot_check.py).
+// Thin wrapper on purpose — all logic lives in the script so it stays runnable
+// standalone from CI, a pre-commit hook, or a project without this task.
+tasks.register<Exec>("archTest") {
+    group = "verification"
+    description = "Checks feature modules against the KMPilot architecture rules."
+    workingDir = rootDir
+    commandLine("python3", ".claude/skills/_shared/kmpilot_check.py", "--all")
+    doFirst {
+        val onPath =
+            System.getenv("PATH")
+                ?.split(File.pathSeparator)
+                ?.any { dir -> File(dir, "python3").canExecute() || File(dir, "python3.exe").canExecute() }
+                ?: false
+        if (!onPath) {
+            throw GradleException(
+                "archTest needs python3 on PATH (macOS: `brew install python`, " +
+                    "Windows: python.org installer + Git Bash). Or run the checker directly: " +
+                    "python3 .claude/skills/_shared/kmpilot_check.py --all",
+            )
+        }
+    }
+}
+
 // Root project Kover configuration for aggregating all feature modules
 kover {
     reports {

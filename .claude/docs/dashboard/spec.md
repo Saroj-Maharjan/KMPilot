@@ -3,11 +3,11 @@
 ## Metadata
 | Field | Value                                                   |
 |-------|---------------------------------------------------------|
-| Version | 3.6.0                                                   |
+| Version | 3.7.1                                                   |
 | Status | Approved                                                |
 | Author | System                                                  |
 | Created | 2026-01-05                                              |
-| Updated | 2026-06-02                                              |
+| Updated | 2026-08-01                                              |
 | Design | `.claude/docs/dashboard/designs/dashboard_blueprint.md` |
 | Reviewers | N/A                                                     |
 
@@ -64,7 +64,7 @@ The dashboard feature was repurposed from a generic pattern demonstrator into a 
 | FR-3 | Display last 5 recent transactions with category icon and amount | Must |
 | FR-4 | Show budget progress for 4 categories with percentage-filled bar | Must |
 | FR-5 | Display 2 savings goals with progress bars and target dates | Must |
-| FR-6 | Show 4 quick action buttons: Send, Receive, Pay, Top Up (stubs) | Must |
+| FR-6 | Show 5 quick action buttons: Send, Receive, Pay, Top Up, Swap (stubs) | Must |
 | FR-7 | Display upcoming bills list (3 items) | Must |
 | FR-8 | Show spending insight banner | Must |
 | FR-9 | Display portfolio/currency snapshot (3 assets) | Must |
@@ -313,6 +313,8 @@ interface DashboardRepository {
 Navigation callbacks:
 - `onActionClick: (String) -> Unit` — Called when user taps a quick action button, passes action ID
 - `onBackToDashboard: () -> Unit` — Called from the Failed state "Return to Dashboard" secondary action; host pops navigation back to the dashboard start destination
+- `onAssetClick: (String) -> Unit` — Called when user taps a portfolio asset card, passes asset ID
+- `onProfileClick: () -> Unit` — Called when user taps the profile avatar
 
 ---
 
@@ -400,7 +402,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 - [ ] 5 recent transactions visible with category icons and amounts
 - [ ] 4 budget categories with progress bars (Shopping shows OVER badge)
 - [ ] 2 savings goals with green progress bars
-- [ ] 4 quick action buttons rendered as surface cards
+- [ ] 5 quick action buttons rendered as surface cards
 - [ ] 3 upcoming bills (Internet shows OVERDUE in red)
 - [ ] Spending insight banner renders with lightbulb icon
 - [ ] 3 portfolio assets with symbol circles and change percentages
@@ -434,6 +436,7 @@ Uninitialized ──[loadDashboard()]──► Loading
 
 | Version | Date | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 |---------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3.7.1 | 2026-08-01 | Naming consistency (Rule 11): renamed `DashboardViewModel.uiModelState`/`_uiModelState` and the `DashboardScreenRoot`/`DashboardScreen` local var + param from `uiState` to `uiModel` throughout (`DashboardScreen`, `DashboardViewModelTest`, `DashboardIntegrationTest`, `DashboardScreenTest`); fixed pre-existing `DashboardScreenTest` compile break by adding `onAssetClick`/`onProfileClick` no-ops to all 20 `DashboardScreenRoot(...)` calls; §5.3 documents `onAssetClick`/`onProfileClick`; FR-6 and the manual test checklist corrected to 5 quick actions (Send, Receive, Pay, Top Up, Swap). No behavior change. |
 | 3.7.0 | 2026-06-03 | Shared state UI: `Loading`/`Failed` now render `thisissadeghi.designsystem.app.AppLoadingState`/`AppErrorState` (design-system `app` tier). Removed the private `LoadingContent`/`FailedContent`, the duplicated `retry_label` string (shared `AppErrorState` defaults `retryLabel` to `DesignSystemResources.string.retry_label` = "Try again"), and the now-unused `failed_background.png`/`warning.xml` drawables. `Failed` passes the feature's `error_title`/`error_message` + a "Return to Dashboard" `secondaryAction`; Empty/Uninitialized stays per-feature (not unified). Internal refactor, no behavior change. |
 | 3.6.0 | 2026-06-02 | Rule 13 (single app-shell Scaffold): `DashboardScreenRoot` migrated from `XScaffold` to `XScreen`; dropped `paddingValues` threading (removed `paddingValues` param from `DashboardContent`, `LoadingContent`/`FailedContent` now plain `Modifier.fillMaxSize()`). The app-shell `Scaffold` in `App.kt` owns all window insets; the feature adds none. No behavior change. |
 | 3.5.0 | 2026-05-31 | i18n (Rule 12): extracted all hardcoded UI chrome (header greeting/title, BalanceCard labels, quick-action labels, INCOME/EXPENSES, Smart Insight, section headers, OVERDUE badge, failed-state text) to `composeResources/values/strings.xml`, replaced with `stringResource`. `@Preview` sample data, repository-supplied text (transaction/merchant/coin names, dates, categories), and currency-symbol formatting left as-is (data, not UI strings). No behavior change. |

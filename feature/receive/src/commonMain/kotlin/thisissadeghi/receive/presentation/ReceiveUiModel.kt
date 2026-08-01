@@ -1,7 +1,8 @@
 package thisissadeghi.receive.presentation
 
+import thisissadeghi.common.UiState
+import thisissadeghi.receive.data.model.ReceiveData
+
 data class ReceiveUiModel(
-    val coinName: String,
-    val networkName: String,
-    val walletAddress: String,
+    val dataState: UiState<ReceiveData> = UiState.Uninitialized,
 )
