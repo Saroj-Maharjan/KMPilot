@@ -1,0 +1,50 @@
+name: Build
+
+# Verifies the template still builds and still obeys its own architecture rules.
+# `archTest` runs FIRST on purpose: the checker takes seconds, the build takes
+# minutes, and an architecture violation is worth failing fast on.
+#
+# Phase 0 of the roadmap extends this workflow (README badge, matrix); Phase 1
+# added the archTest gate.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Proves the checker itself still works: every check fires on an injected
+      # violation, and a rule-abiding fixture feature reports nothing.
+      - name: Checker self-test
+        run: python3 scripts/kmpilot_check_test.py
+
+      # Deterministic architecture checker — .claude/skills/_shared/kmpilot_check.py.
+      # Fails the job on any error-severity violation of the mechanized rules.
+      - name: Architecture rules (archTest)
+        run: ./gradlew archTest --no-daemon
+
+      - name: Upload architecture report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-report
+          path: .claude/docs/_project/check-report.json
+          if-no-files-found: warn
+
+      - name: Assemble debug
+        run: ./gradlew assembleDebug --no-daemon
