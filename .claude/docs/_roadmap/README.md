@@ -12,7 +12,7 @@ Trackable execution plan for the 2026-H2 packaging work. One file per phase, one
 |---|---|---|---|
 | — | Scaffold (this directory) | `roadmap-scaffold` → merged locally into `main-github` | 🔵 In progress |
 | 0 | [Quick wins](PHASE-0-quick-wins.md) | `phase-0-quick-wins` | ⬜ Not started |
-| 1 | [Deterministic arch checker](PHASE-1-arch-checker.md) | `phase-1-arch-checker` | ⬜ Not started |
+| 1 | [Deterministic arch checker](PHASE-1-arch-checker.md) | `phase-1-arch-checker` | 🔵 In progress |
 | 2 | [Adopt into an existing project](PHASE-2-adopt-mode.md) | `phase-2-adopt-mode` | ⬜ Not started |
 | 3 | [Plugin packaging](PHASE-3-plugin-packaging.md) | `phase-3-plugin-packaging` | ⬜ Not started |
 | 4 | [HTML design source](PHASE-4-html-design-source.md) | `phase-4-html-design-source` | ⬜ Not started |
@@ -84,6 +84,7 @@ Roughly 1 in 6 landing visitors opens `.claude/` to read the pipeline. None of t
 | Design input | **HTML sources only** (Stitch MCP / Figma export / hand-written). Screenshots rejected | `/verify-ui` audits code ↔ HTML. HTML guessed from a PNG makes that audit circular and falsifies the "verified against the design" claim |
 | Scope | **Stay KMP-only.** Generalize in the writing, never in the code | The name, the niche, and both converting audience pools are Kotlin/KMP and Claude Code |
 | Checker delivery | Python script (`.claude/skills/_shared/`) + thin Gradle `Exec` task | `.claude/skills` is an `update.sh` **OVERRIDE** path → auto-delivers to existing installs with zero conflicts |
+| Checker strictness | **Two tiers, one rule set.** A KMPilot project — this repo included — is held to every rule as an `error`. `--baseline` (same checks, errors reported as warnings, exit 0) is the pre-adoption tier | Decided 2026-07-31 while landing Phase 1. Leniency belongs to codebases that have not migrated yet, never to the reference implementation — a template that exempts itself from a rule cannot enforce it. Pre-existing violations get fixed, not downgraded. `--baseline` is also what Phase 2's compatibility report consumes |
 | Phase landing | Branch → PR → merge, one phase at a time | CI gate before merge, public review trail, each phase independently revertable |
 | Bitbucket mirror | **Ignored** for the whole roadmap | `origin-bitbucket/main` is behind at `edea204`; re-syncing is a separate decision |
 

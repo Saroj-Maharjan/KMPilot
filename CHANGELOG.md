@@ -11,6 +11,77 @@ may conflict), or **[Breaking]** (manual steps required).
 
 ## [Unreleased]
 
+### Added
+- **[Tooling]** **Deterministic architecture checker.** `.claude/skills/_shared/kmpilot_check.py`
+  mechanizes the greppable half of the 14 rules — 19 checks (R3 setState, R5 Material3
+  components, R7 packages, R8 DI, R9 UseCases, R11a/b/c UiModel/UiState, R12 hardcoded
+  strings + `strings.xml`, R13 Scaffold/insets, the `Screen.kt` `@Composable` allowlist,
+  `components/` placement, the `.app`-tier boundary, the preview import, and the 4
+  integration points). It writes `.claude/docs/_project/check-report.json` and exits
+  non-zero on any `error`-severity violation, so a rule violation now fails a build
+  instead of depending on a model noticing it.
+
+  ```bash
+  ./gradlew archTest                                                   # every feature
+  python3 .claude/skills/_shared/kmpilot_check.py {featurename}         # one feature
+  python3 .claude/skills/_shared/kmpilot_check.py --all --baseline      # errors → warnings, exit 0
+  ```
+
+  `--baseline` is the pre-adoption tier: identical checks, every error reported as a
+  warning, exit code always 0 — for measuring how far a codebase that has **not**
+  adopted KMPilot yet sits from the rules. A KMPilot project itself, this template
+  included, is held to every rule as an error. `--root <path>` points the checker at
+  another repo without installing anything into it.
+
+  On a terminal the findings print grouped by feature with shortened paths and wrapped
+  messages; piped or in CI they collapse to one greppable `file:line severity RULE message`
+  line each (`--compact` forces that form, `NO_COLOR` disables color). The verdict line
+  states the exit code outright.
+
+- **[Tooling]** `/review-feature` and the `code-reviewer` agent now **consume**
+  `check-report.json` instead of re-deriving the mechanical checks by grep, and spend
+  their effort on the five judgment rules (1, 2, 4, 10, 14). A review and a CI run can
+  no longer disagree.
+
+### Changed
+- **[Breaking]** *(manual, one block)* **Register the `archTest` Gradle task.** `build.gradle.kts`
+  is a `MANUAL` path — `./update.sh` surfaces it but never merges it — so existing installs
+  must paste this into the **root** `build.gradle.kts` (anywhere at top level; the script it
+  calls arrives automatically with `./update.sh`):
+
+  ```kotlin
+  // Deterministic architecture checker (see .claude/skills/_shared/kmpilot_check.py).
+  // Thin wrapper on purpose — all logic lives in the script so it stays runnable
+  // standalone from CI, a pre-commit hook, or a project without this task.
+  tasks.register<Exec>("archTest") {
+      group = "verification"
+      description = "Checks feature modules against the KMPilot architecture rules."
+      workingDir = rootDir
+      commandLine("python3", ".claude/skills/_shared/kmpilot_check.py", "--all")
+      doFirst {
+          val onPath =
+              System.getenv("PATH")
+                  ?.split(File.pathSeparator)
+                  ?.any { dir -> File(dir, "python3").canExecute() || File(dir, "python3.exe").canExecute() }
+                  ?: false
+          if (!onPath) {
+              throw GradleException(
+                  "archTest needs python3 on PATH (macOS: `brew install python`, " +
+                      "Windows: python.org installer + Git Bash). Or run the checker directly: " +
+                      "python3 .claude/skills/_shared/kmpilot_check.py --all",
+              )
+          }
+      }
+  }
+  ```
+
+  Skipping this is safe — the checker still runs standalone via `python3`, and
+  `/review-feature` invokes it that way. You only lose `./gradlew archTest`.
+  `python3` is already a hard requirement of `/design-ui`, so this adds no new dependency.
+
+  Expect the first run to report real violations. Add
+  `.claude/docs/_project/check-report.json` to `.gitignore` — it is regenerated every run.
+
 ## [0.1.3] — 2026-07-12
 
 ### Changed
