@@ -17,6 +17,7 @@ Trackable execution plan for the 2026-H2 packaging work. One file per phase, one
 | 3 | [Plugin packaging](PHASE-3-plugin-packaging.md) | `phase-3-plugin-packaging` | ⬜ Not started |
 | 4 | [HTML design source](PHASE-4-html-design-source.md) | `phase-4-html-design-source` | ⬜ Not started |
 | — | [Parked](PARKED.md) | — | ⏸ Deliberately unscheduled |
+| — | [Adopt test backlog](ADOPT-TEST-BACKLOG.md) | — | 🔁 Living — project shapes still untried |
 
 Legend: ⬜ Not started · 🔵 In progress · 🟡 In review (PR open) · ✅ Done · ⏸ Parked
 

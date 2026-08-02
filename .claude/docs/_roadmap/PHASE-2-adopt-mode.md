@@ -152,6 +152,8 @@ Adopt-mode writes into a repo the user already cares about. Non-negotiable:
       Koin's Compose bootstrap, Arrow, a rival design system, library-only `core/*`, stale
       `build/` dirs, `core/*` name collisions, Groovy DSL, non-KMP, dirty tree, re-adoption.
 
+Shapes still untried are tracked in [ADOPT-TEST-BACKLOG.md](ADOPT-TEST-BACKLOG.md).
+
 ### Why the matrix exists
 
 The scratch fixture is one point in a large space, and a happy path hides the failures
