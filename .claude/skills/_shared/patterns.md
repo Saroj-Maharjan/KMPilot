@@ -34,12 +34,16 @@ Implementation skills (`/modify-feature`, `/create-feature`) auto-detect Stitch 
 
 ## 4 Integration Points
 
-Every feature requires exactly these 4 integrations:
+Every feature requires exactly these 4 integrations. `{APP_MODULE}` is `composeApp` in a
+template-mode project and whatever the host named its app module in an **adopted** one —
+read it from `.kmpilot.json` (`appModule`), never assume. Same for `{CATALOG}`
+(`libs` vs `kmpilotLibs`). See
+[create-feature/phases/phase-0-context.md → Step 0.0](../create-feature/phases/phase-0-context.md).
 
 | # | Point | File | Pattern |
 |---|-------|------|---------|
 | 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
-| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
+| 2 | Gradle Dependency | `{APP_MODULE}/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
 | 3 | DI Init | `{INIT_KOIN_PATH}` | add `{featurename}Module` to `startKoin { modules(...) }` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 

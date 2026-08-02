@@ -21,7 +21,7 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 | # | Point | File | Pattern |
 |---|-------|------|---------|
 | 1 | Gradle Include | `settings.gradle.kts` | `include(":feature:{featurename}")` |
-| 2 | Gradle Dependency | `composeApp/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
+| 2 | Gradle Dependency | `{APP_MODULE}/build.gradle.kts` | `implementation(project(":feature:{featurename}"))` |
 | 3 | DI Init | `{INIT_KOIN_PATH}` | add `{featurename}Module` to `startKoin { modules(...) }` |
 | 4 | Navigation | `{NAV_HOST_PATH}` | `{featurename}(onBackClick = {...})` |
 | 5 *(optional)* | Bottom-bar tab | `App.kt` + `navigation/TopLevelDestination.kt` | `TopLevelDestination` enum entry — **only** if the feature is a top-level tab |
@@ -33,12 +33,61 @@ Points 1–4 are always required. Point 5 (bottom-bar tab) is conditional — ap
 1. Create DI module (`di/{Feature}Modules.kt` exposing `val {featurename}Module`)
 2. Integration Point 1: Gradle Include
 3. Integration Point 2: Gradle Dependency
-4. Integration Point 3: DI Initialization
+4. Integration Point 3: DI Initialization (adopted project? also handle the Koin bootstrap — see below)
 5. Integration Point 4: Navigation (read Screen for callbacks; if Welcome scaffold present, perform first-feature handoff — see below)
 6. Integration Point 5 (conditional): Bottom-bar tab — ONLY if the PRD/spec Navigation marks this feature a top-level tab (see "Bottom-Bar Tab Handoff" below)
 7. Platform module (conditional): if `platform` produced a `platformModule`, register it (see below)
 8. Validate: `./gradlew assembleDebug && ./gradlew ktlintFormat`
 9. Generate spec.md (preserve WHY from PRD)
+
+## Adopted projects — the Koin bootstrap (conditional)
+
+**Gate**: `.kmpilot.json` has `"installMode": "adopt"`. Skip entirely in a template-mode
+project, where `initKoin.kt` already exists and already lists KMPilot's core modules.
+
+`install.sh --adopt` deliberately does not edit the host project's Kotlin — a regex cannot
+safely parse the shapes a real `startKoin` takes (`modules(a, b)`, `modules(listOf(...))`,
+multi-line, split across helpers, several call sites), and a wrong guess breaks a build in
+a repo the installer was trusted with. You are a model reading the actual file, so the
+wiring is yours. **Do it while you are already editing that block for Point 3** — one edit,
+one review.
+
+Read `koinBootstrap` from `.kmpilot.json` (absent ⇒ infer: grep the repo for `startKoin`,
+excluding `**/kmpilot/**`, KMPilot's own glue).
+
+**`"host"`** — the project starts Koin itself. In the same `modules(...)` call where you add
+`{featurename}Module`, ensure `kmpilotModules` is present too:
+
+```kotlin
+startKoin {
+    modules(kmpilotModules)        // ← add once, if absent; import {PKG_PREFIX}.kmpilot.kmpilotModules
+    modules(
+        theirExistingModule,
+        {featurename}Module,       // ← Point 3, as usual
+    )
+}
+```
+
+Idempotent: if `kmpilotModules` is already listed, leave it alone.
+
+**`"supplied"`** — adopt wrote `{APP_MODULE}/src/commonMain/kotlin/{PKG_PATH}/kmpilot/InitKmpilotKoin.kt`
+and **nothing calls it**. Koin is not running, so every injected dependency fails at runtime.
+Wire the call:
+
+1. Add `{featurename}Module` to `initKmpilotKoin`'s `modules(...)` — that file is KMPilot's,
+   edit it freely.
+2. Ensure it is actually called at launch:
+   - **Android** — in the `Application` subclass named by `AndroidManifest.xml`'s
+     `android:name`: `initKmpilotKoin { androidContext(this@TheirApplication) }`.
+     No `Application` subclass? Create one and register it in the manifest.
+   - **iOS** — the entry point that builds the root `UIViewController`.
+3. Flip `koinBootstrap` to `"host"` in `.kmpilot.json` — it is now the project's own
+   bootstrap, and the next feature takes the `"host"` path.
+
+This is the one place you edit code the project owns rather than code KMPilot wrote. That is
+acceptable here and not in the installer: the user invoked a skill, the change is one call at
+one entry point, and it lands in the same reviewable diff as the feature. Report it
+explicitly in your summary — never leave it as a silent edit.
 
 ## Platform Module (Rule 14 — conditional)
 

@@ -5,6 +5,10 @@ Canonical Gradle setup for `feature/{featurename}/build.gradle.kts`, matching th
 **Placeholders:**
 - `{featurename}` — lowercase feature name (matches directory and `xcfName`)
 - `{PKG_PREFIX}` — package prefix detected in Phase 0 (e.g. `thisissadeghi`)
+- `{CATALOG}` — version-catalog accessor detected in Phase 0: `libs` in a template-mode
+  project, `kmpilotLibs` in an **adopted** project (`installMode: "adopt"` in `.kmpilot.json`,
+  where KMPilot's catalog is kept separate from the host project's own `libs`)
+- `{INSTALL_MODE}` — `template` or `adopt`, from `.kmpilot.json` (absent ⇒ `template`)
 
 ## Module Plugins
 
@@ -12,17 +16,19 @@ Every feature module applies these plugins. `kover` and `mokkery` are mandatory 
 
 ```kotlin
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidKotlinMultiplatformLibrary)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.mokkery)
+    alias({CATALOG}.plugins.kotlinMultiplatform)
+    alias({CATALOG}.plugins.androidKotlinMultiplatformLibrary)
+    alias({CATALOG}.plugins.jetbrainsCompose)
+    alias({CATALOG}.plugins.composeCompiler)
+    alias({CATALOG}.plugins.kotlinSerialization)
+    alias({CATALOG}.plugins.kover)
+    alias({CATALOG}.plugins.mokkery)
 }
 ```
 
-> Note: SDK versions, JVM target (21), and the `androidResources.enable = true` flag are configured **once** in the root `build.gradle.kts` for any module that applies `com.android.kotlin.multiplatform.library`. Do NOT redeclare `compileSdk`, `minSdk`, `compileOptions`, or `jvmTarget` per-feature.
+> **Template mode only:** SDK versions, JVM target (21), and `androidResources.enable = true` are configured **once** in the root `build.gradle.kts` for any module applying `com.android.kotlin.multiplatform.library`. Do NOT redeclare `compileSdk`, `minSdk`, `compileOptions`, or `jvmTarget` per-feature.
+>
+> **Adopt mode (`{INSTALL_MODE}` = `adopt`):** the host project's root build is **not** KMPilot's and configures none of that — its conventions are its own and adopt mode never edits them. Each feature module therefore configures itself, exactly like the vendored `core/*` modules do (see the `android { }` block below). This is the one place the two modes differ.
 
 ## Targets
 
@@ -30,6 +36,11 @@ plugins {
 kotlin {
     android {
         namespace = "{PKG_PREFIX}.{featurename}"
+        // adopt mode ONLY — omit all three lines in a template-mode project,
+        // where the root build already configures them for every KMP android module:
+        compileSdk = {CATALOG}.versions.android.compileSdk.get().toInt()
+        minSdk = {CATALOG}.versions.android.minSdk.get().toInt()
+        androidResources.enable = true
     }
     jvm("desktop")
 
@@ -47,8 +58,8 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(libs.bundles.testing.common)
-                implementation(libs.compose.ui.test)
+                implementation({CATALOG}.bundles.testing.common)
+                implementation({CATALOG}.compose.ui.test)
             }
         }
 
@@ -67,20 +78,20 @@ Use the dependency set the existing features already use; the test-generation sk
 
 **Always include:**
 ```kotlin
-implementation(libs.compose.foundation)
-implementation(libs.compose.ui)
-implementation(libs.compose.ui.util)
-implementation(libs.compose.material.icons.extended)
-implementation(libs.compose.material3)
-implementation(libs.compose.components.resources)
-implementation(libs.compose.ui.tooling.preview)   // enables @Preview in commonMain (CMP 1.11.0+)
+implementation({CATALOG}.compose.foundation)
+implementation({CATALOG}.compose.ui)
+implementation({CATALOG}.compose.ui.util)
+implementation({CATALOG}.compose.material.icons.extended)
+implementation({CATALOG}.compose.material3)
+implementation({CATALOG}.compose.components.resources)
+implementation({CATALOG}.compose.ui.tooling.preview)   // enables @Preview in commonMain (CMP 1.11.0+)
 
-implementation(libs.kotlinCollection)
-implementation(libs.kotlinxSerialization)
-implementation(libs.koin.compose)
-implementation(libs.koin.compose.viewmodel)
-api(libs.koin.core)
-implementation(libs.jetbrains.compose.navigation)
+implementation({CATALOG}.kotlinCollection)
+implementation({CATALOG}.kotlinxSerialization)
+implementation({CATALOG}.koin.compose)
+implementation({CATALOG}.koin.compose.viewmodel)
+api({CATALOG}.koin.core)
+implementation({CATALOG}.jetbrains.compose.navigation)
 
 implementation(project(":core:designsystem"))
 implementation(project(":core:common"))
@@ -88,7 +99,7 @@ implementation(project(":core:common"))
 
 **Add only if the feature talks to an API** (uses Ktor Resources + `ApiClient`):
 ```kotlin
-implementation(libs.ktor.client.resources)
+implementation({CATALOG}.ktor.client.resources)
 implementation(project(":core:data"))
 ```
 
@@ -100,7 +111,7 @@ Only when the feature uses a device capability or embeds a native view (Platform
 ```kotlin
 commonMain {
     dependencies {
-        implementation(libs.maplibre.compose)   // e.g. MapLibre Compose — cross-platform Map() composable
+        implementation({CATALOG}.maplibre.compose)   // e.g. MapLibre Compose — cross-platform Map() composable
     }
 }
 ```
@@ -109,8 +120,8 @@ commonMain {
 ```kotlin
 sourceSets {
     androidMain.dependencies {
-        implementation(libs.play.services.maps)        // Android-only SDK
-        implementation(libs.androidx.activity.compose)  // if AndroidView needs Activity context
+        implementation({CATALOG}.play.services.maps)        // Android-only SDK
+        implementation({CATALOG}.androidx.activity.compose)  // if AndroidView needs Activity context
     }
     // iosMain / desktopMain dependencies as needed (often none — iOS uses platform frameworks)
 }
@@ -144,11 +155,11 @@ After the `kotlin { ... }` block, add a top-level `dependencies` block so Androi
 
 ```kotlin
 dependencies {
-    androidRuntimeClasspath(libs.compose.ui.tooling)
+    androidRuntimeClasspath({CATALOG}.compose.ui.tooling)
 }
 ```
 
-Both `compose-ui-tooling-preview` and `compose-ui-tooling` aliases already exist in `gradle/libs.versions.toml`. With these wired, components in `presentation/ui/components/` can declare `@Preview` composables in commonMain using `import androidx.compose.ui.tooling.preview.Preview`. See [ui.md → "Previews"](./ui.md) for the full preview pattern.
+Both `compose-ui-tooling-preview` and `compose-ui-tooling` aliases already exist in the `{CATALOG}` catalog (`gradle/libs.versions.toml` in template mode, `gradle/kmpilot.versions.toml` in an adopted project). With these wired, components in `presentation/ui/components/` can declare `@Preview` composables in commonMain using `import androidx.compose.ui.tooling.preview.Preview`. See [ui.md → "Previews"](./ui.md) for the full preview pattern.
 
 > **Do NOT add** `androidx.lifecycle.viewmodel` or `androidx.lifecycle.runtime.compose` — `:core:common` already `api`-exposes both. `collectAsStateWithLifecycle` and `ViewModel` are available transitively.
 
@@ -163,15 +174,15 @@ If you create a feature without tests and later run `/test-feature {featurename}
 ```kotlin
 commonTest {
     dependencies {
-        implementation(libs.bundles.testing.common)
+        implementation({CATALOG}.bundles.testing.common)
 
         @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
         implementation(compose.uiTest)
-        implementation(libs.turbine)
-        implementation(libs.ktor.client.mock)
-        implementation(libs.ktor.client.content.negotiation)
-        implementation(libs.ktor.serialization.kotlinx.json)
-        implementation(libs.ktor.client.resources)
+        implementation({CATALOG}.turbine)
+        implementation({CATALOG}.ktor.client.mock)
+        implementation({CATALOG}.ktor.client.content.negotiation)
+        implementation({CATALOG}.ktor.serialization.kotlinx.json)
+        implementation({CATALOG}.ktor.client.resources)
     }
 }
 
