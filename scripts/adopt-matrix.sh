@@ -196,6 +196,9 @@ mut_no_trailing_newline() {
 mut_stale_core_build() {
     mkdir -p "$1/core/common/build/classes" "$1/core/designsystem/build"
     : > "$1/core/common/build/classes/stale.txt"
+    # Removing an adoption by hand deletes the files but leaves the skeleton:
+    # an empty src/ with no build.gradle.kts. That is not a module either.
+    mkdir -p "$1/core/data/src/commonMain/kotlin"
 }
 
 # The host already owns a module at one of the paths KMPilot vendors into.

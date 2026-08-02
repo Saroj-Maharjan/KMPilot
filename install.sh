@@ -746,8 +746,24 @@ Bringing an Android-only app to KMP is a different job — see 'migrate-feature'
         for m in "${ADOPT_CORE[@]}"; do
             is_real_module "core/$m" && clash="${clash} core/$m"
         done
+        # Every clashing path carrying KMPilot's own signature files means an
+        # adoption was removed without deleting the directories — not a collision.
+        local theirs=""
+        for m in "${ADOPT_CORE[@]}"; do
+            is_real_module "core/$m" && ! is_kmpilot_core "$m" && theirs="${theirs} core/$m"
+        done
+        if [[ -n "$clash" && -z "$theirs" ]]; then
+            die "Found KMPilot's own core modules at:${clash}
+
+but no .kmpilot.json — so a previous adoption was removed without deleting them.
+Nothing here is yours to lose. Either finish the removal, or re-run with --force to
+reuse them as they are:
+
+    rm -rf${clash}                 # then adopt normally
+    …--adopt --force               # or keep them and re-wire around them"
+        fi
         if [[ -n "$clash" ]]; then
-            die "This project already has a module at:${clash}
+            die "This project already has a module at:${theirs}
 
 KMPilot vendors its own modules at exactly those paths, so the names collide. It will not
 overwrite yours, but it also cannot wire features to a \`core/common\` that is not the one
@@ -1058,7 +1074,25 @@ adopt_rewrite_core_builds() {
 # vendoring, and still writes include(":core:common"): a project that cannot
 # configure. Require an actual module.
 is_real_module() {
-    [[ -f "$1/build.gradle.kts" || -d "$1/src" ]]
+    [[ -f "$1/build.gradle.kts" ]] && return 0
+    # A src/ DIRECTORY is not a module — removing an adoption by hand deletes the
+    # files but leaves the empty skeleton behind, and an empty husk must not read
+    # as "already exists" (that skips vendoring while the include is still
+    # written). Require at least one actual source file.
+    [[ -d "$1/src" ]] && find "$1/src" -type f -name '*.kt' 2>/dev/null | grep -q .
+}
+
+# Does a module at core/<name> look like KMPilot's own vendored copy rather than
+# something the host wrote? Signature files, one per module. Distinguishes a real
+# name collision (refuse) from leftovers of an adoption that was removed by hand
+# without deleting the directories (say so, and let --force reuse the paths).
+is_kmpilot_core() {  # <module name>
+    case "$1" in
+        common)       find "core/common/src" -name 'Either.kt' -o -name 'UiState.kt' 2>/dev/null | grep -q . ;;
+        data)         find "core/data/src" -name 'BuildOptionProvider.kt' 2>/dev/null | grep -q . ;;
+        designsystem) find "core/designsystem/src" -name 'XScreen.kt' 2>/dev/null | grep -q . ;;
+        *)            return 1 ;;
+    esac
 }
 
 adopt_vendor_core() {
