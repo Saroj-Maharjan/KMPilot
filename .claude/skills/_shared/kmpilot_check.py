@@ -99,7 +99,26 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REPORT_PATH = Path(".claude/docs/_project/check-report.json")
 SETTINGS_GRADLE = Path("settings.gradle.kts")
-COMPOSE_APP_GRADLE = Path("composeApp/build.gradle.kts")
+MANIFEST = Path(".kmpilot.json")
+DEFAULT_APP_MODULE = "composeApp"
+
+
+def resolve_app_module(root: Path) -> str:
+    """The module holding `initKoin` and the NavHost — `composeApp` in a template
+    project, anything at all in an adopted one (`install.sh --adopt` records the
+    real name in `.kmpilot.json`). Integration points I2/I3/I4 are checked against
+    this module, so hardcoding `composeApp` would fail every adopted repo."""
+    manifest = root / MANIFEST
+    if manifest.is_file():
+        m = re.search(r'"appModule"\s*:\s*"([^"]+)"', read(manifest))
+        if m and (root / m.group(1)).is_dir():
+            return m.group(1)
+    if (root / DEFAULT_APP_MODULE).is_dir():
+        return DEFAULT_APP_MODULE
+    # No manifest and no composeApp: fall back to the module that starts Koin.
+    for candidate in sorted(root.glob("*/src/*/kotlin/**/initKoin.kt")):
+        return candidate.relative_to(root).parts[0]
+    return DEFAULT_APP_MODULE
 
 # Source sets that are production code. Anything with "test" in the source-set
 # name is skipped — test fixtures legitimately hold literals, Scaffolds, etc.
@@ -794,11 +813,12 @@ def check_integration(feature, sources, ctx) -> list[dict]:
             )
         )
 
-    compose_app = read(root / COMPOSE_APP_GRADLE)
+    app_gradle = ctx["app_gradle"]
+    compose_app = read(root / app_gradle)
     if not re.search(rf'project\s*\(\s*"\s*:feature:{re.escape(feature)}\s*"', compose_app):
         out.append(
             violation(
-                feature, "I2", "error", COMPOSE_APP_GRADLE.as_posix(), 0,
+                feature, "I2", "error", app_gradle.as_posix(), 0,
                 f'missing `implementation(project(":feature:{feature}"))`',
             )
         )
@@ -806,7 +826,7 @@ def check_integration(feature, sources, ctx) -> list[dict]:
     init_koin = ctx["init_koin"]
     if init_koin is None:
         out.append(
-            violation(feature, "I3", "error", "composeApp", 0, "initKoin.kt not found")
+            violation(feature, "I3", "error", ctx["app_module"], 0, "initKoin.kt not found")
         )
     else:
         block = re.search(r"modules\s*\((.*?)\)\s*\}", read(init_koin), re.DOTALL)
@@ -821,9 +841,22 @@ def check_integration(feature, sources, ctx) -> list[dict]:
 
     nav_host = ctx["nav_host"]
     if nav_host is None:
-        out.append(
-            violation(feature, "I4", "error", "composeApp", 0, "the NavHost file was not found")
-        )
+        # A template project always ships a NavHost, so its absence is a defect.
+        # An ADOPTED project may navigate with Voyager, Decompose, or plain state
+        # hoisting — no NavHost is a valid architecture there, not a violation, and
+        # failing the build over it would punish the host for its own design.
+        if ctx.get("install_mode") == "adopt":
+            out.append(
+                violation(
+                    feature, "I4", "warning", ctx["app_module"], 0,
+                    "no NavHost in this project — check the feature is reachable from "
+                    "whatever navigation it does use",
+                )
+            )
+        else:
+            out.append(
+                violation(feature, "I4", "error", ctx["app_module"], 0, "the NavHost file was not found")
+            )
     else:
         nav_code = blank_noncode(read(nav_host))
         if not re.search(rf"\b{re.escape(feature)}\s*\(", nav_code):
@@ -964,12 +997,57 @@ def find_first(root: Path, pattern: str, *, exclude_build: bool = True) -> Path 
     return None
 
 
+def find_first_containing(root: Path, pattern: str, needle: str) -> Path | None:
+    """First non-build file matching the glob whose CODE matches `needle`.
+    Filename conventions are KMPilot's; an adopted project keeps its own.
+
+    Comments and string literals are blanked first. Without that, a file earns a
+    role by merely mentioning it in prose: an integrator comment reading "this app
+    has no global startKoin{}" made a file register as the Koin entry point, and a
+    comment about a `NavHostController` stand-in nearly did the same for the nav
+    host. Matching prose is worse than matching nothing — it passes checks that
+    should fail."""
+    rx = re.compile(needle)
+    for path in sorted(root.glob(pattern)):
+        if "/build/" in path.as_posix():
+            continue
+        if rx.search(blank_noncode(read(path))):
+            return path
+    return None
+
+
+def resolve_install_mode(root: Path) -> str:
+    """`template` or `adopt` (absent manifest ⇒ template). Some integration points
+    describe KMPilot's own app shell and cannot be demanded of a host project."""
+    manifest = root / MANIFEST
+    if manifest.is_file():
+        m = re.search(r'"installMode"\s*:\s*"([^"]+)"', read(manifest))
+        if m:
+            return m.group(1)
+    return "template"
+
+
 def run(root: Path, features: list[str]) -> tuple[list[dict], dict]:
+    app_module = resolve_app_module(root)
     ctx = {
         "root": root,
+        "install_mode": resolve_install_mode(root),
         "pkg_prefix": resolve_pkg_prefix(root),
-        "init_koin": find_first(root, "composeApp/src/*/kotlin/**/initKoin.kt"),
-        "nav_host": find_first(root, "composeApp/src/*/kotlin/**/*NavHost*.kt"),
+        "app_module": app_module,
+        "app_gradle": Path(app_module) / "build.gradle.kts",
+        "init_koin": find_first(root, f"{app_module}/src/*/kotlin/**/initKoin.kt")
+        or find_first_containing(
+            root,
+            f"{app_module}/src/*/kotlin/**/*.kt",
+            # Koin has several entry points; a Compose app often uses none of the
+            # global ones. Matching only `startKoin` picked KMPilot's own unused
+            # glue file over the place the host actually registers its modules.
+            r"\b(startKoin|KoinApplication|koinConfiguration|KoinMultiplatformApplication)\s*[({]",
+        ),
+        # KMPilot names it BaseAppNavHost.kt; an adopted project may declare its
+        # NavHost anywhere (often App.kt), so fall back to content.
+        "nav_host": find_first(root, f"{app_module}/src/*/kotlin/**/*NavHost*.kt")
+        or find_first_containing(root, f"{app_module}/src/*/kotlin/**/*.kt", r"\bNavHost\s*\("),
     }
     violations: list[dict] = []
     for feature in features:
@@ -1044,7 +1122,12 @@ def main(argv: list[str]) -> int:
                 file=sys.stderr,
             )
             return 2
-    if not features:
+    # `--all` on a repo with no feature modules is a legitimate empty result, not
+    # a usage error: a freshly installed template and a freshly adopted project
+    # both run `./gradlew archTest` before their first feature exists. An empty
+    # report is written and the gate passes. Naming no features and no --all is
+    # still a usage error.
+    if not features and not args.all:
         parser.print_usage(sys.stderr)
         print("error: pass at least one feature name, or --all", file=sys.stderr)
         return 2

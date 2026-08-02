@@ -33,6 +33,16 @@ jobs:
       - name: Checker self-test
         run: python3 scripts/kmpilot_check_test.py
 
+      # Adopt-mode compatibility matrix. Generates a scratch KMP project per
+      # variant and asserts that `--adopt --dry-run` adopts, warns, or refuses
+      # as documented in ADOPTING.md. Detection-only — pure bash, no Gradle — so
+      # the whole matrix runs in seconds. It exists because a single happy-path
+      # fixture hides the failures that matter: the first run of this matrix
+      # found three silent `set -e` aborts on repos with no version catalog, no
+      # matching plugin version, and no commonMain module.
+      - name: Adopt compatibility matrix
+        run: bash scripts/adopt-matrix.sh
+
       # Deterministic architecture checker — .claude/skills/_shared/kmpilot_check.py.
       # Fails the job on any error-severity violation of the mechanized rules.
       - name: Architecture rules (archTest)

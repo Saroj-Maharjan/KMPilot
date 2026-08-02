@@ -85,12 +85,22 @@ PKG="$(json_get packagePrefix)"
 REPO="$(json_get templateRepo)"
 U_PKG="$(json_get upstreamPkg)"
 U_NAME="$(json_get upstreamName)"
+# Added by install.sh --adopt. Absent in every manifest written before adopt mode
+# existed, which is exactly what "template" means — so the default keeps every
+# older project valid (the release back-compat contract: add fields, never
+# rename or repurpose one).
+INSTALL_MODE="$(json_get installMode)"; INSTALL_MODE="${INSTALL_MODE:-template}"
+APP_MODULE="$(json_get appModule)"; APP_MODULE="${APP_MODULE:-composeApp}"
 [[ -n "$CUR_VER" && -n "$PKG" && -n "$REPO" && -n "$U_PKG" && -n "$U_NAME" ]] \
     || die ".kmpilot.json is missing required fields"
 
 # ── derived rename identifiers (mirror scripts/rename.sh exactly) ───────────
 PKG_PATH="${PKG//.//}"
-NAME_LOWER="$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]')"
+# Same sanitization scripts/rename.sh applies (Compose Multiplatform derives the
+# generated-resources package from rootProject.name, replacing non-identifier
+# characters with '_'). A no-op for a PascalCase template project; required for an
+# adopted one whose rootProject.name is e.g. `acme-notes`.
+NAME_LOWER="$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')"
 U_PKG_PATH="$U_PKG"
 U_NAME_LOWER="$(printf '%s' "$U_NAME" | tr '[:upper:]' '[:lower:]')"
 U_APPNS="${U_PKG}.${U_NAME_LOWER}"
@@ -172,8 +182,29 @@ OVERRIDE_PATHS=(.claude/skills .claude/agents .claude/commands .claude/hooks)
 TIER1_PATHS=(.claude/settings.json .claude/docs/_shared
              CLAUDE.md gradlew gradlew.bat gradle/wrapper update.sh)
 TIER2_PATHS=(core)
-MANUAL_PATHS=(gradle/libs.versions.toml build.gradle.kts settings.gradle.kts
-             composeApp androidApp iosApp)
+# MANUAL: surfaced for review, never auto-merged. An ADOPTED project has none of
+# KMPilot's app modules — its app module is its own, and upstream changes to
+# composeApp/androidApp/iosApp are about a shell it does not have. Reporting them
+# would be pure noise, so the app-shell entries are dropped there. The Gradle
+# files stay in both modes: adopt mode edits settings.gradle.kts and the root
+# build (includes, the kmpilotLibs catalog, the archTest task).
+MANUAL_PATHS=(gradle/libs.versions.toml build.gradle.kts settings.gradle.kts)
+if [[ "$INSTALL_MODE" != "adopt" ]]; then
+    MANUAL_PATHS+=(composeApp androidApp iosApp)
+fi
+
+# In adopt mode, a file KMPilot could not claim (the target already had its own
+# CLAUDE.md or .claude/settings.json) was written beside it as *.kmpilot.*.
+# Updates must land on the sidecar — 3-way merging upstream into a file the
+# project owns would splice KMPilot's content into their document.
+redirect_down_path() {  # <downstream-path> → the path to actually write
+    local p="$1" side
+    if [[ "$INSTALL_MODE" == "adopt" ]]; then
+        side="${p%.*}.kmpilot.${p##*.}"
+        if [[ -f "$side" ]]; then printf '%s' "$side"; return 0; fi
+    fi
+    printf '%s' "$p"
+}
 
 applied=0; merged=0; moved=0; deleted=0; conflicts=0; skipped=0; manual=0
 
@@ -288,6 +319,7 @@ if [[ "$DRY_RUN" == "no" ]]; then
 fi
 
 [[ "$DRY_RUN" == "yes" ]] && echo "→ Updating $BASE_TAG → $TARGET_TAG  (dry run)" || echo "→ Updating $BASE_TAG → $TARGET_TAG"
+[[ "$INSTALL_MODE" == "adopt" ]] && info "adopted project — app module '$APP_MODULE'; KMPilot's app shell is not tracked here"
 
 # process_file <up-old-path> <up-new-path> <status A|M|D|R> <rename yes|no> <policy merge|override>
 # For A/M/D old == new; for R (upstream rename) they differ. Reads the caller's
@@ -301,6 +333,8 @@ process_file() {
     else
         down_old="$up_old"; down_new="$up_new"
     fi
+    down_old="$(redirect_down_path "$down_old")"
+    down_new="$(redirect_down_path "$down_new")"
 
     # Never overwrite the RUNNING updater in place — bash may re-read $0 mid-run
     # and corrupt this very invocation. Only needed when this process actually
@@ -499,9 +533,19 @@ stale_sweep
 changed_manual="$(git -C "$UP" diff --name-only --no-renames "$BASE_TAG" "$TARGET_TAG" -- "${MANUAL_PATHS[@]}" 2>/dev/null || true)"
 if [[ -n "$changed_manual" ]]; then
     warn "Manual review — upstream changed these; reconcile by hand (NOT auto-applied):"
-    printf '%s\n' "$changed_manual" | sed 's/^/      /' >&2
+    if [[ "$INSTALL_MODE" == "adopt" ]]; then
+        # Upstream's catalog is vendored as gradle/kmpilot.versions.toml here;
+        # the project's own gradle/libs.versions.toml is never touched by KMPilot.
+        printf '%s\n' "$changed_manual" \
+            | sed 's|^gradle/libs\.versions\.toml$|gradle/kmpilot.versions.toml   (KMPilot catalog — yours is untouched; ./install.sh --adopt --force regenerates it)|' \
+            | sed 's/^/      /' >&2
+    else
+        printf '%s\n' "$changed_manual" | sed 's/^/      /' >&2
+    fi
     manual=$(( manual + $(printf '%s\n' "$changed_manual" | grep -c .) ))
-    if printf '%s\n' "$changed_manual" | grep -qE 'libs\.versions\.toml|iosApp/iosApp/Info\.plist'; then
+    # The app-version caveat is about the template's own app module; an adopted
+    # project keeps its version in its own catalog, which KMPilot never edits.
+    if [[ "$INSTALL_MODE" != "adopt" ]] && printf '%s\n' "$changed_manual" | grep -qE 'libs\.versions\.toml|iosApp/iosApp/Info\.plist'; then
         warn "  ↳ Your APP version lives in these (android-versionName/versionCode, iOS CFBundleShortVersionString/CFBundleVersion)."
         warn "    That version is YOURS and independent of KMPilot's — merge only dependency/config changes;"
         warn "    do NOT copy KMPilot's version numbers over your own."
