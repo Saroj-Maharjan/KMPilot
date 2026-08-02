@@ -89,6 +89,13 @@ https://github.com/user-attachments/assets/a1438483-68d3-4550-b876-9a62db0d1a21
 
 **Prerequisites:** JDK 21+ · Android Studio · Xcode 15+ (iOS) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
+Two doors, one installer:
+
+| | You have | Command |
+|---|---|---|
+| **Start** | nothing yet — a new KMP app | `install.sh` (below) |
+| **Adopt** | a KMP app already in production | `install.sh --adopt` ([below](#adopt-into-an-existing-kmp-project)) |
+
 **1. Install** — run the installer and it prompts you for the project name and package:
 
 ```bash
@@ -126,6 +133,32 @@ cd MyApp && claude
 ```
 
 See [Skills](#skills) for the full catalog and [The Pattern](#the-pattern) for the flow.
+
+<br />
+
+### Adopt into an existing KMP project
+
+Already have a Kotlin Multiplatform app? You don't have to start over — run the same
+installer **from your repo's root**:
+
+```bash
+cd /path/to/your-kmp-app
+
+# see the compatibility report and the exact file plan — writes nothing
+curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/install.sh | bash -s -- --adopt --dry-run
+
+# apply it
+curl -fsSL https://github.com/ThisIsSadeghi/KMPilot/releases/latest/download/install.sh | bash -s -- --adopt
+```
+
+It vendors the three `core/*` modules renamed to **your** package, wires them in, and
+installs the `.claude/` pipeline — after which `/create-feature` works exactly as it does
+in a generated project. It never edits your Kotlin, never touches your version catalog,
+never overwrites an existing file, and refuses rather than guessing when your project's
+shape is one it cannot safely handle.
+
+**→ [Adopting KMPilot](ADOPTING.md)** — what it does, what it refuses, and whether it
+works on your repo.
 
 <br />
 
@@ -266,6 +299,7 @@ It re-applies your package rename to each upstream change and 3-way-merges it in
 | Resource | Description |
 |:---------|:------------|
 | **[Wiki](https://github.com/ThisIsSadeghi/KMPilot/wiki)** | Complete reference for agents, skills, and architecture patterns |
+| **[ADOPTING.md](ADOPTING.md)** | Installing the pipeline into a KMP project you already have |
 | **[CHANGELOG.md](CHANGELOG.md)** | Release history + downstream upgrade notes |
 | **[CLAUDE.md](CLAUDE.md)** | Rules and conventions that AI agents follow |
 

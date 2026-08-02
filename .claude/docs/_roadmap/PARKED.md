@@ -46,6 +46,20 @@ The largest reach idea available, and the loudest headline: *"port your Android 
 
 ---
 
+## ⏸ Groovy DSL support in adopt mode
+
+`install.sh --adopt` requires `settings.gradle.kts`. A project on the Groovy DSL is refused, cleanly and with an explanation.
+
+**Why it is genuinely tractable** (this is not a hard limit): every edit adopt mode makes to the target is **append-only** — `include(":core:…")`, a `versionCatalogs` block, three `implementation(project(…))` lines, and the `archTest` task — and each has a direct Groovy equivalent. Gradle also allows mixed DSL across projects, so the vendored `core/*` build files stay `.kts` untouched. Estimated ~1 day, mostly a second set of append templates plus matrix variants.
+
+**Why it is parked:** KMP projects skew modern — Kotlin DSL is the default for anything scaffolded in the last several years, so a KMP team on Groovy settings is a minority of a minority. Building it now would repeat the mistake the vendor-vs-capability-map decision already avoided: shipping for an imagined adopter.
+
+**Unpark trigger:** one real adopter reports being refused for Groovy DSL. The refusal message says "not supported **yet**" and points at the issue tracker precisely so that signal gets collected instead of lost — a parked item with no way to hear demand is just a silent no.
+
+**Covered by:** the `groovy-dsl` variant in `scripts/adopt-matrix.sh` asserts the refusal stays clean and explanatory.
+
+---
+
 ## ⏸ Maven Central publishing of `core/*`
 
 Publish `kmpilot-core-common`, `-core-data`, `-core-designsystem` so adoption becomes three dependencies instead of three vendored modules.
