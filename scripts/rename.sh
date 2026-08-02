@@ -3,9 +3,15 @@
 #
 # Usage:
 #   scripts/rename.sh --name=<ProjectName> --pkg=<package.prefix>
+#                     [--paths=a,b] [--no-readme]
 #
 # Example:
 #   scripts/rename.sh --name=MyStore --pkg=com.acme.store
+#
+# --paths scopes the rewrite to the given top-level directories instead of the
+# whole tree. install.sh --adopt uses `--paths=core --no-readme` to rename only
+# the vendored core modules inside its staging clone: everything else in that
+# clone is discarded, and the target repo's own sources must never be rewritten.
 
 set -euo pipefail
 
@@ -23,24 +29,32 @@ OLD_PKG_PATH="thisissadeghi"
 
 NEW_NAME=""
 NEW_PKG=""
+SCOPE=""          # comma-separated top-level dirs; empty = whole tree
+WRITE_README=yes
 
 for arg in "$@"; do
     case "$arg" in
-        --name=*) NEW_NAME="${arg#*=}" ;;
-        --pkg=*)  NEW_PKG="${arg#*=}" ;;
+        --name=*)    NEW_NAME="${arg#*=}" ;;
+        --pkg=*)     NEW_PKG="${arg#*=}" ;;
+        --paths=*)   SCOPE="${arg#*=}" ;;
+        --no-readme) WRITE_README=no ;;
         -h|--help)
             cat <<USAGE
 KMPilot rename — convert this template into your project.
 
 Usage:
   scripts/rename.sh --name=<ProjectName> --pkg=<package.prefix>
+                    [--paths=<dir,dir>] [--no-readme]
 
 Arguments:
-  --name   Project display name (PascalCase, e.g., MyStore)
-  --pkg    Package prefix (lowercase, dotted; e.g., com.acme.store)
+  --name        Project display name (PascalCase, e.g., MyStore)
+  --pkg         Package prefix (lowercase, dotted; e.g., com.acme.store)
+  --paths       Limit the rewrite to these top-level directories (default: all)
+  --no-readme   Do not overwrite README.md
 
 Example:
   scripts/rename.sh --name=MyStore --pkg=com.acme.store
+  scripts/rename.sh --name=MyStore --pkg=com.acme.store --paths=core --no-readme
 USAGE
             exit 0
             ;;
@@ -57,8 +71,12 @@ if [[ -z "$NEW_NAME" || -z "$NEW_PKG" ]]; then
     echo "Try: scripts/rename.sh --help" >&2
     exit 1
 fi
-if [[ ! "$NEW_NAME" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]]; then
-    echo "Error: --name must be a valid identifier (letters/digits/underscore, start with letter)" >&2
+# Hyphens and dots are allowed because an ADOPTED project's rootProject.name is
+# whatever it already is (`acme-notes` is ordinary), and this script has to be
+# able to rename against it. The generated-resources package derived from it is
+# sanitized below, exactly as Compose Multiplatform sanitizes it.
+if [[ ! "$NEW_NAME" =~ ^[A-Za-z][A-Za-z0-9_.-]*$ ]]; then
+    echo "Error: --name must start with a letter and contain only letters, digits, '_', '.' or '-'" >&2
     exit 1
 fi
 if [[ ! "$NEW_PKG" =~ ^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$ ]]; then
@@ -66,17 +84,34 @@ if [[ ! "$NEW_PKG" =~ ^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$ ]]; then
     exit 1
 fi
 
+# Roots the rewrite is allowed to touch. Default is the whole tree; --paths
+# narrows it (adopt mode renames only core/ inside its staging clone).
+ROOTS=(.)
+if [[ -n "$SCOPE" ]]; then
+    ROOTS=()
+    IFS=',' read -r -a SCOPE_DIRS <<< "$SCOPE"
+    for p in "${SCOPE_DIRS[@]}"; do
+        [[ -e "$p" ]] || { echo "Error: --paths entry '$p' does not exist" >&2; exit 1; }
+        ROOTS+=("./${p#./}")
+    done
+fi
+
 # Guard: refuse if template marker is gone (already renamed)
 if ! grep -rq "$OLD_PKG" \
     --include="*.kts" --include="*.kt" --include="*.xml" \
     --exclude-dir=.git --exclude-dir=build --exclude-dir=.gradle \
-    --exclude-dir=.idea --exclude-dir=.kotlin . 2>/dev/null; then
+    --exclude-dir=.idea --exclude-dir=.kotlin "${ROOTS[@]}" 2>/dev/null; then
     echo "Error: template marker '$OLD_PKG' not found — project already renamed?" >&2
     exit 1
 fi
 
 NEW_PKG_PATH="${NEW_PKG//.//}"
-NEW_NAME_LOWER="$(printf '%s' "$NEW_NAME" | tr '[:upper:]' '[:lower:]')"
+# The generated-resources package root: Compose Multiplatform derives it from
+# rootProject.name lowercased, with every character that cannot appear in a
+# Kotlin identifier replaced by '_' (verified: `acme-notes` → `acme_notes`).
+# Mirror that here or the rewritten imports will not compile. For a PascalCase
+# template name this is a plain lowercase, so template installs are unaffected.
+NEW_NAME_LOWER="$(printf '%s' "$NEW_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')"
 OLD_NAME_LOWER="$(printf '%s' "$OLD_NAME" | tr '[:upper:]' '[:lower:]')"
 
 # Cross-platform sed -i (BSD/macOS vs GNU/Linux)
@@ -106,7 +141,7 @@ while IFS= read -r -d '' file; do
     sedi "s|@@KMPILOT_PKG@@|${NEW_PKG}|g" "$file"
     sedi "s|${OLD_NAME}|${NEW_NAME}|g" "$file"
     sedi "s|${OLD_NAME_LOWER}\\.|${NEW_NAME_LOWER}.|g" "$file"
-done < <(find . -type f \
+done < <(find "${ROOTS[@]}" -type f \
     \( -name "*.kt" -o -name "*.kts" -o -name "*.xml" -o -name "*.gradle" -o -name "*.pro" \
        -o -name "*.swift" -o -name "*.plist" -o -name "*.pbxproj" -o -name "*.xcconfig" \
        -o -name "Podfile" \) \
@@ -137,7 +172,7 @@ while IFS= read -r -d '' dir; do
     mv "${tmp}/pkg" "$new_dir"
     rmdir "$tmp"
     echo "  ${dir#./} → ${new_dir#./}"
-done < <(find . -type d -name "${OLD_PKG_PATH}" -path "*/kotlin/${OLD_PKG_PATH}" -print0)
+done < <(find "${ROOTS[@]}" -type d -name "${OLD_PKG_PATH}" -path "*/kotlin/${OLD_PKG_PATH}" -print0)
 
 # Flatten the redundant project-name subdir for modules whose namespace was
 # <prefix>.<projectname> (composeApp, androidApp). After the move, those
@@ -148,7 +183,13 @@ while IFS= read -r -d '' dir; do
     find "$dir" -mindepth 1 -maxdepth 1 -exec mv -- {} "$parent/" \;
     rmdir "$dir"
     echo "  flatten: ${dir#./}"
-done < <(find . -type d -path "*/kotlin/${NEW_PKG_PATH}/${OLD_NAME_LOWER}" -print0)
+done < <(find "${ROOTS[@]}" -type d -path "*/kotlin/${NEW_PKG_PATH}/${OLD_NAME_LOWER}" -print0)
+
+if [[ "$WRITE_README" == "no" ]]; then
+    echo ""
+    echo "✓ Renamed ${SCOPE:-everything} to '${NEW_NAME}' (package: ${NEW_PKG})"
+    exit 0
+fi
 
 echo "→ Writing fresh README..."
 cat > README.md <<'README_EOF'
